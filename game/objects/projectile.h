@@ -86,6 +86,11 @@ public:
 	virtual bool takes_hits() const { return false; }
 	virtual void take_hit() {}
 
+	// Where a launch from an owner centred at owner_centre is swept from:
+	// the owner's centre, for every shot and sub but the wall, which is set
+	// down beside its owner and so is swept sideways at its own height.
+	virtual labrador::Vector2F launch_origin(const labrador::Vector2F& owner_centre) const
+	{ return owner_centre; }
 	// A muzzle can extend through cover even when its owner cannot. Check
 	// the launch volume before Scene defers its first collision sweep.
 	void resolve_launch_obstruction(const labrador::Vector2F& origin,

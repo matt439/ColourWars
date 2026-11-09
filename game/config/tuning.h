@@ -394,11 +394,15 @@ struct SubTuning
 	float burst_speed = 0.0f;
 	ProjectileTuning body;
 	ProjectileTuning burst;
-	// The sprinkler only (zero for the grenade): seconds between sprays once
-	// it has stuck, the seconds it stays, and the enemy shots that break it.
+	// The planted subs only, the sprinkler and the wall (zero for the
+	// grenade): seconds between releases once it has stuck, the seconds it
+	// stays, and the enemy shots that break it.
 	float interval = 0.0f;
 	float lifetime = 0.0f;
 	int hits = 0;
+	// The wall only: from the player's centre to the wall's, sideways, where
+	// it is set down. throw_speed is then how fast it drops to the floor.
+	float reach = 0.0f;
 
 	std::string sound_bank;
 	SoundTuning throw_sound;

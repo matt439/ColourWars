@@ -1205,7 +1205,7 @@ std::vector<std::unique_ptr<Projectile>>
         // The vector may grow below; the projectile itself does not move.
         Projectile& projectile = *projectiles[index];
         projectile.resolve_launch_obstruction(index < launched ?
-            this->center() : projectile.bounds().center(), objects);
+            projectile.launch_origin(this->center()) : projectile.bounds().center(), objects);
         if (this->paint_audio_ != nullptr)
         {
             projectile.flush_paint_audio(*this->paint_audio_);

@@ -61,9 +61,12 @@ protected:
 	const labrador::Colour& team_colour() const { return this->team_colour_; }
 	labrador::RenderResources* render_resources() const { return this->render_resources_; }
 
-	// What one paid use releases, centred at origin with this velocity.
-	virtual std::vector<std::unique_ptr<Projectile>> release(
-		const labrador::Vector2F& origin, const labrador::Vector2F& velocity) const = 0;
+	// What one paid use releases, centred at origin with this velocity: the
+	// aim's unit direction times throw_speed, plus the player's run.
+	// direction is the aim alone, for a sub that is set down rather than
+	// thrown (the wall).
+	virtual std::vector<std::unique_ptr<Projectile>> release(const labrador::Vector2F& origin,
+		const labrador::Vector2F& direction, const labrador::Vector2F& velocity) const = 0;
 
 private:
 	const SubTuning* sub_tuning_ = nullptr;
@@ -89,8 +92,8 @@ public:
 		const labrador::AudioResources* audio_resources);
 
 protected:
-	std::vector<std::unique_ptr<Projectile>> release(
-		const labrador::Vector2F& origin, const labrador::Vector2F& velocity) const override;
+	std::vector<std::unique_ptr<Projectile>> release(const labrador::Vector2F& origin,
+		const labrador::Vector2F& direction, const labrador::Vector2F& velocity) const override;
 
 private:
 	// Resolved once, so a throw resolves no name.
@@ -111,12 +114,36 @@ public:
 		const labrador::AudioResources* audio_resources);
 
 protected:
-	std::vector<std::unique_ptr<Projectile>> release(
-		const labrador::Vector2F& origin, const labrador::Vector2F& velocity) const override;
+	std::vector<std::unique_ptr<Projectile>> release(const labrador::Vector2F& origin,
+		const labrador::Vector2F& direction, const labrador::Vector2F& velocity) const override;
 
 private:
 	labrador::RenderResources::SheetStrip body_strip_;
 	labrador::RenderResources::SheetStrip spray_strip_;
+};
+
+// The paint wall: one ProjectileWall per use, set down `reach` to the side
+// the aim points (right when it points straight up or down), its foot level
+// with the player's, and dropped at throw_speed until it stands on cover.
+class SubWall final : public SubWeapon
+{
+public:
+	SubWall(const GameTuning* tuning,
+		PlayerTeam team,
+		int player_num,
+		const labrador::Colour& team_colour,
+		labrador::RenderResources* render_resources,
+		const labrador::AudioResources* audio_resources);
+
+protected:
+	std::vector<std::unique_ptr<Projectile>> release(const labrador::Vector2F& origin,
+		const labrador::Vector2F& direction, const labrador::Vector2F& velocity) const override;
+
+private:
+	labrador::RenderResources::SheetStrip body_strip_;
+	labrador::RenderResources::SheetStrip spray_strip_;
+	// The player's height, so the wall's foot starts level with theirs.
+	float player_height_ = 0.0f;
 };
 
 // Builds the sub of a type; throws std::invalid_argument for any other value.

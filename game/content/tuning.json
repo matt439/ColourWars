@@ -531,6 +531,41 @@
             "sound_bank": "paint_exe",
             "throw_sound": { "name": "bucket.throw", "volume": 0.3 },
             "empty_sound": { "name": "weapon.empty", "volume": 0.8 }
+        },
+        "wall": {
+            "_comment": "Set down 'reach' to the side the aim points, its foot level with the player's, and dropped at throw_speed until it stands on cover. Standing, it spends every enemy shot that reaches it, so it stops them; 'hits' of them break it, and it goes after 'lifetime'. Each 'interval' it drips burst_count drops straight down from its foot onto the floor. Its body's collision_size is the barrier.",
+            "cost": 0.5,
+            "cooldown": 4.0,
+            "throw_speed": 1200.0,
+            "reach": 140.0,
+            "burst_count": 3,
+            "burst_speed": 300.0,
+            "interval": 0.5,
+            "lifetime": 4.0,
+            "hits": 15,
+            "body": {
+                "gravity": 0.0,
+                "wind_resistance": 0.0,
+                "delete_timer": 1.0,
+                "player_damage": 0.0,
+                "size": { "x": 32.0, "y": 180.0 },
+                "collision_size": { "x": 32.0, "y": 180.0 },
+                "sheet": "paint_fx",
+                "animation": "shot_ball"
+            },
+            "burst": {
+                "gravity": 2500.0,
+                "wind_resistance": 0.0,
+                "delete_timer": 0.3,
+                "player_damage": 0.0,
+                "size": { "x": 28.0, "y": 28.0 },
+                "collision_size": { "x": 28.0, "y": 28.0 },
+                "sheet": "paint_fx",
+                "animation": "shot_ball"
+            },
+            "sound_bank": "paint_exe",
+            "throw_sound": { "name": "bucket.throw", "volume": 0.3 },
+            "empty_sound": { "name": "weapon.empty", "volume": 0.8 }
         }
     }
 }

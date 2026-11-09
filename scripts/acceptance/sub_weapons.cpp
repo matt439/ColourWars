@@ -8,6 +8,7 @@
 #include "game/objects/projectile_ball.h"
 #include "game/objects/projectile_grenade.h"
 #include "game/objects/projectile_sprinkler.h"
+#include "game/objects/projectile_wall.h"
 #include "game/objects/sub_weapon.h"
 #include "game/objects/weapon_builder.h"
 #include "scripts/acceptance/support/json_fixture.h"
@@ -15,14 +16,17 @@
 #include <cmath>
 #include <iostream>
 
-// ROAD#11, slices 1 to 3: the paint grenade end to end. Its tuning and what
+// ROAD#11, slices 1 to 4: the paint grenade end to end. Its tuning and what
 // the loader refuses; the shared tank's sub cost and Endless paint; the
 // grenade's throw, cooldown and burst; every built player carrying one; the
 // Sub action's default controls and their fallbacks; a real round in which a
 // thrown grenade alone paints the stage; the shipping bots' throws, by
-// policy at each difficulty and tool, and in real bot rounds; and the
+// policy at each difficulty and tool, and in real bot rounds; the
 // sprinkler: its tuning, a seat that carries it, and in a real round where
-// it sticks, how long it sprays, what it touches and what breaks it.
+// it sticks, how long it sprays, what it touches and what breaks it; and
+// the paint wall: where a player sets it down, and in a real round that it
+// stands on the floor, stops enemy shots and not its own team's, paints
+// beneath itself, breaks and expires.
 
 namespace
 {
@@ -177,7 +181,18 @@ namespace
             { document["subs"]["sprinkler"]["lifetime"].SetFloat(0.1f); }), "A sprinkler that never sprays loaded");
         require(!loads([](rapidjson::Document& document)
             { document["subs"]["sprinkler"]["hits"].SetInt(0); }), "A sprinkler nothing can break loaded");
-        std::cout << "PASS tuning: shipped grenade and sprinkler, cost bounds, burst bounds, the sprinkler's schedule and unknown keys\n";
+        const SubTuning& wall = tuning.sub(SubType::wall);
+        require(sub_from_name("wall") == SubType::wall && wall.reach > 0.0f && wall.hits >= 1 &&
+            wall.lifetime >= wall.interval && wall.body.details.col_rect_size.y > wall.body.details.col_rect_size.x &&
+            sprinkler.reach == 0.0f, "The shipped wall is upright, with a reach, a schedule and a hit count");
+        require(!loads([](rapidjson::Document& document)
+            { document["subs"]["sprinkler"].AddMember("reach", 100.0f, document.GetAllocator()); }),
+            "A sprinkler took the wall's reach");
+        require(!loads([](rapidjson::Document& document) { document["subs"]["wall"].RemoveMember("reach"); }),
+            "A wall without its reach loaded");
+        require(!loads([](rapidjson::Document& document) { document["subs"]["wall"].RemoveMember("hits"); }),
+            "A wall without its hits loaded");
+        std::cout << "PASS tuning: shipped grenade, sprinkler and wall, cost bounds, burst bounds, the planted subs' schedules, the wall's reach and unknown keys\n";
     }
 
     void check_tank(World& world)
@@ -660,6 +675,96 @@ namespace
             " times over its life and retires; " << tuning.hits << " enemy shots break it, its own team's do not\n";
     }
 
+    // The paint wall: a player sets it down beside them, foot level with
+    // theirs; in a real round it stands on the floor, spends each enemy shot
+    // that reaches it and none of its own team's, drips paint beneath
+    // itself, and goes on its last hit or at the end of its lifetime.
+    void check_wall(World& world)
+    {
+        const GameTuning& game = world.assets.tuning;
+        const SubTuning& tuning = game.sub(SubType::wall);
+        MatchSetup settings = setup(MatchVariant::standard, false);
+        settings.set_player_sub(0, SubType::wall);
+        settings.set_duration(120.0f);
+        auto players = world.players(settings);
+        Player& builder = *players[0];
+        require(builder.sub_weapon()->type() == SubType::wall, "A seat did not carry the wall it was given");
+        const float full = game.starting_ammo();
+        for (const float side : { 1.0f, -1.0f })
+        {
+            builder.force_respawn();
+            builder.set_player_input(throwing(Vector2F(side, -0.2f).normalized()));
+            auto placed = builder.update_weapon_and_get_projectiles(dt, {});
+            require(placed.size() == 1 && dynamic_cast<ProjectileWall*>(placed.front().get()) != nullptr,
+                "A Sub press with the wall did not set one down");
+            const RectangleF wall = placed.front()->bounds();
+            const float feet = builder.center().y + game.player().size.y / 2.0f;
+            require(close_to(wall.center().x, builder.center().x + side * tuning.reach, 0.5f) &&
+                close_to(wall.bottom(), feet, 2.0f) && flown(*placed.front()).x == 0.0f,
+                "A wall was not set down beside the player, foot level with theirs, dropping straight");
+            require(close_to(builder.weapon_ammo(), full - tuning.cost), "A wall did not take its cost");
+        }
+
+        auto level = world.level(settings);
+        level->start_without_countdown();
+        const std::vector<PlayerInputData> idle(input_slots::count);
+        const auto step = [&] { level->update(idle, dt); };
+        const auto strip = [&](const ProjectileTuning& record)
+        { return resolve_projectile_strip(record, world.assets.render); };
+        const Vector2F host = level->player(0).center();
+        const float floor = host.y + game.player().size.y / 2.0f;
+        const auto stand_wall = [&]
+        {
+            // Beside team A's idle host, clear of both players.
+            const Vector2F size = tuning.body.details.col_rect_size;
+            auto* wall = dynamic_cast<ProjectileWall*>(level->admit_projectile(std::make_unique<ProjectileWall>(
+                RectangleF(Vector2F(host.x + 160.0f, floor - size.y / 2.0f - 1.0f), size),
+                Vector2F(0.0f, tuning.throw_speed), PlayerTeam::a, 0, Colour::white, &world.assets.render,
+                strip(tuning.body), strip(tuning.burst), &tuning)));
+            for (int count = 0; !wall->planted() && count < 60; ++count) { step(); }
+            require(wall->planted() && close_to(wall->bounds().bottom(), floor, 2.0f) && wall->mask() == 0,
+                "A wall did not stand on the floor it was set down above");
+            return wall;
+        };
+        const float before = level->level_end_info().team_a_area;
+        ProjectileWall* wall = stand_wall();
+        // A shot of the burst record (small, so it clears the floor) at the
+        // wall's middle from one side, moving across it.
+        const ProjectileTuning& shot = tuning.burst;
+        const auto shoot = [&](PlayerTeam team)
+        {
+            const RectangleF target = wall->bounds();
+            level->admit_projectile(std::make_unique<ProjectileBall>(
+                RectangleF(Vector2F(target.left() - 40.0f, target.center().y), shot.details.col_rect_size),
+                Vector2F(1500.0f, 0.0f), team, 1, Colour::white, &world.assets.render, strip(shot), &shot));
+            for (int count = 0; count < 4; ++count) { step(); }
+        };
+        shoot(PlayerTeam::a);
+        require(wall->hits_left() == tuning.hits, "Its own team's shot was stopped by a wall");
+        shoot(PlayerTeam::b);
+        require(wall->hits_left() == tuning.hits - 1, "An enemy shot passed a standing wall");
+        for (int count = 0; count < static_cast<int>(tuning.interval / dt) * 2; ++count) { step(); }
+        require(wall->sprays() >= 2 && level->level_end_info().team_a_area > before,
+            "A standing wall did not paint beneath itself");
+        // It goes at the end of its lifetime, with its last drips.
+        for (int count = 0; count < static_cast<int>((tuning.lifetime + shot.details.delete_timer) / dt) + 10; ++count)
+        { step(); }
+        require(level->projectile_count() == 0, "A wall outlived its lifetime");
+
+        // Its last hit breaks it well before then.
+        wall = stand_wall();
+        for (int hit = 0; hit < tuning.hits; ++hit)
+        {
+            require(wall->takes_hits(), "A wall broke before its last hit");
+            shoot(PlayerTeam::b);
+        }
+        for (int count = 0; count < static_cast<int>(shot.details.delete_timer / dt) + 10; ++count) { step(); }
+        require(level->projectile_count() == 0, "Its last hit did not break the wall");
+        std::cout << "PASS wall: set down " << tuning.reach << " to either side at the player's feet; it stands, "
+            "stops enemy shots and not its own team's, paints beneath, goes after its lifetime and on its "
+            << tuning.hits << "th hit\n";
+    }
+
 int wmain(int argc, wchar_t* argv[])
 {
     return acceptance::run_probe("sub weapons", [&]
@@ -676,6 +781,7 @@ int wmain(int argc, wchar_t* argv[])
         check_bot_policy(world.assets.tuning);
         check_bot_round(world);
         check_sprinkler(world);
+        check_wall(world);
         return 0;
     });
 }
