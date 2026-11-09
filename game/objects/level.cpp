@@ -395,7 +395,10 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 			this->blocked_shot_feedback_->emit(*contact);
 		}
 	}
-	// A sub's grenade that retired this tick bursts where it stopped.
+	// Enemy shots that reached a planted sprinkler break it, then a sub's
+	// grenade that retired this tick bursts where it stopped and a planted
+	// sprinkler sprays on its schedule.
+	this->strike_breakables();
 	this->burst_projectiles();
 
 	// Loss of ground support is known only after all contacts have been dispatched.
@@ -494,6 +497,24 @@ void Level::update_players(float dt)
 			// Scene owns the shot; the typed pointer add() returns is what the
 			// tick's projectile walks use. Pending until end_tick() admits it.
 			this->pending_projectiles_.push_back(this->scene_->add(std::move(projectile)));
+		}
+	}
+}
+
+void Level::strike_breakables()
+{
+	for (Projectile* target : this->projectiles_)
+	{
+		if (!target->takes_hits()) { continue; }
+		const RectangleF bounds = target->bounds();
+		for (Projectile* shot : this->projectiles_)
+		{
+			if (!target->takes_hits()) { break; }
+			// Only enemy shots in flight; a shot spends itself on the hit.
+			if (shot == target || shot->for_deletion() || shot->takes_hits() ||
+				shot->team() == target->team() || !shot->travel_bounds().intersects(bounds)) { continue; }
+			shot->set_for_deletion(true);
+			target->take_hit();
 		}
 	}
 }

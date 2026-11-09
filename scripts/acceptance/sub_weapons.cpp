@@ -7,6 +7,7 @@
 #include "game/input/input_bindings.h"
 #include "game/objects/projectile_ball.h"
 #include "game/objects/projectile_grenade.h"
+#include "game/objects/projectile_sprinkler.h"
 #include "game/objects/sub_weapon.h"
 #include "game/objects/weapon_builder.h"
 #include "scripts/acceptance/support/json_fixture.h"
@@ -14,12 +15,14 @@
 #include <cmath>
 #include <iostream>
 
-// ROAD#11, slices 1 and 2: the paint grenade end to end. Its tuning and what
+// ROAD#11, slices 1 to 3: the paint grenade end to end. Its tuning and what
 // the loader refuses; the shared tank's sub cost and Endless paint; the
 // grenade's throw, cooldown and burst; every built player carrying one; the
 // Sub action's default controls and their fallbacks; a real round in which a
-// thrown grenade alone paints the stage; and the shipping bots' throws, by
-// policy at each difficulty and tool, and in real bot rounds.
+// thrown grenade alone paints the stage; the shipping bots' throws, by
+// policy at each difficulty and tool, and in real bot rounds; and the
+// sprinkler: its tuning, a seat that carries it, and in a real round where
+// it sticks, how long it sprays, what it touches and what breaks it.
 
 namespace
 {
@@ -155,7 +158,26 @@ namespace
             }), "A misspelt sub key loaded");
         require(!loads([](rapidjson::Document& document) { document.RemoveMember("subs"); }),
             "Tuning without its subs loaded");
-        std::cout << "PASS tuning: shipped grenade, cost bounds, burst bounds and unknown keys\n";
+        const SubTuning& sprinkler = tuning.sub(SubType::sprinkler);
+        require(sub_from_name("sprinkler") == SubType::sprinkler && sprinkler.cost > 0.0f &&
+            sprinkler.interval >= dt && sprinkler.lifetime >= sprinkler.interval && sprinkler.hits >= 1 &&
+            grenade.interval == 0.0f && grenade.hits == 0,
+            "The shipped sprinkler has a spray schedule and a hit count, and the grenade none");
+        require(!loads([](rapidjson::Document& document)
+            { document["subs"]["grenade"].AddMember("hits", 3, document.GetAllocator()); }),
+            "A grenade took the sprinkler's keys");
+        for (const char* key : { "interval", "lifetime", "hits" })
+        {
+            require(!loads([key](rapidjson::Document& document)
+                { document["subs"]["sprinkler"].RemoveMember(key); }), "A sprinkler without its schedule loaded");
+        }
+        require(!loads([](rapidjson::Document& document)
+            { document["subs"]["sprinkler"]["interval"].SetFloat(0.001f); }), "A spray faster than a step loaded");
+        require(!loads([](rapidjson::Document& document)
+            { document["subs"]["sprinkler"]["lifetime"].SetFloat(0.1f); }), "A sprinkler that never sprays loaded");
+        require(!loads([](rapidjson::Document& document)
+            { document["subs"]["sprinkler"]["hits"].SetInt(0); }), "A sprinkler nothing can break loaded");
+        std::cout << "PASS tuning: shipped grenade and sprinkler, cost bounds, burst bounds, the sprinkler's schedule and unknown keys\n";
     }
 
     void check_tank(World& world)
@@ -550,6 +572,94 @@ namespace
     }
 }
 
+    // The sprinkler in a real round: dropped at the idle host's feet, it
+    // sticks to the floor, touches nothing, sprays on its schedule for its
+    // lifetime and retires; enemy shots break it, its own team's do not.
+    void check_sprinkler(World& world)
+    {
+        const SubTuning& tuning = world.assets.tuning.sub(SubType::sprinkler);
+        MatchSetup settings = setup(MatchVariant::standard, false);
+        settings.set_player_sub(0, SubType::sprinkler);
+        settings.set_duration(120.0f);
+        require(settings.player_sub(0) == SubType::sprinkler && settings.player_sub(1) == SubType::grenade &&
+            [&] { try { settings.set_player_sub(1, SubType::count); } catch (const std::invalid_argument&) { return true; }
+                return false; }(),
+            "A seat's sub is not its own choice, or took a sub that is not one");
+        auto players = world.players(settings);
+        require(players[0]->sub_weapon()->type() == SubType::sprinkler &&
+            players[1]->sub_weapon()->type() == SubType::grenade, "A seat did not carry the sub it was given");
+
+        auto level = world.level(settings);
+        level->start_without_countdown();
+        const std::vector<PlayerInputData> idle(input_slots::count);
+        const Vector2F feet = level->player(0).center();
+        const auto strip = [&](const ProjectileTuning& record)
+        { return resolve_projectile_strip(record, world.assets.render); };
+        const auto drop_sprinkler = [&](Vector2F at, PlayerTeam team)
+        {
+            return dynamic_cast<ProjectileSprinkler*>(level->admit_projectile(std::make_unique<ProjectileSprinkler>(
+                RectangleF(at, tuning.body.details.col_rect_size), Vector2F(0.0f, 300.0f),
+                team, 1, Colour::white, &world.assets.render, strip(tuning.body), strip(tuning.burst), &tuning)));
+        };
+        const auto step = [&] { level->update(idle, dt); };
+
+        ProjectileSprinkler* sprinkler = drop_sprinkler(feet, PlayerTeam::a);
+        int steps = 0;
+        while (!sprinkler->planted() && steps < 120) { step(); ++steps; }
+        require(sprinkler->planted() && sprinkler->mask() == 0 && sprinkler->player_damage() == 0.0f &&
+            sprinkler->takes_hits(), "A dropped sprinkler did not stick to the floor, or still touches players");
+        const Vector2F planted_at = sprinkler->bounds().center();
+        const float before = level->level_end_info().team_a_area;
+        // Live until just before its lifetime ends, staying put and spraying
+        // once at once and then once each interval.
+        const int life = static_cast<int>(std::floor(tuning.lifetime / dt)) - 2;
+        for (int index = 0; index < life; ++index) { step(); }
+        const int expected = static_cast<int>(std::floor(static_cast<float>(life + 1) * dt / tuning.interval)) + 1;
+        require(sprinkler->bounds().center() == planted_at && std::abs(sprinkler->sprays() - expected) <= 1,
+            "A planted sprinkler moved or did not spray on its schedule");
+        require(level->level_end_info().team_a_area > before, "A spraying sprinkler painted nothing more");
+        // Past its lifetime and its last drops' flight, nothing is left.
+        for (int index = 0; index < static_cast<int>((tuning.interval + tuning.burst.details.delete_timer) / dt) + 10; ++index)
+        { step(); }
+        require(level->projectile_count() == 0, "A sprinkler outlived its lifetime");
+
+        // Shots reaching it: its own team's leave it be, each enemy one is
+        // spent on it, and the last of its hits breaks it.
+        // Beside the host, clear of both players, on the same floor.
+        sprinkler = drop_sprinkler(feet + Vector2F(160.0f, 0.0f), PlayerTeam::a);
+        for (steps = 0; !sprinkler->planted() && steps < 120; ++steps) { step(); }
+        require(sprinkler->planted() && std::fabs(sprinkler->bounds().center().y - planted_at.y) < 1.0f,
+            "A sprinkler dropped beside the host did not stick to its floor");
+        // A small ball (the spray drop's record), so it can sit on the
+        // sprinkler's top without reaching the floor under it.
+        const ProjectileTuning& shot = tuning.burst;
+        const auto shoot_at = [&](PlayerTeam team)
+        {
+            // Overlapping its top, clear of the floor under it.
+            const RectangleF target = sprinkler->bounds();
+            level->admit_projectile(std::make_unique<ProjectileBall>(
+                RectangleF(Vector2F(target.center().x, target.top() - 4.0f), shot.details.col_rect_size),
+                Vector2F::zero, team, 1, Colour::white, &world.assets.render, strip(shot), &shot));
+            step();
+        };
+        shoot_at(PlayerTeam::a);
+        require(sprinkler->hits_left() == tuning.hits, "Its own team's shot broke a sprinkler");
+        for (int hit = 1; hit < tuning.hits; ++hit)
+        {
+            shoot_at(PlayerTeam::b);
+            require(sprinkler->hits_left() == tuning.hits - hit && sprinkler->takes_hits(),
+                "An enemy shot that reached a sprinkler was not counted against it");
+        }
+        const int sprays = sprinkler->sprays();
+        shoot_at(PlayerTeam::b);
+        // The last hit retires it this tick; the scene drops it at the next.
+        for (int index = 0; index < static_cast<int>(tuning.burst.details.delete_timer / dt) + 10; ++index) { step(); }
+        require(level->projectile_count() == 0 && sprays < static_cast<int>(tuning.lifetime / tuning.interval),
+            "Its last hit did not break the sprinkler");
+        std::cout << "PASS sprinkler: a seat carries it; it sticks, sprays " << expected <<
+            " times over its life and retires; " << tuning.hits << " enemy shots break it, its own team's do not\n";
+    }
+
 int wmain(int argc, wchar_t* argv[])
 {
     return acceptance::run_probe("sub weapons", [&]
@@ -565,6 +675,7 @@ int wmain(int argc, wchar_t* argv[])
         check_round(world);
         check_bot_policy(world.assets.tuning);
         check_bot_round(world);
+        check_sprinkler(world);
         return 0;
     });
 }

@@ -98,6 +98,27 @@ private:
 	labrador::RenderResources::SheetStrip burst_strip_;
 };
 
+// The sprinkler: one ProjectileSprinkler per use, which sticks where it
+// lands and sprays from there.
+class SubSprinkler final : public SubWeapon
+{
+public:
+	SubSprinkler(const GameTuning* tuning,
+		PlayerTeam team,
+		int player_num,
+		const labrador::Colour& team_colour,
+		labrador::RenderResources* render_resources,
+		const labrador::AudioResources* audio_resources);
+
+protected:
+	std::vector<std::unique_ptr<Projectile>> release(
+		const labrador::Vector2F& origin, const labrador::Vector2F& velocity) const override;
+
+private:
+	labrador::RenderResources::SheetStrip body_strip_;
+	labrador::RenderResources::SheetStrip spray_strip_;
+};
+
 // Builds the sub of a type; throws std::invalid_argument for any other value.
 std::unique_ptr<SubWeapon> build_sub_weapon(const GameTuning* tuning,
 	SubType type,

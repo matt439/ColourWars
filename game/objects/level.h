@@ -430,6 +430,9 @@ private:
 	// Admits the drops of every grenade (Projectile::take_burst) that retired
 	// this tick, after contacts settle and before the shot list follows the scene.
 	void burst_projectiles();
+	// Each enemy shot in flight whose travel this tick reaches a projectile
+	// that takes hits (a planted sprinkler) is spent on it.
+	void strike_breakables();
 	void resolve_projectile_movement();
 	// Every scene end_tick() in Level goes through end_scene_tick(), which keeps
 	// projectiles_ in step: retire_projectiles() first prunes it to the shots

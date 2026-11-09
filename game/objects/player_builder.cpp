@@ -102,9 +102,9 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			SpriteFlip::none, 0.0f, participant_index, &this->presentation_->figure(),
 			&this->presentation_->camera().shake, person, settings.variant());
 		player->set_handicap(setting.handicap);
-		// Every player carries the grenade until Weapon Select offers a
-		// choice (ROAD#11's loadout slice).
-		player->set_sub_weapon(build_sub_weapon(this->tuning_, SubType::grenade,
+		// The seat's sub: the grenade unless code chose another, until
+		// Weapon Select offers the choice (ROAD#11's loadout slice).
+		player->set_sub_weapon(build_sub_weapon(this->tuning_, setting.sub,
 			setting.team, paint_owners::index(setting.num, participant_index),
 			team_colours.team_colour(setting.team), render_resources, audio_resources));
 

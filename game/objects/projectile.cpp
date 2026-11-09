@@ -267,6 +267,17 @@ Vector2F Projectile::update_movement(float gravity, float wind_resistance, float
     return displacement;
 }
 
+RectangleF Projectile::travel_bounds() const
+{
+    const RectangleF now = this->shape()->bounding_box();
+    if (!this->first_update_done_) { return now; }
+    const RectangleF& before = this->previous_rectangle_;
+    const float left = std::min(before.left(), now.left());
+    const float top = std::min(before.top(), now.top());
+    return RectangleF(left, top, std::max(before.right(), now.right()) - left,
+        std::max(before.bottom(), now.bottom()) - top);
+}
+
 float Projectile::delete_timer() const
 {
 	return this->details().delete_timer;

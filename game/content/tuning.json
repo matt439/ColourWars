@@ -467,7 +467,7 @@
     },
 
     "subs": {
-        "_comment": "ROAD#11 sub weapons, provisional values until the balance slice. A sub spends 'cost' of the tool's tank and needs all of it; Endless paint ignores the cost, so 'cooldown' paces it there. The grenade bursts on first contact, or in the air when the body's delete_timer runs out, into burst_count drops; both records are paint balls and borrow the bucket's art and sound until the art slice.",
+        "_comment": "ROAD#11 sub weapons, provisional values until the balance slice. A sub spends 'cost' of the tool's tank and needs all of it; Endless paint ignores the cost, so 'cooldown' paces it there. The grenade bursts on first contact, or in the air when the body's delete_timer runs out, into burst_count drops; the sprinkler's own _comment says how it plants. Every record is a paint ball and borrows the bucket's art and sound until the art slice.",
         "grenade": {
             "cost": 0.5,
             "cooldown": 2.5,
@@ -491,6 +491,40 @@
                 "player_damage": 0.15,
                 "size": { "x": 36.0, "y": 36.0 },
                 "collision_size": { "x": 36.0, "y": 36.0 },
+                "sheet": "paint_fx",
+                "animation": "shot_ball"
+            },
+            "sound_bank": "paint_exe",
+            "throw_sound": { "name": "bucket.throw", "volume": 0.3 },
+            "empty_sound": { "name": "weapon.empty", "volume": 0.8 }
+        },
+        "sprinkler": {
+            "_comment": "Sticks where its body first meets cover, then every 'interval' seconds for 'lifetime' sprays burst_count drops in a fan over its top half; 'hits' enemy shots break it. It dies like a shot if it meets an enemy first, and its body's delete_timer is the flight's fuse.",
+            "cost": 0.5,
+            "cooldown": 4.0,
+            "throw_speed": 900.0,
+            "burst_count": 5,
+            "burst_speed": 520.0,
+            "interval": 0.6,
+            "lifetime": 8.0,
+            "hits": 3,
+            "body": {
+                "gravity": 2500.0,
+                "wind_resistance": 20.0,
+                "delete_timer": 2.0,
+                "player_damage": 0.05,
+                "size": { "x": 40.0, "y": 40.0 },
+                "collision_size": { "x": 40.0, "y": 40.0 },
+                "sheet": "paint_fx",
+                "animation": "shot_ball"
+            },
+            "burst": {
+                "gravity": 2500.0,
+                "wind_resistance": 20.0,
+                "delete_timer": 0.4,
+                "player_damage": 0.08,
+                "size": { "x": 28.0, "y": 28.0 },
+                "collision_size": { "x": 28.0, "y": 28.0 },
                 "sheet": "paint_fx",
                 "animation": "shot_ball"
             },
