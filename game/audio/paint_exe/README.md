@@ -99,7 +99,7 @@ before staging it. Missing audio retains the optional silent fallback; a normal
 Release package requires the validated bank. The bank compiler is retained at
 `scripts/audio/tools/XWBTool.exe`.
 
-The corrected runtime bank is **22,765,884 bytes**. The receipt retains its hash,
+The corrected runtime bank is **22,918,348 bytes**. The receipt retains its hash,
 the encoded music export hashes, bounded loop padding, decoded measurements and
 tool identities. All accepted PCM masters are unchanged. The current 18
 audio tests cover pipeline/publication integrity; extracted Release startup
