@@ -867,8 +867,9 @@ namespace
 		std::vector<std::string_view> members{ "cost", "cooldown",
 			"throw_speed", "burst_count", "burst_speed", "body", "burst",
 			"sound_bank", "throw_sound", "empty_sound" };
-		const bool planted = type == SubType::sprinkler;
+		const bool planted = type == SubType::sprinkler || type == SubType::wall;
 		if (planted) { members.insert(members.end(), { "interval", "lifetime", "hits" }); }
+		if (type == SubType::wall) { members.push_back("reach"); }
 		const JsonValue json = known_object(subs, key, members);
 		SubTuning sub;
 		// A sub that costs nothing is a second free tool. Like a shot's
@@ -918,6 +919,7 @@ namespace
 					"; it must be from 1 to 100.");
 			}
 		}
+		if (type == SubType::wall) { sub.reach = read_positive(json, "reach"); }
 		return sub;
 	}
 }

@@ -198,8 +198,12 @@ colour and one frame, so it is not used here.
    firing workflow updates aim, timers, ammunition and sound, then creates
    projectiles through its firing hooks. The player's
    [SubWeapon](../game/objects/sub_weapon.h) then takes the Sub request,
-   spends from the same Weapon's tank and adds its own projectile (the
-   grenade, a `ProjectileGrenade`).
+   spends from the same Weapon's tank and adds its own projectile (a
+   `ProjectileGrenade`, or a sprinkler or wall, both
+   [ProjectilePlanted](../game/objects/projectile_planted.h)s). A sub's
+   projectile may name its own launch origin (`Projectile::launch_origin`):
+   the wall is set down beside the player rather than thrown from their
+   centre.
 4. [ProjectileBuilder](../game/objects/projectile_builder.cpp) selects the
    concrete projectile class and returns owned `Projectile` objects. Player
    checks their launch paths for obstructions. Level transfers the surviving
@@ -212,10 +216,11 @@ colour and one frame, so it is not used here.
    [Collider](../game/objects/collider.h) dispatches it a second time on the
    other party's class; the engine does not know what painting means.
    After the tick's contacts, `Level::strike_breakables` spends each enemy
-   shot that reached a planted sprinkler on it, and `Level::burst_projectiles`
+   shot that reached a planted sprinkler or wall on it, and `Level::burst_projectiles`
    asks each projectile for the drops it releases this tick
    (`Projectile::take_burst`: a retiring grenade's ring, a planted
-   [ProjectileSprinkler](../game/objects/projectile_sprinkler.h)'s spray) and
+   [ProjectileSprinkler](../game/objects/projectile_sprinkler.h)'s spray, a
+   [ProjectileWall](../game/objects/projectile_wall.h)'s drips) and
    admits them like a fresh launch.
 6. [StructurePaintable::on_projectile_contact](../game/objects/structure_paintable.cpp)
    identifies the reached tiles and calls

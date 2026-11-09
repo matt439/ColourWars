@@ -2,6 +2,7 @@
 #include "game/objects/sub_weapon.h"
 #include "game/objects/projectile_grenade.h"
 #include "game/objects/projectile_sprinkler.h"
+#include "game/objects/projectile_wall.h"
 #include "game/objects/weapon.h"
 
 #include <cmath>
@@ -52,7 +53,7 @@ std::vector<std::unique_ptr<Projectile>> SubWeapon::update(bool pressed, Weapon&
 	// The bucket's rule: a throw carries the thrower's run, not their fall.
 	const Vector2F velocity = direction * tuning.throw_speed +
 		Vector2F(player_velocity.x, 0.0f);
-	return this->release(origin, velocity);
+	return this->release(origin, direction, velocity);
 }
 
 bool SubWeapon::ready(const Weapon& tank) const
@@ -78,8 +79,8 @@ SubGrenade::SubGrenade(const GameTuning* tuning,
 	this->burst_strip_ = resolve_projectile_strip(this->tuning().burst, *render_resources);
 }
 
-std::vector<std::unique_ptr<Projectile>> SubGrenade::release(
-	const Vector2F& origin, const Vector2F& velocity) const
+std::vector<std::unique_ptr<Projectile>> SubGrenade::release(const Vector2F& origin,
+	const Vector2F& /*direction*/, const Vector2F& velocity) const
 {
 	const SubTuning& tuning = this->tuning();
 	std::vector<std::unique_ptr<Projectile>> released;
@@ -104,14 +105,44 @@ SubSprinkler::SubSprinkler(const GameTuning* tuning,
 	this->spray_strip_ = resolve_projectile_strip(this->tuning().burst, *render_resources);
 }
 
-std::vector<std::unique_ptr<Projectile>> SubSprinkler::release(
-	const Vector2F& origin, const Vector2F& velocity) const
+std::vector<std::unique_ptr<Projectile>> SubSprinkler::release(const Vector2F& origin,
+	const Vector2F& /*direction*/, const Vector2F& velocity) const
 {
 	const SubTuning& tuning = this->tuning();
 	std::vector<std::unique_ptr<Projectile>> released;
 	released.push_back(std::make_unique<ProjectileSprinkler>(
 		RectangleF(origin, tuning.body.details.col_rect_size), velocity,
 		this->team(), this->player_num(), this->team_colour(),
+		this->render_resources(), this->body_strip_, this->spray_strip_, &tuning));
+	return released;
+}
+
+SubWall::SubWall(const GameTuning* tuning,
+	PlayerTeam team,
+	int player_num,
+	const Colour& team_colour,
+	RenderResources* render_resources,
+	const AudioResources* audio_resources) :
+	SubWeapon(tuning, SubType::wall, team, player_num, team_colour,
+		render_resources, audio_resources),
+	player_height_(tuning->player().size.y)
+{
+	this->body_strip_ = resolve_projectile_strip(this->tuning().body, *render_resources);
+	this->spray_strip_ = resolve_projectile_strip(this->tuning().burst, *render_resources);
+}
+
+std::vector<std::unique_ptr<Projectile>> SubWall::release(const Vector2F& origin,
+	const Vector2F& direction, const Vector2F& /*velocity*/) const
+{
+	const SubTuning& tuning = this->tuning();
+	const Vector2F size = tuning.body.details.col_rect_size;
+	const float side = direction.x < 0.0f ? -1.0f : 1.0f;
+	// Its foot level with the player's, so it starts clear of their floor.
+	const Vector2F centre(origin.x + side * tuning.reach,
+		origin.y + this->player_height_ / 2.0f - size.y / 2.0f - 1.0f);
+	std::vector<std::unique_ptr<Projectile>> released;
+	released.push_back(std::make_unique<ProjectileWall>(RectangleF(centre, size),
+		Vector2F(0.0f, tuning.throw_speed), this->team(), this->player_num(), this->team_colour(),
 		this->render_resources(), this->body_strip_, this->spray_strip_, &tuning));
 	return released;
 }
@@ -131,6 +162,9 @@ std::unique_ptr<SubWeapon> build_sub_weapon(const GameTuning* tuning,
 			render_resources, audio_resources);
 	case SubType::sprinkler:
 		return std::make_unique<SubSprinkler>(tuning, team, player_num, team_colour,
+			render_resources, audio_resources);
+	case SubType::wall:
+		return std::make_unique<SubWall>(tuning, team, player_num, team_colour,
 			render_resources, audio_resources);
 	case SubType::count:
 		break;

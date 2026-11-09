@@ -168,7 +168,9 @@ add_library(colourwars_game STATIC
     objects/projectile_ball.cpp
     objects/projectile_builder.cpp
     objects/projectile_grenade.cpp
+    objects/projectile_planted.cpp
     objects/projectile_sprinkler.cpp
+    objects/projectile_wall.cpp
     objects/projectile_jet.cpp
     objects/projectile_mist.cpp
     objects/projectile_rolling.cpp

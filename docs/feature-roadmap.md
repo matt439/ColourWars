@@ -2367,6 +2367,32 @@ where it stuck rather than riding it, and on a wall or ceiling it still
 sprays upward; a bot given one throws it as it would a grenade (slice 6
 teaches bots where to plant it).
 
+**Slice 4, done 2026-11-09.** The paint wall is `SubType::wall`. The
+sprinkler's planted behaviour moved into an abstract `ProjectilePlanted`
+([projectile_planted.h](../game/objects/projectile_planted.h)), which both
+`ProjectileSprinkler` and the new `ProjectileWall` derive from: flight, the
+plant on first cover, the emptied mask, the `interval` and `lifetime`
+schedule and the `hits` that break it are shared, and each says only what it
+releases (`spray`). `SubWall` does not throw: it sets a 32 by 180 wall down
+`reach` (140 units) to the side the player aims, its foot level with theirs,
+dropping straight so it stands on the floor below. `Projectile::launch_origin`
+lets the wall start its launch-obstruction check from the player's side
+rather than their centre. Standing, it spends every enemy shot that reaches
+it through `Level::strike_breakables` (the `hits`th, 15, breaks it) and none
+of its own team's, drips `burst_count` (3) drops along its foot every 0.5 s
+so it paints the floor beneath it, and goes after 4 s. Players of either
+team walk through it, since its mask is empty: it is cover from shots, not a
+barrier. It costs half the tank, with a 4 s cooldown. The `sub_weapons` case
+checks the tuning and what the loader refuses, the placement to either side
+and its cost, and in a real round that it stands, stops enemy shots but not
+its own team's, paints, retires after its lifetime and breaks on its last
+hit.
+
+Left for later, by plan: a wall set down over a gap falls until it lands or
+its body's `delete_timer` (1 s) ends it; one set down against a step is
+not moved clear of it, and plants where it touches; a bot given one sets it
+down as it would throw a grenade (slice 6).
+
 ### Input
 
 - **Non-XInput controllers (`ROAD#23`).** INVERSUS and most Steam releases
