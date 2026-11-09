@@ -270,7 +270,7 @@ level beside every label before the first tool tile. The mechanic belongs to
 [ROAD#5](feature-roadmap.md#handicaps).
 
 The same line names the row's sub weapon (`ROAD#11`): `menu_text.subs.line`,
-`"{handicap}    Sub: {sub}"`, and `choosing` while the sub is being chosen.
+`"{handicap}   Sub: {sub}"`, and `choosing` while the sub is being chosen.
 A row picks its tool, then A moves it to its sub, where Left/Right cycles the
 grenade, sprinkler, paint wall and Random and the description column shows the
 sub's `menu_text.subs.choices.*.description` in place of the tool's; A again
