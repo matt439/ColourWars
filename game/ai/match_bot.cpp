@@ -212,25 +212,61 @@ bool MatchBot::unscored_floor(const MatchBotObservation& view) const
 	return standing;
 }
 
-std::optional<float> MatchBot::sub_throw(const MatchBotObservation& view,
-	const MatchBotObservation::Enemy& enemy, float movement) const
+std::optional<float> MatchBot::sub_use(const MatchBotObservation& view,
+	const MatchBotObservation::Enemy* enemy, bool engaging, float movement) const
 {
 	if (!view.sub || !view.sub_ready) { return std::nullopt; }
 	const SubTuning& sub = this->tuning_->sub(*view.sub);
-	// The throw must leave the bot able to keep fighting: a throw that would
-	// start a refill at once is held. Endless paint spends nothing.
+	// The sub must leave the bot able to keep fighting: one that would start
+	// a refill at once is held. Endless paint spends nothing.
 	if (view.refill_enabled && view.ammo - sub.cost / this->tuning_->starting_ammo() <=
 		this->tuning_->bots().reserve_low) { return std::nullopt; }
-	// The roller throws along its tilt, on the side the bot faces this step.
-	std::optional<float> fixed;
-	if (view.weapon == WeaponType::roller)
+	const bool right = movement > 0.0f || (movement == 0.0f && view.facing_right);
+	switch (*view.sub)
 	{
-		const bool right = movement > 0.0f || (movement == 0.0f && view.facing_right);
-		const float tilt = this->tuning_->weapon(WeaponType::roller).aim_tilt;
-		fixed = right ? -tilt : pi + tilt;
+	case SubType::wall:
+	{
+		// A wall goes down between the bot and a visible enemy whose tool
+		// reaches it and whose shots the wall would stand in: no higher than
+		// its top, no lower than the bot's floor. Set down reach to that
+		// side, it has to land short of the enemy, so one closer is fought.
+		if (enemy == nullptr || !view.grounded) { return std::nullopt; }
+		const Vector2F gap = enemy->center - view.center;
+		const Vector2F wall = sub.body.details.col_rect_size;
+		const float clear = sub.reach + wall.x * 0.5f + view.size.x * 0.5f;
+		if (gap.y > view.size.y * 0.5f || gap.y < view.size.y * 0.5f - wall.y || std::fabs(gap.x) <= clear ||
+			gap.length_squared() > enemy->engage_distance * enemy->engage_distance) { return std::nullopt; }
+		// The roller sets it down on the side it faces, so it waits to face the enemy.
+		if (this->roller_throw(view, right) && right != (gap.x > 0.0f)) { return std::nullopt; }
+		return gap.x > 0.0f ? 0.0f : pi;
 	}
-	return match_bot_ballistics::throw_angle(sub, view.velocity, enemy.center - view.center,
-		enemy.velocity, fixed, this->tuning_->bots().sub_throw_miss);
+	case SubType::sprinkler:
+	{
+		// A sprinkler is planted on scoring floor its team has not painted,
+		// a few strides ahead where the bot is heading, while no enemy is
+		// engaged: a fight is the grenade's business.
+		if (engaging || this->finishing() || !view.grounded || view.footing == MatchBotFooting::own ||
+			this->unscored_floor(view)) { return std::nullopt; }
+		const Vector2F ahead((right ? 1.0f : -1.0f) * view.size.x * 3.0f, view.size.y * 0.5f);
+		return match_bot_ballistics::throw_angle(sub, view.velocity, ahead, {},
+			this->roller_throw(view, right), this->tuning_->bots().sub_throw_miss);
+	}
+	case SubType::grenade:
+	case SubType::count:
+		break;
+	}
+	// The grenade is thrown at any visible enemy a flight from this pose reaches.
+	if (enemy == nullptr) { return std::nullopt; }
+	return match_bot_ballistics::throw_angle(sub, view.velocity, enemy->center - view.center,
+		enemy->velocity, this->roller_throw(view, right), this->tuning_->bots().sub_throw_miss);
+}
+
+std::optional<float> MatchBot::roller_throw(const MatchBotObservation& view, bool right) const
+{
+	// The roller throws along its tilt, on the side the bot faces this step.
+	if (view.weapon != WeaponType::roller) { return std::nullopt; }
+	const float tilt = this->tuning_->weapon(WeaponType::roller).aim_tilt;
+	return right ? -tilt : pi + tilt;
 }
 
 void MatchBot::decide(const MatchBotObservation& view)
@@ -419,12 +455,12 @@ void MatchBot::decide(const MatchBotObservation& view)
 	// only drains the reserve the bot needs on reaching scoring ground.
 	this->decision_.primary_shoot = !this->refilling_ && (!view.refill_enabled || !view.shot_empty) &&
 		(targeted || !this->unscored_floor(view));
-	// A sub is thrown on a reaction, at the enemy being engaged, mid-climb
+	// A sub is used on a reaction, each to its own rule (sub_use), mid-climb
 	// never. The throw takes the aim for this step, with the decision's drawn
 	// error, and the tool holds its shot so the tank pays for the throw.
-	if (enemy != nullptr && !this->refilling_ && !this->ascending_ && !this->climbing_ramp_ && !recovering)
+	if (!this->refilling_ && !this->ascending_ && !this->climbing_ramp_ && !recovering)
 	{
-		if (const std::optional<float> throw_angle = this->sub_throw(view, *enemy, this->decision_.x_movement))
+		if (const std::optional<float> throw_angle = this->sub_use(view, enemy, engaging, this->decision_.x_movement))
 		{
 			const float angle = *throw_angle + this->aim_error_;
 			this->decision_.shoot_angle = angle;

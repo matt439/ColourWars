@@ -2364,8 +2364,7 @@ breaks on its third enemy shot but not on its own team's.
 
 Left for later, by plan: a sprinkler planted on a moving platform stays
 where it stuck rather than riding it, and on a wall or ceiling it still
-sprays upward; a bot given one throws it as it would a grenade (slice 6
-teaches bots where to plant it).
+sprays upward. Slice 6 taught bots where to plant it.
 
 **Slice 4, done 2026-11-09.** The paint wall is `SubType::wall`. The
 sprinkler's planted behaviour moved into an abstract `ProjectilePlanted`
@@ -2390,8 +2389,8 @@ hit.
 
 Left for later, by plan: a wall set down over a gap falls until it lands or
 its body's `delete_timer` (1 s) ends it; one set down against a step is
-not moved clear of it, and plants where it touches; a bot given one sets it
-down as it would throw a grenade (slice 6).
+not moved clear of it, and plants where it touches. Slice 6 taught bots when
+to set it down.
 
 **Slice 5, first part, done 2026-11-09.** Each row on Weapon Select picks its
 tool, then its sub: A moves from the tool to the sub, Left/Right cycles the
@@ -2424,6 +2423,45 @@ line for each device, and the countdown reminder names Sub
 (`{sub}`, `{pad_sub}`). The `input_bindings`, `keyboard_jump_capture`,
 `player_profiles`, `sub_weapons`, `menu_text` and `locales` cases check the
 domains, defaults, conflicts, save migration, capture and copy.
+
+**Slice 6, done 2026-11-09.** Bots use each sub by its own rule
+(`MatchBot::sub_use`), on the same reaction steps, holds and aim error as the
+grenade. The grenade is thrown as before, at a visible enemy a flight
+reaches. The sprinkler is planted while no enemy is engaged, standing on
+scoring floor the bot's team has not painted: a throw that lands within
+`bots.sub_throw_miss` of the floor three body widths ahead, where the bot is
+heading. The wall goes down when a visible enemy's tool reaches the bot, the
+enemy is no higher than the wall's top and no lower than the bot's floor, and
+far enough away that the wall, set down `reach` to that side, lands between
+them; a roller bot waits until it faces that way, since its sub goes down on
+the side it faces. The `sub_weapons` case checks every difficulty and tool
+against each rule and its holds, and a real bot round per sub under each
+refill rule.
+
+The balance pass ran 1,440 one-minute bot rounds on the Linux harness: one
+Normal bot a side on crossfeed, close_quarters and king_of_the_hill, both
+sides carrying the same tool, each of the five tools, eight seeds, each side
+in turn, one side carrying the grenade and the other each sub. The measure
+is that side's share of the painted area; grenade against grenade averaged
+0.50 (0.49 after the change), the noise being about 0.03.
+
+| Side's sub, against the grenade | Standard | Endless, before | Endless, after |
+|---|---|---|---|
+| Sprinkler | 0.49 | 0.41 | 0.44 |
+| Paint wall | 0.48 | 0.39 | 0.42 |
+
+Under the refill rule, where the half-tank cost paces every sub, the three
+are level within the noise, so every sub keeps the decided half-tank cost.
+Under Endless paint the cooldown alone paces them and the grenade led, being
+the only sub that also hits an enemy. Its cooldown moves from 2.5 s to 3.5 s
+and the sprinkler's and wall's from 4 s to 3 s, which narrows the gap without
+changing the refill rule's result. What is left is mostly the bots' play: a
+roller bot never sets a wall against another roller, whose reach is shorter
+than the wall's, and loses the most with either planted sub (0.30 to 0.33
+under Endless paint); a sniper bot rarely finds a grenade throw, so either
+planted sub beats its grenade (0.58 to 0.63). Those are bot policy and a
+human's play, not costs, and are left to the author's play review. The
+measuring probe was a scratch case and is not kept.
 
 ### Input
 
