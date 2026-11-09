@@ -11,12 +11,13 @@
 #include "game/objects/projectile_wall.h"
 #include "game/objects/sub_weapon.h"
 #include "game/objects/weapon_builder.h"
+#include "game/states/loadout_choice.h"
 #include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
 #include <cmath>
 #include <iostream>
 
-// ROAD#11, slices 1 to 4: the paint grenade end to end. Its tuning and what
+// ROAD#11, slices 1 to 5: the paint grenade end to end. Its tuning and what
 // the loader refuses; the shared tank's sub cost and Endless paint; the
 // grenade's throw, cooldown and burst; every built player carrying one; the
 // Sub action's default controls and their fallbacks; a real round in which a
@@ -26,7 +27,9 @@
 // it sticks, how long it sprays, what it touches and what breaks it; and
 // the paint wall: where a player sets it down, and in a real round that it
 // stands on the floor, stops enemy shots and not its own team's, paints
-// beneath itself, breaks and expires.
+// beneath itself, breaks and expires; and the loadout: Weapon Select's
+// tool-then-sub steps, Random, the sub line's copy, and the HUD's readiness
+// mark.
 
 namespace
 {
@@ -765,6 +768,88 @@ namespace
             << tuning.hits << "th hit\n";
     }
 
+namespace
+{
+    // Weapon Select's row (LoadoutChoice), the sub line's copy, and what a
+    // pane's HUD shows of the sub (Level::sub_hud_cue).
+    void check_loadout(World& world)
+    {
+        using Step = LoadoutChoice::Step;
+        LoadoutChoice row(WeaponType::roller, SubType::sprinkler);
+        require(row.step() == Step::tool && row.tool() == WeaponType::roller &&
+            row.sub_choice() == static_cast<size_t>(SubType::sprinkler), "A row starts on its tool, keeping the sub it came with");
+        require(!row.back() && row.step() == Step::tool, "Back on the tool has nothing to undo");
+        require(row.cycle(Direction::right) && row.tool() == WeaponType::mister &&
+            row.sub_choice() == static_cast<size_t>(SubType::sprinkler), "Left/Right on the tool changes only the tool");
+        require(!row.cycle(Direction::up) && row.tool() == WeaponType::mister, "Up/Down is P1's row move, not a choice");
+        require(row.proceed() && row.step() == Step::sub, "A moves from the tool to the sub");
+        require(row.cycle(Direction::right) && row.sub_choice() == static_cast<size_t>(SubType::wall) &&
+            row.tool() == WeaponType::mister, "Left/Right on the sub changes only the sub");
+        require(row.cycle(Direction::right) && row.sub_choice() == LoadoutChoice::random_sub &&
+            row.cycle(Direction::right) && row.sub_choice() == static_cast<size_t>(SubType::grenade) &&
+            row.cycle(Direction::left) && row.sub_choice() == LoadoutChoice::random_sub,
+            "The subs wrap through Random");
+        require(row.proceed() && row.step() == Step::ready && !row.proceed() && !row.cycle(Direction::left) &&
+            row.sub_choice() == LoadoutChoice::random_sub, "A readies the row, which then holds its choices");
+        require(row.back() && row.step() == Step::sub && row.back() && row.step() == Step::tool,
+            "Back steps from ready to the sub and from the sub to the tool");
+        for (unsigned int draw = 0; draw < 6; ++draw)
+        {
+            require(row.resolved_sub(draw) == static_cast<SubType>(draw % sub_count), "Random draws each sub");
+        }
+        require(LoadoutChoice(WeaponType::random_primary, SubType::wall).resolved_sub(5) == SubType::wall,
+            "A concrete sub ignores the draw");
+        bool refused = false;
+        try { static_cast<void>(LoadoutChoice(WeaponType::sprayer, SubType::count)); }
+        catch (const std::invalid_argument&) { refused = true; }
+        require(refused, "A row refuses an unresolved sub");
+
+        // Every choice has a name and a description, and its line in both
+        // steps names it after the Boost label.
+        const MenuText& text = world.assets.presentation.menu_text();
+        const SubMenuText& copy = text.subs;
+        for (size_t choice = 0; choice < SubMenuText::choice_count; ++choice)
+        {
+            const std::wstring boost = text.handicap_label(2);
+            const std::wstring line = copy.label(choice, false, boost);
+            const std::wstring choosing = copy.label(choice, true, boost);
+            require(!copy.names[choice].empty() && !copy.descriptions[choice].empty() &&
+                line.find(boost) == 0 && choosing.find(boost) == 0 &&
+                line.find(copy.names[choice]) != std::wstring::npos &&
+                choosing.find(copy.names[choice]) != std::wstring::npos && line != choosing,
+                "Each sub's line and choosing line follow the Boost label, name it and differ");
+        }
+
+        // The HUD: ready with a full tank, not once spent, the tick at its cost.
+        const GameTuning& tuning = world.assets.tuning;
+        MatchSetup settings = setup(MatchVariant::standard, false);
+        settings.set_duration(120.0f);
+        settings.set_player_sub(1, SubType::wall);
+        auto level = world.level(settings);
+        level->start_without_countdown();
+        const Player& player = level->player(0);
+        SubHudCue cue = level->sub_hud_cue(player);
+        require(cue.shown && cue.ready &&
+            close_to(cue.cost, tuning.sub(SubType::grenade).cost / tuning.starting_ammo()),
+            "A full tank shows the sub ready, with the tick at its cost");
+        std::vector<PlayerInputData> inputs(input_slots::count);
+        inputs[0] = throwing(Vector2F::direction_up);
+        level->update(inputs, dt);
+        cue = level->sub_hud_cue(player);
+        require(cue.shown && !cue.ready, "A spent sub shows not ready");
+        require(level->player(1).sub_weapon()->type() == SubType::wall, "The other seat carries its own sub");
+
+        MatchSetup endless = setup(MatchVariant::endless_paint, false);
+        endless.set_duration(120.0f);
+        auto endless_level = world.level(endless);
+        endless_level->start_without_countdown();
+        const SubHudCue free = endless_level->sub_hud_cue(endless_level->player(0));
+        require(free.shown && free.ready && free.cost == 0.0f, "Endless paint shows readiness without a cost tick");
+        std::cout << "PASS loadout: tool then sub then ready, back steps, Random draws each sub, every sub's copy; "
+            "HUD readiness and cost tick, none under Endless paint\n";
+    }
+}
+
 int wmain(int argc, wchar_t* argv[])
 {
     return acceptance::run_probe("sub weapons", [&]
@@ -782,6 +867,7 @@ int wmain(int argc, wchar_t* argv[])
         check_bot_round(world);
         check_sprinkler(world);
         check_wall(world);
+        check_loadout(world);
         return 0;
     });
 }

@@ -117,7 +117,8 @@ namespace debug_console_acceptance
 		every.players = 4;
 		every.seats = { seat_choice(1, "bot", "easy"), seat_choice(1, "boost", "2"),
 			seat_choice(1, "team", "a"), seat_choice(2, "bot", "hard"), seat_choice(2, "team", "a"),
-			seat_choice(0, "team", "b"), seat_choice(3, "boost", "1"), seat_choice(0, "boost", "1") };
+			seat_choice(0, "team", "b"), seat_choice(3, "boost", "1"), seat_choice(0, "boost", "1"),
+			seat_choice(1, "sub", "wall"), seat_choice(2, "sub", "random"), seat_choice(0, "sub", "sprinkler") };
 		MatchPlan plan = planner.resolve(nullptr, every, all_pads, random);
 		require(plan.ok, "A plan with every seat field resolves: " + plan.error);
 		const std::vector<SeatSetup> seats = plan.settings.player_settings();
@@ -132,6 +133,9 @@ namespace debug_console_acceptance
 		require(seats[3].controller == PlayerController::human && seats[3].num == 1 &&
 			seats[3].team == PlayerTeam::b && seats[3].handicap == 1,
 			"Seat 4: the next pad, parity team b, Boost 1");
+		require(seats[0].sub == SubType::sprinkler && seats[1].sub == SubType::wall &&
+			static_cast<std::size_t>(seats[2].sub) < sub_count && seats[3].sub == SubType::grenade,
+			"seat <n> sub sets each seat's sub, Random draws a concrete one and the rest keep the grenade");
 		require(plan.settings.human_count() == 2 &&
 			plan.settings.screen_layout() == labrador::ScreenLayout::two_player,
 			"Bots have no pane: the layout follows the humans");
@@ -192,6 +196,9 @@ namespace debug_console_acceptance
 		MatchRequest::SeatChoice team = seat_choice(1, "team", "a");
 		team.value = "none";
 		refused({ team }, 2, "team must be a or b", "A team other than a or b is refused");
+		MatchRequest::SeatChoice sub = seat_choice(1, "sub", "wall");
+		sub.value = "mine";
+		refused({ sub }, 2, "sub must be grenade, sprinkler, wall or random", "An unknown sub is refused");
 		MatchRequest::SeatChoice difficulty = seat_choice(1, "bot", "easy");
 		difficulty.value = "expert";
 		refused({ difficulty }, 2, "easy, normal or hard", "An unknown difficulty is refused");
@@ -244,6 +251,7 @@ namespace debug_console_acceptance
 		fails("seat 2 bot expert", "easy, normal or hard");
 		fails("seat 2 human now", "human takes no value");
 		fails("seat 2 colour b", "unknown field");
+		fails("seat 2 sub mine", "sub must be grenade, sprinkler, wall or random");
 		require(impl.request().seats.empty(), "Refused seat statements queue nothing");
 		const DebugStatus stored = impl.execute("seat 3 bot easy");
 		require(stored.ok && log_contains(impl.log(), "seat 3 bot easy: stored for 'stage <name>'",

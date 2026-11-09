@@ -2393,6 +2393,27 @@ its body's `delete_timer` (1 s) ends it; one set down against a step is
 not moved clear of it, and plants where it touches; a bot given one sets it
 down as it would throw a grenade (slice 6).
 
+**Slice 5, first part, done 2026-11-09.** Each row on Weapon Select picks its
+tool, then its sub: A moves from the tool to the sub, Left/Right cycles the
+grenade, sprinkler, paint wall and Random, and A again readies the row; B
+steps back one step at a time ([LoadoutChoice](../game/states/loadout_choice.h)).
+The sub is named on the row's Boost line (`menu_text.subs`), and its
+description takes the tool's place while it is chosen, so each row keeps its
+height. Random draws when every row is ready, as the tool's does. The seat's
+sub goes into the remembered setup (save version 8, `last_match.players[].sub`,
+omitted for the grenade), the Debug plan (`seat <n> sub
+grenade|sprinkler|wall|random`) and replays (format 11, each seat's `sub`,
+omitted for the grenade). The HUD marks readiness after the PAINT label: a
+keylined square, solid ink when a press would release the sub, paper when not,
+and an ink tick across the PAINT meter at the sub's cost outside Endless
+paint (`hud.sub_mark`). The `sub_weapons` case checks the row's steps and
+Random, the copy and the HUD's cue; `remembered_setup` the save; the Debug
+console's roster checks the plan.
+
+Left for the rest of slice 5: the Sub action is not on the Controls pages, so
+it is still not rebindable, and the controls help and in-match reminder do not
+name it.
+
 ### Input
 
 - **Non-XInput controllers (`ROAD#23`).** INVERSUS and most Steam releases

@@ -9,6 +9,15 @@
 #include "game/objects/player_badge.h"
 
 
+// What the HUD shows of a player's sub weapon (ROAD#11). `cost` is the
+// sub's share of a full tank; zero (Endless paint, or no sub) draws no tick.
+struct SubHudCue
+{
+    bool shown = false;
+    bool ready = false;
+    float cost = 0.0f;
+};
+
 class InterfaceGameplay
 {
 public:
@@ -50,6 +59,7 @@ public:
     // `low_paint` tags the PAINT label (POL#38); it blinks with the tool's
     // simulated low-paint age unless effects are reduced. Untimed practice
     // passes show_clock false and the clock panel is not drawn at all.
+    // `sub` marks the sub weapon's readiness after the PAINT label.
     void draw_gameplay_interface_prepared(labrador::DrawList& draw_list,
         const labrador::Vector2F& resolution,
         int player_index,
@@ -62,7 +72,8 @@ public:
         bool clock_running = true,
         bool low_paint = false,
         float low_paint_elapsed = 0.0f,
-        bool show_clock = true) const;
+        bool show_clock = true,
+        const SubHudCue& sub = {}) const;
 
     // "P1  /  TEAM A\n" followed by the device label: the identity box's text.
     // The team label is menu_text.hud's (HudPresentation::labels); the
@@ -87,6 +98,11 @@ private:
         const std::wstring& label,
         float scale,
         bool tagged = false) const;
+    void draw_sub_mark(labrador::DrawList& draw_list,
+        const labrador::Vector2F& resolution,
+        const labrador::Vector2F& meter_position,
+        const SubHudCue& sub,
+        float scale) const;
     void draw_timer(labrador::DrawList& draw_list,
         const labrador::Vector2F& resolution,
         float timer,

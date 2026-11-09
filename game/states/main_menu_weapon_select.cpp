@@ -4,6 +4,7 @@
 #include "game/objects/crude_drawing.h"
 #include "game/carried/ui_text_drop_shadow.h"
 #include "game/states/player_label.h"
+#include "game/states/loadout_choice.h"
 
 using namespace labrador;
 
@@ -37,6 +38,7 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
+		LoadoutChoice& loadout = this->select_states_[i].loadout;
 		if (inputs[i].action == MenuInputAction::back)
 		{
 			if (can_leave)
@@ -56,12 +58,18 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 				}
 				return;
 			}
-			if (this->select_states_[i].state ==
-				ConfirmationState::confirmed)
+			// Ready steps back to the sub, the sub back to the tool.
+			const bool was_ready = loadout.step() == LoadoutChoice::Step::ready;
+			if (loadout.back())
 			{
-				this->play_wave(this->unready_sound_, this->look().unready_sound.volume);
-				this->select_states_[i].state =
-					ConfirmationState::unconfirmed;
+				if (was_ready)
+				{
+					this->play_wave(this->unready_sound_, this->look().unready_sound.volume);
+				}
+				else
+				{
+					this->play_wave(this->cancel_sound_);
+				}
 				this->player_widgets_[i]->motion.press();
 			}
 			// Continue so other players can act in the same frame.
@@ -69,45 +77,35 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 		else if (inputs[i].action == MenuInputAction::proceed)
 		{
 			this->play_wave(this->confirm_sound_);
-			if (this->select_states_[i].state != ConfirmationState::confirmed)
+			if (loadout.proceed())
 			{
 				this->player_widgets_[i]->motion.press();
 			}
-			this->select_states_[i].state = ConfirmationState::confirmed;
 		}
 		else if (inputs[i].action == MenuInputAction::shuffle)
 		{
 			// Weapon Select has no shuffle; the same button changes the handicap.
-			if (this->select_states_[i].state == ConfirmationState::unconfirmed)
+			if (loadout.step() != LoadoutChoice::Step::ready)
 			{
 				this->play_wave(this->direction_sound_);
 				this->cycle_handicap(i);
 			}
 		}
-		else if (this->select_states_[i].state ==
-			ConfirmationState::unconfirmed)
+		else if (loadout.step() != LoadoutChoice::Step::ready &&
+			(inputs[i].direction == labrador::Direction::left ||
+				inputs[i].direction == labrador::Direction::right))
 		{
-			if (inputs[i].direction == labrador::Direction::left)
+			this->play_wave(this->direction_sound_);
+			if (loadout.cycle(inputs[i].direction))
 			{
-				this->play_wave(this->direction_sound_);
-				this->cycle_weapons(labrador::Direction::left, i);
-			}
-			else if (inputs[i].direction == labrador::Direction::right)
-			{
-				this->play_wave(this->direction_sound_);
-				this->cycle_weapons(labrador::Direction::right, i);
+				// The icon is reused for every tool, so its enum is the
+				// selection identity; the sub line moves with it too.
+				this->player_widgets_[i]->motion.selection_changed();
 			}
 		}
 	}
 	if (this->all_players_confirmed())
 	{
-		for (int i = 0; i < this->player_count(); i++)
-		{
-			if (this->select_states_[i].type == WeaponType::random_primary)
-			{
-				this->select_states_[i].type = random_weapon();
-			}
-		}
 		this->set_level_settings();
 		this->go_to(MainMenuRoute::re_pick(MainMenuScreen::stage_select, this->between_rounds(),
 			PlayerTeam::none, this->round_replay()));
@@ -119,8 +117,12 @@ void MainMenuWeaponSelect::set_level_settings() const
 {
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		this->level_settings()->
-			set_player_weapon(i, this->select_states_[i].type);
+		const LoadoutChoice& loadout = this->select_states_[i].loadout;
+		const WeaponType tool = loadout.tool();
+		this->level_settings()->set_player_weapon(i,
+			tool == WeaponType::random_primary ? random_weapon() : tool);
+		this->level_settings()->set_player_sub(i,
+			loadout.resolved_sub(static_cast<unsigned int>(rand())));
 		this->level_settings()->
 			set_player_handicap(i, this->select_states_[i].handicap);
 	}
@@ -130,29 +132,22 @@ WeaponType MainMenuWeaponSelect::random_weapon()
 	int random = rand() % static_cast<int>(WeaponType::max_prim_wep);
 	return static_cast<WeaponType>(random);
 }
-void MainMenuWeaponSelect::cycle_weapons(
-	labrador::Direction direction, int player_index)
-{
-	const WeaponType previous = this->select_states_[player_index].type;
-	this->select_states_[player_index].type = step_tool(previous, direction, selectable_weapon_count);
-	if (this->select_states_[player_index].type != previous)
-	{
-		// The icon is reused for every tool, so its enum is the selection identity.
-		this->player_widgets_[player_index]->motion.selection_changed();
-	}
-}
 void MainMenuWeaponSelect::cycle_handicap(int player_index)
 {
 	SelectState& row = this->select_states_[static_cast<size_t>(player_index)];
+	// The row's line shows it from the next visual update.
 	row.handicap = (row.handicap + 1) % handicaps::count;
-	this->player_widgets_[static_cast<size_t>(player_index)]->handicap->set_text(
-		this->text().handicap_label(row.handicap));
+}
+std::wstring MainMenuWeaponSelect::handicap_and_sub_line(const SelectState& row) const
+{
+	return this->text().subs.label(row.loadout.sub_choice(),
+		row.loadout.step() == LoadoutChoice::Step::sub, this->text().handicap_label(row.handicap));
 }
 bool MainMenuWeaponSelect::all_players_confirmed() const
 {
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		if (this->select_states_[i].state != ConfirmationState::confirmed)
+		if (this->select_states_[i].loadout.step() != LoadoutChoice::Step::ready)
 		{
 			return false;
 		}
@@ -163,7 +158,7 @@ bool MainMenuWeaponSelect::all_players_unconfirmed() const
 {
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		if (this->select_states_[i].state == ConfirmationState::confirmed)
+		if (this->select_states_[i].loadout.step() != LoadoutChoice::Step::tool)
 		{
 			return false;
 		}
@@ -179,11 +174,18 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 	// and the live presentation, so they are still set every tick.
 	this->displayed_weapons_.resize(static_cast<size_t>(this->player_count()),
 		WeaponType::none);
+	this->displayed_subs_.resize(static_cast<size_t>(this->player_count()));
 
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		const WeaponType type = this->select_states_[i].type;
+		const SelectState& row = this->select_states_[i];
+		const LoadoutChoice& loadout = row.loadout;
+		const WeaponType type = loadout.tool();
 		WeaponType& displayed = this->displayed_weapons_[static_cast<size_t>(i)];
+		// The Boost and sub line, and the description, which is the sub's
+		// while the sub is chosen (ROAD#11), follow the step and the sub.
+		DisplayedSub& shown_sub = this->displayed_subs_[static_cast<size_t>(i)];
+		const DisplayedSub sub{ loadout.sub_choice(), loadout.step() == LoadoutChoice::Step::sub, row.handicap };
 		if (displayed != type)
 		{
 			const WeaponChoicePresentation& choice =
@@ -191,12 +193,18 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame(
 				choice.frame, choice.paint_frame, choice.supply_strip);
 			this->player_widgets_[i]->weapon_name->set_text(choice.name);
-			this->player_widgets_[i]->weapon_description->set_text(
-				this->weapon_description(type));
 			displayed = type;
+			shown_sub = DisplayedSub{};
+		}
+		if (shown_sub != sub)
+		{
+			this->player_widgets_[i]->handicap->set_text(this->handicap_and_sub_line(row));
+			this->player_widgets_[i]->weapon_description->set_text(sub.choosing ?
+				this->text().subs.descriptions.at(sub.choice) : this->weapon_description(type));
+			shown_sub = sub;
 		}
 
-		if (this->select_states_[i].state == ConfirmationState::confirmed)
+		if (loadout.step() == LoadoutChoice::Step::ready)
 		{
 			this->player_widgets_[i]->weapon_icon->
 				set_colour(this->look().weapon_select.selected);
@@ -272,12 +280,11 @@ void MainMenuWeaponSelect::init()
 	for (int i = 0; i < this->player_count(); i++)
 	{
 		SelectState state;
-		state.state = ConfirmationState::unconfirmed;
-		state.type = this->level_settings()
-			->player_weapon(i);
+		state.loadout = LoadoutChoice(this->level_settings()->player_weapon(i),
+			this->level_settings()->player_sub(i));
 		state.handicap = this->level_settings()->player_handicap(i);
 		const WeaponChoicePresentation& choice =
-			this->weapon_select_art_.choice(state.type);
+			this->weapon_select_art_.choice(state.loadout.tool());
 		this->select_states_.push_back(state);
 
 		auto widgets = std::make_unique<Widgets>(this->menu_style().motion);
@@ -295,7 +302,7 @@ void MainMenuWeaponSelect::init()
 			clear_shadow);
 		widgets->handicap = std::make_unique<colourwars::UiTextDropShadow>(
 			name + "_handicap",
-			this->text().handicap_label(state.handicap),
+			this->handicap_and_sub_line(state),
 			this->look().weapon_description_font,
 			Vector2F(this->calculate_widget_position(0, i + 2).x, widgets->player->bounds().bottom()),
 			this->render_resources(),
@@ -333,7 +340,7 @@ void MainMenuWeaponSelect::init()
 
 		widgets->weapon_description = std::make_unique<WrappedTextDropShadow>(
 			name + "_wep_desc",
-			this->weapon_description(state.type),
+			this->weapon_description(state.loadout.tool()),
 			this->look().weapon_description_font,
 			widgets->weapon_icon->rectangle().position() +
 				Vector2F(this->look().weapon_description_x_offset, 0.0f),
@@ -390,6 +397,7 @@ void MainMenuWeaponSelect::check_paper_geometry() const
 		check(tile, "weapon tile");
 		check(widgets->weapon_name->bounds(), "weapon name");
 		check(widgets->weapon_description->bounds(), "weapon description");
+
 		const float inset_limit = std::max(0.0f,
 			std::min(this->menu_style().icon_padding.x, this->menu_style().icon_padding.y));
 		if (std::min(tile.width, tile.height) - inset_limit * 2.0f <=

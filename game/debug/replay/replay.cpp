@@ -389,7 +389,8 @@ namespace
 				", \"controller\": " << quoted(seats[i].controller == PlayerController::bot ? "bot" : "human") <<
 				", \"difficulty\": " << quoted(difficulty_name(seats[i].controller == PlayerController::bot ?
 					seats[i].difficulty : BotDifficulty::normal, path)) <<
-				(seats[i].handicap != 0 ? ", \"handicap\": " + std::to_string(seats[i].handicap) : std::string()) << " }" <<
+				(seats[i].handicap != 0 ? ", \"handicap\": " + std::to_string(seats[i].handicap) : std::string()) <<
+				(seats[i].sub != SubType::grenade ? std::string(", \"sub\": ") + quoted(sub_name(seats[i].sub)) : std::string()) << " }" <<
 				(i + 1 < seats.size() ? ",\n" : "\n");
 		}
 		out << "    ]\n  },\n";
@@ -602,6 +603,13 @@ namespace
 				const int handicap = entry.integer("handicap");
 				if (!handicaps::valid(handicap)) { fail(path, "seat " + std::to_string(seat + 1) + " has an unknown handicap"); }
 				rebuilt.set_player_handicap(seat, handicap);
+			}
+			// Absent is the grenade (format 11).
+			if (entry.has("sub"))
+			{
+				const std::optional<SubType> sub = sub_from_name(entry.string("sub"));
+				if (!sub) { fail(path, "seat " + std::to_string(seat + 1) + " has an unknown sub"); }
+				rebuilt.set_player_sub(seat, *sub);
 			}
 		}
 		rebuilt.set_stage(setup.string("stage"));

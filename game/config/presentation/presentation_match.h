@@ -177,6 +177,16 @@ struct HudLowPaintPresentation
 	float blink_period = 0.0f;
 };
 
+// The sub weapon's readiness beside the PAINT label (ROAD#11): a keylined
+// square, solid ink when a press would release the sub and paper when it
+// would not, plus an ink tick across the PAINT meter at the sub's cost while
+// the tank is spent on it. HUD reference pixels.
+struct HudSubMarkPresentation
+{
+	float size = 0.0f;
+	float gap = 0.0f;
+};
+
 // A hollow marquee centred on the mouse pointer's hotspot (POL#39), so the
 // small system cursor can be found over pale, dark or painted scenes. It
 // surrounds the aim point without covering it, and never moves aim. Window
@@ -263,6 +273,7 @@ struct HudPresentation
 	float timer_reference_width = 1920.0f;
 	ClosingClockPresentation closing_clock;
 	HudLowPaintPresentation low_paint;
+	HudSubMarkPresentation sub_mark;
 	CursorMarkerPresentation cursor_marker;
 	TeammateMarkerPresentation teammate_marker;
 

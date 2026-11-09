@@ -258,6 +258,9 @@ public:
 	std::vector<labrador::RectangleF> opening_cards() const;
 	std::wstring_view stage_entry_name() const;
 	labrador::RectangleF stage_entry_bounds() const;
+	// What a pane's HUD shows of its player's sub (ROAD#11): ready while a
+	// living player's press would release it; the cost tick outside Endless.
+	SubHudCue sub_hud_cue(const Player& player) const;
 	labrador::RectangleF stage_entry_text_bounds() const;
 	std::wstring_view keyboard_controls_text() const;
 	labrador::RectangleF keyboard_controls_text_bounds() const;

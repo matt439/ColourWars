@@ -336,6 +336,17 @@
       "health": "HEALTH",
       "paint": "PAINT"
     },
+    "subs": {
+      "_comment": "ROAD#11: Weapon Select's line under each player's label: the Boost label, then the sub (line while the tool is chosen and once ready, choosing while the sub is). While the sub is chosen, its description takes the tool's place.",
+      "line": "{handicap}    Sub: {sub}",
+      "choosing": "{handicap}    Sub:  < {sub} >",
+      "choices": {
+        "grenade": { "name": "Grenade", "description": "Lobbed along your aim; bursts into a ring of paint.\nHurts enemies caught in it." },
+        "sprinkler": { "name": "Sprinkler", "description": "Sticks where it lands and sprays paint around it.\nEnemy shots break it." },
+        "wall": { "name": "Paint wall", "description": "Stands beside you and stops enemy shots.\nDrips paint on the floor beneath it." },
+        "random": { "name": "Random", "description": "Randomly selects a sub for you." }
+      }
+    },
     "countdown": {
       "get_ready": "GET READY",
       "resuming": "RESUMING",
@@ -384,7 +395,7 @@
       "join": "A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot",
       "team": "Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel",
       "team_shuffle": "Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams",
-      "weapon": "Left/Right Change weapon    X/R Boost    A/Enter Confirm    B/Esc Cancel",
+      "weapon": "Left/Right Tool, then sub    X/R Boost    A/Enter Confirm    B/Esc Cancel",
       "arena_browse": "Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back",
       "arena_locked": "A/Enter Start match    B/Esc Unlock arena",
       "missing_player": " Reconnect controller    B/Esc Change players",
@@ -393,7 +404,7 @@
       "select": "A/Enter Select",
       "credits": "A/Enter Back    B/Esc Back",
       "bot_team": "P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams",
-      "bot_weapon": "P1 Up/Down Row    Left/Right Tool    X/R Boost    A/Enter Ready    B/Esc Cancel",
+      "bot_weapon": "P1 Up/Down Row    Left/Right Tool, then sub    X/R Boost    A/Enter Ready    B/Esc Cancel",
       "profiles": "D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back",
       "profile_name": "Up/Down Letter    Left/Right Move    A/Enter Done    B/Esc Cancel"
     },
@@ -791,6 +802,11 @@
       "text": "FFF5DF",
       "padding": { "x": 6.0, "y": 2.0 },
       "blink_period": 0.5
+    },
+    "sub_mark": {
+      "_comment": "ROAD#11: a keylined square after the PAINT label, solid ink when a Sub press would release the sub, paper when not; and an ink tick on the PAINT meter at the sub's cost, outside Endless paint. HUD reference pixels.",
+      "size": 14.0,
+      "gap": 10.0
     },
     "closing_clock": {
       "_comment": "Only the final ten positive displayed seconds. The existing font and clock keep their size and position; coarse paper, shade and detached pen ticks use HUD reference pixels. Tick age comes from the current displayed second; Reduce effects retains the settled card.",

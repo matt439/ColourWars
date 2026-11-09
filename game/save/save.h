@@ -44,7 +44,9 @@ public:
 	// 6 adds the flat "vsync" preference; older saves have none and read as
 	// On, which is how they played.
 	// 7 adds "last_match.variant"; absent is Standard, the older match policy.
-	static constexpr int version = 7;
+	// 8 adds each "last_match.players[].sub"; absent is the grenade, which
+	// every older match carried.
+	static constexpr int version = 8;
 
 	Save() = default;
 	// Reads the file, or a legacy one, or keeps the defaults. A SettingsSession

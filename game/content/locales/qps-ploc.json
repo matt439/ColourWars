@@ -234,6 +234,16 @@
         "health": "[HEALTH]",
         "paint": "[PAINT]"
       },
+      "subs": {
+        "line": "[{handicap}    Sub: {sub}]",
+        "choosing": "[{handicap}    Sub:  < {sub} >]",
+        "choices": {
+          "grenade": { "name": "[Grenade]", "description": "[Lobbed along your aim; bursts into a ring of paint.]\n[Hurts enemies caught in it.]" },
+          "sprinkler": { "name": "[Sprinkler]", "description": "[Sticks where it lands and sprays paint around it.]\n[Enemy shots break it.]" },
+          "wall": { "name": "[Paint wall]", "description": "[Stands beside you and stops enemy shots.]\n[Drips paint on the floor beneath it.]" },
+          "random": { "name": "[Random]", "description": "[Randomly selects a sub for you.]" }
+        }
+      },
       "countdown": {
         "get_ready": "[GET READY]",
         "resuming": "[RESUMING]",
@@ -282,7 +292,7 @@
         "join": "[A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot]",
         "team": "[Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel]",
         "team_shuffle": "[Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams]",
-        "weapon": "[Left/Right Change weapon    X/R Boost    A/Enter Confirm    B/Esc Cancel]",
+        "weapon": "[Left/Right Tool, then sub    X/R Boost    A/Enter Confirm    B/Esc Cancel]",
         "arena_browse": "[Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back]",
         "arena_locked": "[A/Enter Start match    B/Esc Unlock arena]",
         "missing_player": "[ Reconnect controller    B/Esc Change players]",
@@ -291,7 +301,7 @@
         "select": "[A/Enter Select]",
         "credits": "[A/Enter Back    B/Esc Back]",
         "bot_team": "[P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams]",
-        "bot_weapon": "[P1 Up/Down Row    Left/Right Tool    X/R Boost    A/Enter Ready    B/Esc Cancel]",
+        "bot_weapon": "[P1 Up/Down Row    Left/Right Tool, then sub    X/R Boost    A/Enter Ready    B/Esc Cancel]",
         "profiles": "[D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back]",
         "profile_name": "[Up/Down Letter    Left/Right Move    A/Enter Done    B/Esc Cancel]"
       },

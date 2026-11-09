@@ -32,8 +32,8 @@ complete (2026-11-07), recorded in [their owner](docs/code-hygiene.md#hygiene-re
 The review's engine draft, `ENG#35`, still waits on the author's filing decision.
 `ROAD#22`'s endless-paint slice is complete (2026-11-07), recorded in the
 [roadmap](docs/feature-roadmap.md#endless-paint-road22). `ROAD#11` (sub weapons) is the work in hand: the
-paint grenade, bots throwing it, the sprinkler and the paint wall are complete (2026-11-09); the
-loadout row on Weapon Select is next.
+paint grenade, bots throwing it, the sprinkler, the paint wall and picking a sub on Weapon Select
+are complete (2026-11-09); the Sub action on the Controls pages is next.
 Art (`POL#16`) is unblocked but stays deferred. Bot lift routing, sponges and the controller
 rows remain unscoped.
 
@@ -57,7 +57,7 @@ excluded modes.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ROAD#11` | OPEN | MED | XL | Sub weapons: grenade, sprinkler and paint wall as a loadout pick beside the tool, costing half the paint tank (all decided 2026-11-08), in seven slices. Slices 1 to 4, the grenade end to end, bots throwing it, the sprinkler and the paint wall, are done (2026-11-09); next, the loadout row on Weapon Select, Controls page, HUD mark and save. [Plan](docs/feature-roadmap.md#sub-weapons-road11). |
+| `ROAD#11` | OPEN | MED | XL | Sub weapons: grenade, sprinkler and paint wall as a loadout pick beside the tool, costing half the paint tank (all decided 2026-11-08), in seven slices. Slices 1 to 4 and most of 5 are done (2026-11-09): the grenade end to end, bots throwing it, the sprinkler, the paint wall, and the sub picked on Weapon Select, saved, planned and replayed, with its HUD mark. Next, the Sub action on the Controls pages, which finishes slice 5. [Plan](docs/feature-roadmap.md#sub-weapons-road11). |
 | `ROAD#13` | UNSCOPED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#14` | UNSCOPED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#28` | UNSCOPED | MED | L | Cycling and paint-driven lifts are done (2026-11-03, Lift and Paint Lift Trials; trial values accepted 2026-11-05). Left: deliberate bot lift routing, including a stuck check that discounts carried y; never scoped. [Slice](docs/feature-roadmap.md#paint-driven-lift-second-slice-road28) |

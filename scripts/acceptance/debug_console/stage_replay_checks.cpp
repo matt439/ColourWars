@@ -144,7 +144,7 @@ namespace debug_console_acceptance
                 {
                     out << '|' << seat.num << ':' << static_cast<int>(seat.team) << ':' << static_cast<int>(seat.weapon)
                         << ':' << static_cast<int>(seat.controller) << ':' << static_cast<int>(seat.difficulty)
-                        << ':' << seat.handicap;
+                        << ':' << seat.handicap << ':' << static_cast<int>(seat.sub);
                 }
                 for (const int device : settings.pad_devices()) { out << '|' << device; }
             }

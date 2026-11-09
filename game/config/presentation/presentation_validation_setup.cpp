@@ -358,6 +358,14 @@ void Presentation::Validation::validate_team_and_weapon_labels(const RosterPaper
 			weapon_contents = RectangleF::union_of(weapon_contents,
 				shadow_bounds(description_position, description_size, main.weapon_description_shadow_offset));
 		}
+		// A sub's description takes the tool's place while the sub is chosen (ROAD#11).
+		for (const std::wstring& sub_description : this->presentation.menu_text_.subs.descriptions)
+		{
+			const Vector2F description_position = weapon_canvas_position + Vector2F(main.weapon_description_x_offset, 0.0f);
+			const std::wstring wrapped = render.wrap_text(name_font, sub_description, main.weapon_description_max_width);
+			weapon_contents = RectangleF::union_of(weapon_contents, shadow_bounds(description_position,
+				render.measure_text(name_font, wrapped), main.weapon_description_shadow_offset));
+		}
 		for (int slot = 0; slot < (player == 0 ? input_slots::count : label_choices); ++slot)
 		{
 			const std::wstring words = label_words(player, slot);
@@ -388,16 +396,27 @@ void Presentation::Validation::validate_team_and_weapon_labels(const RosterPaper
 					"handicap_none", "handicap_plus_one", "handicap_plus_two" };
 				const std::string handicap_key = std::string("menu_text.labels.") +
 					handicap_roles[static_cast<size_t>(level)] + " at Weapon Select";
-				const RectangleF handicap = shadow_bounds(Vector2F(weapon_position.x, weapon_label.bottom()),
-					label_size(handicap_key, this->presentation.menu_text_.handicap_label(level), main.weapon_description_font),
-					Vector2F(2.0f, 2.0f));
-				check_label_bounds(handicap_key, handicap, weapon_inside);
-				if (handicap.right() > weapon_tile.x)
+				// The line also names the row's sub (menu_text.subs), every
+				// choice in both steps.
+				for (size_t sub = 0; sub < SubMenuText::choice_count; ++sub)
 				{
-					throw std::runtime_error(this->presentation.source_path_ + ": " + handicap_key +
-						" must end before the first weapon tile including its border.");
+					for (const bool choosing : { false, true })
+					{
+						const std::string line_key = handicap_key + " with menu_text.subs." +
+							(choosing ? "choosing " : "line ") + (sub < sub_count ? sub_names[sub] : "random");
+						const RectangleF handicap = shadow_bounds(Vector2F(weapon_position.x, weapon_label.bottom()),
+							label_size(line_key, this->presentation.menu_text_.subs.label(sub, choosing,
+								this->presentation.menu_text_.handicap_label(level)), main.weapon_description_font),
+							Vector2F(2.0f, 2.0f));
+						check_label_bounds(line_key, handicap, weapon_inside);
+						if (handicap.right() > weapon_tile.x)
+						{
+							throw std::runtime_error(this->presentation.source_path_ + ": " + line_key +
+								" must end before the first weapon tile including its border.");
+						}
+						weapon_row = RectangleF::union_of(weapon_row, handicap);
+					}
 				}
-				weapon_row = RectangleF::union_of(weapon_row, handicap);
 			}
 			check_label_bounds(key + " at Weapon Select", weapon_row, weapon_inside);
 			if (weapon_label.right() > weapon_tile.x)

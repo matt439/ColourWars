@@ -142,7 +142,8 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		player->primary_weapon().low_paint_elapsed(),
 		// The stage title's card sits over the top of the window, where the
 		// clock is; the clock is frozen until GO, so it waits for the card to go.
-		!this->practice() && this->stage_entry_bounds().width <= 0.0f);
+		!this->practice() && this->stage_entry_bounds().width <= 0.0f,
+		this->sub_hud_cue(*player));
 
 	if (player->showing_debug())
 	{
@@ -257,4 +258,13 @@ bool Level::aim_marker_visible(int participant) const
 const BlockedShotFeedback& Level::blocked_shot_feedback() const
 {
 	return *this->blocked_shot_feedback_;
+}
+
+SubHudCue Level::sub_hud_cue(const Player& player) const
+{
+	const SubWeapon* sub = player.sub_weapon();
+	if (sub == nullptr) { return {}; }
+	const Weapon& tank = player.primary_weapon();
+	return { true, player.state() == PlayerState::alive && sub->ready(tank),
+		tank.endless_paint() ? 0.0f : sub->cost() / this->tuning_->starting_ammo() };
 }

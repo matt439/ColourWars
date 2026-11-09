@@ -38,6 +38,25 @@ namespace
 		return static_cast<size_t>(weapon) < tuned_weapon_count;
 	}
 
+	bool valid_sub(SubType sub)
+	{
+		return static_cast<size_t>(sub) < sub_count;
+	}
+
+	SubType read_sub(const JsonValue& player)
+	{
+		try
+		{
+			if (player.has("sub"))
+			{
+				const std::optional<SubType> sub = sub_from_name(player.identifier("sub"));
+				if (sub) { return *sub; }
+			}
+		}
+		catch (const std::runtime_error&) {}
+		return SubType::grenade;
+	}
+
 	bool valid_controller(PlayerController controller)
 	{
 		return controller == PlayerController::human || controller == PlayerController::bot;
@@ -135,7 +154,7 @@ LastMatchSetup LastMatchSetup::capture(const MatchSetup& settings)
 	{
 		setup.players.push_back({ player.team, player.weapon, player.controller,
 			player.controller == PlayerController::bot ? player.difficulty : BotDifficulty::normal,
-			player.handicap });
+			player.handicap, player.sub });
 	}
 	setup.stage = settings.stage();
 	setup.layout = settings.screen_layout();
@@ -177,6 +196,10 @@ void LastMatchSetup::validate() const
 		{
 			throw std::invalid_argument("Remembered handicaps must be none, +1 or +2");
 		}
+		if (!valid_sub(player.sub))
+		{
+			throw std::invalid_argument("Remembered subs must be the grenade, sprinkler or wall");
+		}
 	}
 	if (this->stage.empty() || this->stage.find('\0') != std::string::npos)
 	{
@@ -209,6 +232,7 @@ LastMatchSetup LastMatchSetup::normalised() const
 		if (!valid_controller(player.controller)) { player.controller = PlayerController::human; }
 		if (!valid_bot_difficulty(player.difficulty)) { player.difficulty = BotDifficulty::normal; }
 		if (!handicaps::valid(player.handicap)) { player.handicap = 0; }
+		if (!valid_sub(player.sub)) { player.sub = SubType::grenade; }
 	}
 	setup.players.front().controller = PlayerController::human;
 	for (LastMatchPlayer& player : setup.players)
@@ -256,6 +280,7 @@ MatchSetup LastMatchSetup::restore(const StageList& stages) const
 		settings.set_player_weapon(index, player.weapon);
 		if (player.controller == PlayerController::bot) { settings.set_player_bot(index, player.difficulty); }
 		settings.set_player_handicap(index, player.handicap);
+		settings.set_player_sub(index, player.sub);
 	}
 	settings.set_stage(chosen_stage == stages.end() ? stages.front().name : chosen_stage->name);
 	settings.set_screen_layout(setup.layout);
@@ -285,7 +310,7 @@ void LastMatchSetupSection::read(const JsonValue& root, SaveData& data) const
 	{
 		const JsonValue player = players.at(index);
 		setup.players.push_back({ read_team(player), read_weapon(player),
-			read_controller(player), read_difficulty(player), read_handicap(player) });
+			read_controller(player), read_difficulty(player), read_handicap(player), read_sub(player) });
 	}
 	try
 	{
@@ -363,6 +388,11 @@ void LastMatchSetupSection::write(SaveWriter& writer, const SaveData& data) cons
 		{
 			writer.key("handicap");
 			writer.integer(player.handicap);
+		}
+		if (player.sub != SubType::grenade)
+		{
+			writer.key("sub");
+			writer.string(sub_name(player.sub));
 		}
 		writer.end_object();
 	}

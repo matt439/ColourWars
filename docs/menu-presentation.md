@@ -269,6 +269,17 @@ font, which keeps the row within its spacing. X / R cycles an unready row's leve
 level beside every label before the first tool tile. The mechanic belongs to
 [ROAD#5](feature-roadmap.md#handicaps).
 
+The same line names the row's sub weapon (`ROAD#11`): `menu_text.subs.line`,
+`"{handicap}    Sub: {sub}"`, and `choosing` while the sub is being chosen.
+A row picks its tool, then A moves it to its sub, where Left/Right cycles the
+grenade, sprinkler, paint wall and Random and the description column shows the
+sub's `menu_text.subs.choices.*.description` in place of the tool's; A again
+readies it, and B steps back one step at a time. The page leaves only when
+every row is back on its tool. Validation fits every Boost level with every
+sub in both steps before the first tool tile, and every sub description in the
+description column. The rule is `LoadoutChoice`
+([loadout_choice.h](../game/states/loadout_choice.h)).
+
 ## Shared paper focus and press motion
 
 The required `menu_style.motion` object controls the shared paper focus arrow,

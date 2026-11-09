@@ -46,6 +46,8 @@ public:
 		const labrador::Vector2F& player_velocity, float dt);
 
 	SubType type() const { return this->type_; }
+	// What one use takes from the tank, in tank units.
+	float cost() const { return this->sub_tuning_->cost; }
 	// Seconds before the next use may leave; zero when it may now.
 	float cooldown_remaining() const { return this->cooldown_remaining_; }
 	// Whether a press now would release the sub: past its cooldown, with the
