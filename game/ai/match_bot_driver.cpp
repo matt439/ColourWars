@@ -197,6 +197,8 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 		view.shot_empty = player.tool_empty;
 		view.engage_distance = engagement_distance(player, *this->tuning_);
 		view.weapon = player.weapon;
+		view.sub = player.sub;
+		view.sub_ready = player.sub_ready;
 		view.obstacles = gates.empty() ? obstacles : world.obstacles(player.team);
 		view.supports = gates.empty() ? supports : world.supports(player.team);
 		view.ramps = ramps;

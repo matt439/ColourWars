@@ -62,6 +62,11 @@ BotBody LevelBotWorld::body(int participant) const
     body.tool_ready = readiness == WeaponReadiness::ready;
     body.tool_empty = readiness == WeaponReadiness::empty;
     body.muzzle_reach = Vector2F::distance(weapon.nozzle_pos(), player.center());
+    if (const SubWeapon* sub = player.sub_weapon())
+    {
+        body.sub = sub->type();
+        body.sub_ready = sub->ready(weapon);
+    }
     return body;
 }
 
