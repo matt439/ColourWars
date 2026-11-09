@@ -208,6 +208,7 @@ void validate_controls_reminders(const Presentation& presentation, const RenderR
 	}
 	InputBindings mixed;
 	mixed.pads[1][PadAction::jump] = { PadControl::b, PadControl::right_shoulder };
+	mixed.pads[1][PadAction::sub] = { PadControl::x, PadControl::none };
 	mixed.pads[2][PadAction::shoot] = { PadControl::left_shoulder, PadControl::none };
 	mixed.pads[3][PadAction::pause] = { PadControl::y, PadControl::none };
 	check("gamepad_per_pad_reminder", controls_text::pad_controls_reminder(copy, mixed, every_pad));
