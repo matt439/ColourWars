@@ -584,10 +584,11 @@
 
     std::vector<float> hud_style(const HudPresentation& p)
     {
-        static_assert(field_count<HudPresentation>() == 31, "hud_style: add the new HudPresentation field");
+        static_assert(field_count<HudPresentation>() == 32, "hud_style: add the new HudPresentation field");
         static_assert(field_count<HudPaperPresentation>() == 5, "hud_style: add the new HudPaperPresentation field");
         static_assert(field_count<ClosingClockPresentation>() == 9, "hud_style: add the new ClosingClockPresentation field");
         static_assert(field_count<HudLowPaintPresentation>() == 4, "hud_style: add the new HudLowPaintPresentation field");
+        static_assert(field_count<HudSubMarkPresentation>() == 2, "hud_style: add the new HudSubMarkPresentation field");
         static_assert(field_count<CursorMarkerPresentation>() == 6, "hud_style: add the new CursorMarkerPresentation field");
         static_assert(field_count<TeammateMarkerPresentation>() == 9, "hud_style: add the new TeammateMarkerPresentation field");
         static_assert(field_count<HudLabels>() == 4, "hud_style: add the new HudLabels field");
@@ -602,6 +603,7 @@
         const auto& k = p.closing_clock;
         add_styles(v, k.ink, k.paper, k.shade, k.text, k.accent, k.keyline_width, k.shadow_offset, k.tick_reach, k.beat_duration);
         add_styles(v, p.low_paint.tag, p.low_paint.text, p.low_paint.padding, p.low_paint.blink_period);
+        add_styles(v, p.sub_mark.size, p.sub_mark.gap);
         const auto& cursor = p.cursor_marker;
         add_styles(v, cursor.enabled, cursor.ink, cursor.paper, cursor.size, cursor.ink_width, cursor.paper_width);
         const auto& t = p.teammate_marker;
