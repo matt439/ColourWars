@@ -235,8 +235,8 @@
         "paint": "[PAINT]"
       },
       "subs": {
-        "line": "[{handicap}    Sub: {sub}]",
-        "choosing": "[{handicap}    Sub:  < {sub} >]",
+        "line": "[{handicap}  Sub: {sub}]",
+        "choosing": "[{handicap}  Sub: <{sub}>]",
         "choices": {
           "grenade": { "name": "[Grenade]", "description": "[Lobbed along your aim; bursts into a ring of paint.]\n[Hurts enemies caught in it.]" },
           "sprinkler": { "name": "[Sprinkler]", "description": "[Sticks where it lands and sprays paint around it.]\n[Enemy shots break it.]" },

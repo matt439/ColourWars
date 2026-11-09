@@ -338,8 +338,8 @@
     },
     "subs": {
       "_comment": "ROAD#11: Weapon Select's line under each player's label: the Boost label, then the sub (line while the tool is chosen and once ready, choosing while the sub is). While the sub is chosen, its description takes the tool's place.",
-      "line": "{handicap}    Sub: {sub}",
-      "choosing": "{handicap}    Sub:  < {sub} >",
+      "line": "{handicap}   Sub: {sub}",
+      "choosing": "{handicap}   Sub: < {sub} >",
       "choices": {
         "grenade": { "name": "Grenade", "description": "Lobbed along your aim; bursts into a ring of paint.\nHurts enemies caught in it." },
         "sprinkler": { "name": "Sprinkler", "description": "Sticks where it lands and sprays paint around it.\nEnemy shots break it." },
