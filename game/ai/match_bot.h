@@ -2,6 +2,7 @@
 
 #include "game/objects/player_input_data.h"
 #include "game/objects/player_team.h"
+#include "game/objects/sub_type.h"
 #include "game/objects/weapon_type.h"
 #include "game/config/tuning.h"
 #include "game/ai/match_bot_support.h"
@@ -53,6 +54,9 @@ struct MatchBotObservation
 	bool shot_empty = false;
 	float engage_distance = 0.0f;
 	WeaponType weapon = WeaponType::sprayer;
+	// The sub it carries and whether a Sub press now would throw it (ROAD#11).
+	std::optional<SubType> sub;
+	bool sub_ready = false;
 	std::vector<Enemy> enemies;
 	// Sampled visible non-team scoring tiles, refreshed only for a replan.
 	std::vector<labrador::Vector2F> territory;
@@ -190,4 +194,9 @@ private:
 	bool obstacle_ahead(const MatchBotObservation& view) const;
 	bool ledge_ahead(const MatchBotObservation& view) const;
 	bool unscored_floor(const MatchBotObservation& view) const;
+	// The angle to throw the sub at this enemy now, if the bot should: the
+	// sub is ready, the throw leaves the reserve above its low mark, and a
+	// flight from this pose passes within bots.sub_throw_miss of the enemy.
+	std::optional<float> sub_throw(const MatchBotObservation& view,
+		const MatchBotObservation::Enemy& enemy, float movement) const;
 };

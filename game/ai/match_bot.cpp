@@ -212,6 +212,27 @@ bool MatchBot::unscored_floor(const MatchBotObservation& view) const
 	return standing;
 }
 
+std::optional<float> MatchBot::sub_throw(const MatchBotObservation& view,
+	const MatchBotObservation::Enemy& enemy, float movement) const
+{
+	if (!view.sub || !view.sub_ready) { return std::nullopt; }
+	const SubTuning& sub = this->tuning_->sub(*view.sub);
+	// The throw must leave the bot able to keep fighting: a throw that would
+	// start a refill at once is held. Endless paint spends nothing.
+	if (view.refill_enabled && view.ammo - sub.cost / this->tuning_->starting_ammo() <=
+		this->tuning_->bots().reserve_low) { return std::nullopt; }
+	// The roller throws along its tilt, on the side the bot faces this step.
+	std::optional<float> fixed;
+	if (view.weapon == WeaponType::roller)
+	{
+		const bool right = movement > 0.0f || (movement == 0.0f && view.facing_right);
+		const float tilt = this->tuning_->weapon(WeaponType::roller).aim_tilt;
+		fixed = right ? -tilt : pi + tilt;
+	}
+	return match_bot_ballistics::throw_angle(sub, view.velocity, enemy.center - view.center,
+		enemy.velocity, fixed, this->tuning_->bots().sub_throw_miss);
+}
+
 void MatchBot::decide(const MatchBotObservation& view)
 {
 	this->decision_ = {};
@@ -398,6 +419,22 @@ void MatchBot::decide(const MatchBotObservation& view)
 	// only drains the reserve the bot needs on reaching scoring ground.
 	this->decision_.primary_shoot = !this->refilling_ && (!view.refill_enabled || !view.shot_empty) &&
 		(targeted || !this->unscored_floor(view));
+	// A sub is thrown on a reaction, at the enemy being engaged, mid-climb
+	// never. The throw takes the aim for this step, with the decision's drawn
+	// error, and the tool holds its shot so the tank pays for the throw.
+	if (enemy != nullptr && !this->refilling_ && !this->ascending_ && !this->climbing_ramp_ && !recovering)
+	{
+		if (const std::optional<float> throw_angle = this->sub_throw(view, *enemy, this->decision_.x_movement))
+		{
+			const float angle = *throw_angle + this->aim_error_;
+			this->decision_.shoot_angle = angle;
+			this->decision_.shoot_direction = Vector2F(std::cos(angle), std::sin(angle));
+			this->decision_.shoot_direction_requested = true;
+			this->decision_.right_analog_stick = this->decision_.shoot_direction;
+			this->decision_.sub_pressed = true;
+			this->decision_.primary_shoot = false;
+		}
+	}
 	// The window steers each step; a held decision would count as blocked.
 	if (finishing) { this->decision_.x_movement = 0.0f; this->decision_.left_analog_stick = {}; }
 	this->react_in_ = this->tuning_->bot(this->difficulty_).reaction_steps;
@@ -514,6 +551,9 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 	if (this->recovery_left_ == 0 && this->replan_in_-- <= 0) { this->choose_territory(view); }
 	if (--this->react_in_ <= 0) { this->decide(view); }
 	PlayerInputData input = this->decision_;
+	// A throw is one press. Its aim lasts only this step: the next reacts
+	// afresh, so the tool does not fire along the throw's arc.
+	if (this->decision_.sub_pressed) { this->decision_.sub_pressed = false; this->react_in_ = 1; }
 	if (this->ascending_) { this->steer_ascent(view, input); }
 	if (this->climbing_ramp_) { this->steer_ramp(view, input); }
 	if (this->finish_left_ > 0)

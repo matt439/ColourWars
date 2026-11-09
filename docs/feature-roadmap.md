@@ -2324,6 +2324,22 @@ the swept contacts to report a surface normal, so it waits for the art pass or
 a play note asking for it); Sub is not yet listed on the Controls pages, so it
 is not rebindable; there is no HUD readiness mark; bots do not throw.
 
+**Slice 2, done 2026-11-08.** Bots throw the grenade. `BotBody` and the
+bot's observation carry the seat's sub and whether a press would throw it
+(`SubWeapon::ready`). On a reaction with a visible enemy, outside a climb or
+recovery and not refilling, `MatchBot` asks
+`match_bot_ballistics::throw_angle` for a throw from its centre, with its run,
+that passes within `bots.sub_throw_miss` (120 units, about the burst's reach)
+of the enemy; the roller's throw is fixed by its tilt, so a roller bot throws
+only when that arc reaches. The throw takes the decision's aim error, so
+difficulty spreads it as it does a shot, holds the tool's shot for that step
+so the tank pays for the throw, and is a single-step press; the next step
+reacts afresh. With refill on, a bot holds a throw that would leave its
+reserve at `bots.reserve_low`; under Endless paint only the cooldown paces
+it. The `sub_weapons` case checks every difficulty and tool against the
+ballistics, the holds (not ready, no sub, out of reach, short tank) and two
+real bot rounds, one per refill rule.
+
 ### Input
 
 - **Non-XInput controllers (`ROAD#23`).** INVERSUS and most Steam releases

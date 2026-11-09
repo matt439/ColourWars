@@ -3,6 +3,7 @@
 #include "game/ai/match_bot_support.h"
 #include "game/objects/paintable_object.h"
 #include "game/objects/player_team.h"
+#include "game/objects/sub_type.h"
 #include "game/objects/weapon_type.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
@@ -35,6 +36,10 @@ struct BotBody
 	bool tool_empty = false;
 	// From the body's centre to its tool's nozzle.
 	float muzzle_reach = 0.0f;
+	// The sub it carries, if any, and whether a Sub press now would throw it:
+	// past its cooldown with the whole cost in the tank (ROAD#11).
+	std::optional<SubType> sub;
+	bool sub_ready = false;
 };
 
 // What the shipping bots may ask of a running match (HYG#40). Nothing here

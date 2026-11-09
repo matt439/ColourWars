@@ -20,21 +20,16 @@ namespace
 		return {};
 	}
 
-	float miss_squared(float angle, const WeaponTuning& tool, const ProjectileTuning& projectile,
-		Vector2F inherited, Vector2F target, Vector2F target_velocity)
+	// The closest a free flight from position at velocity comes to a target
+	// moving at constant velocity, squared, over at most one second of the
+	// projectile's life. Swept, so a fast flight need not end a tick on it.
+	float flight_miss_squared(Vector2F position, Vector2F velocity, const ProjectileTuning& projectile,
+		Vector2F target, Vector2F target_velocity)
 	{
 		const float dt = simulation::seconds_per_step;
-		const Vector2F direction(std::cos(angle), std::sin(angle));
-		Vector2F position = Vector2F::rotate_vector(tool.details.nozzle_offset +
-			Vector2F(tool.details.size.x, 0.0f), angle);
-		position += Vector2F(direction.x < 0.0f ? -tool.details.offset.x : tool.details.offset.x,
-			tool.details.offset.y);
-		Vector2F velocity = direction * tool.details.starting_vel_length + inherited;
 		Vector2F previous = position - target;
 		float best = (std::numeric_limits<float>::max)();
 		float elapsed = 0.0f;
-		// One second, including the first sweep of a shorter-lived projectile.
-		// Use relative swept distance so a fast shot need not land on a tick endpoint.
 		for (int step = 0; step < simulation::simulation_hz; ++step)
 		{
 			elapsed += dt;
@@ -56,6 +51,55 @@ namespace
 			previous = current;
 		}
 		return best;
+	}
+
+	float miss_squared(float angle, const WeaponTuning& tool, const ProjectileTuning& projectile,
+		Vector2F inherited, Vector2F target, Vector2F target_velocity)
+	{
+		const Vector2F direction(std::cos(angle), std::sin(angle));
+		Vector2F position = Vector2F::rotate_vector(tool.details.nozzle_offset +
+			Vector2F(tool.details.size.x, 0.0f), angle);
+		position += Vector2F(direction.x < 0.0f ? -tool.details.offset.x : tool.details.offset.x,
+			tool.details.offset.y);
+		return flight_miss_squared(position, direction * tool.details.starting_vel_length + inherited,
+			projectile, target, target_velocity);
+	}
+
+	// A sub leaves from the body's centre, carrying the thrower's run.
+	float throw_miss_squared(float angle, const SubTuning& sub, Vector2F shooter_velocity,
+		Vector2F target, Vector2F target_velocity)
+	{
+		const Vector2F direction(std::cos(angle), std::sin(angle));
+		return flight_miss_squared({}, direction * sub.throw_speed + Vector2F(shooter_velocity.x, 0.0f),
+			sub.body, target, target_velocity);
+	}
+
+	// The coarse ring and eight refinements both searches use: 32 trajectories.
+	template <typename Miss>
+	float best_angle(float direct, Miss&& miss, float& best)
+	{
+		float result = direct;
+		best = miss(direct);
+		constexpr int directions = 16;
+		const float increment = 2.0f * pi / static_cast<float>(directions);
+		for (int index = 1; index < directions; ++index)
+		{
+			const float angle = direct + increment * static_cast<float>(index);
+			const float candidate = miss(angle);
+			if (candidate < best) { best = candidate; result = angle; }
+		}
+		float radius = increment;
+		for (int refinement = 0; refinement < 8; ++refinement)
+		{
+			radius *= 0.5f;
+			const float center = result;
+			for (const float angle : { center - radius, center + radius })
+			{
+				const float candidate = miss(angle);
+				if (candidate < best) { best = candidate; result = angle; }
+			}
+		}
+		return result;
 	}
 }
 
@@ -101,28 +145,28 @@ Vector2F match_bot_ballistics::aim_direction(const WeaponTuning& tool, const Pro
 	const float direct = target_offset.angle();
 	if (tool.details.starting_vel_length <= 0.0f) { return { std::cos(direct), std::sin(direct) }; }
 	const Vector2F inherited = inherited_velocity(tool.relative, shooter_velocity);
-	float best_angle = direct;
-	float best = miss_squared(direct, tool, projectile, inherited, target_offset, target_velocity);
 	// A fixed coarse ring and eight local refinements bound the work to 32
 	// trajectories (1920 integration steps) per reaction, independent of arena size.
-	constexpr int directions = 16;
-	const float increment = 2.0f * pi / static_cast<float>(directions);
-	for (int index = 1; index < directions; ++index)
+	float best = 0.0f;
+	const float angle = best_angle(direct, [&](float candidate)
+		{ return miss_squared(candidate, tool, projectile, inherited, target_offset, target_velocity); }, best);
+	return { std::cos(angle), std::sin(angle) };
+}
+
+std::optional<float> match_bot_ballistics::throw_angle(const SubTuning& sub, Vector2F shooter_velocity,
+	Vector2F target_offset, Vector2F target_velocity, std::optional<float> fixed_angle, float tolerance)
+{
+	if (!(tolerance > 0.0f) || !(sub.throw_speed > 0.0f)) { return std::nullopt; }
+	const auto miss = [&](float candidate)
+	{ return throw_miss_squared(candidate, sub, shooter_velocity, target_offset, target_velocity); };
+	float best = 0.0f;
+	float angle = 0.0f;
+	if (fixed_angle) { angle = *fixed_angle; best = miss(angle); }
+	else
 	{
-		const float angle = direct + increment * static_cast<float>(index);
-		const float miss = miss_squared(angle, tool, projectile, inherited, target_offset, target_velocity);
-		if (miss < best) { best = miss; best_angle = angle; }
+		const float direct = target_offset.length_squared() > 0.0f ? target_offset.angle() : 0.0f;
+		angle = best_angle(direct, miss, best);
 	}
-	float radius = increment;
-	for (int refinement = 0; refinement < 8; ++refinement)
-	{
-		radius *= 0.5f;
-		const float center = best_angle;
-		for (const float angle : { center - radius, center + radius })
-		{
-			const float miss = miss_squared(angle, tool, projectile, inherited, target_offset, target_velocity);
-			if (miss < best) { best = miss; best_angle = angle; }
-		}
-	}
-	return { std::cos(best_angle), std::sin(best_angle) };
+	if (best > tolerance * tolerance) { return std::nullopt; }
+	return angle;
 }

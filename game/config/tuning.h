@@ -84,6 +84,9 @@ struct BotTuning
 	// and, off it, holds rather than walk onto enemy paint ahead. No effect
 	// while paint underfoot is off.
 	bool refill_off_enemy_paint = false;
+	// A bot throws its sub (ROAD#11) only along a flight that passes this
+	// close to a visible enemy, in units: about the burst's reach.
+	float sub_throw_miss = 0.0f;
 };
 
 // One handicap level's boost (docs/feature-roadmap.md#handicaps). Level 0

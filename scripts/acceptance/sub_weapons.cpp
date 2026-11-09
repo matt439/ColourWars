@@ -1,5 +1,7 @@
 #include "game/pch.h"
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
+#include "game/ai/match_bot.h"
+#include "game/ai/match_bot_ballistics.h"
 #include "game/contracts/match_variant.h"
 #include "game/contracts/simulation.h"
 #include "game/input/input_bindings.h"
@@ -12,11 +14,12 @@
 #include <cmath>
 #include <iostream>
 
-// ROAD#11, slice 1: the paint grenade end to end. Its tuning and what the
-// loader refuses; the shared tank's sub cost and Endless paint; the grenade's
-// throw, cooldown and burst; every built player carrying one; the Sub
-// action's default controls and their fallbacks; and a real round in which a
-// thrown grenade alone paints the stage.
+// ROAD#11, slices 1 and 2: the paint grenade end to end. Its tuning and what
+// the loader refuses; the shared tank's sub cost and Endless paint; the
+// grenade's throw, cooldown and burst; every built player carrying one; the
+// Sub action's default controls and their fallbacks; a real round in which a
+// thrown grenade alone paints the stage; and the shipping bots' throws, by
+// policy at each difficulty and tool, and in real bot rounds.
 
 namespace
 {
@@ -400,6 +403,151 @@ namespace
             "A grenade alone did not paint the stage for its team");
         std::cout << "PASS round: one thrown grenade bursts and paints without the tool\n";
     }
+
+    // The bot policy's fixture: flat open floor, one enemy straight ahead.
+    MatchBotObservation bot_view(const GameTuning& tuning, WeaponType tool, Vector2F enemy)
+    {
+        MatchBotObservation view;
+        view.alive = view.grounded = true;
+        view.size = tuning.player().size;
+        view.ammo = 1.0f;
+        view.engage_distance = 800.0f;
+        view.weapon = tool;
+        view.sub = SubType::grenade;
+        view.sub_ready = true;
+        view.obstacles.emplace_back(-3000.0f, view.size.y * 0.5f, 6000.0f, 100.0f);
+        view.supports.push_back({ view.obstacles.back(), false });
+        view.enemies.push_back({ enemy, {}, 800.0f });
+        return view;
+    }
+
+    // The steps a bot presses Sub over a run, ready throughout until it throws.
+    struct BotRun
+    {
+        std::vector<int> presses;
+        PlayerInputData press;
+        PlayerInputData after;
+    };
+
+    BotRun run_bot(MatchBot& bot, MatchBotObservation view, int steps)
+    {
+        BotRun run;
+        bool thrown = false;
+        for (int step = 0; step < steps; ++step)
+        {
+            const PlayerInputData input = bot.think(view);
+            require(input.connected && std::isfinite(input.shoot_angle), "A bot emitted invalid input");
+            if (thrown && run.presses.size() == 1 && step == run.presses.front() + 1) { run.after = input; }
+            if (input.sub_pressed)
+            {
+                run.presses.push_back(step);
+                run.press = input;
+                thrown = true;
+                // As the player would: the throw starts the cooldown.
+                view.sub_ready = false;
+            }
+        }
+        return run;
+    }
+
+    void check_bot_policy(const GameTuning& tuning)
+    {
+        const SubTuning& grenade = tuning.sub(SubType::grenade);
+        const Vector2F near_enemy(320.0f, 0.0f);
+        int throwers = 0;
+        for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+        {
+            const int window = tuning.bot(difficulty).reaction_steps * 3 + 2;
+            const float error = tuning.bot(difficulty).aim_error_radians;
+            for (const WeaponType tool : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
+                WeaponType::mister, WeaponType::bucket })
+            {
+                const MatchBotObservation view = bot_view(tuning, tool, near_enemy);
+                std::optional<float> fixed;
+                if (tool == WeaponType::roller) { fixed = -tuning.weapon(WeaponType::roller).aim_tilt; }
+                const std::optional<float> expected = match_bot_ballistics::throw_angle(grenade, {},
+                    near_enemy, {}, fixed, tuning.bots().sub_throw_miss);
+                MatchBot bot(&tuning, difficulty, 31);
+                const BotRun run = run_bot(bot, view, window);
+                require(run.presses.size() == (expected ? 1u : 0u),
+                    "A bot's throws at a reachable enemy did not match the ballistics");
+                if (!expected) { continue; }
+                ++throwers;
+                const Vector2F aim = Vector2F::unit_vec_from_angle(*expected);
+                require(Vector2F::dot(run.press.shoot_direction, aim) >= std::cos(error) - 0.001f &&
+                    run.press.shoot_direction_requested && !run.press.primary_shoot,
+                    "A bot's throw strayed past its difficulty's aim error or fired the tool with it");
+                require(!run.after.sub_pressed, "A bot held Sub past one step");
+                // Not ready, no sub, or an enemy out of reach: never a press.
+                MatchBotObservation idle = view; idle.sub_ready = false;
+                MatchBot waiting(&tuning, difficulty, 31);
+                require(run_bot(waiting, idle, window).presses.empty(), "A bot pressed Sub while not ready");
+                MatchBotObservation bare = view; bare.sub.reset();
+                MatchBot unarmed(&tuning, difficulty, 31);
+                require(run_bot(unarmed, bare, window).presses.empty(), "A bot without a sub pressed Sub");
+                const MatchBotObservation remote = bot_view(tuning, tool, { 1500.0f, 0.0f });
+                MatchBot distant(&tuning, difficulty, 31);
+                require(run_bot(distant, remote, window).presses.empty(), "A bot threw at an enemy out of reach");
+                // A throw that would leave the reserve at its low mark waits,
+                // unless Endless paint means it spends nothing.
+                MatchBotObservation short_tank = view;
+                short_tank.ammo = tuning.bots().reserve_low + grenade.cost / tuning.starting_ammo() - 0.01f;
+                MatchBot careful(&tuning, difficulty, 31);
+                require(run_bot(careful, short_tank, window).presses.empty(),
+                    "A bot threw its reserve below the low mark");
+                short_tank.refill_enabled = false;
+                MatchBot endless(&tuning, difficulty, 31);
+                require(run_bot(endless, short_tank, window).presses.size() == 1,
+                    "Endless paint did not let a bot throw on a short tank");
+            }
+        }
+        require(throwers >= 12, "Too few tools could throw at a nearby enemy");
+        std::cout << "PASS bot policy: " << throwers << " difficulty/tool pairs throw once, on aim, "
+            "never unready, unarmed, out of reach or below the reserve; Endless paint throws\n";
+    }
+
+    // A roller and a sprayer bot on crossfeed for a minute, under either
+    // refill rule.
+    void check_bot_round(World& world)
+    {
+        for (const MatchVariant variant : { MatchVariant::standard, MatchVariant::endless_paint })
+        {
+            // The host stays human and idle; a sprayer bot joins its team.
+            MatchSetup settings = setup(variant);
+            settings.set_player_count(3);
+            settings.set_player_bot(2, BotDifficulty::hard);
+            settings.set_player_team(2, PlayerTeam::a);
+            settings.set_player_weapon(2, WeaponType::sprayer);
+            settings.set_screen_layout(layout_for_humans(settings.human_count()));
+            settings.set_duration(120.0f);
+            auto level = world.level(settings);
+            level->start_without_countdown();
+            const std::vector<PlayerInputData> devices(input_slots::count);
+            std::array<int, 2> throws{};
+            std::array<float, 2> cooldown{};
+            for (int step = 0; step < 60 * simulation::simulation_hz; ++step)
+            {
+                level->update(devices, dt);
+                for (size_t index = 0; index < throws.size(); ++index)
+                {
+                    const SubWeapon* sub = level->player(static_cast<int>(index) + 1).sub_weapon();
+                    require(sub != nullptr, "A bot seat carried no sub");
+                    const float now = sub->cooldown_remaining();
+                    if (now > cooldown[index]) { ++throws[index]; }
+                    cooldown[index] = now;
+                }
+            }
+            // Where the two bots meet is the stage's business; that they throw
+            // when they do, at each tool, is the policy check's. Here: a real
+            // round's bots throw, and never faster than the cooldown allows.
+            const int most = static_cast<int>(60.0f / world.assets.tuning.sub(SubType::grenade).cooldown) + 1;
+            require(throws[0] + throws[1] > 0, std::string("No bot threw its grenade in a ") +
+                match_variant_key(variant) + " round");
+            require(throws[0] <= most && throws[1] <= most, "A bot threw faster than the cooldown");
+            std::cout << "PASS bot round " << match_variant_key(variant) << ": roller threw " << throws[0] <<
+                ", sprayer threw " << throws[1] << " in a minute\n";
+        }
+    }
 }
 
 int wmain(int argc, wchar_t* argv[])
@@ -415,6 +563,8 @@ int wmain(int argc, wchar_t* argv[])
         check_players(world);
         check_controls();
         check_round(world);
+        check_bot_policy(world.assets.tuning);
+        check_bot_round(world);
         return 0;
     });
 }
