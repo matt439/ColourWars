@@ -112,6 +112,23 @@
     "world.ambience.close_quarters": "72c7ce570338646c346c49c25dbfd94173cf442275d87e8d5e5fd9c06e12f484",
     "world.ambience.king_of_the_hill": "ea75daf9d4c9664f3f7c75551291d1a20fb8986e88f92b4fe6c931ef9ab37282",
     "world.ambience.turbulence": "45051e4b21fa048d96e6834f26f442ff14ca10818b0874a5d4bf392a28248fe5",
-    "world.detail": "3018478d708985e9b2e043ab4c932d3e1691e5459495f64271b32d2518bcb340"
-  }
+    "world.detail": "3018478d708985e9b2e043ab4c932d3e1691e5459495f64271b32d2518bcb340",
+    "sub.grenade.throw": "2064b846be298438f4cfbda70d7de877c0d403483848578e784190efd2bf1f54",
+    "sub.sprinkler.throw": "8968e519c313cad0b9b43ef3b94c1d65b4d0ec2815e916e21a54623860dca97c",
+    "sub.wall.set": "64d7b12112138a42e4a57333d936c9bbe26f05019d9a4334c8f69912f5eeeeeb"
+  },
+  "amendments": [
+    {
+      "date": "2026-11-09",
+      "task": "ROAD#11",
+      "status": "accepted",
+      "author_response": "Accept all",
+      "response_context": "Chosen on a decision card asking whether to accept the three new sub weapon sounds and sprites as they are, with the three rendered masters and a sprite preview attached.",
+      "cues": [
+        "sub.grenade.throw",
+        "sub.sprinkler.throw",
+        "sub.wall.set"
+      ]
+    }
+  ]
 }

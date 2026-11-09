@@ -447,7 +447,7 @@ audio. The live bank is `game/content/sounds/paint_exe.xwb`; its definition is
 `paint_exe.json` beside it. The build validates the tracked bank before staging
 it. Normal game builds need no audio encoder or Python installation.
 
-All 103 accepted masters, editable scores/recipes, retained CC0 recordings and
+All 106 accepted masters, editable scores/recipes, retained CC0 recordings and
 per-wave provenance are in [game/audio/paint_exe](game/audio/paint_exe/README.md).
 That page describes how to reproduce the bank with FFmpeg and
 `scripts/audio/tools/XWBTool.exe`. Music uses MS-ADPCM; short effects use PCM16.

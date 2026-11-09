@@ -292,7 +292,7 @@ scheduled nightly is the signal to look; the rest of the time, nothing is owed.
 
 A fresh clone includes `game/content/sounds/paint_exe.xwb` and its definition.
 The build validates the tracked bank before staging it; normal game builds do
-not need Python or FFmpeg. All 103 accepted masters, retained CC0 recordings,
+not need Python or FFmpeg. All 106 accepted masters, retained CC0 recordings,
 editable scores/recipes and per-wave provenance live under
 [game/audio/paint_exe/](game/audio/paint_exe/README.md), which documents bank
 reproduction with `scripts/audio/tools/XWBTool.exe`.

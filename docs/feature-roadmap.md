@@ -2463,6 +2463,20 @@ planted sub beats its grenade (0.58 to 0.63). Those are bot policy and a
 human's play, not costs, and are left to the author's play review. The
 measuring probe was a scratch case and is not kept.
 
+**Slice 7, done 2026-11-09.** Each sub draws and sounds as itself. The
+`paint_fx` sheet gains three looping body strips, `sub_grenade` (a round paint
+bomb whose cap wobbles), `sub_sprinkler` (a squat nozzled dome throwing beads)
+and `sub_wall` (an upright slab with changing drips), drawn in the same
+keylined grayscale as the shots and tinted by team; the atlas grows to 2048
+rows ([paint-fx README](../game/art/paint-fx/README.md)). Three foley masters
+join the `paint_exe` bank, cut from recordings it already retains, so no new
+source or licence comes in: `sub.grenade.throw`, `sub.sprinkler.throw` and
+`sub.wall.set` ([foley README](../game/audio/paint_exe/foley/README.md)). The
+author accepted all six on 2026-11-09, recorded as an amendment in
+[acceptance.json](../game/audio/paint_exe/acceptance.json); the bank holds 106
+waves. The bursts and drops stay paint balls, and the empty click is the
+tools'. What remains is the author's attended play review.
+
 ### Input
 
 - **Non-XInput controllers (`ROAD#23`).** INVERSUS and most Steam releases

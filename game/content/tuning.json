@@ -467,7 +467,7 @@
     },
 
     "subs": {
-        "_comment": "ROAD#11 sub weapons. Costs and cooldowns are the slice 6 balance pass (docs/feature-roadmap.md): every sub costs half the tank, and the cooldowns even out Endless paint, where the grenade led. A sub spends 'cost' of the tool's tank and needs all of it; Endless paint ignores the cost, so 'cooldown' paces it there. The grenade bursts on first contact, or in the air when the body's delete_timer runs out, into burst_count drops; the sprinkler's own _comment says how it plants. Every record is a paint ball and borrows the bucket's art and sound until the art slice.",
+        "_comment": "ROAD#11 sub weapons. Costs and cooldowns are the slice 6 balance pass (docs/feature-roadmap.md): every sub costs half the tank, and the cooldowns even out Endless paint, where the grenade led. A sub spends 'cost' of the tool's tank and needs all of it; Endless paint ignores the cost, so 'cooldown' paces it there. The grenade bursts on first contact, or in the air when the body's delete_timer runs out, into burst_count drops; the sprinkler's own _comment says how it plants. Each body draws its own paint_fx strip (sub_grenade, sub_sprinkler, sub_wall) and plays its own throw cue; the bursts and drops are paint balls.",
         "grenade": {
             "cost": 0.5,
             "cooldown": 3.5,
@@ -482,7 +482,7 @@
                 "size": { "x": 40.0, "y": 40.0 },
                 "collision_size": { "x": 40.0, "y": 40.0 },
                 "sheet": "paint_fx",
-                "animation": "shot_ball"
+                "animation": "sub_grenade"
             },
             "burst": {
                 "gravity": 2500.0,
@@ -495,7 +495,7 @@
                 "animation": "shot_ball"
             },
             "sound_bank": "paint_exe",
-            "throw_sound": { "name": "bucket.throw", "volume": 0.3 },
+            "throw_sound": { "name": "sub.grenade.throw", "volume": 0.3 },
             "empty_sound": { "name": "weapon.empty", "volume": 0.8 }
         },
         "sprinkler": {
@@ -516,7 +516,7 @@
                 "size": { "x": 40.0, "y": 40.0 },
                 "collision_size": { "x": 40.0, "y": 40.0 },
                 "sheet": "paint_fx",
-                "animation": "shot_ball"
+                "animation": "sub_sprinkler"
             },
             "burst": {
                 "gravity": 2500.0,
@@ -529,7 +529,7 @@
                 "animation": "shot_ball"
             },
             "sound_bank": "paint_exe",
-            "throw_sound": { "name": "bucket.throw", "volume": 0.3 },
+            "throw_sound": { "name": "sub.sprinkler.throw", "volume": 0.3 },
             "empty_sound": { "name": "weapon.empty", "volume": 0.8 }
         },
         "wall": {
@@ -551,7 +551,7 @@
                 "size": { "x": 32.0, "y": 180.0 },
                 "collision_size": { "x": 32.0, "y": 180.0 },
                 "sheet": "paint_fx",
-                "animation": "shot_ball"
+                "animation": "sub_wall"
             },
             "burst": {
                 "gravity": 2500.0,
@@ -564,7 +564,7 @@
                 "animation": "shot_ball"
             },
             "sound_bank": "paint_exe",
-            "throw_sound": { "name": "bucket.throw", "volume": 0.3 },
+            "throw_sound": { "name": "sub.wall.set", "volume": 0.3 },
             "empty_sound": { "name": "weapon.empty", "volume": 0.8 }
         }
     }
