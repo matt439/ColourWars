@@ -194,9 +194,14 @@ private:
 	bool obstacle_ahead(const MatchBotObservation& view) const;
 	bool ledge_ahead(const MatchBotObservation& view) const;
 	bool unscored_floor(const MatchBotObservation& view) const;
-	// The angle to throw the sub at this enemy now, if the bot should: the
-	// sub is ready, the throw leaves the reserve above its low mark, and a
-	// flight from this pose passes within bots.sub_throw_miss of the enemy.
-	std::optional<float> sub_throw(const MatchBotObservation& view,
-		const MatchBotObservation::Enemy& enemy, float movement) const;
+	// The angle to use the sub at now, if the bot should: the sub is ready,
+	// using it leaves the reserve above its low mark, and its own rule holds.
+	// A grenade's flight passes within bots.sub_throw_miss of the nearest
+	// visible enemy; a sprinkler's lands that close to unowned scoring floor
+	// ahead while no enemy is engaged; a wall stands between the bot and the
+	// nearest visible enemy whose tool reaches it, in the wall's height.
+	std::optional<float> sub_use(const MatchBotObservation& view,
+		const MatchBotObservation::Enemy* enemy, bool engaging, float movement) const;
+	// The roller's fixed throw angle on the side it faces; empty for any other tool.
+	std::optional<float> roller_throw(const MatchBotObservation& view, bool right) const;
 };

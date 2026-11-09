@@ -21,7 +21,7 @@
         "refill_retreat_margin": 600.0,
         "mover_hold_steps": 600,
         "refill_off_enemy_paint": true,
-        "_sub_throw_miss": "ROAD#11: a bot throws its sub only on a flight passing this many units from a visible enemy; provisional until the balance slice.",
+        "_sub_throw_miss": "ROAD#11: a bot throws its grenade only on a flight passing this many units from a visible enemy, and plants its sprinkler only on one landing this close to the floor ahead.",
         "sub_throw_miss": 120.0,
         "easy": { "reaction_steps": 24, "replan_steps": 90, "territory_candidates": 8, "aim_error_radians": 0.28 },
         "normal": { "reaction_steps": 12, "replan_steps": 45, "territory_candidates": 16, "aim_error_radians": 0.14 },
@@ -467,10 +467,10 @@
     },
 
     "subs": {
-        "_comment": "ROAD#11 sub weapons, provisional values until the balance slice. A sub spends 'cost' of the tool's tank and needs all of it; Endless paint ignores the cost, so 'cooldown' paces it there. The grenade bursts on first contact, or in the air when the body's delete_timer runs out, into burst_count drops; the sprinkler's own _comment says how it plants. Every record is a paint ball and borrows the bucket's art and sound until the art slice.",
+        "_comment": "ROAD#11 sub weapons. Costs and cooldowns are the slice 6 balance pass (docs/feature-roadmap.md): every sub costs half the tank, and the cooldowns even out Endless paint, where the grenade led. A sub spends 'cost' of the tool's tank and needs all of it; Endless paint ignores the cost, so 'cooldown' paces it there. The grenade bursts on first contact, or in the air when the body's delete_timer runs out, into burst_count drops; the sprinkler's own _comment says how it plants. Every record is a paint ball and borrows the bucket's art and sound until the art slice.",
         "grenade": {
             "cost": 0.5,
-            "cooldown": 2.5,
+            "cooldown": 3.5,
             "throw_speed": 1000.0,
             "burst_count": 12,
             "burst_speed": 650.0,
@@ -501,7 +501,7 @@
         "sprinkler": {
             "_comment": "Sticks where its body first meets cover, then every 'interval' seconds for 'lifetime' sprays burst_count drops in a fan over its top half; 'hits' enemy shots break it. It dies like a shot if it meets an enemy first, and its body's delete_timer is the flight's fuse.",
             "cost": 0.5,
-            "cooldown": 4.0,
+            "cooldown": 3.0,
             "throw_speed": 900.0,
             "burst_count": 5,
             "burst_speed": 520.0,
@@ -535,7 +535,7 @@
         "wall": {
             "_comment": "Set down 'reach' to the side the aim points, its foot level with the player's, and dropped at throw_speed until it stands on cover. Standing, it spends every enemy shot that reaches it, so it stops them; 'hits' of them break it, and it goes after 'lifetime'. Each 'interval' it drips burst_count drops straight down from its foot onto the floor. Its body's collision_size is the barrier.",
             "cost": 0.5,
-            "cooldown": 4.0,
+            "cooldown": 3.0,
             "throw_speed": 1200.0,
             "reach": 140.0,
             "burst_count": 3,

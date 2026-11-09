@@ -559,10 +559,111 @@ namespace
             "never unready, unarmed, out of reach or below the reserve; Endless paint throws\n";
     }
 
+    // The sprinkler and the wall each have their own rule (slice 6): the
+    // sprinkler is planted on unowned scoring floor ahead while no enemy is
+    // engaged, the wall set down between the bot and a visible enemy whose
+    // tool reaches it, within the wall's height.
+    void check_bot_planted_subs(const GameTuning& tuning)
+    {
+        const SubTuning& sprinkler = tuning.sub(SubType::sprinkler);
+        const SubTuning& wall = tuning.sub(SubType::wall);
+        int planters = 0;
+        for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+        {
+            const int window = tuning.bot(difficulty).reaction_steps * 3 + 2;
+            const float error = tuning.bot(difficulty).aim_error_radians;
+            for (const WeaponType tool : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
+                WeaponType::mister, WeaponType::bucket })
+            {
+                // Sprinkler: open paintable floor, nobody in sight.
+                MatchBotObservation open = bot_view(tuning, tool, {});
+                open.enemies.clear();
+                open.sub = SubType::sprinkler;
+                open.supports.back().paintable = true;
+                MatchBot planter(&tuning, difficulty, 31);
+                const BotRun planted = run_bot(planter, open, window);
+                require(planted.presses.size() <= 1, "A bot planted its sprinkler twice on one cooldown");
+                if (!planted.presses.empty())
+                {
+                    ++planters;
+                    // A throw at floor level a few strides out on either side.
+                    bool on_aim = false;
+                    for (const float side : { 1.0f, -1.0f })
+                    {
+                        std::optional<float> fixed;
+                        if (tool == WeaponType::roller)
+                        {
+                            const float tilt = tuning.weapon(WeaponType::roller).aim_tilt;
+                            fixed = side > 0.0f ? -tilt : pi + tilt;
+                        }
+                        const std::optional<float> expected = match_bot_ballistics::throw_angle(sprinkler, {},
+                            { side * open.size.x * 3.0f, open.size.y * 0.5f }, {}, fixed, tuning.bots().sub_throw_miss);
+                        on_aim = on_aim || (expected && Vector2F::dot(planted.press.shoot_direction,
+                            Vector2F::unit_vec_from_angle(*expected)) >= std::cos(error) - 0.001f);
+                    }
+                    require(on_aim && !planted.press.primary_shoot,
+                        "A bot's sprinkler missed the floor ahead or fired the tool with it");
+                }
+                // Never on its own paint, on floor that scores nothing, or in a fight.
+                MatchBotObservation owned = open; owned.footing = MatchBotFooting::own;
+                MatchBot proud(&tuning, difficulty, 31);
+                require(run_bot(proud, owned, window).presses.empty(), "A bot planted a sprinkler on its own paint");
+                MatchBotObservation bare = open; bare.supports.back().paintable = false;
+                MatchBot wasteful(&tuning, difficulty, 31);
+                require(run_bot(wasteful, bare, window).presses.empty(), "A bot planted a sprinkler on unscored floor");
+                MatchBotObservation fight = bot_view(tuning, tool, { 320.0f, 0.0f });
+                fight.sub = SubType::sprinkler;
+                fight.supports.back().paintable = true;
+                MatchBot fighter(&tuning, difficulty, 31);
+                require(run_bot(fighter, fight, window).presses.empty(), "A bot planted a sprinkler mid-fight");
+
+                // Wall: an enemy on the bot's floor, clear of where it lands.
+                const float clear = wall.reach + wall.body.details.col_rect_size.x * 0.5f + open.size.x * 0.5f;
+                for (const float side : { 1.0f, -1.0f })
+                {
+                    MatchBotObservation duel = bot_view(tuning, tool, { side * (clear + 120.0f), 0.0f });
+                    duel.sub = SubType::wall;
+                    MatchBot guard(&tuning, difficulty, 31);
+                    const BotRun walled = run_bot(guard, duel, window);
+                    // The roller sets it down on the side it faces, which is right here.
+                    const size_t expected = tool == WeaponType::roller && side < 0.0f ? 0u : 1u;
+                    require(walled.presses.size() == expected, "A bot did not set its wall down against a duel");
+                    if (expected == 1u)
+                    {
+                        require(walled.press.shoot_direction.x * side > 0.0f && !walled.press.primary_shoot,
+                            "A bot set its wall down on the wrong side or fired the tool with it");
+                    }
+                }
+                const auto never = [&](MatchBotObservation view, const char* message)
+                {
+                    view.sub = SubType::wall;
+                    MatchBot bot(&tuning, difficulty, 31);
+                    require(run_bot(bot, view, window).presses.empty(), message);
+                };
+                never(bot_view(tuning, tool, { clear - 10.0f, 0.0f }), "A bot walled an enemy inside the wall's reach");
+                never(bot_view(tuning, tool, { clear + 120.0f, -wall.body.details.col_rect_size.y }),
+                    "A bot walled an enemy above the wall's top");
+                never(bot_view(tuning, tool, { clear + 120.0f, open.size.y }), "A bot walled an enemy below its floor");
+                MatchBotObservation harmless = bot_view(tuning, tool, { clear + 120.0f, 0.0f });
+                harmless.enemies.back().engage_distance = clear;
+                never(harmless, "A bot walled an enemy whose tool cannot reach it");
+                MatchBotObservation alone = open; alone.supports.back().paintable = false;
+                never(alone, "A bot set a wall down with nobody to stop");
+            }
+        }
+        require(planters >= 12, "Too few tools planted a sprinkler on open floor");
+        std::cout << "PASS bot planted subs: " << planters << " difficulty/tool pairs plant a sprinkler ahead, never "
+            "on own paint, unscored floor or mid-fight; walls go down between duels, never too close, outside the "
+            "wall's height, against a harmless or absent enemy\n";
+    }
+
     // A roller and a sprayer bot on crossfeed for a minute, under either
-    // refill rule.
+    // refill rule, carrying each sub in turn.
     void check_bot_round(World& world)
     {
+        for (const SubType carried : { SubType::grenade, SubType::sprinkler, SubType::wall })
+        {
+        int used = 0;
         for (const MatchVariant variant : { MatchVariant::standard, MatchVariant::endless_paint })
         {
             // The host stays human and idle; a sprayer bot joins its team.
@@ -571,6 +672,8 @@ namespace
             settings.set_player_bot(2, BotDifficulty::hard);
             settings.set_player_team(2, PlayerTeam::a);
             settings.set_player_weapon(2, WeaponType::sprayer);
+            settings.set_player_sub(1, carried);
+            settings.set_player_sub(2, carried);
             settings.set_screen_layout(layout_for_humans(settings.human_count()));
             settings.set_duration(120.0f);
             auto level = world.level(settings);
@@ -584,21 +687,22 @@ namespace
                 for (size_t index = 0; index < throws.size(); ++index)
                 {
                     const SubWeapon* sub = level->player(static_cast<int>(index) + 1).sub_weapon();
-                    require(sub != nullptr, "A bot seat carried no sub");
+                    require(sub != nullptr && sub->type() == carried, "A bot seat did not carry its sub");
                     const float now = sub->cooldown_remaining();
                     if (now > cooldown[index]) { ++throws[index]; }
                     cooldown[index] = now;
                 }
             }
-            // Where the two bots meet is the stage's business; that they throw
-            // when they do, at each tool, is the policy check's. Here: a real
-            // round's bots throw, and never faster than the cooldown allows.
-            const int most = static_cast<int>(60.0f / world.assets.tuning.sub(SubType::grenade).cooldown) + 1;
-            require(throws[0] + throws[1] > 0, std::string("No bot threw its grenade in a ") +
-                match_variant_key(variant) + " round");
-            require(throws[0] <= most && throws[1] <= most, "A bot threw faster than the cooldown");
-            std::cout << "PASS bot round " << match_variant_key(variant) << ": roller threw " << throws[0] <<
-                ", sprayer threw " << throws[1] << " in a minute\n";
+            // Where the two bots meet is the stage's business; that they use
+            // each sub when they should, at each tool, is the policy checks'.
+            // Here: a real round's bots use it, never faster than the cooldown.
+            const int most = static_cast<int>(60.0f / world.assets.tuning.sub(carried).cooldown) + 1;
+            used += throws[0] + throws[1];
+            require(throws[0] <= most && throws[1] <= most, "A bot used its sub faster than the cooldown");
+            std::cout << "PASS bot round " << sub_name(carried) << " " << match_variant_key(variant) <<
+                ": roller used " << throws[0] << ", sprayer used " << throws[1] << " in a minute\n";
+        }
+        require(used > 0, std::string("No bot used its ") + sub_name(carried) + " in either round");
         }
     }
 }
@@ -877,6 +981,7 @@ int wmain(int argc, wchar_t* argv[])
         check_controls();
         check_round(world);
         check_bot_policy(world.assets.tuning);
+        check_bot_planted_subs(world.assets.tuning);
         check_bot_round(world);
         check_sprinkler(world);
         check_wall(world);
