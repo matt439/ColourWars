@@ -53,7 +53,7 @@ void check_sub_remembered_setup(const std::filesystem::path& save_path)
     Save save; SettingsSession save_session(save);
     require(save.remember_match_setup_and_save(captured), "Cannot persist a setup with subs");
     const auto document = labrador::read_json_file(save_path.string().c_str());
-    require(document.root().integer("save_version") == 8, "A save with subs is not save version 8");
+    require(document.root().integer("save_version") >= 8, "A save with subs is older than save version 8");
     const auto players = document.root().object("last_match").array("players");
     require(!players.at(0).has("sub") && players.at(1).string("sub") == "wall" &&
         players.at(2).string("sub") == "sprinkler",

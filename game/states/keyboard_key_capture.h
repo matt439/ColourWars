@@ -8,8 +8,8 @@
 // One physical keyboard gesture for one keyboard action. The page samples once
 // per update; queries and repeated samples of a terminal frame never accept the
 // choice a second time. All named keys participate in neutral/chord detection,
-// including keys outside the small binding domain. Shoot's gesture also counts
-// mouse buttons; every other action ignores the mouse.
+// including keys outside the small binding domain. Shoot's and Sub's gestures
+// also count mouse buttons; every other action ignores the mouse.
 class KeyboardKeyCapture
 {
 public:
@@ -31,7 +31,7 @@ public:
 	Phase phase() const { return this->phase_; }
 	Rejection rejection() const { return this->rejection_; }
 	KeyboardAction action() const { return this->action_; }
-	bool accepts_mouse() const { return this->action_ == KeyboardAction::shoot; }
+	bool accepts_mouse() const { return keyboard_action_takes_mouse(this->action_); }
 	// The key part of the candidate/result; none for a mouse button.
 	labrador::Key candidate() const { return this->candidate_.key; }
 	std::optional<labrador::Key> result() const;

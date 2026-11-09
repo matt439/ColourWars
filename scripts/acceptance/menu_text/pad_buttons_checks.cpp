@@ -56,8 +56,8 @@ namespace menu_text_acceptance
         const labrador::Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
             look.art.shadow_offset - look.layout.position.x - look.layout.spacing.x,
             look.layout.spacing.y - look.art.focus_padding.y * 2.0f);
-        const std::array<const std::wstring*, 6> rows{ &copy.jump, &copy.jump_alternate, &copy.shoot,
-            &copy.shoot_alternate, &copy.pause, &copy.pause_alternate };
+        const std::array<const std::wstring*, 7> rows{ &copy.jump, &copy.jump_alternate, &copy.shoot,
+            &copy.shoot_alternate, &copy.pause, &copy.pause_alternate, &copy.sub };
         const auto listed = pad_controls();
         std::vector<PadControl> values(listed.begin(), listed.end());
         values.push_back(PadControl::none);

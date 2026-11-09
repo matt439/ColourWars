@@ -42,7 +42,7 @@ int main(int argc, char** argv)
         check_keyboard_domain_and_mapping(tuning.input());
         check_keyboard_reader(argv[1]);
         check_keyboard_save(directory);
-        std::cout << "PASS input bindings keyboard actions: explicit six-action domains (A-Z/Space, Shoot's five mouse "
+        std::cout << "PASS input bindings keyboard actions: explicit seven-action domains (A-Z/Space, Shoot's and Sub's five mouse "
             "buttons, optional extra Pause), reserved keys, defaults equal to the old literals, per-profile conflicts, "
             "effective mapping with fixed Escape/Down/F1/intro/menu aliases, actual reader remap/held adoption/focus, "
             "save schema/round trip, missing/damaged/conflicting keyboard-object recovery and pad independence\n";

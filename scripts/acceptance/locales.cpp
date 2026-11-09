@@ -161,10 +161,10 @@ namespace
             "qps-ploc must bracket menu_text.controls' headings and labels, and Keyboard Keys must name them.");
         const std::array<int, 1> one_pad{ 0 };
         require(controls_text::pad_controls_reminder(pseudo_controls, InputBindings{}, one_pad) ==
-            L"[Left stick  Move    |    Stick down  Drop through]\n[A / LT  Jump    |    RT  Shoot]\n"
+            L"[Left stick  Move    |    Stick down  Drop through]\n[A / LT  Jump    |    RT  Shoot    |    RB  Sub]\n"
             L"[Right stick  Aim    |    [Start]  Pause]" &&
             controls_text::keyboard_controls_reminder(pseudo_controls, InputBindings{}) ==
-            L"[A / D  Move    |    S  Drop through]\n[[Space]  Jump    |    [Left click]  Shoot]\n"
+            L"[A / D  Move    |    S  Drop through]\n[[Space]  Jump    |    [Left click]  Shoot    |    [Right click]  Sub]\n"
             L"[Mouse  Aim    |    [Esc]  Pause]",
             "qps-ploc must reach every line of the controls reminder and its label words.");
         InputBindings mixed;
@@ -172,7 +172,7 @@ namespace
         const std::array<int, 2> two_pads{ 0, 1 };
         require(controls_text::pad_controls_reminder(pseudo_controls, mixed, two_pads) ==
             L"[Left stick  Move    |    Stick down  Drop through]\n"
-            L"[Pad 1: A / LT Jump, RT Shoot, [Start] Pause]\n[Pad 2: B Jump, RT Shoot, [Start] Pause]\n"
+            L"[Pad 1: A / LT Jump, RT Shoot, RB Sub, [Start] Pause]\n[Pad 2: B Jump, RT Shoot, RB Sub, [Start] Pause]\n"
             L"[Right stick  Aim]",
             "qps-ploc must reach the per-pad reminder lines.");
         // Each shipped stage's title, which Stage Select and the countdown draw.

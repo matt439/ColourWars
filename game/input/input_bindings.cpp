@@ -50,7 +50,7 @@ namespace
 		throw std::invalid_argument("Unknown pad control");
 	}
 
-	constexpr std::array<const char*, pad_action_count> action_names{ "jump", "shoot", "pause" };
+	constexpr std::array<const char*, pad_action_count> action_names{ "jump", "shoot", "pause", "sub" };
 
 	// Adds one control to an action's sources. Triggers are thresholded; a
 	// shoot trigger keeps the shoot threshold, every other action the jump one.
@@ -99,7 +99,7 @@ namespace
 	} };
 
 	constexpr std::array<const char*, keyboard_action_count> keyboard_action_names{
-		"move_left", "move_right", "jump", "drop", "shoot", "pause" };
+		"move_left", "move_right", "jump", "drop", "shoot", "pause", "sub" };
 
 	const MouseName* mouse_entry(MouseButton button)
 	{
@@ -155,7 +155,7 @@ bool keyboard_control_supported(KeyboardAction action, const DesktopControl& con
 	if (unbound(control)) { return action == KeyboardAction::pause; }
 	if (control.button != MouseButton::none)
 	{
-		return action == KeyboardAction::shoot && mouse_entry(control.button) != nullptr;
+		return keyboard_action_takes_mouse(action) && mouse_entry(control.button) != nullptr;
 	}
 	return keyboard_key_supported(control.key);
 }
@@ -195,6 +195,7 @@ GameAction keyboard_game_action(KeyboardAction action)
 	case KeyboardAction::drop: return GameAction::drop;
 	case KeyboardAction::shoot: return GameAction::shoot;
 	case KeyboardAction::pause: return GameAction::pause;
+	case KeyboardAction::sub: return GameAction::sub;
 	default: throw std::out_of_range("Unknown keyboard action");
 	}
 }
@@ -209,6 +210,7 @@ DesktopControl keyboard_control(const InputBindings& bindings, KeyboardAction ac
 	case KeyboardAction::drop: return { bindings.keyboard_drop, MouseButton::none };
 	case KeyboardAction::shoot: return bindings.keyboard_shoot;
 	case KeyboardAction::pause: return { bindings.keyboard_pause, MouseButton::none };
+	case KeyboardAction::sub: return bindings.keyboard_sub;
 	default: throw std::out_of_range("Unknown keyboard action");
 	}
 }
@@ -228,6 +230,7 @@ void set_keyboard_control(InputBindings& bindings, KeyboardAction action, const 
 	case KeyboardAction::drop: bindings.keyboard_drop = control.key; return;
 	case KeyboardAction::shoot: bindings.keyboard_shoot = control; return;
 	case KeyboardAction::pause: bindings.keyboard_pause = control.key; return;
+	case KeyboardAction::sub: bindings.keyboard_sub = control; return;
 	default: throw std::out_of_range("Unknown keyboard action");
 	}
 }
@@ -328,6 +331,10 @@ void PadProfile::validate() const
 		{
 			throw std::invalid_argument("Pad " + std::string(action_names[index]) + " has an unsupported alternate control");
 		}
+		if (choice.alternate != PadControl::none && !pad_action_has_alternate(static_cast<PadAction>(index)))
+		{
+			throw std::invalid_argument("Pad " + std::string(action_names[index]) + " takes no alternate control");
+		}
 		for (const bool alternate : { false, true })
 		{
 			const PadControl control = alternate ? choice.alternate : choice.primary;
@@ -371,10 +378,11 @@ void InputBindings::validate() const
 
 namespace
 {
-	// A pad profile's Jump, Shoot and Pause sources, over whatever was there.
+	// A pad profile's Jump, Shoot, Pause and Sub sources, over whatever was there.
 	void apply_pad_profile(ActionBindings& result, const PadProfile& profile)
 	{
-		const std::array<GameAction, pad_action_count> actions{ GameAction::jump, GameAction::shoot, GameAction::pause };
+		const std::array<GameAction, pad_action_count> actions{ GameAction::jump, GameAction::shoot,
+			GameAction::pause, GameAction::sub };
 		for (std::size_t index = 0; index < pad_action_count; ++index)
 		{
 			PadActionBinding binding;
@@ -382,19 +390,6 @@ namespace
 			add_source(binding, profile.actions[index].alternate, static_cast<PadAction>(index));
 			result.game_pad[static_cast<std::size_t>(actions[index])] = std::move(binding);
 		}
-		// The Sub action (ROAD#11) is not a profile choice yet: it takes RB,
-		// or LB when the profile gave RB to Jump, Shoot or Pause, or nothing
-		// when it gave both away, so it never shares a control with them.
-		const auto used = [&profile](PadControl control)
-		{
-			return std::any_of(profile.actions.begin(), profile.actions.end(),
-				[control](const PadActionChoice& choice)
-				{ return choice.primary == control || choice.alternate == control; });
-		};
-		PadActionBinding sub;
-		if (!used(PadControl::right_shoulder)) { sub.buttons = { GamepadButton::right_shoulder }; }
-		else if (!used(PadControl::left_shoulder)) { sub.buttons = { GamepadButton::left_shoulder }; }
-		result.game_pad[static_cast<std::size_t>(GameAction::sub)] = std::move(sub);
 	}
 }
 
@@ -416,11 +411,10 @@ ActionBindings effective_action_bindings(const InputBindings& preferences)
 	else { shoot.keys = { preferences.keyboard_shoot.key }; }
 	desktop(GameAction::pause).keys = { player_input_consts::pause_key };
 	if (preferences.keyboard_pause != Key::none) { desktop(GameAction::pause).keys.push_back(preferences.keyboard_pause); }
-	// The Sub action (ROAD#11) takes the right mouse button, or the left when
-	// Shoot chose the right. Only Shoot may take a mouse button, so one of
-	// the two is always free.
-	desktop(GameAction::sub).mouse_buttons = {
-		preferences.keyboard_shoot.button == MouseButton::right ? MouseButton::left : MouseButton::right };
+	DesktopActionBinding& sub = desktop(GameAction::sub);
+	sub = {};
+	if (preferences.keyboard_sub.button != MouseButton::none) { sub.mouse_buttons = { preferences.keyboard_sub.button }; }
+	else { sub.keys = { preferences.keyboard_sub.key }; }
 	// A slot that has not chosen reads the default profile's controls.
 	apply_pad_profile(result, PadProfile());
 	return result;
@@ -444,7 +438,23 @@ PadProfile read_pad_profile(const JsonValue& entry)
 	PadProfile profile;
 	for (std::size_t action = 0; action < pad_action_count; ++action)
 	{
+		if (static_cast<PadAction>(action) == PadAction::sub && !entry.has(action_names[action])) { continue; }
 		profile.actions[action] = read_choice(entry.array(action_names[action]));
+	}
+	if (!entry.has(action_names[static_cast<std::size_t>(PadAction::sub)]))
+	{
+		// Written before Sub was a choice: RB, else LB, else the first
+		// control the other actions leave free.
+		std::vector<PadControl> order{ PadControl::right_shoulder, PadControl::left_shoulder };
+		for (const PadControl control : pad_controls()) { order.push_back(control); }
+		for (const PadControl control : order)
+		{
+			if (!pad_control_conflict(profile, PadAction::sub, false, control))
+			{
+				profile[PadAction::sub] = { control, PadControl::none };
+				break;
+			}
+		}
 	}
 	profile.validate();
 	return profile;
@@ -483,7 +493,7 @@ void InputBindingsSection::read(const JsonValue& root, SaveData& data) const
 	catch (const std::invalid_argument&) {}
 	if (section.has("keyboard"))
 	{
-		// The other five recover together: one damaged entry discards them all.
+		// The other six recover together: one damaged entry discards them all.
 		InputBindings keys = candidate;
 		try
 		{
@@ -492,6 +502,14 @@ void InputBindingsSection::read(const JsonValue& root, SaveData& data) const
 			{
 				const KeyboardAction action = static_cast<KeyboardAction>(index);
 				if (action == KeyboardAction::jump) { continue; }
+				if (action == KeyboardAction::sub && !keyboard.has(keyboard_action_names[index]))
+				{
+					// Written before Sub was a choice (save version 9): the
+					// right mouse button, or the left when Shoot has the right.
+					keys.keyboard_sub = { Key::none, keys.keyboard_shoot.button == MouseButton::right ?
+						MouseButton::left : MouseButton::right };
+					continue;
+				}
 				set_keyboard_control(keys, action, desktop_control_from_name(
 					keyboard.string(keyboard_action_names[index])));
 			}
@@ -500,7 +518,7 @@ void InputBindingsSection::read(const JsonValue& root, SaveData& data) const
 		catch (const std::runtime_error&) {}
 		catch (const std::invalid_argument&) {}
 	}
-	// A conflicting set recovers the five to the defaults first, then Jump to
+	// A conflicting set recovers the six to the defaults first, then Jump to
 	// Space if it still clashes with a default.
 	const auto keyboard_valid = [](const InputBindings& value)
 	{

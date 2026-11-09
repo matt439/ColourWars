@@ -46,7 +46,11 @@ public:
 	// 7 adds "last_match.variant"; absent is Standard, the older match policy.
 	// 8 adds each "last_match.players[].sub"; absent is the grenade, which
 	// every older match carried.
-	static constexpr int version = 8;
+	// 9 adds the Sub action to "input_bindings": "keyboard.sub" and each pad
+	// profile's "sub" (also in "profiles"). Absent reads as the right mouse
+	// button (the left when Shoot has the right) and RB (else LB, else the
+	// first free pad control), which is where older builds put it.
+	static constexpr int version = 9;
 
 	Save() = default;
 	// Reads the file, or a legacy one, or keeps the defaults. A SettingsSession

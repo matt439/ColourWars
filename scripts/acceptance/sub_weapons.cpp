@@ -401,22 +401,35 @@ namespace
             defaults.game_desktop[static_cast<size_t>(GameAction::sub)].keys.empty(),
             "The Sub action's defaults are not RB and the right mouse button");
 
-        InputBindings rb_jump;
-        rb_jump.pads[1][PadAction::jump] = { PadControl::right_shoulder, PadControl::none };
-        require(pad_sub(effective_action_bindings(rb_jump, 1)) == std::vector<GamepadButton>{ GamepadButton::left_shoulder } &&
-            pad_sub(effective_action_bindings(rb_jump, 0)) == std::vector<GamepadButton>{ GamepadButton::right_shoulder },
-            "A profile that gave RB away did not move only its own Sub to LB");
+        // Sub is a choice like the others (slice 5): one slot's profile moves
+        // only that slot, a key works as well as a button, and no control
+        // serves Sub and another action at once.
+        InputBindings lb_sub;
+        lb_sub.pads[1][PadAction::sub] = { PadControl::left_shoulder, PadControl::none };
+        require(pad_sub(effective_action_bindings(lb_sub, 1)) == std::vector<GamepadButton>{ GamepadButton::left_shoulder } &&
+            pad_sub(effective_action_bindings(lb_sub, 0)) == std::vector<GamepadButton>{ GamepadButton::right_shoulder },
+            "A profile that chose LB for Sub did not move only its own Sub");
+        InputBindings shared;
+        shared.pads[2][PadAction::jump] = { PadControl::right_shoulder, PadControl::none };
+        bool refused = false;
+        try { shared.validate(); } catch (const std::invalid_argument&) { refused = true; }
+        InputBindings alternate;
+        alternate.pads[0][PadAction::sub] = { PadControl::right_shoulder, PadControl::left_shoulder };
+        bool alternate_refused = false;
+        try { alternate.validate(); } catch (const std::invalid_argument&) { alternate_refused = true; }
+        require(refused && alternate_refused, "Sub shared RB with Jump, or took a second pad control");
 
-        InputBindings both;
-        both.pads[2][PadAction::jump] = { PadControl::right_shoulder, PadControl::left_shoulder };
-        require(pad_sub(effective_action_bindings(both, 2)).empty(),
-            "Sub shared a shoulder a profile chose for another action");
-
+        InputBindings key_sub;
+        key_sub.keyboard_sub = { Key::q, MouseButton::none };
+        const ActionBindings keyed = effective_action_bindings(key_sub);
+        require(mouse_sub(keyed).empty() &&
+            keyed.game_desktop[static_cast<size_t>(GameAction::sub)].keys == std::vector<Key>{ Key::q },
+            "The keyboard Sub key did not replace the right mouse button");
         InputBindings right_shoot;
         right_shoot.keyboard_shoot = { Key::none, MouseButton::right };
-        require(mouse_sub(effective_action_bindings(right_shoot)) == std::vector<MouseButton>{ MouseButton::left },
-            "Sub shared the right mouse button with Shoot");
-        std::cout << "PASS controls: RB and right mouse, the free shoulder or button when taken\n";
+        require(keyboard_control_conflict(right_shoot, KeyboardAction::shoot, right_shoot.keyboard_shoot) ==
+            KeyboardAction::sub, "Shoot on the right mouse button did not conflict with Sub");
+        std::cout << "PASS controls: RB and right mouse by default, rebindable per pad and on the keyboard, never shared\n";
     }
 
     void check_round(World& world)

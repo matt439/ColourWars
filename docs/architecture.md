@@ -358,7 +358,10 @@ unrecognized variant restores Standard, so older saves keep their existing
 match policy; Endless paint is written with its stable `endless_paint` key.
 Save version 8 adds each seat's `last_match.players[].sub`, written only when
 it is not the grenade; absent or unknown is the grenade, which every older
-match carried.
+match carried. Save version 9 adds the Sub action to `input_bindings`
+(`keyboard.sub` and each pad profile's `sub`, also in `profiles`); absent reads
+as the right mouse button (the left when Shoot has the right) and RB (else LB,
+else the first free control), where older builds put it.
 
 Content resolves beside the executable, not the working directory: the engine's
 rule (`engine/app/content_root.h`), which `Application::load_manifest` applies

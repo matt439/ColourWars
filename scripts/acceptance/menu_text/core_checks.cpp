@@ -52,12 +52,12 @@ namespace menu_text_acceptance
         require(text.keyboard_jump.release_key(L"W") == L"Release W to keep this choice." &&
             text.keyboard_jump.release_key(L"Right click") == L"Release Right click to keep this choice." &&
             text.keyboard_jump.row(0) == L"Move left" && text.keyboard_jump.row(2) == L"Jump" &&
-            text.keyboard_jump.row(5) == L"Pause (also)",
+            text.keyboard_jump.row(5) == L"Pause (also)" && text.keyboard_jump.row(6) == L"Sub",
             "Keyboard Keys wrappers changed their literal copy, row order or required key substitution");
         bool row_rejected = false;
-        try { std::ignore = text.keyboard_jump.row(6); }
+        try { std::ignore = text.keyboard_jump.row(7); }
         catch (const std::out_of_range&) { row_rejected = true; }
-        require(row_rejected, "Keyboard Keys row lookup accepted a seventh action");
+        require(row_rejected, "Keyboard Keys row lookup accepted an eighth action");
         for (const auto& entry : status_text)
         {
             require(text.status.*entry.field == entry.text, std::string("Save-status default changed: ") + entry.key);

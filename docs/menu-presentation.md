@@ -1073,9 +1073,9 @@ the separate controls item font or shared menu detail font.
 `controls` preserves this exact shipped text with the default keyboard keys,
 including the authored line breaks and spacing. The template spells the
 keyboard keys as `{jump}` (required once) and `{left}`, `{right}`, `{drop}`,
-`{shoot}` and `{pause}` (each optional, at most once); the page substitutes the
+`{shoot}`, `{pause}` and `{sub}` (each optional, at most once); the page substitutes the
 saved keys, and `{pause}` is `Esc` followed by any extra Pause key. The pad
-lines spell `{pad_jump}`, `{pad_shoot}` and `{pad_pause}` (each optional, at
+lines spell `{pad_jump}`, `{pad_shoot}`, `{pad_pause}` and `{pad_sub}` (each optional, at
 most once): the pads' shared Pad buttons choice, such as `A / LT`, or `per pad`
 when the slots' profiles differ, whose buttons the countdown card and Pad
 buttons name per pad. The defaults read as below:
@@ -1085,12 +1085,14 @@ CONTROLLER
 Move / drop: left stick
 Aim: right stick    Shoot: RT
 Jump: A / LT (hold for height)
-Pause: Start    Debug: Back / View
+Pause: Start    Sub: RB
+Debug: Back / View
 KEYBOARD + MOUSE
 Move: A / D    Drop: S / Down
 Aim: mouse cursor    Shoot: Left click
 Jump: Space (hold for height)
-Pause: Esc    Debug: F1
+Pause: Esc    Sub: Right click
+Debug: F1
 MENUS
 Navigate: stick / D-pad / arrows
 Select: A / Enter    Back: B / Esc
@@ -1146,8 +1148,8 @@ the developer-bind warning. See the
 
 `menu_text.controls` owns the in-match controls reminder: the two card
 headings (`keyboard_heading`, `gamepad_heading`), the keyboard and shared pad
-templates (`keyboard_reminder` with all six keyboard tokens, `gamepad_reminder`
-with `{pad_jump}`, `{pad_shoot}` and `{pad_pause}`), the mixed-profile pad
+templates (`keyboard_reminder` with all seven keyboard tokens, `gamepad_reminder`
+with `{pad_jump}`, `{pad_shoot}`, `{pad_pause}` and `{pad_sub}`), the mixed-profile pad
 reminder (`gamepad_per_pad_reminder`, whose `{pads}` is one single-line
 `gamepad_pad_line` per pad, `{pad}` being the slot's number), the Controls
 help's `per_pad`, and `labels`: the words among the control labels (`space`,

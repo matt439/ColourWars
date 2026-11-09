@@ -210,7 +210,7 @@ namespace presentation_read
 			std::pair{ "move_left", &KeyboardKeysMenuText::move_left }, std::pair{ "move_right", &KeyboardKeysMenuText::move_right },
 			std::pair{ "jump", &KeyboardKeysMenuText::jump }, std::pair{ "drop", &KeyboardKeysMenuText::drop },
 			std::pair{ "shoot", &KeyboardKeysMenuText::shoot }, std::pair{ "pause", &KeyboardKeysMenuText::pause },
-			std::pair{ "reset", &KeyboardKeysMenuText::reset },
+			std::pair{ "sub", &KeyboardKeysMenuText::sub }, std::pair{ "reset", &KeyboardKeysMenuText::reset },
 			std::pair{ "pending_status", &KeyboardKeysMenuText::pending_status }, std::pair{ "saved_status", &KeyboardKeysMenuText::saved_status },
 			std::pair{ "capture_wait_neutral", &KeyboardKeysMenuText::capture_wait_neutral }, std::pair{ "capture_ready", &KeyboardKeysMenuText::capture_ready },
 			std::pair{ "capture_ready_mouse", &KeyboardKeysMenuText::capture_ready_mouse },
@@ -233,7 +233,7 @@ namespace presentation_read
 			std::pair{ "jump", &PadButtonsMenuText::jump }, std::pair{ "jump_alternate", &PadButtonsMenuText::jump_alternate },
 			std::pair{ "shoot", &PadButtonsMenuText::shoot }, std::pair{ "shoot_alternate", &PadButtonsMenuText::shoot_alternate },
 			std::pair{ "pause", &PadButtonsMenuText::pause }, std::pair{ "pause_alternate", &PadButtonsMenuText::pause_alternate },
-			std::pair{ "reset", &PadButtonsMenuText::reset }, std::pair{ "pending_status", &PadButtonsMenuText::pending_status },
+			std::pair{ "sub", &PadButtonsMenuText::sub }, std::pair{ "reset", &PadButtonsMenuText::reset }, std::pair{ "pending_status", &PadButtonsMenuText::pending_status },
 			std::pair{ "saved_status", &PadButtonsMenuText::saved_status }, std::pair{ "conflict_status", &PadButtonsMenuText::conflict_status } })
 		{ buttons.*field.second = read_menu_line(pad_buttons, field.first); }
 		buttons.help = read_menu_block(pad_buttons, "help");
@@ -600,15 +600,15 @@ std::wstring KeyboardKeysMenuText::release_key(std::wstring_view label) const
 
 const std::wstring& KeyboardKeysMenuText::row(size_t index) const
 {
-	const std::array<const std::wstring*, 6> rows{ &this->move_left, &this->move_right, &this->jump,
-		&this->drop, &this->shoot, &this->pause };
+	const std::array<const std::wstring*, 7> rows{ &this->move_left, &this->move_right, &this->jump,
+		&this->drop, &this->shoot, &this->pause, &this->sub };
 	return *rows.at(index);
 }
 
 const std::wstring& PadButtonsMenuText::row(size_t index) const
 {
-	const std::array<const std::wstring*, 6> rows{ &this->jump, &this->jump_alternate, &this->shoot,
-		&this->shoot_alternate, &this->pause, &this->pause_alternate };
+	const std::array<const std::wstring*, 7> rows{ &this->jump, &this->jump_alternate, &this->shoot,
+		&this->shoot_alternate, &this->pause, &this->pause_alternate, &this->sub };
 	return *rows.at(index);
 }
 

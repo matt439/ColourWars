@@ -35,7 +35,7 @@ void KeyboardKeysMenu::init()
 		menu_geometry::settings_action_width(look, this->calculate_widget_position(1, 0).x),
 		look.layout.spacing.y - look.art.focus_padding.y * 2.0f);
 	const std::array<const char*, keyboard_action_count> names{ "move_left", "move_right", "jump",
-		"drop", "shoot", "pause" };
+		"drop", "shoot", "pause", "sub" };
 	for (size_t index = 0; index < keyboard_action_count; ++index)
 	{
 		const int row = static_cast<int>(index);

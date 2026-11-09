@@ -37,9 +37,8 @@ enum class GameAction
 	pause,
 	debug,
 	skip_intro,
-	// The sub weapon (ROAD#11): pad RB and the right mouse button, or the
-	// nearest free control when a chosen action already holds one
-	// (effective_action_bindings). Not yet a choice on the Controls pages.
+	// The sub weapon (ROAD#11): pad RB and the right mouse button by
+	// default, rebindable on Keyboard Keys and Pad Buttons.
 	sub,
 	count
 };
@@ -98,7 +97,8 @@ struct ActionBindings
 
 // Only the controls no save changes: F1 / Back debug, the intro skip, the
 // menus, Escape pause and Down drop. The rebindable game actions (desktop
-// move, jump, shoot, drop and pause; pad jump, shoot and pause) are empty.
+// move, jump, shoot, drop, pause and sub; pad jump, shoot, pause and sub)
+// are empty.
 const ActionBindings& fixed_action_bindings();
 // The fixed controls plus what a default InputBindings chooses
 // (effective_action_bindings(InputBindings{}), with the default PadProfile),

@@ -61,23 +61,24 @@ struct MenuHelpText
 // (input_bindings.h); capture_ready_mouse is the Shoot row's prompt.
 struct KeyboardKeysMenuText
 {
-	std::wstring heading, move_left, move_right, jump, drop, shoot, pause, reset, help;
+	std::wstring heading, move_left, move_right, jump, drop, shoot, pause, sub, reset, help;
 	std::wstring pending_status, saved_status, capture_wait_neutral, capture_ready, capture_ready_mouse;
 	std::wstring capture_release, capture_rejected, capture_conflict, capture_cancelled, debug_collision;
 	// menu_text.controls.labels, copied when read, which release_key names.
 	ControlLabels labels;
 	std::wstring release_key(std::wstring_view label) const;
-	// Index by KeyboardAction: move_left, move_right, jump, drop, shoot, pause.
+	// Index by KeyboardAction: move_left, move_right, jump, drop, shoot, pause, sub.
 	const std::wstring& row(size_t index) const;
 };
 
 // The Pad Buttons page: one row per action entry, in PadAction order with the
-// alternate after each primary. Control labels are the game's (input_bindings.h).
+// alternate after each primary (Sub has none). Control labels are the game's
+// (input_bindings.h).
 struct PadButtonsMenuText
 {
-	std::wstring heading, jump, jump_alternate, shoot, shoot_alternate, pause, pause_alternate;
+	std::wstring heading, jump, jump_alternate, shoot, shoot_alternate, pause, pause_alternate, sub;
 	std::wstring reset, help, pending_status, saved_status, conflict_status;
-	// Index 0-5: jump, jump_alternate, shoot, shoot_alternate, pause, pause_alternate.
+	// Index 0-6: jump, jump_alternate, shoot, shoot_alternate, pause, pause_alternate, sub.
 	const std::wstring& row(size_t index) const;
 };
 
