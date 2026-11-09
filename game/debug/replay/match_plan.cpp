@@ -101,7 +101,7 @@ const char* MatchPlanner::weapon_name(WeaponType weapon)
 
 std::vector<std::string> MatchPlanner::seat_fields()
 {
-	return { "team", "bot", "human", "boost" };
+	return { "team", "bot", "human", "boost", "sub" };
 }
 
 std::vector<std::string> MatchPlanner::seat_values()
@@ -109,6 +109,8 @@ std::vector<std::string> MatchPlanner::seat_values()
 	std::vector<std::string> values{ "a", "b" };
 	for (const BotDifficulty difficulty : bot_difficulties) { values.push_back(bot_difficulty_key(difficulty)); }
 	values.insert(values.end(), { "0", "1", "2" });
+	for_each_sub([&values](SubType, const char* name) { values.push_back(name); });
+	values.push_back("random");
 	return values;
 }
 
@@ -120,6 +122,7 @@ const char* MatchPlanner::seat_field_name(MatchRequest::SeatChoice::Field field)
 	case MatchRequest::SeatChoice::Field::bot: return "bot";
 	case MatchRequest::SeatChoice::Field::human: return "human";
 	case MatchRequest::SeatChoice::Field::boost: return "boost";
+	case MatchRequest::SeatChoice::Field::sub: return "sub";
 	default: return "other";
 	}
 }
@@ -160,9 +163,17 @@ std::string MatchPlanner::parse_seat_choice(const std::string& field, const std:
 			return "boost must be 0, 1 or 2, got '" + value + "'";
 		}
 	}
+	else if (field == "sub")
+	{
+		choice.field = Field::sub;
+		if (value != "random" && !sub_from_name(value))
+		{
+			return "sub must be grenade, sprinkler, wall or random, got '" + value + "'";
+		}
+	}
 	else
 	{
-		return "unknown field '" + field + "'; one of team, bot, human, boost";
+		return "unknown field '" + field + "'; one of team, bot, human, boost, sub";
 	}
 	choice.value = value;
 	return {};
@@ -349,6 +360,11 @@ MatchPlan MatchPlanner::resolve(const MatchSetup* current,
 		else if (choice.field == Field::boost)
 		{
 			settings.set_player_handicap(choice.seat, choice.value[0] - '0');
+		}
+		else if (choice.field == Field::sub)
+		{
+			settings.set_player_sub(choice.seat, choice.value == "random" ?
+				static_cast<SubType>(random() % static_cast<unsigned int>(sub_count)) : *sub_from_name(choice.value));
 		}
 	}
 	if (!request.seats.empty())

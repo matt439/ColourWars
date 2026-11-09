@@ -99,16 +99,20 @@ namespace
             old_best_of + "    \"variant\": \"standard\",\n");
         // Version 10 adds the Sub action's input flag (ROAD#11); inputs
         // without a throw are written as before.
-        std::string current = version_9;
-        current.replace(current.find("\"version\": 9"), 12, "\"version\": 10");
-        file.write(path); require(read_text(path) == current, "Static version-10 replay bytes changed");
+        std::string version_10 = version_9;
+        version_10.replace(version_10.find("\"version\": 9"), 12, "\"version\": 10");
+        // Version 11 adds each seat's sub (ROAD#11), written only when it is
+        // not the grenade: an all-grenade file matches 10's.
+        std::string current = version_10;
+        current.replace(current.find("\"version\": 10"), 13, "\"version\": 11");
+        file.write(path); require(read_text(path) == current, "Static version-11 replay bytes changed");
         file.final_print.seats[0].paint_underfoot = true;
         file.final_print.seats[0].support_paint_team = 1; file.final_print.seats[0].step_paint_team = 2;
         std::string active = current;
         const std::string needle = "\"alive\": 0 }";
         active.replace(active.find(needle), needle.size(),
             "\"alive\": 0, \"paint_underfoot\": { \"support_team\": 1, \"step_team\": 2 } }");
-        file.write(path); require(read_text(path) == active, "POL#36-only version-10 replay bytes changed");
+        file.write(path); require(read_text(path) == active, "POL#36-only version-11 replay bytes changed");
         const auto decoded = ReplayFile::read(path);
         require(!decoded.final_print.horizontal_motion &&
             MatchFingerprint::difference(file.final_print, decoded.final_print).empty(),
@@ -117,17 +121,17 @@ namespace
         const ReplayFile static_read = ReplayFile::read(path);
         require(!static_read.final_print.horizontal_motion && static_read.tape.settings().human_count() == 1 &&
             static_read.tape.settings().bot_count() == 0 && static_read.seed == 0,
-            "Static domain, bot or seed changed on version-10 read");
+            "Static domain, bot or seed changed on version-11 read");
         // A replay holds only on the build that recorded it: older versions are refused, not read.
         for (const auto& [text, version] : { std::pair{ expected, 3 }, std::pair{ version_4, 4 },
             std::pair{ version_5, 5 }, std::pair{ version_6, 6 }, std::pair{ version_7, 7 }, std::pair{ version_8, 8 },
-            std::pair{ version_9, 9 } })
+            std::pair{ version_9, 9 }, std::pair{ version_10, 10 } })
         {
             write_text(path, text);
             throws_with([&] { static_cast<void>(ReplayFile::read(path)); },
-                "format version " + std::to_string(version) + "; this build reads only 10");
+                "format version " + std::to_string(version) + "; this build reads only 11");
         }
-        // The seed is required: a version-10 file without one is refused.
+        // The seed is required: a version-11 file without one is refused.
         std::string seedless = current;
         seedless.erase(seedless.find("  \"seed\": \"0\",\n"), std::string("  \"seed\": \"0\",\n").size());
         write_text(path, seedless);

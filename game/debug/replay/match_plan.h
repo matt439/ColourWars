@@ -20,15 +20,15 @@ struct MatchRequest
 		std::string weapon; // a weapon name or "random"
 	};
 
-	// `seat <n> team|bot|human|boost [value]`: what the shipping setup
+	// `seat <n> team|bot|human|boost|sub [value]`: what the shipping setup
 	// chooses per seat. A shipping bot is the seat's controller, unlike a
 	// Debug behaviour (`bot`), which only drives a seat's input.
 	struct SeatChoice
 	{
-		enum class Field { team, bot, human, boost };
+		enum class Field { team, bot, human, boost, sub };
 		int seat = 0; // 0-based
 		Field field = Field::team;
-		std::string value; // a, b; easy, normal, hard; 0-2; empty for human
+		std::string value; // a, b; easy, normal, hard; 0-2; a sub or random; empty for human
 	};
 
 	std::optional<std::string> stage; // a stage key, or random/next/prev

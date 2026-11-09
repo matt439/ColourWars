@@ -197,6 +197,7 @@ namespace debug_console_acceptance
 		rejects(replace_once(valid, current_version, "\"version\": 6"), "an earlier schema, before vertical lifts");
 		rejects(replace_once(valid, current_version, "\"version\": 7"), "the previous schema, before rounds");
 		rejects(replace_once(valid, current_version, "\"version\": 9"), "the previous schema, before the Sub action");
+		rejects(replace_once(valid, current_version, "\"version\": 10"), "the previous schema, before sub loadouts");
 
 		write_text(path, "existing recording");
 		MatchSetup invalid_roster = mixed.tape.settings();

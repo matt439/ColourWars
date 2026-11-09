@@ -143,7 +143,7 @@ namespace presentation_read
 			"options_palette_timing", "title", "home_subtitle", "display_trial_countdown", "help",
 			"keyboard_jump", "pad_buttons", "profiles", "status", "values", "confirmations", "end",
 			"results", "stage_scan", "stage", "stage_names", "records", "labels", "connection",
-			"stick_readouts", "hud", "countdown", "controls", "headings", "prompts", "items" });
+			"stick_readouts", "hud", "subs", "countdown", "controls", "headings", "prompts", "items" });
 		MenuText text;
 		text.brand = read_menu_line(json, "brand");
 		text.solo_practice_hint = read_menu_line(json, "solo_practice_hint");
@@ -452,6 +452,29 @@ namespace presentation_read
 		text.hud.team_b = read_menu_line(hud, "team_b");
 		text.hud.health = read_menu_line(hud, "health");
 		text.hud.paint = read_menu_line(hud, "paint");
+		const JsonValue subs = json.object("subs");
+		content_value::require_known_keys(subs, { "line", "choosing", "choices" });
+		text.subs.line = read_menu_line(subs, "line");
+		text.subs.choosing = read_menu_line(subs, "choosing");
+		const JsonValue sub_choices = subs.object("choices");
+		{
+			std::vector<std::string_view> sub_keys(sub_names.begin(), sub_names.end());
+			sub_keys.push_back("random");
+			for (size_t index = 0; index < sub_keys.size(); ++index)
+			{
+				const JsonValue choice = sub_choices.object(std::string(sub_keys[index]).c_str());
+				content_value::require_known_keys(choice, { "name", "description" });
+				text.subs.names[index] = read_menu_line(choice, "name");
+				text.subs.descriptions[index] = read_menu_block(choice, "description");
+			}
+			content_value::require_known_keys(sub_choices, sub_keys);
+		}
+		for (const bool choosing : { false, true })
+		{
+			try { std::ignore = text.subs.label(0, choosing, L"Boost: Off"); }
+			catch (const std::invalid_argument& error)
+			{ throw std::runtime_error(subs.where() + ": " + (choosing ? "choosing" : "line") + ": " + error.what()); }
+		}
 		const JsonValue countdown = json.object("countdown");
 		text.countdown.get_ready = read_menu_line(countdown, "get_ready");
 		text.countdown.resuming = read_menu_line(countdown, "resuming");
@@ -608,6 +631,12 @@ std::wstring MenuText::display_countdown(int seconds) const
 {
 	if (seconds < 0) { throw std::out_of_range("Display countdown seconds must be nonnegative."); }
 	return format_label_template(this->display_trial_countdown, { { L"{seconds}", std::to_wstring(seconds) } });
+}
+
+std::wstring SubMenuText::label(size_t choice, bool choosing_sub, const std::wstring& handicap) const
+{
+	return format_label_template(choosing_sub ? this->choosing : this->line,
+		{ { L"{handicap}", handicap }, { L"{sub}", this->names.at(choice) } });
 }
 
 std::wstring MenuText::practice_tool_label(std::wstring_view tool) const

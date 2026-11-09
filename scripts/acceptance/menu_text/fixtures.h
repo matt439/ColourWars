@@ -71,7 +71,7 @@ namespace menu_text_acceptance
         { "join", L"A/Enter Join / P1 continue    B/Esc Leave / back    X/R Profile    P1: Up/Down Row, Left/Right Human / Bot" },
         { "team", L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel" },
         { "team_shuffle", L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams" },
-        { "weapon", L"Left/Right Change weapon    X/R Boost    A/Enter Confirm    B/Esc Cancel" },
+        { "weapon", L"Left/Right Tool, then sub    X/R Boost    A/Enter Confirm    B/Esc Cancel" },
         { "arena_browse", L"Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back" },
         { "arena_locked", L"A/Enter Start match    B/Esc Unlock arena" },
         { "missing_player", L" Reconnect controller    B/Esc Change players" },
@@ -79,7 +79,7 @@ namespace menu_text_acceptance
         { "pause_missing", L" Reconnect, then Start    A/Enter Select" },
         { "select", L"A/Enter Select" }, { "credits", L"A/Enter Back    B/Esc Back" },
         { "bot_team", L"P1 Up/Down Row    Left/Right Team    A/Enter Ready    B/Esc Cancel    X/R Random teams" },
-        { "bot_weapon", L"P1 Up/Down Row    Left/Right Tool    X/R Boost    A/Enter Ready    B/Esc Cancel" },
+        { "bot_weapon", L"P1 Up/Down Row    Left/Right Tool, then sub    X/R Boost    A/Enter Ready    B/Esc Cancel" },
         { "profiles", L"D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back" },
         { "profile_name", L"Up/Down Letter    Left/Right Move    A/Enter Done    B/Esc Cancel" }
     };

@@ -289,6 +289,15 @@ namespace presentation_read
 				"tag/text required.");
 		}
 
+		const JsonValue sub_mark = json.object("sub_mark");
+		require_known_keys(sub_mark, { "size", "gap" });
+		hud.sub_mark.size = read_positive(sub_mark, "size");
+		hud.sub_mark.gap = read_positive(sub_mark, "gap");
+		if (hud.sub_mark.size < 6.0f || hud.sub_mark.size > 40.0f || hud.sub_mark.gap > 40.0f)
+		{
+			throw std::runtime_error(sub_mark.where() + ": size from 6 to 40 and gap up to 40 required.");
+		}
+
 		const JsonValue marker = json.object("cursor_marker");
 		CursorMarkerPresentation& cursor = hud.cursor_marker;
 		cursor.enabled = marker.boolean("enabled");

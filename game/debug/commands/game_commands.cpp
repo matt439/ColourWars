@@ -137,11 +137,12 @@ void DebugDirectorImpl::register_commands()
 		}, DebugMenuTraits::of("match", Form::pick, true, 1, "all"));
 
 	// Console only: three words per seat do not fit one picker.
-	registry.add_command("seat", "set a seat's team, shipping bot or Boost: seat <1-4> team a|b, "
-		"seat <2-4> bot easy|normal|hard, seat <2-4> human, seat <1-4> boost 0|1|2 "
+	registry.add_command("seat", "set a seat's team, shipping bot, Boost or sub: seat <1-4> team a|b, "
+		"seat <2-4> bot easy|normal|hard, seat <2-4> human, seat <1-4> boost 0|1|2, "
+		"seat <1-4> sub grenade|sprinkler|wall|random "
 		"(bot <seat> <behaviour> only drives a seat's input)",
 		{ { "1-4", false, [] { return std::vector<std::string>{ "1", "2", "3", "4" }; } },
-			{ "team|bot|human|boost", false, [] { return MatchPlanner::seat_fields(); } },
+			{ "team|bot|human|boost|sub", false, [] { return MatchPlanner::seat_fields(); } },
 			{ "value", true, [] { return MatchPlanner::seat_values(); } } },
 		[this](Args args, DebugLog&)
 		{

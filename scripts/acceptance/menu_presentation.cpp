@@ -36,6 +36,12 @@ namespace
         {
             member->value.SetString("Fit");
         }
+        // The subs' descriptions take the same place while a sub is chosen (ROAD#11).
+        auto& subs = document["menu_text"]["subs"]["choices"];
+        for (auto member = subs.MemberBegin(); member != subs.MemberEnd(); ++member)
+        {
+            member->value["description"].SetString("Fit");
+        }
     }
 
     void short_worn_join_rows(rapidjson::Document& d)

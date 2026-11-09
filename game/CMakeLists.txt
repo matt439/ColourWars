@@ -211,6 +211,7 @@ add_library(colourwars_game STATIC
     states/controls_settings_menu.cpp
     states/keyboard_key_capture.cpp
     states/keyboard_keys_menu.cpp
+    states/loadout_choice.cpp
     states/pad_buttons_menu.cpp
     states/profiles_menu.cpp
     states/stick_settings_menu.cpp

@@ -6,6 +6,7 @@
 #include "engine/render/screen_layout.h"
 #include "game/objects/player_team.h"
 #include "game/objects/stage.h"
+#include "game/objects/sub_type.h"
 #include "game/objects/weapon_type.h"
 #include "game/match/player_control.h"
 #include "game/save/save_section.h"
@@ -24,6 +25,8 @@ struct LastMatchPlayer
 	BotDifficulty difficulty = BotDifficulty::normal;
 	// handicaps::valid, humans and bots alike; 0 is none.
 	int handicap = 0;
+	// The resolved sub (ROAD#11): Weapon Select's Random is drawn before capture.
+	SubType sub = SubType::grenade;
 };
 
 // Preferences from one normally started match, independent of its progress.
@@ -56,7 +59,7 @@ struct LastMatchSetup
 };
 
 // "last_match": { "players": [ { "team": "a", "weapon": "sprayer",
-// "controller": "human", "difficulty": "normal", "handicap": 1 } ],
+// "controller": "human", "difficulty": "normal", "handicap": 1, "sub": "wall" } ],
 // "stage": "...", "layout": "one_player", "best_of": 1, "duration": ...,
 // "stage_rule": "rotate", "variant": "endless_paint" }.
 // Default duration is represented by omitting duration. Invalid whole sections
@@ -67,7 +70,9 @@ struct LastMatchSetup
 // Rotate; absent or unknown is Rotate, so Same is written explicitly. P1 is human,
 // and the layout follows the number of humans rather than all participants.
 // The variant (save version 7) is omitted for Standard; absent, malformed or
-// unknown is Standard, preserving the way older saved matches played.
+// unknown is Standard, preserving the way older saved matches played. A
+// seat's sub (save version 8) is omitted for the grenade; absent or unknown is
+// the grenade, the sub every match had before it could be chosen.
 class LastMatchSetupSection final : public SaveSection
 {
 public:

@@ -99,6 +99,7 @@ public:
 	// Match policy, captured when Player is built. Full supply ignores shot
 	// cost, including a cost larger than a tank; cooldown and feedback stay real.
 	void set_endless_paint(bool enabled);
+	bool endless_paint() const { return this->endless_paint_; }
 	// POL#38: below the larger of the tank share and the shot reserve in
 	// tuning, never above a full tank. Feedback only; firing ignores it.
 	float low_paint_level() const;

@@ -92,7 +92,7 @@ void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
 	float timer,
 	const Colour& team_colour,
 	bool reduced_effects, bool clock_running,
-	bool low_paint, float low_paint_elapsed, bool show_clock) const
+	bool low_paint, float low_paint_elapsed, bool show_clock, const SubHudCue& sub) const
 {
 	const HudPresentation& look = *this->look_;
 	const float scale = std::min(
@@ -164,8 +164,46 @@ void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
 		(reduced_effects || std::fmod(low_paint_elapsed, blink) < blink * 0.5f);
 	this->draw_meter(draw_list, resolution, ammo, team_colour,
 		ammo_pos, look.labels.paint, scale, tagged);
+	if (sub.shown)
+	{
+		this->draw_sub_mark(draw_list, resolution, ammo_pos, sub, scale);
+	}
 
 	draw_list.set_filter(TextureFilter::point);
+}
+
+void InterfaceGameplay::draw_sub_mark(DrawList& draw_list, const Vector2F& resolution,
+	const Vector2F& meter_position, const SubHudCue& sub, float scale) const
+{
+	const HudPresentation& look = *this->look_;
+	const SpriteSheet* sheet = this->render_resources()->sprite_sheet(this->sheet_);
+	const float pen = this->paper_pen(scale);
+	const Vector2F meter_size(resolution.x * look.box_size.x, resolution.y * look.box_size.y);
+	draw_list.set_filter(TextureFilter::point);
+	// The tick: what the tank must hold for the sub, across the meter.
+	const float cost = std::clamp(sub.cost, 0.0f, 1.0f);
+	if (cost > 0.0f && cost < 1.0f)
+	{
+		sheet->draw(draw_list, this->fill_frame_, RectangleF(
+			Vector2F(meter_position.x + meter_size.x * cost - pen * 0.5f, meter_position.y - pen),
+			Vector2F(pen, meter_size.y + pen * 2.0f)), CrudeDrawing::premultiplied(look.paper.ink));
+	}
+	// The square after the PAINT label, its bottom on the label's.
+	const Vector2F label_size = this->render_resources()->measure_text(
+		this->meter_label_font_, look.labels.paint) * scale;
+	const float side = std::max(pen * 3.0f, look.sub_mark.size * scale);
+	const float label_top = meter_position.y - label_size.y - look.meter_label_gap * scale;
+	const RectangleF square(
+		Vector2F(meter_position.x + label_size.x + look.sub_mark.gap * scale,
+			label_top + std::max(0.0f, (label_size.y - side) * 0.5f)),
+		Vector2F(side, side));
+	sheet->draw(draw_list, this->fill_frame_, square, CrudeDrawing::premultiplied(look.paper.ink));
+	if (!sub.ready)
+	{
+		RectangleF face = square;
+		face.inflate(-pen);
+		sheet->draw(draw_list, this->fill_frame_, face, CrudeDrawing::premultiplied(look.paper.paper));
+	}
 }
 
 float InterfaceGameplay::paper_pen(float scale) const

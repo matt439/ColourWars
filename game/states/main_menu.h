@@ -5,6 +5,7 @@
 #include "engine/render/text_encoding.h"
 #include "game/objects/player_team.h"
 #include "game/states/confirmation_state.h"
+#include "game/states/loadout_choice.h"
 #include "game/match/session.h"
 #include "game/states/menu_page.h"
 #include "game/states/menu_panel.h"
@@ -450,16 +451,25 @@ private:
 	MenuPaperArtPresentation icon_art_;
 	struct SelectState
 	{
-		WeaponType type = WeaponType::sprayer;
-		ConfirmationState state = ConfirmationState::unconfirmed;
+		// The tool, then the sub, then ready (ROAD#11).
+		LoadoutChoice loadout;
 		int handicap = 0;
+	};
+	// What a row's Boost and sub line and description last showed; the
+	// default matches no row, so the first update always writes them.
+	struct DisplayedSub
+	{
+		size_t choice = LoadoutChoice::sub_choice_count;
+		bool choosing = false;
+		int handicap = -1;
+		bool operator==(const DisplayedSub&) const = default;
 	};
 	struct Widgets
 	{
 		explicit Widgets(const MenuFocusMotionPresentation& look) : motion(look) {}
 		MenuFocusMotion motion;
 		std::unique_ptr<colourwars::UiTextDropShadow> player = nullptr;
-		// The row's handicap, under its label.
+		// The row's handicap and sub (ROAD#11), under its label.
 		std::unique_ptr<colourwars::UiTextDropShadow> handicap = nullptr;
 		std::unique_ptr<UiPlayerBadge> badge;
 		std::unique_ptr<MenuIcon> weapon_icon = nullptr;
@@ -477,6 +487,7 @@ private:
 	// Each row's weapon when its icon and text were last written; none until
 	// the first write, so that one always happens.
 	std::vector<WeaponType> displayed_weapons_;
+	std::vector<DisplayedSub> displayed_subs_;
 	int host_row_ = 0;
 	std::unique_ptr<labrador::UiTexture> host_cursor_;
 	void update_weapon_select_visuals();
@@ -485,10 +496,10 @@ private:
 	bool all_players_unconfirmed() const;
 	static WeaponType random_weapon();
 	void set_level_settings() const;
-	void cycle_weapons(labrador::Direction direction, int player_index);
 	// Off, +1, +2, then back to Off.
 	void cycle_handicap(int player_index);
 	const std::wstring& weapon_description(WeaponType type) const;
+	std::wstring handicap_and_sub_line(const SelectState& row) const;
 	void check_paper_geometry() const;
 };
 

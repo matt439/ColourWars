@@ -16,6 +16,7 @@
 #include "game/contracts/match_variant.h"
 #include "game/config/presentation/presentation_match.h"
 #include "game/input/controls_copy.h"
+#include "game/objects/sub_type.h"
 
 enum class MenuHeading
 {
@@ -294,6 +295,23 @@ struct StageScanMenuText
 	std::wstring progress(size_t file, size_t files, size_t page, size_t pages) const;
 };
 
+// menu_text.subs (ROAD#11): Weapon Select's line under each player's label,
+// the Boost label then the sub, and each sub's description, which takes the
+// tool's place while the sub is chosen. A choice is a SubType index, or
+// sub_count for Random.
+struct SubMenuText
+{
+	static constexpr size_t choice_count = sub_count + 1;
+	// {handicap} and {sub}, each once: while the row's tool is chosen or it
+	// is ready (line), and while its sub is (choosing).
+	std::wstring line;
+	std::wstring choosing;
+	std::array<std::wstring, choice_count> names;
+	std::array<std::wstring, choice_count> descriptions;
+	// Throws out_of_range for a choice past Random.
+	std::wstring label(size_t choice, bool choosing_sub, const std::wstring& handicap) const;
+};
+
 // Fixed roles select display text; navigation and accepted inputs remain code.
 struct MenuText
 {
@@ -326,6 +344,7 @@ struct MenuText
 	MenuConnectionText connection;
 	MenuStickReadoutsText stick_readouts;
 	HudLabels hud;
+	SubMenuText subs;
 	MenuCountdownText countdown;
 	// The in-match controls reminder and the control-label words (controls_copy.h).
 	ControlsCopy controls;

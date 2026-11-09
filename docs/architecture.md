@@ -356,6 +356,9 @@ folder is read once, if nothing is at the real path, to carry it across
 Save version 7 adds the remembered setup's `last_match.variant`. An absent or
 unrecognized variant restores Standard, so older saves keep their existing
 match policy; Endless paint is written with its stable `endless_paint` key.
+Save version 8 adds each seat's `last_match.players[].sub`, written only when
+it is not the grenade; absent or unknown is the grenade, which every older
+match carried.
 
 Content resolves beside the executable, not the working directory: the engine's
 rule (`engine/app/content_root.h`), which `Application::load_manifest` applies

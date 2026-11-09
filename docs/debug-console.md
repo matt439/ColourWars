@@ -149,7 +149,7 @@ running.
 | `stage <name\|next\|prev\|random>` | start that stage (from a menu) or rebuild the match on it |
 | `players <1-4> [bot]` | seats: connected pads in slot order, then keyboard/mouse, then idle dummies. With no pad, seat 1 is keyboard/mouse. A second word is `bot all <bot>` as well (`players 4 paint`). In a menu it is stored for `stage`; a match started from the menus instead drops it (logged), as does a match ending with it still queued |
 | `weapon <seat\|all> <sprayer\|sniper\|roller\|mister\|bucket\|random>` | a seat's weapon (seats are 1-4) |
-| `seat <1-4> team <a\|b>`, `seat <2-4> bot <easy\|normal\|hard>`, `seat <2-4> human`, `seat <1-4> boost <0\|1\|2>` | what the shipping setup chooses per seat: the team, a [shipping bot](debug-console-record.md#roster-statements-for-bots-teams-and-boost-dbg17) at a difficulty (the seat's controller, with no device or pane), a bot handed back to a human, and Boost. Queued like `weapon`, applied after `players` in typed order; seat 1 stays human. Console only, not in the debug menu |
+| `seat <1-4> team <a\|b>`, `seat <2-4> bot <easy\|normal\|hard>`, `seat <2-4> human`, `seat <1-4> boost <0\|1\|2>`, `seat <1-4> sub <grenade\|sprinkler\|wall\|random>` | what the shipping setup chooses per seat: the team, a [shipping bot](debug-console-record.md#roster-statements-for-bots-teams-and-boost-dbg17) at a difficulty (the seat's controller, with no device or pane), a bot handed back to a human, Boost, and the sub weapon (`ROAD#11`; Random draws when the plan applies). Queued like `weapon`, applied after `players` in typed order; seat 1 stays human. Console only, not in the debug menu |
 | `intro <auto\|full\|quick\|off>` | how the next match begins: `auto` is the game's choice (the whole intro on a match's first build, the quick one from the colour preview on a rematch), `off` starts at the split-screen countdown. `record` and `play`, and any one-player match, always build without one (variable) |
 | `feedback <on\|off\|toggle>` | movement feedback (variable; `1`/`0` too). Immediate |
 | `overlay [player\|collision\|camera\|paint\|stations\|perf\|all\|none]` | toggle one [overlay](#overlays), or all on/off (`all` leaves `perf` alone, `none` clears it); alone, list them |
@@ -1088,10 +1088,11 @@ hash every 60 updates and the final state. In memory a recording is the same
 `RoundTape` the shipping instant replay keeps (`game/match/round_tape.h`); the file
 is that tape plus the checks.
 
-Files use **format 10** (`DBG#2` added later rounds, so format 7 is refused;
+Files use **format 11** (`DBG#2` added later rounds, so format 7 is refused;
 `ROAD#28` had moved the motion block to schema 2 for vertical lifts, `ROAD#22`
 made each round's variant required in format 9, and `ROAD#11` added the Sub
-action's input flag, 512, in format 10), with
+action's input flag, 512, in format 10 and each seat's `sub`, written only
+when it is not the grenade, in format 11), with
 explicit human/bot controller kind and
 Easy/Normal/Hard difficulty for each participant. `seed` is required and is the
 round seed, which `play` builds from, so a recording made without `seed`
