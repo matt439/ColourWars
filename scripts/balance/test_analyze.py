@@ -313,6 +313,16 @@ class ComparisonTests(unittest.TestCase):
                    table={},marginals={})
         with self.assertRaises(ValueError): analyze.compare_groups([group],[group],{'paint':.03})
         with self.assertRaises(ValueError): analyze.compare_groups([group],[dict(group,seeds=[3,4])],dict(paint=.03,kills=.2,deaths=.2))
+    def test_diagnostic_rates_use_simulated_active_minutes(self):
+        counters=dict(alive_ticks=120,engaged_ticks=60,refilling_ticks=30,
+                      ready_fire_intents=20,observed_sub_cooldown_resets=2)
+        match=dict(stage='arena',seed=1,players=1,bot='match:hard',seconds=1.,active_minutes=2.,
+                   seats=[dict(team='a',tool='sprayer',paint=.5,kills=0.,deaths=0.,diagnostics=counters)])
+        result=analyze.analyze([match],{},True)[0]['diagnostics']['sprayer']
+        self.assertEqual(result['ready_fire_intents_per_minute'],10.)
+        self.assertEqual(result['observed_sub_cooldown_resets_per_minute'],1.)
+        self.assertEqual(result['engaged_fraction'],.5)
+
     def test_two_player_teams_report_whole_team_paint(self):
         matches=[]
         for seed,share in enumerate((.55,.60,.65)):

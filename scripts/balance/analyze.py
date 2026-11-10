@@ -191,7 +191,7 @@ def read_matches(files):
             match = {
                 "stage": row["stage"], "seed": int(number(row, "seed", path, line)),
                 "players": players, "bot": row["bot"],
-                "seconds": number(row, "requested_active_seconds", path, line), "seats": seats,
+                "seconds": number(row, "requested_active_seconds", path, line), "active_minutes": minutes, "seats": seats,
             }
             key = (match["stage"], match["seed"], players, match["bot"], match["seconds"],
                    tuple((s["team"], s["tool"], s["sub"]) for s in seats))
@@ -507,7 +507,7 @@ def analyze_group(matches, profiles, include_mirrors):
             item=totals.setdefault(seat['tool'],dict(alive_ticks=0,engaged_ticks=0,refilling_ticks=0,ready_fire_intents=0,observed_sub_cooldown_resets=0,minutes=0))
             for name,value in seat['diagnostics'].items():
                 item[name]+=value
-            item['minutes']+=match['seconds']/60.0
+            item['minutes']+=match.get('active_minutes',match['seconds']/60.0)
     result['diagnostics']={tool:dict(values,
         engaged_fraction=values['engaged_ticks']/values['alive_ticks'] if values['alive_ticks'] else None,
         refilling_fraction=values['refilling_ticks']/values['alive_ticks'] if values['alive_ticks'] else None,
