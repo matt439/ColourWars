@@ -3769,7 +3769,7 @@ What the local run found, on MattPC with MSVC 14.51 (2026-11-10):
   `ERROR: AddressSanitizer: heap-buffer-overflow` and a symbolised stack. It
   is not committed.
 - `/analyze` completed and reported 13 distinct warnings. Eleven are this
-  repository's: eight C6262 (a function with a stack frame of 17 to 89 KiB, half
+  repository's: eight C6262 (a function with a stack frame of 17 to 87 KiB, half
   of them about 64 KiB; four in `game/` outside the console, three in
   `editor/`, one in `game/debug/`), C6011 at `game/debug/tune/tune_target.cpp:103`, C6387 at
   `editor/window_dpi.cpp:13` and C28251 on the editor's `wWinMain`. Two are
@@ -3794,6 +3794,13 @@ Not checked:
   were not run under the sanitizer.
 - Leaks. MSVC's AddressSanitizer has no leak detection.
 - clang-tidy was not attempted.
+
+What is left, and why the row is `OPEN`: the next step is local. Run
+`scripts/report-analyze.ps1` and judge each of the eleven warnings that are
+this repository's: fix it, or record here why it stands. The two engine
+warnings are Labrador's and need nothing here. The hosted legs are confirmed
+on the nightly trial of the pull request that carries the presets, which
+needs a push the author authorises; the row is deleted once both are done.
 
 ## Open shortlist (2026-10-29)
 
