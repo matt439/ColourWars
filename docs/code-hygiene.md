@@ -3493,6 +3493,13 @@ the first show command with the launcher's hidden flag, so the fit helper now
 re-enters fullscreen to apply the engine's hidden-safe monitor bounds. Both
 presets build and pass initial-display acceptance and startup again; receipts
 are under `out/validation/pr78/hidden-first-window/`.
+The completed PR run also caught the new Join hint exceeding the test locale's
+retained text bounds: the English line fit, but its bracketed `qps-ploc` form
+did not. The hint is shorter in both files and the independent text/raster
+fixtures. `locales`, `menu_presentation` and `menu_text` now pass in both
+presets, as does actual `qps-ploc` startup; the Release ConnectionText and
+JoinPaper painter leaves check the revised copy within the existing bounds.
+Evidence is under `out/validation/pr78/locale-hint/`.
 
 ### Promote stable nightly checks (`CI#7`)
 

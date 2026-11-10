@@ -130,7 +130,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
                 available ? art.focus_ink : art.disabled_ink, style.item_shadow_offset);
         }
         add(ready ? L"Everyone joined. Player 1 can continue." :
-            L"A / Enter joins. Reconnect reserved pads. Extra seats need Xbox pads or bots.", style.detail_font, 7, art.ink, style.detail_shadow_offset);
+            L"A / Enter joins. Reconnect reserved pads. Add Xbox pads or bots.", style.detail_font, 7, art.ink, style.detail_shadow_offset);
         const RectangleF panel((Vector2F(menu_consts::design_resolution.x, style.footer_y) - look.setup_box_size) / 2.0f, look.setup_box_size);
         const float edge = art.keyline_width * 3.0f;
         const RectangleF inside(panel.position() + Vector2F(edge), panel.size() - Vector2F(edge * 2.0f + art.shadow_offset));
