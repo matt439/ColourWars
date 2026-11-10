@@ -3844,8 +3844,14 @@ frame for each puff) to guard a stack that is not near its limit.
 The two engine warnings are not reported to Labrador from here. Both were read
 and neither is a defect:
 
-- C6262 in `read_json_file` is the same 64 KiB read chunk on a 1 MiB stack, in
-  a function that returns the text before parsing it.
+- C6262 in `read_json_file` is the same 64 KiB read chunk on a 1 MiB stack.
+  Unlike `read_stage_snapshot` it parses in the same frame, so the chunk sits
+  beneath rapidjson's parse, which is recursive at the pinned revision and
+  bounded by nothing. The chunk costs 6% of the reserve and does not decide
+  whether a deeply nested file overflows: that is the save's overflow recorded
+  under [`REV#62`](#mutation-probe-for-the-save-and-user-stage-readers-rev62), ledger
+  [report 36](review/engine-reports.md#36-json-parsing-recurses-once-per-nesting-level---answered-on-master-before-it-was-drafted),
+  already answered on engine master and not a new report.
 - C28020 at `xwb_file.cpp:208` indexes the 16-entry `adaptation` table with
   `nibble`, which is `byte >> 4` or `byte & 0x0F` of an `unsigned char` and so
   0 to 15. The analysis does not carry that range through the conditional.
