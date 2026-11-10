@@ -172,7 +172,7 @@ namespace
 			"reserve_resume", "stuck_jump_steps", "stuck_turn_steps", "recovery_steps",
 			"progress_window_steps", "progress_distance", "finish_dwell_steps",
 			"deliberate_shot_interval", "refill_retreat_margin", "mover_hold_steps",
-			"refill_off_enemy_paint", "sub_throw_miss", "easy", "normal", "hard" });
+			"refill_off_enemy_paint", "sub_throw_miss", "sub_reserve", "easy", "normal", "hard" });
 		BotTuning bots;
 		bots.sight_distance = read_positive(json, "sight_distance");
 		bots.reserve_low = read_unit(json, "reserve_low");
@@ -201,6 +201,11 @@ namespace
 		bots.mover_hold_steps = steps(json, "mover_hold_steps");
 		bots.refill_off_enemy_paint = json.boolean("refill_off_enemy_paint");
 		bots.sub_throw_miss = read_positive(json, "sub_throw_miss");
+		bots.sub_reserve = read_unit(json, "sub_reserve");
+		if (bots.sub_reserve <= bots.reserve_low)
+		{
+			throw std::runtime_error(json.where() + ": sub_reserve must exceed reserve_low.");
+		}
 		if (bots.stuck_turn_steps <= bots.stuck_jump_steps)
 		{
 			throw std::runtime_error(json.where() + ": stuck_turn_steps must exceed stuck_jump_steps.");

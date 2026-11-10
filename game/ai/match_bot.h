@@ -195,7 +195,9 @@ private:
 	bool ledge_ahead(const MatchBotObservation& view) const;
 	bool unscored_floor(const MatchBotObservation& view) const;
 	// The angle to use the sub at now, if the bot should: the sub is ready,
-	// using it leaves the reserve above its low mark, and its own rule holds.
+	// using it leaves the reserve above its low mark (and a grenade thrown at
+	// an enemy beyond the tool's reach at least bots.sub_reserve), and its own
+	// rule holds.
 	// A grenade's flight passes within bots.sub_throw_miss of the nearest
 	// visible enemy; a sprinkler's lands that close to unowned scoring floor
 	// ahead while no enemy is engaged; a wall stands between the bot and the

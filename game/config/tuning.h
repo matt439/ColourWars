@@ -87,6 +87,10 @@ struct BotTuning
 	// A bot throws its sub (ROAD#11) only along a flight that passes this
 	// close to a visible enemy, in units: about the burst's reach.
 	float sub_throw_miss = 0.0f;
+	// A bot throws its grenade at an enemy beyond its tool's reach only when
+	// at least this share of the tank is left after it. Every other sub use
+	// need only leave the tank above reserve_low.
+	float sub_reserve = 0.0f;
 };
 
 // One handicap level's boost (docs/feature-roadmap.md#handicaps). Level 0

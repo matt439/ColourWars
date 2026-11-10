@@ -2508,52 +2508,60 @@ round's seed draw from; before the slice only a Random tool drew.
 Random, after that seat's tool. The preview-backing leaf pins that a concrete
 commit draws nothing, and the weapon-paper leaf one draw per Random tool.
 
-*One call left for the author.* `bot_team_trials` requires every bot's body to
-leave its home band and now counts 559/560, so the nightly's opt-in leg stays
-red; the gate was not changed. The miss is trial 66: Close Quarters, mixed
+*The home-band call (the author, 2026-11-10): change the bot.*
+`bot_team_trials` requires every bot's body to leave its home band and counted
+559/560 after the slices. The miss was trial 66: Close Quarters, mixed
 rotation 0, seed `3946`, human on team b, whose lone team-b Sprayer faces a
-Roller and a Bucket. A per-step trace (a scratch probe, not kept) shows no
-loop. The bot runs out to the scoring floor and paints. At step 454 it throws
-its grenade with 0.79 of a tank, reaches the reserve floor by step 500 at
-x 4117, a hundred units inside its band's edge (x 4016.7), and backs away to
-refill from the Bucket bot 350 units off. It comes back and dies at step 637
-at x 4021.6, five units short of the edge. Its second life, from step 818, is
-fought inside its own third, where the two opponents spend 423 and 663 of the
-1800 steps; they withdraw near step 1525 and it is back out at x 4312,
-fighting, when the trial ends. Run on past the horizon, it crosses at step 2395.
-Before the slices the same bot was outside its band for 124 of the 1800 steps,
-the thinnest margin in the matrix.
+Roller and a Bucket. At step 454 it threw its grenade with 0.79 of a tank,
+reached the reserve floor by step 500 a hundred units inside its band's edge,
+backed away to refill from the Bucket bot, and died five units short of the
+edge; its second life was fought inside its own third. It also logged an
+off-home-paint miss, as did seed `8644` on the same side (one-bot retention
+118/120). This was the side-swapped sibling of the pinned
+[Close Quarters `61403` loop](#home-band-loop-slow-tool-spending-and-sustained-middle-retention-2026-10-27),
+which the loop's guard, comparing only the `human=a ... team=a` key, could not
+see. Of the two choices recorded, reclassifying the miss as an outnumbered
+outcome or changing the bot, the author chose the bot.
 
-This trial is the side-swapped sibling of the pinned
-[Close Quarters `61403` loop](#home-band-loop-slow-tool-spending-and-sustained-middle-retention-2026-10-27):
-the same arena, seed (`3946`, formerly `61403`), rotation and lone Sprayer,
-with the human and the lone bot on team b where the pinned case has them on
-team a. It also logs an off-home-paint miss, `close_quarters seed=3946 human=b
-rotation=0 team=b (one bot)`, as does seed `8644` on the same side, so one-bot
-retention is 118/120 where the 2026-11-08 nightly had 120/120. The guard for
-the returned loop compares only the `human=a ... team=a` key, so it cannot see
-this side. The first life here shares one step of that loop: the tank is spent
-inside the band and the refill backs away from a visible enemy. What differs
-in the trace is the rest. The pinned loop's bot emptied its tank with
-untargeted fire on the non-scoring home floor, painted nothing that scores, and
-repeated the walk and the retreat from an enemy about 1500 units away. This
-bot paints scoring ground, spends the tank on one throw, retreats once, and
-loses the rest of the horizon to a death and two opponents in its third.
+*The change.* A grenade thrown at an enemy beyond the bot's own tool reach (not
+`engaging`) must now leave `bots.sub_reserve` of the tank, 0.40, so a bot
+throws that way only from 0.90 or more. Every other sub use keeps the old
+rule, leaving the tank above `reserve_low`. Holding the throw only in a fight
+left trial 66 failing, so the throw that sent it home was a long one. Applying
+the reserve to every sub use, or to every grenade, moved the miss to other
+outnumbered Close Quarters trials at 0.30-0.35 (seed `5242`'s lone Sprayer or
+Roller kept no off-home paint) and at 0.50. The narrowed rule passes the whole
+case at 0.38, 0.40, 0.42 and 0.45; 0.40 is the middle and keeps one-bot
+retention at 120/120. A first version that also held the sprinkler cut its
+planting by about 80% (to nearly none on King of the Hill), which is why the
+reserve is the grenade's alone.
 
-The gate's comment does not yet allow for that. It calls a body leaving its
-home band navigation, and names only what a one-bot side still holds at the
-end as an outnumbered outcome; by that wording this miss is a navigation
-failure. The choices are:
+*Results.* `bot_team_trials` passes: bots leave their home band 560/560, and
+mixed one-bot teams retain off-home paint 120/120. The loop guard now names
+both sides' keys. `sub_weapons` checks the new hold and that a sprinkler still
+plants on a tank just above the low mark; `bot_driver` rejects a missing or
+too-low `sub_reserve`. Every opt-in case and the default Release and Debug
+cases pass.
 
-- *Reclassify.* Count a one-bot side's bot that opponents pinned inside its
-  band as a measurement, as its final paint already is. This changes what the
-  gate says navigation is, not something its comment already permits. The
-  guard for the returned loop then needs a decision too: extended to the
-  `human=b ... team=b` key it fails today on this trial's off-home miss, and
-  left one-sided it needs its reason written down.
-- *Change the bot.* Have a bot hold a throw that leaves it this close to a
-  refill, which changes every trial and needs the slice 6 balance figures
-  measured again.
+*Balance, measured again.* A scratch probe (not kept) ran 1,440 one-minute
+rounds under the Standard refill rule: one Normal bot a side plus one idle
+human a side, crossfeed, close_quarters and king_of_the_hill, five tools, eight
+seeds, each side in turn, the measuring bot carrying each sub against a
+grenade. "Before" is the old rule, reproduced by setting `sub_reserve` just
+above `reserve_low`. Its seeds and roster are not the slice 6 probe's, so its
+before figures differ slightly from the table above.
+
+| Side's sub, against the grenade | Before | After | Paired change (SE) |
+|---|---|---|---|
+| Grenade | 0.500 | 0.500 | 0 (mirrored rounds) |
+| Sprinkler | 0.493 | 0.496 | +0.003 (0.009) |
+| Paint wall | 0.463 | 0.473 | +0.011 (0.009) |
+
+Both planted subs stay level with the grenade within the noise, so the
+half-tank cost stands. The bucket's wall gains most (0.433 to 0.473), and the
+sniper's rounds are unchanged, since its throws are always within its reach. A
+bot throws its grenade about 40% less often (1.53 a round against 2.56) and
+plants the sprinkler and wall as often as before. Endless paint is untouched.
 
 ### Input
 

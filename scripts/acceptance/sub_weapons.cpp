@@ -541,13 +541,31 @@ namespace
                 const MatchBotObservation remote = bot_view(tuning, tool, { 1500.0f, 0.0f });
                 MatchBot distant(&tuning, difficulty, 31);
                 require(run_bot(distant, remote, window).presses.empty(), "A bot threw at an enemy out of reach");
-                // A throw that would leave the reserve at its low mark waits,
-                // unless Endless paint means it spends nothing.
+                // In a fight, a throw that would leave the reserve at its low
+                // mark waits; one that leaves it just above goes.
+                const float cost = grenade.cost / tuning.starting_ammo();
                 MatchBotObservation short_tank = view;
-                short_tank.ammo = tuning.bots().reserve_low + grenade.cost / tuning.starting_ammo() - 0.01f;
+                short_tank.ammo = tuning.bots().reserve_low + cost - 0.01f;
                 MatchBot careful(&tuning, difficulty, 31);
                 require(run_bot(careful, short_tank, window).presses.empty(),
                     "A bot threw its reserve below the low mark");
+                MatchBotObservation fighting = view;
+                fighting.ammo = tuning.bots().reserve_low + cost + 0.01f;
+                MatchBot spender(&tuning, difficulty, 31);
+                require(run_bot(spender, fighting, window).presses.size() == 1,
+                    "A bot in a fight held a throw that left its reserve above the low mark");
+                // Outside a fight (the enemy beyond its tool's reach), the
+                // throw must leave the sub reserve; a full tank throws.
+                MatchBotObservation reaching = view;
+                reaching.engage_distance = near_enemy.x * 0.5f;
+                reaching.ammo = tuning.bots().sub_reserve + cost - 0.01f;
+                MatchBot reserved(&tuning, difficulty, 31);
+                require(run_bot(reserved, reaching, window).presses.empty(),
+                    "A bot outside a fight threw its tank below the sub reserve");
+                reaching.ammo = 1.0f;
+                MatchBot full(&tuning, difficulty, 31);
+                require(run_bot(full, reaching, window).presses.size() == 1,
+                    "A bot outside a fight did not throw from a full tank");
                 short_tank.refill_enabled = false;
                 MatchBot endless(&tuning, difficulty, 31);
                 require(run_bot(endless, short_tank, window).presses.size() == 1,
@@ -556,7 +574,8 @@ namespace
         }
         require(throwers >= 12, "Too few tools could throw at a nearby enemy");
         std::cout << "PASS bot policy: " << throwers << " difficulty/tool pairs throw once, on aim, "
-            "never unready, unarmed, out of reach or below the reserve; Endless paint throws\n";
+            "never unready, unarmed, out of reach, below the reserve, or below the sub reserve beyond the tool's reach; "
+            "Endless paint throws\n";
     }
 
     // The sprinkler and the wall each have their own rule (slice 6): the
@@ -603,6 +622,13 @@ namespace
                     }
                     require(on_aim && !planted.press.primary_shoot,
                         "A bot's sprinkler missed the floor ahead or fired the tool with it");
+                    // The grenade's sub reserve is not the sprinkler's: a tank
+                    // left just above the low mark still plants.
+                    MatchBotObservation lean = open;
+                    lean.ammo = tuning.bots().reserve_low + sprinkler.cost / tuning.starting_ammo() + 0.01f;
+                    MatchBot thrifty(&tuning, difficulty, 31);
+                    require(run_bot(thrifty, lean, window).presses.size() == 1,
+                        "A bot held its sprinkler for the grenade's sub reserve");
                 }
                 // Never on its own paint, on floor that scores nothing, or in a fight.
                 MatchBotObservation owned = open; owned.footing = MatchBotFooting::own;

@@ -560,7 +560,8 @@ namespace
 		rejects("refill_off_enemy_paint", [](auto& d) { d["bots"].RemoveMember("refill_off_enemy_paint"); });
 		rejects("refill_off_enemy_paint", [](auto& d) { d["bots"]["refill_off_enemy_paint"].SetInt(1); });
 		for (const char* field : { "recovery_steps", "progress_window_steps", "progress_distance",
-			"finish_dwell_steps", "deliberate_shot_interval", "refill_retreat_margin", "mover_hold_steps", "sub_throw_miss" })
+			"finish_dwell_steps", "deliberate_shot_interval", "refill_retreat_margin", "mover_hold_steps", "sub_throw_miss",
+			"sub_reserve" })
 		{
 			rejects(field, [&](auto& d) { d["bots"].RemoveMember(field); });
 			rejects(field, [&](auto& d) { d["bots"][field].SetInt(0); });
