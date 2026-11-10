@@ -1,0 +1,65 @@
+# What the tracked files already do, measured on 2026-11-10. A property is
+# stated only where the tree agrees with itself; where it is mixed the property
+# is left unset and an edit follows the file it is in. Nothing here is a
+# request to reformat an existing file.
+#
+# end_of_line is deliberately absent: .gitattributes owns line endings
+# (* text=auto, *.cmd eol=crlf).
+root = true
+
+# No tracked text file has a byte-order mark. scripts/ci/lint.py refuses
+# trailing whitespace on changed lines, Markdown included.
+[*]
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Every space-indented C++ file uses four, and four is the tab width the
+# tab-indented ones are aligned for.
+[*.{h,cpp,cs}]
+indent_size = 4
+
+# Tabs where a folder is uniformly tabs. game/objects, game/contracts,
+# game/input, game/carried, game/match, game/save, the game/ root and
+# scripts/acceptance hold both styles, so their indent_style stays unset.
+[game/{ai,config,debug,states}/**.{h,cpp}]
+indent_style = tab
+
+[editor/**.{h,cpp}]
+indent_style = space
+
+[{CMakeLists.txt,*.cmake,*.py,*.ps1,*.psd1}]
+indent_style = space
+indent_size = 4
+
+[*.yml]
+indent_style = space
+indent_size = 2
+
+# JSON is always spaces, but two wide in some folders and four in others
+# (levels and texture sheets), so the width is unset.
+[*.json]
+indent_style = space
+
+# Reference pages, archived levels and vendored licence texts keep the bytes
+# they arrived with.
+[*.html]
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+
+[game/art/**.json]
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+
+[game/art/sources/fonts/licenses/*]
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+
+# Vendored code keeps its upstream style. external/labrador has its own
+# root .editorconfig.
+[external/**]
+charset = unset
+indent_style = unset
+indent_size = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset

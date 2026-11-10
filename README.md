@@ -331,6 +331,9 @@ same checks; `-SkipBuild` is for an already-current build.
 
 CI lints changed lines for whitespace errors and conflict markers on every run,
 and checks that relative Markdown links and their heading anchors resolve.
+The root [.editorconfig](.editorconfig) gives an editor the whitespace the tree
+already has; it leaves indent style unset where a folder mixes tabs and spaces,
+and there is no `.clang-format`.
 Pushes and pull requests containing only Markdown or images/videos under
 `docs/images/` stop after lint. Code, build files, scripts, schemas, runtime assets,
 submodule changes and deletion of packaged Markdown still run the full Windows
