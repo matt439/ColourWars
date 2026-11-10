@@ -260,5 +260,12 @@ Cases = @(
         NeedsTrial = $true
         Group = 'opt-in'
     }
+    @{
+        # Fixed-seed mutants of the shipped levels and of three saves, through
+        # the user-stage scan and Save: each loads or is refused (REV#62).
+        Name = 'reader_mutations'
+        Quick = $true
+        Group = 'opt-in'
+    }
 )
 }

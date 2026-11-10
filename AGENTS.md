@@ -243,7 +243,7 @@ Release (the `publish` job); the first tag is the author's call. Change detectio
 Full CI runs five parallel Windows legs, each building for itself: Debug
 `crossfeed`, the rest of Debug's cases, Debug's other checks, Release's cases
 and Release's other checks. It compiles without running the opt-in probes
-(the sixteen opt-in acceptance cases, `-OptIn`, `check-painter.ps1 -CompileOnly` with
+(the seventeen opt-in acceptance cases, `-OptIn`, `check-painter.ps1 -CompileOnly` with
 both pad readers, `check-paint-fx.ps1 -CompileOnly` and, in Debug,
 `check-frame-pacing.ps1 -CompileOnly`), runs consumer acceptance, the `Quick`
 opt-in cases in Release, movement feedback and display awake in both presets,

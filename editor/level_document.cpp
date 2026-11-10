@@ -325,6 +325,9 @@ namespace colourwars_editor
             catch (const std::invalid_argument& error) { fail(source + "The file " + error.what() + "."); }
         }
         if (input.bad()) { fail(source + "Could not read the complete level file."); }
+        // The nesting limit, before the parser recurses through the text.
+        try { level_format::limit::check_nesting(text); }
+        catch (const std::invalid_argument& error) { fail(source + "The file " + error.what() + "."); }
         Document document;
         try
         {

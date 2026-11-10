@@ -800,6 +800,20 @@ namespace
 		acceptance::write_text(folder / "file_over_limit.json",
 			stage + std::string(limit::max_file_bytes + 1 - stage.size(), ' '));
 
+		// A member nothing reads, nested under the root object: the root is
+		// one level, so this many arrays reach the limit and one more passes
+		// it. The third is far past where the recursive parsers overflow.
+		const auto nested = [&stage](std::size_t arrays)
+		{
+			const std::size_t root = stage.find('{');
+			require(root != std::string::npos, "The shipped stage has no root object");
+			return stage.substr(0, root + 1) + "\"zz_nested\":" + std::string(arrays, '[') +
+				std::string(arrays, ']') + "," + stage.substr(root + 1);
+		};
+		acceptance::write_text(folder / "nested_at_limit.json", nested(limit::max_nesting - 1));
+		acceptance::write_text(folder / "nested_over_limit.json", nested(limit::max_nesting));
+		acceptance::write_text(folder / "nested_deep.json", nested(100000));
+
 		Shipped shipped;
 		const UserStageScan result = scan(fixture, content, folder, shipped);
 		for (const std::string& line : result.refused)
@@ -808,9 +822,9 @@ namespace
 				line.find('\r') == std::string::npos, "A limit refusal must be one refusal line: " + line);
 			std::cout << "  " << line << '\n';
 		}
-		require(result.accepted == std::vector<std::string>{ "file_at_limit", "most_objects" } &&
-			result.refused.size() == 7 && shipped.stages.size() == shipped.count + 2,
-			"A stage at the file limit and one at the object limit must load, and the seven past a limit must not; got " +
+		require(result.accepted == std::vector<std::string>{ "file_at_limit", "most_objects", "nested_at_limit" } &&
+			result.refused.size() == 9 && shipped.stages.size() == shipped.count + 3,
+			"A stage at the file, object and nesting limits must each load, and the nine past a limit must not; got " +
 			std::to_string(result.accepted.size()) + " accepted and " + std::to_string(result.refused.size()) + " refused");
 		const std::string coordinate = "coordinate limit of +/-" + limit::whole(limit::max_coordinate);
 		const std::string extent = "wider or taller than the level format's limit of " + limit::whole(limit::max_bounds_extent);
@@ -830,13 +844,16 @@ namespace
 			"Too much paintable face was not refused naming the paint limit");
 		require(refused(result, "file_over_limit.json", std::to_string(limit::max_file_bytes) + " bytes"),
 			"A file one byte over the limit was not refused naming the limit");
+		const std::string nesting = "more than " + std::to_string(limit::max_nesting) + " deep";
+		require(refused(result, "nested_over_limit.json", nesting) && refused(result, "nested_deep.json", nesting),
+			"A file nested past the limit was not refused naming the limit");
 
 		// The manifest's reader (wWinMain's "level" kind): a shipped stage past
 		// a limit throws, which fails startup like any content bug. The object
 		// and paint limits throw from the content check every stage then gets.
 		const LevelObjectBuilder builder(&fixture.world->render, &fixture.play_settings, &fixture.tuning->paint());
 		for (const char* name : { "wide_bounds", "many_objects", "file_over_limit", "wide_object", "far_object",
-			"far_ramp", "long_paint" })
+			"far_ramp", "long_paint", "nested_over_limit", "nested_deep" })
 		{
 			bool thrown = false;
 			try
@@ -872,9 +889,9 @@ namespace
 		require(std::none_of(count.refused.begin(), count.refused.end(),
 			[](const std::string& line) { return line.find("zz-last") != std::string::npos; }),
 			"The file past the folder limit must not be refused by name");
-		std::cout << "PASS format limits: bounds, object size and distance, ramp distance, object count, paint length "
-			"and file size refused with one line each and by the manifest's reader; a stage at the object and file "
-			"limits loads; a folder of " << files << " files is read for its first " << limit::max_user_stage_files << "\n";
+		std::cout << "PASS format limits: bounds, object size and distance, ramp distance, object count, paint length, "
+			"file size and nesting refused with one line each and by the manifest's reader; a stage at the object, file "
+			"and nesting limits loads; a folder of " << files << " files is read for its first " << limit::max_user_stage_files << "\n";
 	}
 
 	void check_diagnostics(const Fixture& fixture)

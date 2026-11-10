@@ -50,7 +50,12 @@ checks a reader refuses bad JSON writes edited copies with
 scratch by [support/scratch.h](acceptance/support/scratch.h), whose checked
 `read_text` and `write_text` the probes use for whole files. A probe that reads what
 the game prints to stderr captures it with
-[support/stderr_capture.h](acceptance/support/stderr_capture.h). A probe that
+[support/stderr_capture.h](acceptance/support/stderr_capture.h). The opt-in
+`reader_mutations` case feeds fixed-seed mutants of every staged level to
+`load_user_stages` and of three saves to `Save`, in one private root, and
+requires that each loads or is refused; its own watchdog thread fails it on a
+mutant that takes over 120 seconds
+([record](../docs/code-hygiene.md#mutation-probe-for-the-save-and-user-stage-readers-rev62)). A probe that
 steps one real Player in a bare Scene derives its course from
 `acceptance::PlayerCourse` in
 [support/player_course.h](acceptance/support/player_course.h), which keeps

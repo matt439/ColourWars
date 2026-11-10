@@ -74,6 +74,21 @@ namespace level_editor_acceptance
         largest.load(at);
         require(parse(largest.serialize()) == parse(original), "A level file at the size limit did not open intact");
 
+        // One array past the nesting limit is refused, as is a file nested far
+        // past where a recursive parser overflows; the text never reaches one.
+        const auto nested = [&](const char* name, std::size_t arrays)
+        {
+            const std::size_t root = original.find('{');
+            require(root != std::string::npos, "The template has no root object");
+            const fs::path path = scratch / (std::string("limit-") + name + ".json");
+            write_text(path, original.substr(0, root + 1) + "\"zz_nested\":" + std::string(arrays, '[') +
+                std::string(arrays, ']') + "," + original.substr(root + 1));
+            return path;
+        };
+        const std::string nesting = "more than " + std::to_string(limit::max_nesting) + " deep";
+        refuses_file(document, nested("nested-over", limit::max_nesting), nesting, "A level nested past the limit opened");
+        refuses_file(document, nested("nested-deep", 100000), nesting, "A deeply nested level opened");
+
         // An edit past a limit is refused and changes nothing.
         const Entry floor_entry = named(document, EntryKind::collision, "paintable_floor");
         reject_without_change(document,
@@ -92,7 +107,7 @@ namespace level_editor_acceptance
         refuses([&] { wordy.save(unsaved); }, std::to_string(limit::max_file_bytes) + " bytes for one level file",
             "A level over the file limit was saved");
         require(!fs::exists(unsaved) && wordy.path().empty(), "A refused over-size save wrote or adopted its destination");
-        std::cout << "PASS format limits: over-wide bounds, over-size and far objects, too many objects, too much paint "
-            "and an over-size file refused at load; edits past a limit change nothing; an over-size save writes nothing\n";
+        std::cout << "PASS format limits: over-wide bounds, over-size and far objects, too many objects, too much paint, "
+            "an over-size file and over-deep nesting refused at load; edits past a limit change nothing; an over-size save writes nothing\n";
     }
 }

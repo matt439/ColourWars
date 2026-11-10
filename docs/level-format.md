@@ -99,7 +99,9 @@ checks and full Release qualification in
 Keys and enum spellings are case sensitive. JSON numbers may be integral or
 fractional except `format`, which uses the integer representation. Coordinates
 become game `float` values. Use ordinary finite world coordinates: a JSON number
-can overflow or underflow a game float even though a schema accepts it. Required
+can overflow or underflow a game float even though a schema accepts it (the
+opt-in `reader_mutations` case feeds such numbers to the reader and requires a
+load or a refusal). Required
 fields have no implicit default unless this document names one. Empty strings
 are not useful asset identifiers; loaded-resource lookup determines whether a
 sheet, frame, bank or effect actually exists.
@@ -603,6 +605,7 @@ represent the 32-unit step the terrain outline walks, so that loop never ended.
 | Paintable face length over the stage (`max_paint_length`) | 524,288 units | 26,560 | 20x |
 | Paint tiles on one face (`max_face_tiles`) | 1,048,576 | 1,500 (a 6,000-unit face) | about 700x |
 | Level file size (`max_file_bytes`) | 1,048,576 bytes | 35,076 | 30x |
+| Arrays and objects open at once (`max_nesting`) | 64 | 5 (a lesson's `area`) | 12x |
 | `.json` files read from the user stage folder (`max_user_stage_files`) | 256 | 13 shipped stages | 20x |
 
 The shipped figures were measured on 2026-11-10 over the thirteen files in
@@ -635,6 +638,13 @@ meets one.
 - **File size**: a stage at both object limits is about 0.6 MB at the shipped
   560 bytes an object, so the file limit and the object limit agree. The game
   stops reading at the limit instead of reading the rest.
+- **Nesting** (since 2026-11-10, `REV#62`) is counted on the file's text
+  before any parser sees it: brackets and braces outside strings. The game's
+  reader parses a level twice and walks it once to hash it, each a native
+  stack frame for every level of nesting, so a file of a few thousand brackets
+  overflowed the stack and ended the game at startup instead of being
+  refused. Text that is not JSON can meet this rule before the parser's own
+  error. An unknown member counts like any other.
 - **File count**: past 256 the folder's first 256 `.json` files by file name
   are read and one line gives the folder's count. The rest are not opened and
   get no line of their own.
@@ -649,6 +659,7 @@ Who enforces what:
 | Paint length | Yes | Yes | No |
 | Face tiles | Yes | No (it has no paint tuning) | No |
 | File size | Yes | At open and at save | No |
+| Nesting | Yes | At open | No (Draft-04 cannot state a depth) |
 | File count | Yes | No (it opens one file) | No |
 
 A stage past a limit is refused where any other invalid stage is. A user
@@ -673,6 +684,14 @@ The `user_stages` case covers each refusal, the two at-limit acceptances, the
 manifest's reader and the folder count; `level_format` holds the schema's
 numbers to the header's and covers what the schema cannot see; the editor's
 document acceptance covers load, edit and save.
+
+The nesting limit came later the same day, from `REV#62`'s
+[mutation probe](code-hygiene.md#mutation-probe-for-the-save-and-user-stage-readers-rev62),
+whose first deep mutant overflowed the stack. `user_stages` covers a stage at
+the limit, one array past it and one 100,000 deep, through the scan and the
+manifest's reader; the editor's document acceptance refuses the last two at
+open; and the opt-in `reader_mutations` case keeps two deep files as named
+inputs and sweeps the rest of the format with fixed-seed mutants.
 
 ## Validation and authoring workflow
 

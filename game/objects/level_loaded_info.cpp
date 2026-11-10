@@ -41,6 +41,20 @@ namespace
 		return text;
 	}
 
+	// The format's nesting limit, before any parse: both parses below and the
+	// hash's walk spend a native frame for each level of nesting, so a small
+	// file of brackets would overflow the stack instead of being refused.
+	const std::string& within_nesting_limit(const std::string& snapshot, const char* path)
+	{
+		try { level_format::limit::check_nesting(snapshot); }
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(std::string("LevelLoadedInfo - '") + (path != nullptr ? path : "") +
+				"' " + error.what());
+		}
+		return snapshot;
+	}
+
 	class StageSemanticHash
 	{
 	public:
@@ -154,7 +168,7 @@ LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :
 }
 
 LevelLoadedInfo::LevelLoadedInfo(const char* json_path, std::string snapshot) :
-	json_doc_(parse_json(snapshot, json_path))
+	json_doc_(parse_json(within_nesting_limit(snapshot, json_path), json_path))
 {
 	// An untagged legacy level has exactly the format-1 meaning. Reject a
 	// future or malformed tag before interpreting any of its content fields.

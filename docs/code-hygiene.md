@@ -5,7 +5,9 @@ for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
 arena/tuning order. Since 2026-10-29 it also owns the CI-gate rows `CI#2` to
 `CI#8`; `CI#1`, the foreground debug-console check, stays with
-[the debug console](debug-console-record.md#foreground-checks-ci1).
+[the debug console](debug-console-record.md#foreground-checks-ci1). It also
+records the outcomes of two rows of the frozen 2026-11-10 project review,
+`REV#6` and `REV#62`.
 
 ## Hygiene review (2026-11-05)
 
@@ -3572,6 +3574,121 @@ pinned number edited. The Release `Quick` opt-in cases passed (12 cases), among
 them the bot trials' replay fingerprints, and the opt-in cases compile in both
 presets (16 each). Not run: `check-startup.ps1`, the painter and any performance
 capture.
+
+### Mutation probe for the save and user-stage readers (`REV#62`)
+
+**Done 2026-11-10; one behaviour change, the level format's nesting limit.**
+From the 2026-11-10 project review
+([record](review/2026-11-10-project-review.md#no-mutation-probe-for-outside-file-readers-rev62)):
+the two readers that take files from outside the build had only hand-written
+negative fixtures.
+
+[reader_mutations.cpp](../scripts/acceptance/reader_mutations.cpp) is a new
+opt-in case, declared `Quick`, so every pull request runs it in Release and
+the nightly runs it in both presets. It mutates each of the thirteen staged
+levels 64 times and each of three saves 200 times (832 and 600 mutants;
+iteration 0 of each source is the source itself and must load). The saves are
+the defaults a first run writes, a save populated through `Save`'s own
+setters (a profile, a remembered match, a record, display settings) and the
+flat version-0 layout. The generator is a SplitMix64 in the probe with the
+constant seed `0x5245563632`; a mutant depends on its source index and
+iteration alone, so a failure names both and can be rebuilt. No clock,
+`rand()` or `<random>` distribution is used to make a mutant.
+
+Six operators, chosen by the generator:
+
+- one to four bit flips or byte overwrites;
+- truncation at any offset, zero included;
+- one number token replaced from a fixed table: the edges of `int` and
+  `float`, values on each side of every `level_format::limit`, exponents that
+  overflow and underflow, spellings JSON does not allow (`NaN`, `Infinity`,
+  `0x10`, `01`, `--1`) and values of another type;
+- one member removed;
+- one member's name repeated in its object, with its own value or another
+  member's, placed first or last;
+- one number, or a new root member nothing reads, wrapped in nested arrays or
+  objects: for a level 1 to 64 deep or, as often, 64, 65, 100, 1,000, 10,000
+  or 100,000 deep; for a save 1 to 64 deep.
+
+A level mutant is written as the one file of a private stage folder and read
+by `load_user_stages` against the manifest's catalog. The scan must not
+throw, must answer once, and must either list the stage or return one refusal
+line naming the file and a reason; the shipped list must be unchanged
+afterwards. A save mutant replaces the private save and is read by
+`Save::load_save_file`, which must not throw. What was loaded must then pass
+its first readers (`checked_play_settings`, `InputBindings::validate`,
+`PlayerProfiles::validate`, `LastMatchSetup::restore` against the shipped
+list), and, unless the file was set aside as unreadable, `save_to_file` must
+write it back as a file the reader takes whole. Each sweep must both load and
+refuse at least one mutant, so a harness that refuses everything cannot pass.
+Counts by operator are printed and not pinned: they move with every level
+edit.
+
+Everything is under one `acceptance::IsolatedSave` root in `%TEMP%`: the save,
+the stage folder and the captured stderr. The player's save and stage folder
+are never opened. A failed check copies the mutant beside the probe as
+`reader_mutations-failed-<kind>-<source>-<iteration>.json`.
+
+Hangs and crashes: a watchdog thread in the probe fails the case when one
+mutant takes over 120 seconds, naming it; the runner's deadline
+(`-RunTimeoutSeconds`) is only the backstop. The probe turns off the fault,
+abort and Debug CRT assertion dialogs, none of which a probe or the runner
+suppressed before, and an unhandled-exception filter names the mutant in hand.
+Both paths were exercised with temporary edits that are not committed. Before
+the level fix, deep nesting ended the run with
+`FAIL reader mutations: crashed on level source 0, iteration 3` and exit code
+`0xC00000FD`; with the save's bound lifted it ended with `crashed on save
+source 0, iteration 13` and the same code; and with the deadline set to zero
+it ended with `the per-mutant deadline passed on level source 0, iteration
+14`. The runner reported the case failed each time.
+
+One defect was found, by the first deep mutant. A level nested a few thousand
+arrays deep overflowed the stack inside the reader and ended the process:
+at startup for a shipped level, at startup or on opening Stage Select for a
+file in the user stage folder. `LevelLoadedInfo` parses the file twice (the
+engine's `parse_json`, then rapidjson again for the content hash) and walks
+it once (`StageSemanticHash::append`), and all three recurse. The fix is a
+limit in the level format, [`level_format::limit::max_nesting`](level-format.md#limits),
+64 against a shipped maximum of 5, checked on the file's text before the
+first parse (`check_nesting`). The level editor applies it at open, before its
+own parse, which is the same recursive rapidjson parser (not driven to an
+overflow here). Two files 100,000 deep, one of
+arrays and one of objects, are named regression inputs that the probe runs
+before its sweep. `user_stages` and the editor's document acceptance cover
+the limit, the step past it and a deep file.
+
+The save has the same overflow and it is not fixed here: `Save` reads through
+the engine's `read_json_file`, whose parse is recursive at the pinned
+revision, and no game code runs first. Engine master already parses
+iteratively, so this is ledger
+[report 36](review/engine-reports.md#36-json-parsing-recurses-once-per-nesting-level---answered-on-master-before-it-was-drafted),
+answered before it was drafted and spent at the pin bump that brings the
+answer: the probe's `save_max_nesting` bound of 64 goes then (`ENG#36`).
+Until then a save nested thousands deep, which only a hand edit or a
+corrupted disk produces, still ends the game at startup.
+
+Nothing else failed. No mutant made either reader throw past its contract,
+hold a loaded value its first reader refused, or write a save it could not
+read back.
+
+Limits of the case: it tests the readers. No `Level` is built or stepped from
+an accepted mutant beyond what `validate_stage_objects` builds, so a number
+that loads and then misbehaves in play is not found here. The replay codec is
+Debug-only and out of scope. The counts are a fixed sample: 64 mutants of a
+35 KB level touch a small part of it. Because the inputs are the shipped
+levels, a later level edit changes every mutant of that level and can surface
+a reader defect in an unrelated pull request; that is the case working.
+
+Both presets build under `/W4 /WX`. `reader_mutations` passed in Release
+(12 and 21 seconds over two runs, with identical logs) and in Debug
+(16 seconds) on MattPC; the spread is disk time, mostly the save's
+replacing writes. The default acceptance list passed in Release (80 cases)
+and in Debug with `-SkipSlowDebug` (77), the Release `Quick` opt-in cases
+passed (13, this one among them), the opt-in cases compile in both presets
+(17 each), `check-acceptance-selection.ps1` passed under Windows PowerShell
+5.1, and `check-level-editor.ps1` passed in both presets. Not run: Debug's
+four slow cases, `check-startup.ps1`, the painter and the nightly's `-OptIn`
+run.
 
 ## Open shortlist (2026-10-29)
 

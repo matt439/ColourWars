@@ -10,8 +10,8 @@
 //
 // It also owns the format's size limits (namespace limit): how far a
 // coordinate may lie from the origin, how large a rectangle, an object array,
-// a stage's paint and a level file may be, and how many files the user stage
-// folder is read for.
+// a stage's paint and a level file may be, how deeply a file may nest, and how
+// many files the user stage folder is read for.
 //
 // The rules for the format's larger records live in their own contracts, which
 // are part of this format: station_contract.h (stations and lessons),
@@ -308,6 +308,10 @@ namespace level_format
 		inline constexpr int max_face_tiles = 1048576;
 		// A level file, shipped or user.
 		inline constexpr std::size_t max_file_bytes = 1048576;
+		// Arrays and objects open at once anywhere in a level file. The format
+		// nests five deep at most (a lesson's area in a station); the readers
+		// parse and walk a file recursively, a native frame for each level.
+		inline constexpr std::size_t max_nesting = 64;
 		// .json files read from the user stage folder, first by file name.
 		inline constexpr std::size_t max_user_stage_files = 256;
 
@@ -383,6 +387,34 @@ namespace level_format
 			{
 				throw std::invalid_argument("is larger than the level format's limit of " +
 					std::to_string(max_file_bytes) + " bytes for one level file");
+			}
+		}
+
+		// The file's text, before any parser sees it: brackets and braces are
+		// counted outside strings, as a parser opens them. Text that is not
+		// JSON may be refused here first, by this rule instead of the parser's.
+		inline void check_nesting(std::string_view text)
+		{
+			std::size_t depth = 0;
+			bool in_string = false;
+			for (std::size_t index = 0; index < text.size(); ++index)
+			{
+				const char character = text[index];
+				if (in_string)
+				{
+					if (character == '\\') { ++index; }
+					else if (character == '"') { in_string = false; }
+				}
+				else if (character == '"') { in_string = true; }
+				else if (character == '[' || character == '{')
+				{
+					if (++depth > max_nesting)
+					{
+						throw std::invalid_argument("nests arrays and objects more than " +
+							std::to_string(max_nesting) + " deep, the level format's limit");
+					}
+				}
+				else if ((character == ']' || character == '}') && depth > 0) { --depth; }
 			}
 		}
 	}
