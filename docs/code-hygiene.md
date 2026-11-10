@@ -3488,6 +3488,11 @@ and Join-paper painter leaves pass on MattPC's GPU with scripted pads; those
 are raster/geometry checks, not physical-pad or human readability acceptance.
 The initial display's startup receipt confirms the fresh-save outer window
 fits its monitor; author decisions and waived attended checks are unchanged.
+PR review also caught hidden first-run fullscreen sizing: Windows can override
+the first show command with the launcher's hidden flag, so the fit helper now
+re-enters fullscreen to apply the engine's hidden-safe monitor bounds. Both
+presets build and pass initial-display acceptance and startup again; receipts
+are under `out/validation/pr78/hidden-first-window/`.
 
 ### Promote stable nightly checks (`CI#7`)
 

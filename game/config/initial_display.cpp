@@ -61,7 +61,12 @@ void fit_initial_window(labrador::Application& app, Save& save)
         monitor.rcWork.right - monitor.rcWork.left, monitor.rcWork.bottom - monitor.rcWork.top,
         frame.right - frame.left, frame.bottom - frame.top);
     if (save.resolution() != display.resolution) { app.set_resolution(display.resolution); }
-    if (app.fullscreen() != display.fullscreen) { app.set_fullscreen(display.fullscreen); }
+    // STARTUPINFO can hide the first ShowWindow and suppress maximization.
+    // Re-enter fullscreen to size that hidden first window to its monitor.
+    if (display.fullscreen || app.fullscreen() != display.fullscreen)
+    {
+        app.set_fullscreen(display.fullscreen);
+    }
     if (!display.fullscreen)
     {
         RECT outer{};
