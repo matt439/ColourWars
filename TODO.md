@@ -37,8 +37,11 @@ left.
 Art (`POL#16`) is unblocked but stays deferred. Bot lift routing, sponges and the controller
 rows remain unscoped.
 The 2026-11-10 project review added the `REV` rows
-([Project review](#project-review-2026-11-10)). Twenty are `DECISION`, each a call beside
-something accepted or waived on 2026-11-05; none is ordered here until the author sets an aim.
+([Project review](#project-review-2026-11-10)). Its ready rows were cleared the same day; the
+owners and `git log` hold the results. Twenty-two are `DECISION`. Twenty-one are calls beside
+something accepted or waived on 2026-11-05, `REV#38` among them now that its reveal captures
+exist. `REV#61` waits only on the hosted run of its two nightly legs. None is ordered here
+until the author sets an aim.
 
 ## Art direction, characters and the UI
 
@@ -142,7 +145,7 @@ was proposed and given no row.
 | `REV#13` | DECISION | LOW | S | The F1/Back per-player developer panel draws in Release and is listed in Controls help. Keep it as the Release frame-time readout, hide it from help, or compile it out: the author's call; no decision is recorded. [Record](docs/review/2026-11-10-project-review.md#developer-text-panel-ships-in-release-rev13). |
 | `REV#14` | DECISION | MED | S | Default Random palette still rolls pink_green and blue_yellow, the two pairs exempt from the colour-vision bar (one roll in three). A per-pair in-random flag would fix it but reopens ROAD#8's choice and changes seeded draws. [Record](docs/review/2026-11-10-project-review.md#random-palette-draws-the-exempt-pairs-rev14). |
 | `REV#15` | DEFERRED | LOW | S | No CONTRIBUTING, issue form or SECURITY file. A short CONTRIBUTING (OOP rule, engine changes go to Labrador) and a bug form asking for build-info.txt and last-error.log; rides with the first release, which is the author's call. [Record](docs/review/2026-11-10-project-review.md#no-contributor-or-issue-files-rev15). |
-| `REV#16` | UNSCOPED | LOW | S | Actions are pinned by major tag with no Dependabot, and the nightly's nine legs each rebuild. All are first-party actions and runner minutes are free, so weight is small; per-leg builds on pull requests are a recorded choice. [Record](docs/review/2026-11-10-project-review.md#ci-action-pins-and-nightly-rebuilds-rev16). |
+| `REV#16` | UNSCOPED | LOW | S | Actions are pinned by major tag with no Dependabot, and the nightly's eleven legs each rebuild. All are first-party actions and runner minutes are free, so weight is small; per-leg builds on pull requests are a recorded choice. [Record](docs/review/2026-11-10-project-review.md#ci-action-pins-and-nightly-rebuilds-rev16). |
 | `REV#18` | UNSCOPED | LOW | L | feature-roadmap, code-hygiene and level-editor docs interleave reference with closed records. Only a level-editor manual split (M) has a clear reader; the rest is L, cosmetic and risks anchors TODO rows link to. [Record](docs/review/2026-11-10-project-review.md#large-docs-mix-manual-and-records-rev18). |
 
 **Bots, stages and records**
