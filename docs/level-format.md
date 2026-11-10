@@ -617,12 +617,15 @@ meets one.
 
 - **Coordinates** stop at 2^20, where a game float still resolves an eighth of
   a unit. A rectangle is checked on all four edges, a ramp on its bounding box,
-  and a `rectangle_tlbr` after conversion.
+  and a `rectangle_tlbr` after conversion. A fixed slab is not checked against
+  this number because its own rule is tighter: both endpoints within 65,536
+  ([Fixed scored slabs](#fixed-scored-slabs)), in the game, the editor and the
+  schema.
 - **Bounds and object extent** are the same number because the schema has one
-  rectangle definition for both. Two acceptance fixtures use an arena 140,200
-  wide, so the limit could not usefully be much smaller.
+  rectangle definition for both. Two acceptance fixtures use arenas 140,000
+  and 140,200 wide, so the limit could not usefully be much smaller.
 - **Object count** is per array so the schema can state it as `maxItems`.
-- **Paint length** is what bounds the work: for each `StructurePaintable`, its
+- **Paint length** bounds the paint tiles: for each `StructurePaintable`, its
   width for each enabled top and bottom face plus its height for each enabled
   left and right face, as authored. Clipping against other terrain only
   shortens a face, so the sum is an upper bound on what is built. At the
@@ -673,10 +676,20 @@ already keeps that area inside `camera_bounds`.
 
 The limits bound each quantity. They are not a time budget: a folder of 256
 stages each at the paint limit still takes a long time to check, and nothing
-here measures or promises how long. Three things stay uncapped on purpose: a
-mover's `travel_x` and `travel_y` (bounded by level admission), the lengths of
-the spawn and `stations` arrays (bounded only by the file size), and the
-folder listing itself, which names every entry before the first 256 are kept.
+here measures or promises how long. Paint is also not the only work that grows
+with size. A collision object with a `material` is drawn as quads along its
+extent, whether or not it is paintable: a set square adds a row for every 4
+units of its height, and the outline, the ground's brick joints and the
+ruler's marks repeat along an edge. No limit sums that over the stage, so it
+is bounded only by the object count times the object extent. One over-wide
+object, the typing mistake these limits are for, is at most 262,144 ramp rows;
+a file written to sit just inside every limit can still ask for far more
+terrain than any real stage and be slow to load.
+
+Three things stay uncapped on purpose: a mover's `travel_x` and `travel_y`
+(bounded by level admission), the lengths of the spawn and `stations` arrays
+(bounded only by the file size), and the folder listing itself, which names
+every entry before the first 256 are kept.
 
 This closed `REV#2` of the
 [2026-11-10 project review](review/2026-11-10-project-review.md#user-stage-geometry-and-folder-have-no-caps-rev2).
