@@ -3506,6 +3506,13 @@ Release (76 cases) and in Debug (77, with the slow cases), including the bot tri
 `debug_console`'s record and play, which replay matches bit for bit with the
 Debug guard running. `check-startup.ps1` passed on the Debug executable.
 
+## Project review (2026-11-10)
+
+These entries are not part of the architecture review above. They record the
+outcomes of rows from the 2026-11-10 project review, whose findings are frozen
+in [the review](review/2026-11-10-project-review.md) and are not edited there.
+Each entry links its section of that record.
+
 ### Projectile target answers asked once (`REV#6`)
 
 **Done 2026-11-10.** From the 2026-11-10 project review
