@@ -120,7 +120,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `TOOL#4` | OPEN | LOW | L | Matrix driver, per-seat subs, in-memory patches and A/B reports are implemented. Left: run and record the shipped 1v1/2v2 matrix. Evidence only. [Plan](docs/gameplay-tuning.md#balance-matrix-tool-tool4). |
 | `TOOL#5` | OPEN | LOW | M | Proxy diagnostics and the aim/reaction design are implemented. Left: record the ladder; exact paid-event counters need an author decision on allowing a passive game-code observer. [Plan](docs/gameplay-tuning.md#bot-diagnostics-tool5). |
 | `CI#7` | DEFERRED | LOW | S | The first hosted trial passed 96 of 97 painter leaves and paint-fx in both presets; music flow is skipped without an audio endpoint. After a week of scheduled nightlies (from 2026-11-11), promote what is stable and short to `ci.yml`. [Hygiene](docs/code-hygiene.md#promote-stable-nightly-checks-ci7). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console-record.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |

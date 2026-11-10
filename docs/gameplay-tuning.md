@@ -903,7 +903,7 @@ The profiles are data, in [`scripts/balance/profiles.json`](../scripts/balance/p
 which the `TOOL#4` analyser checks every run against. Bucket's "between" is
 written there as between Sprayer, Roller and Mister.
 
-**What the existing evidence says.** `TOOL#3`'s 875 Hard matrix CSVs, read by
+**What the earlier evidence said.** `TOOL#3`'s 875 Hard matrix CSVs, read by
 that analyser ([below](#analyser-on-the-tool3-matrix-2026-11-10)): the Sniper
 and Mister sit on their profiles, and so do every tool's eliminations and
 deaths. Paint departs twice. The all-rounder out-paints the Roller (Sprayer
@@ -923,14 +923,13 @@ against its profile ([`TOOL#4`](#balance-matrix-tool-tool4)).
 
 ## Balance matrix tool (`TOOL#4`)
 
-**Plan, 2026-11-10.** The headless runner plays real, deterministic matches,
-but each past sweep (`TOOL#1`-`TOOL#3`, `REV#22`) used a driver and analyser
+**Complete, 2026-11-10.** The headless runner plays real, deterministic matches.
+Before this slice, each sweep (`TOOL#1`-`TOOL#3`, `REV#22`) used a driver and analyser
 kept only in a gitignored `out/validation/` folder. Their seeds were chosen by
-hand and they report medians and min/max, not confidence intervals. The runner
-seats every bot with the default grenade (`scripts/acceptance/balance_runner/runner.cpp`
-sets no sub) and can try a tuning value only by editing `tuning.json`, which
-`run-balance.ps1` refuses. No matrix has measured the game as it ships, with
-paint underfoot on and subs carried.
+hand and reported medians and min/max, not confidence intervals. The runner
+seated every bot with the default grenade and could try a tuning value only
+by editing `tuning.json`, which `run-balance.ps1` refused. The shipped-game
+matrix below now measures paint underfoot on and carried subs.
 
 `TOOL#4` makes the runner a repeatable report and an A/B comparison. It reports
 evidence and never proposes or applies a tuning value: the five-tool values
@@ -946,7 +945,7 @@ observations. Slices, in order:
    in-memory tuning patch, limited to `weapons`, `projectiles`, `subs` and
    `bots`. An empty patch reproduces the rows byte for byte. The runner stays
    Debug-only.
-4. **The shipped game.** Every ordered tool pair on the four Random stages,
+4. **The shipped game (measured 2026-11-10).** Every ordered tool pair on the four Random stages,
    over a consecutive seed block, at Hard and Normal 1v1, plus 2v2 rosters
    pairing each tool with each painter. Filed here as evidence.
 5. **A/B (implemented 2026-11-10).** `analyze.py --compare` between two runs of one design: per-cell
@@ -1035,6 +1034,55 @@ records above remain records of that version. The analyser reads both versions,
 separates per-seat sub configurations and reports whole-team paint and
 elimination rates for the side-swapped 2v2 rosters as well as individual tools.
 
+
+### Shipped-game matrix (2026-11-10)
+
+The checked-in design completed **5,504 device-free Debug matches**: 1,600
+1v1 and 1,152 2v2 at each of Normal and Hard, over the four Random arenas,
+60 seconds, consecutive seeds 1000-1015 and default grenades. The clean game
+revision is `94783857`, with Labrador `e7fc50e`. All 566 input pins were
+unchanged, every job's two output hashes checked, and the separate 16-match
+repeat reproduced its main and paint CSVs byte for byte. These results close
+`TOOL#4`; the bot counter boundary remains `TOOL#5` below.
+
+The 1v1 figures below are equal-weight cell means excluding mirrors, with
+unadjusted 95% intervals. They describe these bots, tools, stages and horizon.
+
+| Tool | Normal share of painted | Hard share of painted |
+|---|---|---|
+| Sprayer | 0.579 ± 0.008 | 0.586 ± 0.008 |
+| Sniper | 0.128 ± 0.004 | 0.154 ± 0.004 |
+| Roller | 0.617 ± 0.008 | 0.611 ± 0.008 |
+| Mister | 0.662 ± 0.007 | 0.646 ± 0.007 |
+| Bucket | 0.514 ± 0.007 | 0.503 ± 0.007 |
+
+Every stated 1v1 profile comparison except Bucket's paint is confirmed at
+both difficulties. Sniper has the most eliminations (Normal 1.681 ± 0.088
+per minute; Hard 1.457 ± 0.097) and the least paint. Bucket remains below the
+all-rounder and both painters on held paint. Roller now meets its painter
+profile; changed stages, seeds and build prevent attributing the difference
+from `TOOL#3` to any one change.
+
+In whole-team 2v2 results against two of the matching painter, Sniper+Mister
+holds 0.367 ± 0.013 of the painted area at Normal and 0.372 ± 0.012 at Hard.
+Sniper+Roller holds 0.387 ± 0.026 and 0.436 ± 0.024 respectively. These teams'
+eliminations do not establish a paint-score benefit from replacing a painter
+with Sniper in these one-minute bot rosters. This does not reverse the
+Sniper's intended profile or select a tuning change. Human play and longer
+matches were not measured.
+
+Evidence: `out/validation/overnight-20261110/shipped16/` has the design,
+566 input hashes, 344 job receipts plus the repeat, logs, retained attempts
+and both aggregate CSVs in `variants/baseline/`.
+`shipped16-analysis/summary.md` and `summary.json` hold all cells, profiles,
+whole-team rosters and descriptive diagnostic proxies. Main CSV SHA256:
+`F72842C9694EB821B41D62692F8D3E81AE5CCF40D9E55FC0EB1AE22DD4147155`;
+paint CSV:
+`0D1124BA255DA7564AEF7B839F65926E730A59B126B2A386C0FD811F180C1881`;
+summary:
+`EB00CEF6739DBCC6BF54FF17C21E59529F6A4E3082A84F0D285AAB99228C5C07`.
+The native mixed-loadout smoke, resume and A/B report also pass, as do the
+42 Python checks; no gameplay tuning was changed.
 
 ### Analyser on the `TOOL#3` matrix (2026-11-10)
 
