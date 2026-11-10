@@ -44,8 +44,26 @@ Xbox-style (XInput) controllers.
   Jump                A or left trigger    Space
   Aim                 Right stick          Mouse
   Shoot               Right trigger        Left mouse button
+  Sub                 Right bumper (RB)    Right mouse button
   Drop through        Left stick down      S or Down
   Pause               Start                Escape
+
+Sub is your sub weapon, carried beside your tool all match. Choose it on
+Weapon Select: confirm your tool with A / Enter, pick the sub with Left/Right,
+then press A / Enter again.
+
+  Grenade             Lobbed along your aim. It bursts into a ring of paint
+                      and hurts enemies caught in it.
+  Sprinkler           Sticks where it lands and sprays paint around it for a
+                      few seconds. Enemy shots break it.
+  Paint wall          Stands beside you, on the side you aim, and stops enemy
+                      shots for a few seconds. It drips paint on the floor
+                      beneath it.
+  Random              Picks one of the three for you.
+
+A sub costs half a tank of paint and only fires when that much is in the
+tank. The small square beside PAINT on your HUD is solid when it is ready.
+With Endless paint, a short wait between uses takes the place of the cost.
 
 Menus: left stick or D-pad / arrow keys to move, A / Enter to choose,
 B / Escape to go back. Controls, volume, window size and full screen are

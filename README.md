@@ -126,12 +126,13 @@ Use D-pad/arrows on that page so the sticks stay free for testing.
 These settings follow the pad slot, independently of player numbers, unless the
 pad wears a **profile**. Old saves keep their existing deadzones until edited.
 Mouse aim follows the cursor and the roller keeps its fixed aim.
-Open **Pad Buttons** to choose Jump, Shoot and Pause for each Pad 1-4 slot, each
-with an optional second control: A/B/X/Y, LB/RB, LT/RT, a stick press (LS/RS) or
-Start. The defaults are A / LT Jump, RT Shoot and Start Pause, and a control in use
-on that pad is skipped. **Keyboard Keys** changes the shared keyboard player's
-Move left, Move right, Jump, Drop, Shoot (a key or a mouse button) and an extra
-Pause key: select a row and press the new key. Esc always pauses, Down always
+Open **Pad Buttons** to choose Jump, Shoot, Pause and Sub for each Pad 1-4 slot
+from A/B/X/Y, LB/RB, LT/RT, a stick press (LS/RS) or Start; all but Sub may take
+an optional second control. The defaults are A / LT Jump, RT Shoot, Start Pause
+and RB Sub, and a control in use on that pad is skipped. **Keyboard Keys** changes
+the shared keyboard player's Move left, Move right, Jump, Drop, Shoot and Sub
+(each of those two a key or a mouse button) and an extra Pause key: select a row
+and press the new key. Esc always pauses, Down always
 drops and a key in use is refused. These choices leave menu and intro controls
 unchanged.
 **Profiles** keeps up to eight named profiles, each carrying a person's
@@ -162,12 +163,25 @@ The following controls are the defaults:
 | Jump | A or left trigger | Space |
 | Aim | Right stick | Mouse cursor |
 | Shoot | Right trigger | Left mouse button |
+| Sub | Right bumper (RB) | Right mouse button |
 | Drop through a platform | Left stick down | S or Down |
 | Pause/resume | Start | Escape |
 | Debug overlay | Back/View | F1 |
 | Menu navigation | Left stick or D-pad | Arrow keys or WASD |
 | Menu confirm | A | Enter or Space |
 | Menu back | B | Escape or Backspace |
+
+Each player carries a **sub weapon** beside their tool for the whole match. On
+Weapon Select a row picks its tool, then its sub: A/Enter confirms the tool,
+Left/Right chooses the Grenade, Sprinkler, Paint wall or Random, and A/Enter
+again readies the row. The grenade is lobbed along the aim and bursts into a
+ring of paint that hurts enemies caught in it. The sprinkler sticks where it
+lands and sprays paint around it until its time runs out or enemy shots break
+it. The paint wall stands beside the player, on the side they aim, stops enemy
+shots and drips paint on the floor beneath it. A sub costs half the paint tank
+and fires only with that much in it; under Endless paint a cooldown paces it
+instead. The square after the HUD's PAINT label is solid when a Sub press would
+release it.
 
 ## Your own stages
 

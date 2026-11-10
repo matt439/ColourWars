@@ -2477,6 +2477,12 @@ author accepted all six on 2026-11-09, recorded as an amendment in
 waves. The bursts and drops stay paint balls, and the empty click is the
 tools'. What remains is the author's attended play review.
 
+**Player documents, 2026-11-10.** `HOW-TO-PLAY.txt` and the README gained the
+Sub control row and a loadout paragraph, and the README's Pad Buttons and
+Keyboard Keys sentences now name Sub (`REV#9`). The `SeatSetup::sub` comment
+says what slice 5 made true (`REV#8`). The Movement Course still has no sub
+station (`REV#56`).
+
 ### Input
 
 - **Non-XInput controllers (`ROAD#23`).** INVERSUS and most Steam releases
