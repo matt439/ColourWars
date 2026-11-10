@@ -51,7 +51,8 @@ public:
 	int hits_left() const { return this->hits_left_; }
 
 protected:
-	void resolve_travel(std::span<labrador::CollisionObject* const> objects) override;
+	void resolve_travel(std::span<labrador::CollisionObject* const> objects,
+		std::optional<ProjectileTargetFlags> known) override;
 	// It sticks to bare cover rather than splashing, so it never duds.
 	bool duds_on_bare_cover() const override { return false; }
 

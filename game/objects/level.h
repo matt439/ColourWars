@@ -441,7 +441,8 @@ private:
 	// projectiles_ in step: retire_projectiles() first prunes it to the shots
 	// the end_tick() keeps and appends this tick's, and check_projectiles()
 	// then throws std::logic_error, in Debug only, unless it is the scene's
-	// projectiles in scene order.
+	// projectiles in scene order and, once admitted, the projectile targets
+	// are the scene's other collision objects with their cached answers.
 	void end_scene_tick();
 	void retire_projectiles();
 	void check_projectiles() const;

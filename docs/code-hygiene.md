@@ -3504,6 +3504,75 @@ Release (76 cases) and in Debug (77, with the slow cases), including the bot tri
 `debug_console`'s record and play, which replay matches bit for bit with the
 Debug guard running. `check-startup.ps1` passed on the Debug executable.
 
+### Projectile target answers asked once (`REV#6`)
+
+**Done 2026-11-10.** From the 2026-11-10 project review
+([record](review/2026-11-10-project-review.md#small-per-frame-waste-on-the-match-hot-path-rev6)),
+which scoped the fix to caching two per-level answers. No player-visible
+effect. No gain is claimed: the performance captures were waived (`POL#25`),
+so the saving is unmeasured, and the record itself calls the cost negligible at
+20 to 41 collision objects an arena.
+
+[LevelStructures](../game/objects/level_structures.h) now asks its projectile
+targets two questions once, in `admit()`, and keeps the answers as a
+[ProjectileTargetFlags](../game/objects/projectile_target_flags.h): whether any
+target is a `Structure` with a `mover()`, and whether any is tagged
+`structure_fixed_slab`. `Level` passes them with the target list to
+`Player::update_weapon_and_get_projectiles`,
+`Projectile::resolve_launch_obstruction` and
+`Projectile::resolve_movement_contacts`. Before, `Projectile::resolve_travel`
+ran an `any_of` with a `Collider::of` cast over every target for each swept
+shot each tick, and `resolve_sweep` an `any_of` over every target's tag for
+each travel and each launch
+([projectile_contacts.cpp](../game/objects/projectile_contacts.cpp)). The two
+predicates moved verbatim into `ProjectileTargetFlags::any_mover` and
+`any_fixed_slab`. The flags are an optional, defaulted argument: a caller that
+passes none, which is every probe, gets the scan where it always ran, with the
+same casts and the same throw on a non-`Collider`. The one-target
+`resolve_sweep` calls inside the translating and slab sweeps pass none either,
+because one target's answer is not the list's.
+
+`admit()` also keeps the `Structure*` of each target, and
+`Level::refresh_views` walks that list to set the miniature mode instead of
+casting every target on each of its up to four calls a frame. The order is the
+same and `set_miniature` is a plain setter. `Collider::of` and the role lookup
+are unchanged, as is every hierarchy; the lookups are asked once instead of
+repeatedly.
+
+The answers cannot go stale because the list cannot change. It is filled only
+in `admit()`, which `Level::build_opening_frame` calls once at the end of the
+constructor. After that the only collision objects `Level` adds to its scene
+are projectiles (`update_players`, `burst_projectiles`, `admit_projectile`),
+which are never targets; the idle drips and the Debug station labels are not
+collision objects; and no game code removes a scene object. A planted
+sprinkler or paint wall is a `ProjectilePlanted`, struck through
+`Level::strike_breakables`, so a sub appearing or breaking does not touch the
+list. A replay or restart builds a new `Level` and admits again. Both answers
+are fixed per object: `mover()` is decided by class and a structure's tag by
+its constructor argument. So there is no invalidation hook, and none should be
+added. `check_projectiles()` enforces it in Debug after every scene tick: once
+the targets are admitted they must be the scene's non-projectile collision
+objects in scene order, and the kept flags must equal a fresh scan, or it
+throws `std::logic_error`. It found no disagreement.
+
+The per-tick vectors the record lists are left alone, each for a reason.
+`was_dead` and `by_participant` in `Level` hold at most four elements, reuse
+would need new members, and `by_participant` is handed to the bot driver and
+the seat filter. `take_rumble_events`, the round tape's per-step seat copy and
+`MatchBotDriver`'s obstacle, support and ramp copies are returned or stored
+values, so reusing a buffer would change an interface; the tape's copy is the
+tape. None is obviously behaviour-neutral under bit-exact replays, which is
+the record's own objection.
+
+Both presets build under `/W4 /WX`. The full default acceptance list passed in
+Release (80 cases) and in Debug (81, with the slow cases and the guard
+running on every tick), including `moving_structure`'s replay checks,
+`instant_replay`, `sub_weapons` and `debug_console`'s record and play, with no
+pinned number edited. The Release `Quick` opt-in cases passed (12 cases), among
+them the bot trials' replay fingerprints, and the opt-in cases compile in both
+presets (16 each). Not run: `check-startup.ps1`, the painter and any performance
+capture.
+
 ## Open shortlist (2026-10-29)
 
 The author approved adding every proposal from the 2026-10-29 verified

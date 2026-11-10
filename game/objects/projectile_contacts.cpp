@@ -203,33 +203,50 @@ namespace
     }
 }
 
-void Projectile::resolve_launch_obstruction(const Vector2F& origin,
-    std::span<CollisionObject* const> objects)
+bool ProjectileTargetFlags::any_mover(std::span<CollisionObject* const> objects)
 {
-    const RectangleF finish = this->shape()->bounding_box();
-    RectangleF start = finish;
-    start.set_position_at_center(origin);
-    this->resolve_sweep(start, finish, objects, true);
-}
-
-void Projectile::resolve_movement_contacts(
-    std::span<CollisionObject* const> objects)
-{
-    if (this->for_deletion_ || !this->first_update_done_) { return; }
-    this->resolve_travel(objects);
-    // Level supplies one complete target span, once, for this actual update.
-    this->moving_contact_ready_ = false;
-}
-
-void Projectile::resolve_travel(std::span<CollisionObject* const> objects)
-{
-    if (!is_swept(this->type_)) { return; }
-    const bool translating = std::any_of(objects.begin(), objects.end(),
+    return std::any_of(objects.begin(), objects.end(),
         [](const CollisionObject* object)
         {
             const Structure* structure = Collider::of(*object).structure();
             return structure != nullptr && structure->mover() != nullptr;
         });
+}
+
+bool ProjectileTargetFlags::any_fixed_slab(std::span<CollisionObject* const> objects)
+{
+    return std::any_of(objects.begin(), objects.end(), [](const CollisionObject* object)
+        { return to_collision_type(object->tag()) == CollisionObjectType::structure_fixed_slab; });
+}
+
+void Projectile::resolve_launch_obstruction(const Vector2F& origin,
+    std::span<CollisionObject* const> objects,
+    std::optional<ProjectileTargetFlags> known)
+{
+    const RectangleF finish = this->shape()->bounding_box();
+    RectangleF start = finish;
+    start.set_position_at_center(origin);
+    this->resolve_sweep(start, finish, objects, true,
+        known ? std::optional<bool>(known->fixed_slabs) : std::nullopt);
+}
+
+void Projectile::resolve_movement_contacts(
+    std::span<CollisionObject* const> objects,
+    std::optional<ProjectileTargetFlags> known)
+{
+    if (this->for_deletion_ || !this->first_update_done_) { return; }
+    this->resolve_travel(objects, known);
+    // Level supplies one complete target span, once, for this actual update.
+    this->moving_contact_ready_ = false;
+}
+
+void Projectile::resolve_travel(std::span<CollisionObject* const> objects,
+    std::optional<ProjectileTargetFlags> known)
+{
+    if (!is_swept(this->type_)) { return; }
+    // Asked only when the caller has no answer, and only for a swept kind.
+    const bool translating = known ? known->movers :
+        ProjectileTargetFlags::any_mover(objects);
     if (translating)
     {
         this->resolve_translating_contacts(this->previous_rectangle_,
@@ -239,7 +256,8 @@ void Projectile::resolve_travel(std::span<CollisionObject* const> objects)
     {
         // The complete original static path retains its float arithmetic.
         this->resolve_sweep(this->previous_rectangle_,
-            this->shape()->bounding_box(), objects, false);
+            this->shape()->bounding_box(), objects, false,
+            known ? std::optional<bool>(known->fixed_slabs) : std::nullopt);
     }
 }
 
@@ -384,10 +402,9 @@ void Projectile::resolve_rolling_translating_contacts(std::span<CollisionObject*
 }
 void Projectile::resolve_sweep(const RectangleF& start,
     const RectangleF& finish, std::span<CollisionObject* const> objects,
-    bool launch)
+    bool launch, std::optional<bool> fixed_slabs)
 {
-    if (std::any_of(objects.begin(), objects.end(), [](const CollisionObject* object)
-        { return to_collision_type(object->tag()) == CollisionObjectType::structure_fixed_slab; }))
+    if (fixed_slabs ? *fixed_slabs : ProjectileTargetFlags::any_fixed_slab(objects))
     {
         this->resolve_fixed_slab_sweep(start, finish, objects, launch);
         return;

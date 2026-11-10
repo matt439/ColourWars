@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/objects/horizontal_motion.h"
+#include "game/objects/projectile_target_flags.h"
 #include <optional>
 #include <span>
 #include <vector>
@@ -11,12 +12,14 @@ namespace labrador
     class CollisionObject;
 }
 class Player;
+class Structure;
 struct PlayerTuning;
 class TranslatingStructurePaintable;
 class TeamGateStructurePaintable;
 
 // The stage structures a Level drives each step (HYG#40): its translating
-// movers and their supports, its team gates and the projectile targets.
+// movers and their supports, its team gates and the projectile targets, with
+// what those targets answer about movers and fixed slabs (REV#6).
 // Every pointer is a borrow from the Level's Scene, collected once by admit()
 // when the builder's objects are admitted. Admitted fixed movers explicitly
 // refuse retirement and the scene never retires a structure or a player, so
@@ -34,8 +37,9 @@ public:
     };
 
     // Collects the movers (validated before any is bound), then the gates,
-    // then the projectile targets, each in Scene order. Throws
-    // std::invalid_argument when the movers cannot be admitted.
+    // then the projectile targets, each in Scene order, with their flags and
+    // the structures among them. Throws std::invalid_argument when the movers
+    // cannot be admitted.
     void admit(const labrador::Scene& scene, std::span<Player* const> players,
         const PlayerTuning& player_tuning);
 
@@ -56,6 +60,12 @@ public:
     // Scene-owned geometry and players, which live for the whole match. Flying
     // paint sweeps this list so its cost does not grow with other projectiles.
     std::span<labrador::CollisionObject* const> projectile_targets() const;
+    // What projectile_targets() answers about movers and fixed slabs, asked
+    // once in admit(). The list never changes afterwards, and neither answer
+    // can: a structure is a mover or a slab by construction.
+    ProjectileTargetFlags target_flags() const;
+    // Every structure among the targets, in Scene order.
+    std::span<Structure* const> structure_targets() const;
 
 private:
     void admit_horizontal(const labrador::Scene& scene, std::span<Player* const> players,
@@ -74,4 +84,6 @@ private:
     std::vector<const TeamGateStructurePaintable*> team_gates_view_;
     std::vector<TeamGateStructurePaintable*> team_gates_;
     std::vector<labrador::CollisionObject*> projectile_targets_;
+    ProjectileTargetFlags target_flags_;
+    std::vector<Structure*> structure_targets_;
 };

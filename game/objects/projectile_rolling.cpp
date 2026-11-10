@@ -41,7 +41,8 @@ void ProjectileRolling::on_player_contact(const Player& /*other*/,
 	const Vector2F& /*normal*/, float /*penetration*/)
 {
 }
-void ProjectileRolling::resolve_travel(std::span<CollisionObject* const> objects)
+void ProjectileRolling::resolve_travel(std::span<CollisionObject* const> objects,
+	std::optional<ProjectileTargetFlags> /*known*/)
 {
 	if (this->moving_contact_ready())
 	{
