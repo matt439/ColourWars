@@ -1149,16 +1149,16 @@ These describe the 2026-10-30 build and its bots, not today's game.
 
 ## Bot diagnostics (`TOOL#5`)
 
-**Plan, 2026-11-10.** The shipping bot plays every tool by one policy
+**Diagnostic slice measured, 2026-11-10.** The shipping bot plays every tool by one policy
 (`REV#20`), so each number is bot and tool together. The Sniper's profile is
 intended, but its bot paints only when no enemy is in view, and its reach
 exceeds `bots.sight_distance`, so any visible enemy holds its aim. How much of
-its low paint is the tool and how much the bot is unmeasured. `TOOL#5` adds
-per-seat counters to the runner, with no change to game code: time engaged
-(derived from `bot_world()` by the bot's own sight, line-of-sight and reach
-rule), time refilling (`MatchBot::refilling()`), shots and sub uses. With
-`TOOL#4`'s tuning patch it also runs an aim-error and reaction ladder on the
-`bots.hard` record. Its output feeds `REV#20` and decides nothing.
+its low paint is the tool and how much the bot is only partly measured. The
+runner now records per-seat engagement/refilling and action proxies and has
+run the aim/reaction ladder below, with no change to game code. The original
+scope also asked for exact shots and sub uses; that part needs the author to
+allow an observer, as recorded below. The output feeds `REV#20` and decides
+nothing about the accepted bot values.
 
 **Implemented diagnostic slice, 2026-11-10.** Schema 3 exports per-seat engaged
 and refilling ticks, ready primary-fire intents and observed sub cooldown resets.
@@ -1180,3 +1180,58 @@ shots. These columns are named as proxies and are not shots or exact sub-use
 counts. Completing that part requires the author to allow a passive game-code
 observer, which the original no-game-code-change scope forbids. The diagnostic
 slice therefore does not close TOOL#5.
+
+### Aim and reaction ladder (2026-11-10)
+
+`bot-ladder.psd1` completed **8,000 Debug matches**, 1,600 per variant, on the
+same four arenas, 60-second horizon and seeds 1000-1015 as the shipped matrix.
+Every ordered tool pair plays Hard 1v1 with grenades. One factor changes at a
+time from the shipped Hard record; the patch lives only in the runner's memory.
+The measured game remains `94783857` / engine `e7fc50e`.
+
+Sniper's equal-weight 1v1 marginals (unadjusted 95% intervals):
+
+| Variant | Aim error, radians | Reaction steps | Share of painted | Eliminations / min |
+|---|---|---|---|---|
+| Baseline | 0.05 | 4 | 0.154 ± 0.004 | 1.457 ± 0.097 |
+| Perfect aim | 0 | 4 | 0.154 ± 0.004 | 1.400 ± 0.088 |
+| Wide aim | 0.20 | 4 | 0.146 ± 0.004 | 1.339 ± 0.082 |
+| Fast reaction | 0.05 | 1 | 0.155 ± 0.004 | 1.533 ± 0.104 |
+| Slow reaction | 0.05 | 24 | 0.121 ± 0.004 | 1.207 ± 0.073 |
+
+Sniper keeps its least-paint/most-eliminations profile in every variant.
+Perfect aim does not show an elimination increase over baseline in this
+sample, and its low paint remains. Slow reaction changes Sniper paint by
+-0.033 ± 0.005 and eliminations by -0.250 ± 0.121 per minute. Both changes
+have a direction, but neither interval lies entirely beyond its design margin
+(0.03 paint and 0.20 eliminations/min), so the A/B magnitude verdict is
+**inconclusive**, not an equivalence or an accepted balance change. The ladder
+measures these two bot inputs; it does not separate all bot policy from tool
+mechanics, or describe human play. Each patch changes both Hard opponents
+and every tool, so it does not isolate a Sniper-only bot effect.
+
+All 566 pinned inputs stayed unchanged and all 501 final job receipts (500
+jobs plus the repeat) passed independent output-hash verification. The repeat
+reproduced both CSVs byte for byte. A controlled hard stop after 235 completed
+jobs closed all four owned native processes with zero survivors; restarting
+with ten workers reused those 235 jobs under the same input signature. The
+interrupted attempts and stale lock remain as evidence.
+
+The aggregate audit also checks all 316,209 regional rows against the main
+match metadata and preserves the source main/regional row contents. All 100
+Hard 1v1 cells shared with the shipped design reproduce both CSVs byte for
+byte across the two drivers. The descriptive diagnostic fractions have no
+intervals; the full reports distinguish those proxies from their statistical
+paint/elimination estimates.
+
+Receipts and per-variant main/paint CSVs:
+`out/validation/overnight-20261110/ladder16/`.
+The independent audit and five summaries, including four A/B comparisons,
+are in `ladder16-analysis/`; `controlled-resume.json` records the ownership
+and reuse check. The full reports include every tool, cell, descriptive
+engagement/refill fraction and action proxy. No tuning value was applied to
+the game. Audit SHA256:
+`5F3BCEF6A1BEA8F4667ECFFB545120EA531595608D0C274BB42CEEC6882029C1`;
+aggregate audit:
+`AC14B4FDA651C1B9760B91BCFEBD6343F332FD6509C090BB7D837A3ECE6BBFD9`.
+The exact paid-event observer remains an author decision.

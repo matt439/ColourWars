@@ -48,6 +48,13 @@ The long-path report is drafted as `ENG#37`; filing stays with the author.
 Three are `DECISION`: cutting the first tag (`FTR#1`), the fresh-save arena
 (`FTR#13`) and the README's shape (`FTR#15`).
 
+The overnight ready queue is worked through (2026-11-10): twelve first-run
+rows and `TOOL#4` are complete. The shipped matrix and bot ladder record
+13,504 match rows, with repeats and pinned inputs verified. `TOOL#5`'s
+diagnostic slice is measured; exact paid-event counters now need the author's
+decision on allowing a passive game-code observer. Results and limits are in
+[gameplay tuning](docs/gameplay-tuning.md#balance-matrix-tool-tool4).
+
 ## Art direction, characters and the UI
 
 **Owner:** [docs/polish-plan.md](docs/polish-plan.md) §1, §4 and §6. It records the 2026-10-09
@@ -120,7 +127,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `TOOL#5` | OPEN | LOW | M | Proxy diagnostics and the aim/reaction design are implemented. Left: record the ladder; exact paid-event counters need an author decision on allowing a passive game-code observer. [Plan](docs/gameplay-tuning.md#bot-diagnostics-tool5). |
+| `TOOL#5` | DECISION | LOW | M | Diagnostics and the aim/reaction ladder are measured. Exact paid-shot/sub-use counts need a passive game-code observer, excluded by the original scope; the author decides whether to allow it. [Boundary](docs/gameplay-tuning.md#bot-diagnostics-tool5). |
 | `CI#7` | DEFERRED | LOW | S | The first hosted trial passed 96 of 97 painter leaves and paint-fx in both presets; music flow is skipped without an audio endpoint. After a week of scheduled nightlies (from 2026-11-11), promote what is stable and short to `ci.yml`. [Hygiene](docs/code-hygiene.md#promote-stable-nightly-checks-ci7). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console-record.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
@@ -160,7 +167,7 @@ was proposed and given no row.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `REV#19` | UNSCOPED | MED | L | Bots chase any sighted enemy at any range, stand still once in range, and observe no clock, health or score. Four possible slices (paint/fight weighting, final-seconds push, retreat, strafing); sits beside the accepted ROAD#10 and is unmeasured. [Record](docs/review/2026-11-10-project-review.md#bots-chase-sighted-enemies-and-ignore-the-clock-rev19). |
-| `REV#20` | UNSCOPED | MED | L | One bot policy plays all five tools. The Sniper's low paint share is its intended trade (author, 2026-11-10: [profiles](docs/gameplay-tuning.md#weapon-profiles-2026-11-10)); left: how much is the bot (`TOOL#5`), and whether per-tool roles are wanted. [Record](docs/review/2026-11-10-project-review.md#one-bot-policy-plays-all-five-tools-rev20). |
+| `REV#20` | UNSCOPED | MED | L | One bot policy plays all five tools. Aim/reaction sensitivity is measured in `TOOL#5`; exact event counters need a decision, and per-tool roles remain unscoped. Sniper's low paint is intended. [Record](docs/review/2026-11-10-project-review.md#one-bot-policy-plays-all-five-tools-rev20). |
 | `REV#21` | BLOCKED | LOW | M | Bots never target an enemy sprinkler and fire into an enemy paint wall, since BotWorld has no planted-sub query and bot sight ignores the wall. Bounded to 4-8 s per use. Waits on ROAD#11's attended play review. [Record](docs/review/2026-11-10-project-review.md#bots-do-not-answer-enemy-sprinklers-or-walls-rev21). |
 | `REV#23` | DECISION | LOW | S | The bot's finishing window on a support is sized at the handicap refill rate, not the 1.25x own-paint rate that POL#30 ships on; the code calls it a sufficient minimum and ROAD#39's note left it undecided. Author decides: keep the safe bound or tighten. [Record](docs/review/2026-11-10-project-review.md#bot-finish-window-sized-without-own-paint-refill-rev23). |
 | `REV#25` | DECISION | MED | M | Stage records are keyed by stage only, so solo has nothing graded to beat. Two shapes: per-stage Easy/Normal/Hard win marks or coverage medals at a fixed duration. Author's call: it sits beside no-stats, no-variant-leaderboard (ROAD#22) and solo-is-practice. [Record](docs/review/2026-11-10-project-review.md#solo-play-has-no-graded-stage-goal-rev25). |
