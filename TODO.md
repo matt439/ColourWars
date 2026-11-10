@@ -40,6 +40,10 @@ The 2026-11-10 project review added the `REV` rows
 owners and `git log` hold the results. Twenty-one are `DECISION`, each a call beside
 something accepted or waived on 2026-11-05, `REV#38` among them now that its reveal captures
 exist. None is ordered here until the author sets an aim.
+The 2026-11-10 first-run review added the `FTR` rows
+([First-run review](#first-run-review-2026-11-10)): what a newcomer meets from the GitHub page to
+a first match. Three are `DECISION`: cutting the first tag (`FTR#1`), the fresh-save arena
+(`FTR#13`) and the README's shape (`FTR#15`).
 
 ## Art direction, characters and the UI
 
@@ -218,6 +222,45 @@ was proposed and given no row.
 | `REV#68` | UNSCOPED | LOW | L | No document scopes a Steam release (store page, Remote Play Together, prompts, Deck pass); a note beside ROAD#23, whose grading does not move. Steamworks claims unchecked; nothing is released on any channel yet. [Record](docs/review/2026-11-10-project-review.md#steam-release-is-not-scoped-rev68). |
 | `REV#69` | DECISION | LOW | S | Nothing tells players that Parsec-style streaming can stand in for online play. One hedged HOW-TO-PLAY paragraph, but qualifying it needs two machines, a remote friend and pads: the author's hardware and call. [Record](docs/review/2026-11-10-project-review.md#stream-based-online-play-is-undocumented-rev69). |
 
+## First-run review (2026-11-10)
+
+**Owner:** [docs/review/2026-11-10-first-run-review.md](docs/review/2026-11-10-first-run-review.md),
+a frozen record, so this file holds each row's status. It walked a newcomer from the GitHub page
+to a first match, including a real build from a fresh clone; nothing was played on a pad. Its
+[last section](docs/review/2026-11-10-first-run-review.md#already-tracked) lists findings that
+already had rows.
+
+**Install and download**
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `FTR#1` | DECISION | HIGH | S | No release or tag, so README's "no Git, Visual Studio or terminal" promise leads to an expiring CI artifact or a source build. The publish job and 0.1.0 are ready: tag `v0.1.0`, then make step 1 one link. The first tag is the author's. [Record](docs/review/2026-11-10-first-run-review.md#no-release-exists-ftr1). |
+| `FTR#2` | OPEN | MED | S | README's build fallback lands on developer steps, omits Git, says `VCPKG_ROOT` is required and never gives size or time. Put an "Easy build" section first; fix the stale CMake-error line. [Record](docs/review/2026-11-10-first-run-review.md#the-build-fallback-leads-with-the-hard-route-ftr2). |
+| `FTR#3` | OPEN | LOW | M | `build.ps1`: no log, hidden vcvars output, no SDK check or VS version floor, unchecked stale `VCPKG_ROOT`, a message that loops back to `build.cmd`, no compile hint, no long-path warning. [Record](docs/review/2026-11-10-first-run-review.md#buildps1-failures-it-does-not-foresee-leave-no-next-step-ftr3). |
+| `FTR#4` | OPEN | LOW | S | Engine golden-image filenames make a clone under a root of about 93 characters print `Filename too long` and a failed submodule checkout. Draft a report for the ledger. [Record](docs/review/2026-11-10-first-run-review.md#long-engine-test-filenames-break-deep-clones-ftr4). |
+| `FTR#5` | OPEN | MED | S | No troubleshooting section anywhere. Add "If something goes wrong" after Play, linked from HOW-TO-PLAY and `build.ps1`'s failure lines. [Record](docs/review/2026-11-10-first-run-review.md#no-troubleshooting-section-ftr5). |
+| `FTR#6` | OPEN | LOW | S | The ZIP ships the developer README beside the guide, has no version in its name, nests its folder twice and gets generated PR notes. [Record](docs/review/2026-11-10-first-run-review.md#the-release-zips-contents-and-name-ftr6). |
+| `FTR#7` | OPEN | LOW | S | A clean build prints 44 "CMake Warning (dev)" blocks from `file(REAL_PATH)` on folders not yet made; guard with `if(EXISTS)`. [Record](docs/review/2026-11-10-first-run-review.md#clean-builds-print-44-cmake-warnings-ftr7). |
+
+**First launch and learning to play**
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `FTR#8` | OPEN | MED | S | PlayStation and Switch pads are silently ignored and nothing says so. Name them in README and HOW-TO-PLAY, and hint on Join Players; the reader is `ROAD#23`. [Record](docs/review/2026-11-10-first-run-review.md#non-xinput-pads-are-silently-ignored-ftr8). |
+| `FTR#9` | OPEN | LOW | S | HOW-TO-PLAY is unlinked and absent beside a source build; README omits the Remote Desktop/VM limit; `build.ps1` prints no guide or play-again path. [Record](docs/review/2026-11-10-first-run-review.md#the-player-guide-is-hard-to-find-ftr9). |
+| `FTR#10` | OPEN | LOW | S | The Movement Course lesson cards are the only tutorial and nothing points to them. One line in HOW-TO-PLAY and README. [Record](docs/review/2026-11-10-first-run-review.md#the-only-tutorial-cannot-be-found-ftr10). |
+| `FTR#11` | OPEN | MED | S | The fatal dialog shows raw developer text, ignores its own `no_hardware_device` class, and says nowhere where to report or that `last-error.log` lacks the error. [Record](docs/review/2026-11-10-first-run-review.md#startup-failures-show-developer-text-with-no-remedy-ftr11). |
+| `FTR#12` | OPEN | LOW | M | The first window is 1920x1080, unclamped, so the prompt bar can fall off a 1080p laptop screen; no Alt+Enter. Fit the first run to the work area. [Record](docs/review/2026-11-10-first-run-review.md#the-first-window-can-be-larger-than-the-screen-ftr12). |
+| `FTR#13` | DECISION | LOW | S | A fresh save opens Stage Select on King of the Hill, among six Trial stages, with Random last. Opening on Random and grouping the Trials sits beside the 2026-11-05 arena call. [Record](docs/review/2026-11-10-first-run-review.md#a-fresh-save-opens-the-arena-page-on-king-of-the-hill-ftr13). |
+| `FTR#14` | UNSCOPED | LOW | M | About eight confirm screens before a first match, and the save and `stages` folders are never shown. Quick Play, Open save folder, make `stages` on first run; none designed. [Record](docs/review/2026-11-10-first-run-review.md#the-setup-path-is-long-and-the-save-folder-is-hidden-ftr14). |
+
+**Finding help**
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `FTR#15` | DECISION | LOW | M | README puts art history, review status, CI, the pin and repository history among player text. Trim Play to download, requirements, controls and help; `REV#12` called the shape a matter of taste. [Record](docs/review/2026-11-10-first-run-review.md#the-readme-mixes-audiences-ftr15). |
+| `FTR#16` | OPEN | LOW | S | `docs/README.md` opens with "Reading the code" and files HOW-TO-PLAY under tools. Add a Players block on top and a maintainer-material line. [Record](docs/review/2026-11-10-first-run-review.md#the-docs-index-is-written-for-maintainers-ftr16). |
+
 ## Areas with no open rows
 
 A new row for one of these gets its section back.
@@ -273,7 +316,8 @@ the owner; a second copy here goes stale unnoticed.
 audit's own section number (`GAP#4.2`, `GAP#D3`, `GAP#F8`), ledger rows the report number
 (`ENG#23`); the rest are `PREFIX#n` by owner: `STORY` backstory, `POL` polish plan, `ED` level
 editor, `ROAD` feature roadmap, `DBG` developer console, `HYG` code hygiene,
-`OOP` OOP guide, `DES` design process, `REV` the 2026-11-10 project review,
+`OOP` OOP guide, `DES` design process, `REV` the 2026-11-10 project review, `FTR` the
+2026-11-10 first-run review,
 `DOC`/`CI`/`TOOL` the named file.
 
 **`status`**, a closed list:
