@@ -36,6 +36,9 @@ The review's engine draft, `ENG#35`, still waits on the author's filing decision
 left.
 Art (`POL#16`) is unblocked but stays deferred. Bot lift routing, sponges and the controller
 rows remain unscoped.
+The 2026-11-10 project review added the `REV` rows
+([Project review](#project-review-2026-11-10)). Twenty are `DECISION`, each a call beside
+something accepted or waived on 2026-11-05; none is ordered here until the author sets an aim.
 
 ## Art direction, characters and the UI
 
@@ -110,6 +113,118 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `CI#7` | DEFERRED | LOW | S | The first hosted trial passed 96 of 97 painter leaves and paint-fx in both presets; music flow is skipped without an audio endpoint. After a week of scheduled nightlies (from 2026-11-11), promote what is stable and short to `ci.yml`. [Hygiene](docs/code-hygiene.md#promote-stable-nightly-checks-ci7). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console-record.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
+## Project review (2026-11-10)
+
+**Owner:** [docs/review/2026-11-10-project-review.md](docs/review/2026-11-10-project-review.md),
+a frozen record, so this file holds each row's status. It compared the project with Splatoon,
+couch arena games, other paint games and similar C++ projects; every row was checked against the
+code and the recorded decisions, and nothing was built or played. Its
+[last section](docs/review/2026-11-10-project-review.md#proposed-and-not-given-rows) lists what
+was proposed and given no row.
+
+**Code and robustness**
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `REV#1` | DECISION | MED | M | A player wholly outside the bounds throws `PlayerOutOfBounds` and exits the game; user stages (`ROAD#16`) are never checked for enclosure. Author picks: out-of-bounds becomes an elimination (pits become authorable) or the scan refuses unsealed stages. [Record](docs/review/2026-11-10-project-review.md#a-player-leaving-the-arena-ends-the-process-rev1). |
+| `REV#2` | OPEN | LOW | S | User stage bounds, object rectangles, object count and the stage folder have no upper limits; an absurd width stalls startup and Stage Select and reaches an undefined int cast. Add caps to `level_format.h`, honoured by the scan, editor and schema. [Record](docs/review/2026-11-10-project-review.md#user-stage-geometry-and-folder-have-no-caps-rev2). |
+| `REV#3` | BLOCKED | LOW | M | Planted sprinklers and walls take hits by a shot's travel bounding box, tested after the tick's contacts: diagonal shots hit up to about 17 units wide, and a player inside the wall is hit before it. Waits on the `ROAD#11` play review. [Record](docs/review/2026-11-10-project-review.md#breakable-subs-are-struck-by-travel-bounding-box-rev3). |
+| `REV#4` | DECISION | LOW | M | An exception in the live round or instant replay step exits the game; recovery was scoped out with `GAP#7.3` and the replay has no known Release cause. Author's call whether to contain it at `GameLevel`, after `REV#1` removes the reachable throw. [Record](docs/review/2026-11-10-project-review.md#no-containment-around-the-match-or-replay-step-rev4). |
+| `REV#5` | DECISION | LOW | M | A reset save or section, a kept-aside copy and a newer save about to lose sections are reported only on stderr, which a Release player never sees. Author's call (left undecided in `HYG#22`): an in-game notice, and a copy aside before a downgrade write. [Record](docs/review/2026-11-10-project-review.md#save-recovery-notices-reach-only-stderr-rev5). |
+| `REV#6` | OPEN | LOW | S | Unmeasured hot-path waste: `refresh_views` casts every target up to four times a frame, each swept projectile rescans all targets for movers and slabs, and several vectors are rebuilt per tick. Cache the per-level flags; the `Collider` lookup stays. [Record](docs/review/2026-11-10-project-review.md#small-per-frame-waste-on-the-match-hot-path-rev6). |
+| `REV#7` | UNSCOPED | LOW | M | Static paint submits up to three sprites per owned 4-unit tile per pane, about 900 tiles on a full Crossfeed floor; draw cost was never measured. Measure a fully painted 4P arena first; merging runs would move painter pins. [Record](docs/review/2026-11-10-project-review.md#static-paint-draws-one-tile-at-a-time-rev7). |
+| `REV#8` | OPEN | LOW | S | `game/match/seat_setup.h:12-14` still says every menu match carries the grenade and that the save, Debug plan and replays lack the sub; slice 5 of `ROAD#11` changed that. Reword with the next `ROAD#11` change. [Record](docs/review/2026-11-10-project-review.md#stale-seatsetup-comment-about-the-grenade-rev8). |
+
+**Release, README and repository**
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `REV#9` | OPEN | MED | S | HOW-TO-PLAY.txt and the README never mention sub weapons: add the Sub row and a loadout paragraph to both. A Movement Course SUB station is a separate M piece with route pins. [Record](docs/review/2026-11-10-project-review.md#player-docs-predate-sub-weapons-rev9). |
+| `REV#10` | DECISION | MED | M | Paint underfoot (POL#30) ships on with no HUD, audio or text cue. One line in HOW-TO-PLAY and the refill lesson can ride with REV#9; whether to build an enemy-paint cue on the meter or step sound is the author's call. [Record](docs/review/2026-11-10-project-review.md#paint-underfoot-has-no-player-cue-rev10). |
+| `REV#11` | OPEN | HIGH | S | README Play step 1 leads nowhere: no release or tag exists, and master push runs carry no ZIP since the passed-tree skip. Reword it to pull-request runs or build.cmd; cutting v0.1.0 stays the author's call. [Record](docs/review/2026-11-10-project-review.md#readme-download-route-is-dead-rev11). |
+| `REV#12` | DECISION | MED | S | README shows no screenshot, GIF or clip in 511 lines though docs/images holds captures. The author picks the hero image and clip, given POL#16's art is unfinished; trimming settings and CI prose is a separate M. [Record](docs/review/2026-11-10-project-review.md#readme-has-no-screenshot-or-clip-rev12). |
+| `REV#13` | DECISION | LOW | S | The F1/Back per-player developer panel draws in Release and is listed in Controls help. Keep it as the Release frame-time readout, hide it from help, or compile it out: the author's call; no decision is recorded. [Record](docs/review/2026-11-10-project-review.md#developer-text-panel-ships-in-release-rev13). |
+| `REV#14` | DECISION | MED | S | Default Random palette still rolls pink_green and blue_yellow, the two pairs exempt from the colour-vision bar (one roll in three). A per-pair in-random flag would fix it but reopens ROAD#8's choice and changes seeded draws. [Record](docs/review/2026-11-10-project-review.md#random-palette-draws-the-exempt-pairs-rev14). |
+| `REV#15` | DEFERRED | LOW | S | No CONTRIBUTING, issue form or SECURITY file. A short CONTRIBUTING (OOP rule, engine changes go to Labrador) and a bug form asking for build-info.txt and last-error.log; rides with the first release (REV#11). [Record](docs/review/2026-11-10-project-review.md#no-contributor-or-issue-files-rev15). |
+| `REV#16` | UNSCOPED | LOW | S | Actions are pinned by major tag with no Dependabot, and the nightly's nine legs each rebuild. All are first-party actions and runner minutes are free, so weight is small; per-leg builds on pull requests are a recorded choice. [Record](docs/review/2026-11-10-project-review.md#ci-action-pins-and-nightly-rebuilds-rev16). |
+| `REV#17` | OPEN | LOW | S | No .editorconfig, though Labrador ships one. Add one matching current practice (tabs in game sources) after checking Labrador's settings agree; no .clang-format, which would churn a hand-formatted tree. [Record](docs/review/2026-11-10-project-review.md#no-editorconfig-in-the-repository-rev17). |
+| `REV#18` | UNSCOPED | LOW | L | feature-roadmap, code-hygiene and level-editor docs interleave reference with closed records. Only a level-editor manual split (M) has a clear reader; the rest is L, cosmetic and risks anchors TODO rows link to. [Record](docs/review/2026-11-10-project-review.md#large-docs-mix-manual-and-records-rev18). |
+
+**Bots, stages and records**
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `REV#19` | UNSCOPED | MED | L | Bots chase any sighted enemy at any range, stand still once in range, and observe no clock, health or score. Four possible slices (paint/fight weighting, final-seconds push, retreat, strafing); sits beside the accepted ROAD#10 and is unmeasured. [Record](docs/review/2026-11-10-project-review.md#bots-chase-sighted-enemies-and-ignore-the-clock-rev19). |
+| `REV#20` | UNSCOPED | MED | L | One bot policy plays all five tools; the Hard Sniper bot holds 12-15% of painted area in 1v1 mirrors (paint share, not win rate). Per-tool bot roles as new subclasses were never designed; POL#27 and ROAD#10 were accepted with the table on record. [Record](docs/review/2026-11-10-project-review.md#one-bot-policy-plays-all-five-tools-rev20). |
+| `REV#21` | BLOCKED | LOW | M | Bots never target an enemy sprinkler and fire into an enemy paint wall, since BotWorld has no planted-sub query and bot sight ignores the wall. Bounded to 4-8 s per use. Waits on ROAD#11's attended play review. [Record](docs/review/2026-11-10-project-review.md#bots-do-not-answer-enemy-sprinklers-or-walls-rev21). |
+| `REV#22` | OPEN | LOW | M | Bots pick territory with no teammate term in the observation or the cost. Overlap between two same-team bots is unmeasured: first measure painted/paintable share for 2-bot teams on the headless runner, then add an ally cost term only if it shows waste. [Record](docs/review/2026-11-10-project-review.md#bots-choose-territory-without-teammate-awareness-rev22). |
+| `REV#23` | DECISION | LOW | S | The bot's finishing window on a support is sized at the handicap refill rate, not the 1.25x own-paint rate that POL#30 ships on; the code calls it a sufficient minimum and ROAD#39's note left it undecided. Author decides: keep the safe bound or tighten. [Record](docs/review/2026-11-10-project-review.md#bot-finish-window-sized-without-own-paint-refill-rev23). |
+| `REV#24` | OPEN | LOW | S | Stage Select's Random pick has no memory, so separate Random starts repeat the last arena about one time in four from a pool of four. Exclude the last-played stage or deal from a bag; the stage_selection case pins the function. [Record](docs/review/2026-11-10-project-review.md#random-stage-pick-can-repeat-the-last-arena-rev24). |
+| `REV#25` | DECISION | MED | M | Stage records are keyed by stage only, so solo has nothing graded to beat. Two shapes: per-stage Easy/Normal/Hard win marks or coverage medals at a fixed duration. Author's call: it sits beside no-stats, no-variant-leaderboard (ROAD#22) and solo-is-practice. [Record](docs/review/2026-11-10-project-review.md#solo-play-has-no-graded-stage-goal-rev25). |
+| `REV#26` | DECISION | MED | S | Stage Select lists 13 stages in manifest order with nothing marking accepted arenas from the seven Turbulence Yard entries, and the accepted slab arena is itself named a Trial. Author picks: reorder and rename, an In Random mark, or a sectioned page (M). [Record](docs/review/2026-11-10-project-review.md#stage-select-does-not-mark-arenas-from-trials-rev26). |
+| `REV#27` | UNSCOPED | MED | XL | The gate, ferry and lifts appear only on single-purpose Yard trial blockouts; Random is four stages. A finished gate or ferry arena in Random is a candidate aim, never designed. Art is POL#16 and bot lift routing ROAD#28; the aim is the author's to set. [Record](docs/review/2026-11-10-project-review.md#no-random-arena-uses-the-gate-ferry-or-lifts-rev27). |
+
+**Player-facing UX**
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `REV#28` | UNSCOPED | MED | L | A missing pad with no spare leaves only Quit, which discards a series. Let a bot take the seat from the pause, or swap driver in the same seat between series rounds; needs the ROAD#20 roster lock relaxed and tape and record rules. [Record](docs/review/2026-11-10-project-review.md#bot-takeover-for-a-missing-seat-rev28). |
+| `REV#29` | UNSCOPED | MED | M | Split-pane HUD text has no size floor and no size option: scale is 0.5 in a 4P pane at 1080p and 0.333 at 720p, with only the keyline floored. Unobserved, since POL#24 readability was waived; a floor rebaselines the painter's HUD fixtures. [Record](docs/review/2026-11-10-project-review.md#hud-text-floor-or-size-option-rev29). |
+| `REV#30` | UNSCOPED | MED | M | Movement Course has no entry point: it is stage 4 of 13 behind five setup pages, hinted only on Mode Select. Consider a Home Practice row and ordering Trial stages after the accepted arenas; Home is an authored six-aspect layout. [Record](docs/review/2026-11-10-project-review.md#direct-entry-to-the-practice-course-rev30). |
+| `REV#31` | UNSCOPED | LOW | L | No toggle-to-fire, stick swap, d-pad movement or follow-movement aim; Pad Buttons remaps four actions only. Four per-pad options in the ROAD#7 pattern; toggle fire is the one cheap slice. Beside ROAD#24 and GAP#4.2. [Record](docs/review/2026-11-10-project-review.md#input-accommodations-beyond-rebinding-rev31). |
+| `REV#32` | UNSCOPED | LOW | M | Home has no play-again shortcut. GAP#6.1 already pre-fills every setup page and Join cannot be skipped, so it saves about four confirm presses for a conditional Home row and a second route into Join and Stage. [Record](docs/review/2026-11-10-project-review.md#play-again-with-last-setup-rev32). |
+| `REV#33` | UNSCOPED | LOW | S | Menus are keys and d-pad only; the keyboard seat's mouse does nothing in them. Smallest slice is left click proceeds, right click backs, but those are default Shoot and Sub, so arming must cover a firing click at the buzzer. [Record](docs/review/2026-11-10-project-review.md#mouse-input-in-menus-rev33). |
+| `REV#34` | UNSCOPED | LOW | L | GAP#2.3 residue: HUD, results and palettes answer it, but painted surface is still told apart by hue alone, and POL#30 makes ownership a gameplay input. An optional per-team pattern in PaintTile; may clash with terrain hatching. [Record](docs/review/2026-11-10-project-review.md#non-colour-team-channel-on-paint-rev34). |
+| `REV#35` | UNSCOPED | MED | M | A worn profile's name shows only on Join and the Pad rows; HUD identity, Results, Team and Weapon rows and the pause list say Player N. Extends ROAD#21. Needs fit in the 4P identity panel and Results rows that share width with awards. [Record](docs/review/2026-11-10-project-review.md#profile-name-on-hud-and-results-rev35). |
+| `REV#36` | BLOCKED | LOW | M | Respawn grace is already a recorded POL#17 fallback, to add only on observed spawn pressure; the sprinkler is a reason to look for it. Blocked on ROAD#11's attended play review. Choosing among the team's spawns is new and undesigned. [Record](docs/review/2026-11-10-project-review.md#respawn-grace-and-spawn-choice-rev36). |
+
+**Presentation and feedback**
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `REV#37` | UNSCOPED | MED | M | Shooter-side hit confirmation: feedback is victim-keyed, so a hit on a target outside or tiny in the shooter's pane is unconfirmed. Pane cue and shooter rumble never designed; the hit_confirm sound stays declined under POL#23. [Record](docs/review/2026-11-10-project-review.md#shooter-side-hit-and-splat-confirmation-rev37). |
+| `REV#38` | OPEN | MED | M | Paint strips (12 units deep) come to about 2-3 px in the full-picture reveal, by arithmetic. Capture a heavily painted four-player reveal first; a reveal-only minimum weight or body tint is then the author's call. [Record](docs/review/2026-11-10-project-review.md#paint-strips-are-hairline-thin-in-the-reveal-rev38). |
+| `REV#39` | DEFERRED | MED | S | Post-reveal Results and series pages show only A/B letters in ink; no team colour. Keylined colour chips on the plates and rows fit the hidden-bar decision; colour-name winner copy is a design call. With POL#16. [Record](docs/review/2026-11-10-project-review.md#post-reveal-results-pages-carry-no-team-colour-rev39). |
+| `REV#40` | UNSCOPED | LOW | M | Persistent damage on the figure as accumulating enemy-colour smears; health shows only on the HUD meter. Never designed: needs authored art, may not read in quarter panes and erodes team-colour identity. [Record](docs/review/2026-11-10-project-review.md#show-damage-on-the-figure-as-enemy-paint-rev40). |
+| `REV#41` | UNSCOPED | LOW | S | Time-up card at the pull-back: the round ends on sound and the camera move, with no text. The closing clock already announces it; a banner over the scripted reveal beat is a fiction call. Never designed. [Record](docs/review/2026-11-10-project-review.md#no-on-screen-time-up-signal-rev41). |
+| `REV#42` | DECISION | LOW | M | Crossfeed and Close Quarters share one music loop and sting, the only collision in Random; Press Tower's reuse is deliberate. Decide whether Crossfeed gets its own arrangement, given POL#23 accepted and listening waived. [Record](docs/review/2026-11-10-project-review.md#crossfeed-shares-the-close-quarters-music-rev42). |
+| `REV#43` | DECISION | LOW | S | Player-owned cues play centred at authored pitch for every seat; the wrapper already takes pan and pitch. Decide whether per-seat offsets are wanted, since the mix is accepted (POL#23) and can only be judged by ear. [Record](docs/review/2026-11-10-project-review.md#per-seat-pan-and-pitch-for-player-cues-rev43). |
+| `REV#44` | UNSCOPED | LOW | M | Series end is the normal Results page plus a winner line and the win ledger. A round-by-round strip, a match-point announcement and series-wide awards were never designed. [Record](docs/review/2026-11-10-project-review.md#series-conclusion-is-the-ordinary-results-page-rev44). |
+| `REV#45` | UNSCOPED | LOW | M | More paint-flavoured awards ahead of splats would extend ROAD#12, but none of the tallies is collected today. A consolation award for every player conflicts with the recorded one-each, order-is-the-design rule. Never designed. [Record](docs/review/2026-11-10-project-review.md#wider-awards-set-and-a-consolation-call-out-rev45). |
+| `REV#46` | UNSCOPED | LOW | M | Roster strip by the clock with respawning players crossed out; the HUD has no roster element. Never designed, and it sits beside the ROAD#18 choice to keep enemy state off the HUD, so the author rules first. [Record](docs/review/2026-11-10-project-review.md#team-status-strip-showing-who-is-respawning-rev46). |
+| `REV#47` | UNSCOPED | LOW | M | Respawn shows neither attacker nor tool. Needs a last-attacker record and a new HUD element over a wait designed to be wordless; close to the kill attribution declined under POL#30. Never designed. [Record](docs/review/2026-11-10-project-review.md#tell-a-splatted-player-who-got-them-rev47). |
+
+**New features from the comparison**
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `REV#48` | UNSCOPED | MED | M | Whole-round time-lapse from one arena camera as an optional End row after the reveal (extends ROAD#19). Needs paced playback, a whole-arena layout in the rebuilt level and a HUD ruling. Never designed. [Record](docs/review/2026-11-10-project-review.md#whole-round-time-lapse-replay-rev48). |
+| `REV#49` | UNSCOPED | MED | M | Save the finished arena as a PNG from an explicit End or Results action. Capture and WIC writer exist only in Debug; needs a Release home, the reveal frame, a folder, copy and a check. Never designed. [Record](docs/review/2026-11-10-project-review.md#save-the-finished-picture-as-a-png-rev49). |
+| `REV#50` | DECISION | LOW | M | Author's call: should an elimination leave a small burst of the attacker's paint (Splatoon)? Burst path and attacker credit exist, but it makes kills score territory, beside POL#30 and the balance accepted 2026-11-05. [Record](docs/review/2026-11-10-project-review.md#elimination-leaves-a-burst-of-attacker-paint-rev50). |
+| `REV#51` | DECISION | LOW | XL | Author's call: trial own-colour wall slide and wall jump (Splatoon, Splasher)? Never ruled on under POL#30. Reopens accepted arenas, reach numbers, bot routing and editor reach aids; default-off trial at most. [Record](docs/review/2026-11-10-project-review.md#own-colour-wall-climb-or-wall-jump-rev51). |
+| `REV#52` | UNSCOPED | LOW | L | Paint-keyed bounce pad as a paint object beside ROAD#28 and ROAD#29: static, launches the team holding its top paint, needs none of the sponge contracts. New class, format kind, art, cue and trial stage. Never designed. [Record](docs/review/2026-11-10-project-review.md#paint-keyed-bounce-pad-object-rev52). |
+| `REV#53` | UNSCOPED | LOW | L | Eraser stage object that returns tiles to neutral (Splasher water, de Blob). Breaks the paint-only-arrives invariant that wet strips, paint objects, bot finishing, underfoot and awards assume. Never designed. [Record](docs/review/2026-11-10-project-review.md#eraser-stage-object-that-clears-paint-rev53). |
+| `REV#54` | UNSCOPED | LOW | M | Coverage-over-time strip on Results after the reveal: sample both totals each second, replay-neutral, and fit a two-colour strip into the validated paper layout. Sits against POL#15's quick Results. Never designed. [Record](docs/review/2026-11-10-project-review.md#coverage-over-time-strip-on-results-rev54). |
+| `REV#55` | DECISION | LOW | M | Author's call: untimed, unrecorded exploration of any arena for 1-4 players (Splatoon Recon)? A no-winner session is outside the 2026-11-03 options ruling; cheaper variant is solo practice on any stage. [Record](docs/review/2026-11-10-project-review.md#untimed-group-exploration-of-any-arena-rev55). |
+| `REV#56` | BLOCKED | LOW | S | Movement Course has no lesson station for the Sub action: add one JSON lesson with its checks and text fit. Waits on ROAD#11's play review so it is written once. A practice target dummy is separate and unscoped. [Record](docs/review/2026-11-10-project-review.md#sub-lesson-station-in-movement-course-rev56). |
+| `REV#57` | DECISION | LOW | M | Author's call: give the sniper a hold-to-charge with a line opponents can see (Splatoon chargers)? Reopens a tool and bot ballistics accepted 2026-11-05, with no observed problem; if taken, rides with ROAD#13. [Record](docs/review/2026-11-10-project-review.md#sniper-charge-or-readable-warning-rev57). |
+| `REV#58` | UNSCOPED | LOW | L | Rotation for five to eight people (Nidhogg 2 tournaments): profile names, who sits out, per-person standings. Needs a second ledger beside the team-win Session and a per-person winner rule. Never designed. [Record](docs/review/2026-11-10-project-review.md#party-rotation-for-more-than-four-people-rev58). |
+| `REV#59` | UNSCOPED | LOW | L | Bots-only attract match behind the title. Level and LevelBuilder refuse a setup with no human view, so it needs a spectator view and a new stack shape. The colourless front end itself is POL#16. Never designed. [Record](docs/review/2026-11-10-project-review.md#attract-match-behind-the-title-rev59). |
+| `REV#60` | DEFERRED | LOW | M | Fill the spare quadrant of three-human matches with territory-free content (clock, rosters), the row the ROAD#17 decline invited. Must repeat what panes show; needs a draw region and 3P painter cover. With POL#16. [Record](docs/review/2026-11-10-project-review.md#territory-free-use-of-the-spare-3p-quadrant-rev60). |
+
+**Tooling, editor and distribution**
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `REV#61` | OPEN | MED | M | No ASan, /analyze or clang-tidy run anywhere; add an x64-asan preset and a non-required nightly leg over the default acceptance cases, with /analyze as a report first. The engine's half is Labrador's. [Record](docs/review/2026-11-10-project-review.md#no-sanitizer-or-static-analysis-leg-rev61). |
+| `REV#62` | OPEN | LOW | M | No generative test of the save and user-stage readers; add one opt-in fixed-seed mutation case that requires return or refusal, never a crash or hang. Replay codec excluded; nesting-depth findings go to the ledger. [Record](docs/review/2026-11-10-project-review.md#no-mutation-probe-for-outside-file-readers-rev62). |
+| `REV#63` | DECISION | MED | M | Access violations and terminate leave no record, and Release keeps no PDB. Slice: a filter and terminate handler writing one local dump, plus a PDB artifact. Author's call: a dump holds memory the privacy rules exclude. [Record](docs/review/2026-11-10-project-review.md#no-crash-dump-and-no-release-symbols-rev63). |
+| `REV#64` | DECISION | MED | L | The editor is left out of the ZIP and compiles absolute checkout paths, so shipping it means relocatable content lookup, hidden source flows, a guide and package checks. Author's call: it redrafts design-process P5, J4, F6 and F7. [Record](docs/review/2026-11-10-project-review.md#level-editor-is-not-shipped-to-players-rev64). |
+| `REV#65` | BLOCKED | LOW | M | No Play Stage or Open My Stages folder item in the editor. Waits on REV#64: it pays only if the editor ships, and a Release launch argument cuts against the rule that Release takes none. [Record](docs/review/2026-11-10-project-review.md#editor-has-no-test-play-command-rev65). |
+| `REV#66` | UNSCOPED | LOW | L | Editor has no multi-select, recent files, drag-and-drop open or autosave. Group move is the one with authoring value; a textured canvas contradicts the schematic scope. Scope with the next editor slice. [Record](docs/review/2026-11-10-project-review.md#editor-lacks-multi-select-and-recent-files-rev66). |
+| `REV#67` | DECISION | LOW | M | The only channel is an unsigned GitHub ZIP, itself unpublished. An itch.io page with a butler step in publish is the worthwhile addition; signing and a checksum add little. Author's call, after the first tag. [Record](docs/review/2026-11-10-project-review.md#distribution-is-one-unsigned-github-zip-rev67). |
+| `REV#68` | UNSCOPED | LOW | L | No document scopes a Steam release (store page, Remote Play Together, prompts, Deck pass); a note beside ROAD#23, whose grading does not move. Steamworks claims unchecked; nothing is released on any channel yet. [Record](docs/review/2026-11-10-project-review.md#steam-release-is-not-scoped-rev68). |
+| `REV#69` | DECISION | LOW | S | Nothing tells players that Parsec-style streaming can stand in for online play. One hedged HOW-TO-PLAY paragraph, but qualifying it needs two machines, a remote friend and pads: the author's hardware and call. [Record](docs/review/2026-11-10-project-review.md#stream-based-online-play-is-undocumented-rev69). |
 ## Areas with no open rows
 
 A new row for one of these gets its section back.
@@ -165,7 +280,8 @@ the owner; a second copy here goes stale unnoticed.
 audit's own section number (`GAP#4.2`, `GAP#D3`, `GAP#F8`), ledger rows the report number
 (`ENG#23`); the rest are `PREFIX#n` by owner: `STORY` backstory, `POL` polish plan, `ED` level
 editor, `ROAD` feature roadmap, `DBG` developer console, `HYG` code hygiene,
-`OOP` OOP guide, `DES` design process, `DOC`/`CI`/`TOOL` the named file.
+`OOP` OOP guide, `DES` design process, `REV` the 2026-11-10 project review,
+`DOC`/`CI`/`TOOL` the named file.
 
 **`status`**, a closed list:
 - `OPEN`: ready to work.
