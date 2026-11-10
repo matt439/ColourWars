@@ -1581,9 +1581,10 @@ Implemented:
   refreshes on each build, including local-change markers.
 - The executable carries a VERSIONINFO resource stamped from the root
   `project(VERSION)`, the number CPack also uses; `check-startup.ps1` fails an
-  executable that is not stamped with it. CI keeps the inspected, started Release
-  ZIP as the `ColourWars-windows-x64` run artifact for 14 days. No tag or release
-  job exists yet.
+  executable that is not stamped with it. A pull request's full CI run keeps the
+  inspected, started Release ZIP as the `ColourWars-windows-x64` run artifact for
+  14 days. CI's `publish` job turns a matching `v*` tag into a GitHub Release; no
+  tag has been cut yet.
 
 Original package validation: Debug and Release builds; ZIP extraction into a temporary directory
 outside the checkout; all 16 packaged assets matched against their sources; no

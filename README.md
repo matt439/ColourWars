@@ -7,12 +7,16 @@ arena, and a scoreboard that counts painted surface rather than kills.
 
 You don't need Git, Visual Studio or a terminal to play.
 
-1. Download `ColourWars-windows-x64.zip` from the
-   [latest release](https://github.com/matt439/ColourWars/releases/latest).
-   Until the first release is out, a signed-in GitHub account can take the
-   `ColourWars-windows-x64` artifact from a passing
-   [CI run](https://github.com/matt439/ColourWars/actions/workflows/ci.yml?query=branch%3Amaster+is%3Asuccess)
-   (it comes wrapped in a second ZIP), or use `build.cmd` (see [Building](#building)).
+1. Get `ColourWars-windows-x64.zip`. No release has been published yet, so the
+   [releases page](https://github.com/matt439/ColourWars/releases) is empty;
+   once it lists one, download the ZIP from there. Until then, a signed-in
+   GitHub account can take the `ColourWars-windows-x64` artifact from a passing
+   [pull-request CI run](https://github.com/matt439/ColourWars/actions/workflows/ci.yml?query=event%3Apull_request+is%3Asuccess):
+   open a run and look under **Artifacts** at the bottom of its summary (the
+   download comes wrapped in a second ZIP). Only a run that built the game has
+   one, so a pull request that changed only documents does not, and GitHub
+   deletes it 14 days after the run. If no listed run has it, use `build.cmd`
+   (see [Building](#building)).
 2. Right-click the ZIP and choose **Extract All**. Running the game from
    inside the ZIP doesn't work.
 3. Open the extracted folder, then the `ColourWars-windows-x64` folder inside
@@ -399,10 +403,12 @@ changes and `source-archive` when Git metadata is unavailable. Rebuild after
 committing to produce a package labelled with that commit. The release version
 is `project(VERSION)` in the root `CMakeLists.txt`; it is CPack's package version,
 heads `build-info.txt` and is stamped into `ColourWars.exe` (Properties >
-Details). CI keeps each passing Release ZIP as the `ColourWars-windows-x64` run
-artifact. A `v*` tag on `master` that matches `project(VERSION)` (`v0.1.0` for
-`0.1.0`) runs full CI, and its `publish` job attaches that run's checked ZIP to a
-new GitHub Release.
+Details). A pull request's full CI run keeps its checked Release ZIP as the
+`ColourWars-windows-x64` run artifact for 14 days. The push run that follows a
+merge to `master` normally has none: it skips the Windows jobs when its tree
+already passed on the pull request. No release has been cut yet. A `v*` tag on
+`master` that matches `project(VERSION)` (`v0.1.0` for `0.1.0`) runs full CI,
+and its `publish` job attaches that run's checked ZIP to a new GitHub Release.
 
 Only the assets listed in [cmake/runtime_assets.cmake](cmake/runtime_assets.cmake)
 are staged and packaged; configure checks that the list matches the runtime manifest.

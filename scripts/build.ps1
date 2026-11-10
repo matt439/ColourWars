@@ -53,8 +53,8 @@ if (-not $vs) {
     Stop-Build ("No Visual Studio with C++ tools was found. Install Visual Studio 2022 or " +
         "newer (Community is free) with the 'Desktop development with C++' workload:`n" +
         "  https://visualstudio.microsoft.com/downloads/`n" +
-        'then run this again. Only want to play? Download the ZIP from ' +
-        'https://github.com/matt439/ColourWars/releases instead.')
+        'then run this again. Only want to play? README.md, under Play, says ' +
+        'where to get a built ZIP.')
 }
 Write-Host "Using Visual Studio at $vs"
 
