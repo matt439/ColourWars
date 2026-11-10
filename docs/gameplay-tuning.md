@@ -879,3 +879,102 @@ every stage, difficulty and duration for each table here.
 Not decided here: bot difficulty, tool tuning and whether a bot is a good
 teammate for a person. The first two were `ROAD#10` and `POL#27`, accepted by
 the author on 2026-11-05; the last is a play question.
+
+## Weapon profiles (2026-11-10)
+
+**Decided by the author, 2026-11-10.** A tool is judged on two measures, not
+one: **eliminating opponents** and **painting the arena**. Each tool has an
+intended profile on the two, and a balance finding is a tool missing its own
+profile, not a tool scoring below the others on paint:
+
+| Tool | Profile |
+|---|---|
+| Sprayer | The all-rounder: paints and fights about evenly. |
+| Sniper | The killer: the most eliminations, the least paint. |
+| Roller | A painter that dies often. |
+| Mister | A painter that dies often. |
+| Bucket | Between the all-rounder and the painters. |
+
+The Sniper's low held-paint share (about an eighth of the painted area in
+[`TOOL#3`](#turbulence-bands-and-hard-five-tool-rerun-tool3-2026-10-29)) is therefore
+its intended trade, not a fault by itself.
+
+**What the existing evidence says.** Re-reading `TOOL#3`'s 875 Hard matrix
+CSVs for both measures, per tool over both seats and every opponent (350 seat
+results each, mirrors included, so a mirror's 0.5 share pulls every mean toward
+the middle), per 60-second match:
+
+| Tool | Share of painted, mean | Kills / min | Deaths / min | K/D |
+|---|---|---|---|---|
+| Sprayer | 0.59 | 0.64 | 0.44 | 1.44 |
+| Sniper | 0.20 | 1.01 | 0.17 | 5.77 |
+| Roller | 0.56 | 0.51 | 1.01 | 0.51 |
+| Mister | 0.64 | 0.55 | 0.99 | 0.56 |
+| Bucket | 0.52 | 0.65 | 0.75 | 0.88 |
+
+Kills are `p<n>_credited_enemy_eliminations`; deaths are the opponent's. Every
+tool sits on its profile. The Sniper out-kills every opponent (0.87-1.34 kills
+a minute against the other four) and is rarely eliminated. These are Hard bots
+on the 2026-10-30 build, before paint underfoot shipped (`POL#30`) and before
+sub weapons (`ROAD#11`), over five chosen seeds: they show direction, not
+today's balance, and nothing here says a person plays a tool as the bot does.
+
+**What follows for measurement.** Score is still painted area, so a 1v1 Sniper
+loses on purpose; its eliminations are worth something only when they let a
+teammate paint. A role tool is therefore checked by its **team result in 2v2**
+(a Sniper and a painter against two painters), which no sweep has measured yet.
+The balance matrix tool reports both measures for every tool and flags a tool
+against its profile ([`TOOL#4`](#balance-matrix-tool-tool4)).
+
+## Balance matrix tool (`TOOL#4`)
+
+**Plan, 2026-11-10.** The headless runner plays real, deterministic matches,
+but each past sweep (`TOOL#1`-`TOOL#3`, `REV#22`) used a driver and analyser
+kept only in a gitignored `out/validation/` folder. Their seeds were chosen by
+hand and they report medians and min/max, not confidence intervals. The runner
+seats every bot with the default grenade (`scripts/acceptance/balance_runner/runner.cpp`
+sets no sub) and can try a tuning value only by editing `tuning.json`, which
+`run-balance.ps1` refuses. No matrix has measured the game as it ships, with
+paint underfoot on and subs carried.
+
+`TOOL#4` makes the runner a repeatable report and an A/B comparison. It reports
+evidence and never proposes or applies a tuning value: the five-tool values
+were accepted under `POL#27`, and the arena owners say not to retune from bot
+observations. Slices, in order:
+
+1. **Analyser.** A standard-library `scripts/balance/analyze.py` reads runner
+   CSVs and gives, per cell and per tool, both profile measures (share of
+   painted, kills and deaths a minute) with confidence intervals clustered by
+   seed, side-swap pairs, and the smallest detectable change. Each tool is
+   flagged against its [profile](#weapon-profiles-2026-11-10). It has a unit test
+   on a small committed fixture CSV. It is first run on the retained `TOOL#3`
+   CSVs as a method check, and those results are not taken as today's balance.
+2. **Matrix driver.** `scripts/run-balance-matrix.ps1` with one design file,
+   `cases.psd1`-style. It compiles once, runs jobs in parallel, resumes after a
+   kill, and repeats one job as a byte-identity check.
+3. **Loadout and tuning patch.** Runner flags for each seat's sub and an
+   in-memory tuning patch, limited to `weapons`, `projectiles`, `subs` and
+   `bots`. An empty patch reproduces the rows byte for byte. The runner stays
+   Debug-only.
+4. **The shipped game.** Every ordered tool pair on the four Random stages,
+   over a consecutive seed block, at Hard and Normal 1v1, plus 2v2 rosters
+   pairing each tool with each painter. Filed here as evidence.
+5. **A/B.** `analyze.py --compare` between two runs of one design: per-cell
+   and per-tool change with intervals, and a check that nothing moved beyond a
+   margin set in the design file. This serves future changes (new tools,
+   pickups, an elimination burst) rather than reopening the accepted values.
+
+Bot results stay evidence, not acceptance (see [above](#headless-balance-runner-tool1-2026-10-25)).
+
+## Bot diagnostics (`TOOL#5`)
+
+**Plan, 2026-11-10.** The shipping bot plays every tool by one policy
+(`REV#20`), so each number is bot and tool together. The Sniper's profile is
+intended, but its bot paints only when no enemy is in view, and its reach
+exceeds `bots.sight_distance`, so any visible enemy holds its aim. How much of
+its low paint is the tool and how much the bot is unmeasured. `TOOL#5` adds
+per-seat counters to the runner, with no change to game code: time engaged
+(derived from `bot_world()` by the bot's own sight, line-of-sight and reach
+rule), time refilling (`MatchBot::refilling()`), shots and sub uses. With
+`TOOL#4`'s tuning patch it also runs an aim-error and reaction ladder on the
+`bots.hard` record. Its output feeds `REV#20` and decides nothing.
