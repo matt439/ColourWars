@@ -848,9 +848,11 @@ of 36 cells. Close Quarters has no bands (`stage_partition` gives it one
   independent bots' is, and usually less.
 
 An ally term in the territory cost would move every recorded outcome for
-rosters with two same-team bots, for a gain these numbers put at a few percent
-at most, on a roster that is a minority in a four-seat couch game. It was not
-added. The weakest cell, Easy on Crossfeed in the first minute, is where to
+rosters with two same-team bots, on a roster that is a minority in a four-seat
+couch game. What it could recover is the shortfall against bots that cannot
+get in each other's way: at most 1% in the pooled medians, 6-9% in four of the
+36 cells and 15% in the weakest. These numbers do not say what coordination
+beyond that would add. It was not added. The weakest cell, Easy on Crossfeed in the first minute, is where to
 look first if two-bot teams are ever seen crowding in play.
 
 **Limits.** Five chosen seeds and a Sprayer mirror: descriptive, with observed
@@ -858,8 +860,10 @@ ranges, not confidence intervals. Debug build. Held paint at time-up is not
 paint laid: a team's repaint of its own ground and ground lost to the enemy are
 both invisible, and the runner does not export laid area. No direct sample of
 the two bots' chosen goals exists, because `MatchBot` exposes none; the credit
-split and band overlap stand in for it. The runner's `ally` transition columns
-are not an overlap measure, since a friendly repaint changes no owner. 2v2 also
+split and band overlap stand in for it. The opt-in `bot_team_trials` case does
+count `ally` transitions (`ally_repaint_events`, `ally_transition_area`), but
+they are not an overlap measure either, since a friendly repaint changes no
+owner. 2v2 also
 doubles the fighting (eliminations rise with every added bot), and the equal
 bot-seconds comparison gives the 1v1 bots twice as long to travel and respawn.
 A human teammate, mixed difficulties and mixed tools were not run.
