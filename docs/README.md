@@ -70,7 +70,8 @@ client owes Labrador, and [gap-audit.md](review/gap-audit.md), the 2026-08-11
 audit of missing functionality that still owns the `GAP` rows. The rest are the
 [2026-10-30 architecture review](review/2026-10-30-architecture-review.md), the
 [2026-11-05 code hygiene review](review/2026-11-05-code-hygiene-review.md), the
-three 2026-09-26 fix records and the
+[2026-11-10 project review](review/2026-11-10-project-review.md), which owns the
+`REV` rows, the three 2026-09-26 fix records and the
 [hidden-window-resize](review/hidden-window-resize/README.md) request and exhibit (`ENG#23`).
 
 `images/` holds the screenshots and clips the docs embed.
