@@ -4,7 +4,8 @@
 # scripts/acceptance/<Name>.cpp, then its Sources, then every .cpp in a
 # same-named folder, against the game library and both platform adapters.
 #
-#   Group        'default' (omitted): in the default list of both presets.
+#   Group        'default' (omitted): in the default list of every preset
+#                (x64-asan runs Release's list).
 #                'debug-only': in the Debug default list; refused in Release.
 #                'opt-in': never run by default; -OptIn selects all of them.
 #                CI compiles them all; nightly.yml runs them.

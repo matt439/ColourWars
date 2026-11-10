@@ -6,8 +6,8 @@ maintenance slices alongside the gameplay backlog; they do not change its
 arena/tuning order. Since 2026-10-29 it also owns the CI-gate rows `CI#2` to
 `CI#8`; `CI#1`, the foreground debug-console check, stays with
 [the debug console](debug-console-record.md#foreground-checks-ci1). It also
-records the outcomes of two rows of the frozen 2026-11-10 project review,
-`REV#6` and `REV#62`.
+records the outcomes of three rows of the frozen 2026-11-10 project review,
+`REV#6`, `REV#61` and `REV#62`.
 
 ## Hygiene review (2026-11-05)
 
@@ -3689,6 +3689,104 @@ passed (13, this one among them), the opt-in cases compile in both presets
 5.1, and `check-level-editor.ps1` passed in both presets. Not run: Debug's
 four slow cases, `check-startup.ps1`, the painter and the nightly's `-OptIn`
 run.
+
+### Sanitizer and static analysis presets (`REV#61`)
+
+**Presets, runner support and nightly legs landed 2026-11-10; the hosted legs
+have not run.** From the 2026-11-10 project review
+([record](review/2026-11-10-project-review.md#no-sanitizer-or-static-analysis-leg-rev61)):
+nothing outside `external/` ran AddressSanitizer or `/analyze`.
+
+Two configure and build presets were added to `CMakePresets.json`. Neither
+changes a CMake file or anything under `external/`.
+
+- `x64-asan` is RelWithDebInfo with `/fsanitize=address`. Debug cannot be
+  used: its `/RTC1` is refused alongside the sanitizer. RelWithDebInfo already
+  writes debug information, so reports are symbolised and warning C5072 (ASan
+  without debug information) cannot fire under the engine's `/WX`; `_DEBUG` is
+  off, so class layouts and the case list are Release's. It is not Release, so
+  `cmake/release_package.cmake` refuses to package it. Its linker flags turn
+  incremental linking off, which the sanitizer does not support.
+- `x64-analyze` is Debug, so the developer console is analysed too, with
+  `/analyze /analyze:WX- /analyze:external-`. `/analyze:WX-` keeps analysis
+  warnings as warnings under `/WX`; the build completes whatever they say.
+
+The flags are in each preset's `CMAKE_CXX_FLAGS`, which therefore restates
+CMake's own defaults (`/DWIN32 /D_WINDOWS /EHsc`). That reaches every target,
+the engine's included, without touching `labrador_settings`, and it does not
+reach `rc.exe` as a directory compile option would.
+
+vcpkg stays on the stock `x64-windows` triplet. DirectXTK and XAudio2 are
+DLLs, so only their import libraries are linked, and every static library and
+object (engine, math, game, adapters, editor, probes) is compiled here with
+the flag. The STL's container annotations therefore agree across the link and
+no `_DISABLE_VECTOR_ANNOTATION` or overlay triplet is needed; the vcpkg binary
+cache key is unchanged. The cost is that nothing inside those two DLLs is
+checked.
+
+`run-acceptance.ps1 -Preset x64-asan` runs Release's default list. Through
+`probe-build.ps1` the probes compile with `/fsanitize=address /Z7` (`/Z7` so
+parallel compiles share no `.pdb`), and the runner puts the configured
+compiler's folder on the probes' `PATH`, because the runtime DLL
+(`clang_rt.asan_dynamic-x86_64.dll`) ships beside `cl.exe` and must be that
+toolset's; the preflight refuses a build configured without the flag or a
+toolset without the DLL. The two existing presets are unchanged: a Release
+`ammo.rsp` is identical before and after. The other check scripts still take
+only the two original presets.
+
+From an x64 Developer shell:
+
+```
+cmake --preset x64-asan
+cmake --build --preset x64-asan
+scripts/run-acceptance.ps1 -Preset x64-asan -SkipBuild -Parallel 4
+scripts/report-analyze.ps1
+```
+
+`report-analyze.ps1` configures `x64-analyze`, rebuilds it from clean (only a
+compile reports) and writes `build.log`, `analyze-warnings.log` and
+`analyze-summary.json` under `out/validation/analyze`: the distinct C6xxx,
+C26xxx and C28xxx lines, counted by code for this repository and for
+`external/labrador`. It exits non-zero only when the configure or build fails.
+
+What the local run found, on MattPC with MSVC 14.51 (2026-11-10):
+
+- The preset built with no compiler or linker warning. All 80 default cases
+  passed under AddressSanitizer with `-Parallel 4`, in 762 seconds against
+  124 for an earlier Release run at the same setting, and no log holds a
+  sanitizer report. The long cases were
+  `crossfeed` (741 seconds), `press_tower` (401) and `menu_text` (279). No
+  case was excluded and no defect was found.
+- The leg can fail: a throwaway probe compiled with a generated response
+  file's flags, reading one byte past a 16-byte heap block, exited 1 with
+  `ERROR: AddressSanitizer: heap-buffer-overflow` and a symbolised stack. It
+  is not committed.
+- `/analyze` completed and reported 13 distinct warnings. Eleven are this
+  repository's: eight C6262 (a function with a stack frame of 17 to 89 KiB, half
+  of them about 64 KiB; four in `game/` outside the console, three in
+  `editor/`, one in `game/debug/`), C6011 at `game/debug/tune/tune_target.cpp:103`, C6387 at
+  `editor/window_dpi.cpp:13` and C28251 on the editor's `wWinMain`. Two are
+  the engine's and Labrador's to judge: C6262 in `engine/assets/json.cpp` and
+  C28020 in `engine/audio/xwb_file.cpp`. None has been triaged.
+
+`nightly.yml` gained two legs. `asan` builds the preset and runs the default
+cases; a failure joins the `Nightly sweep failed` issue like any other leg.
+`analyze` runs the report with `continue-on-error`, uploads its logs and
+cannot fail the night. Neither is part of `gate`.
+
+Not checked:
+
+- The hosted legs. Nothing was pushed, so whether the runner image carries
+  the sanitizer component, and how long `crossfeed` takes there, is unknown.
+  The pull request that carries this change runs the whole nightly as a trial
+  because it edits `nightly.yml`.
+- `pwsh`. The two selection checkers and the runner ran under Windows
+  PowerShell 5.1 only.
+- The game itself. `ColourWars.exe` from `x64-asan` was built and not
+  started, and the opt-in cases, the painter, startup and the editor checks
+  were not run under the sanitizer.
+- Leaks. MSVC's AddressSanitizer has no leak detection.
+- clang-tidy was not attempted.
 
 ## Open shortlist (2026-10-29)
 

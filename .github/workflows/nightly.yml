@@ -1,6 +1,7 @@
 # What is too long or too exact for every pull request: the painter, paint
-# effects and the long opt-in cases, on master's tip each night. Not a required
-# check. A failure opens or updates one issue, so nobody has to look for it.
+# effects, the long opt-in cases, the default cases under AddressSanitizer and
+# a static analysis report, on master's tip each night. Not a required check.
+# A failure opens or updates one issue, so nobody has to look for it.
 #
 # This also keeps the vcpkg cache warm: caches are scoped per ref, master's
 # pushes no longer build, and a pull request can only inherit from master.
@@ -18,6 +19,7 @@ on:
       - .github/actions/windows-setup/**
       - scripts/check-painter-sweep.ps1
       - scripts/check-painter/hosted-known-failures.txt
+      - scripts/report-analyze.ps1
 
 permissions:
   contents: read
@@ -48,6 +50,8 @@ jobs:
           - { leg: painter-2, preset: x64-release, sweep: true, shard: 2 }
           - { leg: painter-3, preset: x64-release, sweep: true, shard: 3 }
           - { leg: painter-debug-only, preset: x64-debug, sweep_debug_only: true }
+          - { leg: asan, preset: x64-asan, asan: true }
+          - { leg: analyze, preset: x64-analyze, analyze: true }
 
     defaults:
       run:
@@ -61,11 +65,14 @@ jobs:
       # This save warms the cache the pull request workflow restores.
       - uses: ./.github/actions/windows-setup
 
+      # The analysis report configures and builds for itself.
       - name: Configure
+        if: ${{ !matrix.analyze }}
         run: |
           cmake --preset ${{ matrix.preset }}
 
       - name: Build
+        if: ${{ !matrix.analyze }}
         run: |
           cmake --build --preset ${{ matrix.preset }}
 
@@ -93,6 +100,18 @@ jobs:
         if: matrix.sweep_debug_only
         run: |
           pwsh -NoProfile -File scripts/check-painter-sweep.ps1 -Preset ${{ matrix.preset }} -DebugOnlyLeaves -KnownFailures scripts/check-painter/hosted-known-failures.txt -OutputDirectory out/validation/painter-sweep
+
+      - name: Default cases under AddressSanitizer
+        if: matrix.asan
+        run: |
+          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4 -OutputDirectory out/validation/asan
+
+      # A report: its log and counts are uploaded, and it never fails the leg.
+      - name: Static analysis report
+        if: matrix.analyze
+        continue-on-error: true
+        run: |
+          pwsh -NoProfile -File scripts/report-analyze.ps1 -OutputDirectory out/validation/analyze
 
       # Results and logs; the captures stay on the runner.
       - name: Upload evidence

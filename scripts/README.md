@@ -21,7 +21,7 @@ full.
 
 | Script | What |
 |---|---|
-| [run-acceptance.ps1](run-acceptance.ps1) | builds the game and runs the consumer probes declared in [acceptance/cases.psd1](acceptance/cases.psd1) (`-Cases`, `-ExcludeCases`, `-OptIn`, `-QuickOptIn`, `-OwnLegOnly`, `-SkipOwnLeg`, `-SkipSlowDebug`, `-CompileOnly`, `-Parallel`, `-RunTimeoutSeconds`); writes `acceptance-summary.json` |
+| [run-acceptance.ps1](run-acceptance.ps1) | builds the game and runs the consumer probes declared in [acceptance/cases.psd1](acceptance/cases.psd1) (`-Preset`, where `x64-asan` runs Release's list under AddressSanitizer, `-Cases`, `-ExcludeCases`, `-OptIn`, `-QuickOptIn`, `-OwnLegOnly`, `-SkipOwnLeg`, `-SkipSlowDebug`, `-CompileOnly`, `-Parallel`, `-RunTimeoutSeconds`); writes `acceptance-summary.json` |
 | [acceptance-process.ps1](acceptance-process.ps1), [acceptance-process/](acceptance-process/) | the runner's native helper: one Windows Job Object, deadline and log per probe |
 | [check-acceptance-selection.ps1](check-acceptance-selection.ps1) | checks the runner's case selection rules without CMake, a compiler or the helper |
 | [check-acceptance-process.ps1](check-acceptance-process.ps1) | qualifies the helper's ownership, deadlines, logging and cancellation with isolated processes |
@@ -29,7 +29,8 @@ full.
 | [process-births.ps1](process-births.ps1) | dot-sourced helper that counts the processes a check starts, through a Job Object, so the two selection checkers measure that their preflights started none |
 | [quiet-game.ps1](quiet-game.ps1) | dot-sourced helper that sets `COLOURWARS_MUTE` for the game and real-audio probes a check starts, and restores the caller's value; set `COLOURWARS_MUTE=0` first to hear a run |
 | [drawing-references.ps1](drawing-references.ps1) | dot-sourced helper giving `check-paint-fx.ps1` and the debug-console driver the `Add-Type` references System.Drawing code needs under pwsh as well as Windows PowerShell |
-| [probe-build.ps1](probe-build.ps1) | dot-sourced helper for the configured build's compiler arguments, game and adapter libraries, dependency includes and Windows libraries |
+| [probe-build.ps1](probe-build.ps1) | dot-sourced helper for the configured build's compiler arguments, game and adapter libraries, dependency includes and Windows libraries; for `x64-asan` also the sanitizer flags and the folder of its runtime DLL |
+| [report-analyze.ps1](report-analyze.ps1) | builds the `x64-analyze` preset from clean and writes `analyze-warnings.log` and `analyze-summary.json`, the `/analyze` warnings counted by code for this repository and for the engine; a report that fails only if the build does |
 | [check-diagnostics.ps1](check-diagnostics.ps1) | shared stderr checks; only the exact optional-bank fallback or a caller's explicit fixture diagnostic is allowed |
 | [check-windows.ps1](check-windows.ps1) | shared Win32 source for enumerating a child process's top-level windows, finding a class and closing those windows |
 | [check-probe-helpers.ps1](check-probe-helpers.ps1) | checks build preflights, diagnostics and owned-window enumeration with synthetic files and an invisible native window; no CMake, MSVC or GPU |
