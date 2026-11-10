@@ -218,9 +218,17 @@ std::optional<float> MatchBot::sub_use(const MatchBotObservation& view,
 	if (!view.sub || !view.sub_ready) { return std::nullopt; }
 	const SubTuning& sub = this->tuning_->sub(*view.sub);
 	// The sub must leave the bot able to keep fighting: one that would start
-	// a refill at once is held. Endless paint spends nothing.
-	if (view.refill_enabled && view.ammo - sub.cost / this->tuning_->starting_ammo() <=
-		this->tuning_->bots().reserve_low) { return std::nullopt; }
+	// a refill at once is held. A grenade thrown at an enemy beyond the tool's
+	// reach must also leave bots.sub_reserve: a tank spent lower runs out
+	// before the bot reaches that enemy, and the refill backs it into its home
+	// ground (ROAD#11). Endless paint spends nothing.
+	if (view.refill_enabled)
+	{
+		const BotTuning& policy = this->tuning_->bots();
+		const float left = view.ammo - sub.cost / this->tuning_->starting_ammo();
+		if (left <= policy.reserve_low ||
+			(*view.sub == SubType::grenade && !engaging && left < policy.sub_reserve)) { return std::nullopt; }
+	}
 	const bool right = movement > 0.0f || (movement == 0.0f && view.facing_right);
 	switch (*view.sub)
 	{

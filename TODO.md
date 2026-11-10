@@ -32,8 +32,7 @@ complete (2026-11-07), recorded in [their owner](docs/code-hygiene.md#hygiene-re
 The review's engine draft, `ENG#35`, still waits on the author's filing decision.
 `ROAD#22`'s endless-paint slice is complete (2026-11-07), recorded in the
 [roadmap](docs/feature-roadmap.md#endless-paint-road22). `ROAD#11` (sub weapons) is implemented
-(2026-11-09): all seven slices are done; the author's attended play review and one call on a
-nightly bot gate are the decisions left.
+(2026-11-09): all seven slices are done; the author's attended play review is the decision left.
 Art (`POL#16`) is unblocked but stays deferred. Bot lift routing, sponges and the controller
 rows remain unscoped.
 The 2026-11-10 project review added the `REV` rows
@@ -62,7 +61,7 @@ excluded modes.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ROAD#11` | DECISION | MED | S | Sub weapons: all seven slices are done (2026-11-09). What remains is the author's attended play review, and their call on `bot_team_trials`' home-band gate: 559/560 since bots throw, so the nightly's opt-in leg is red. The miss is the side-swapped sibling of the pinned seed-`3946` loop, which the loop's guard does not cover. [Plan](docs/feature-roadmap.md#sub-weapons-road11). |
+| `ROAD#11` | DECISION | MED | S | Sub weapons: all seven slices are done (2026-11-09), and the home-band gate is green again (2026-11-10). What remains is the author's attended play review. [Plan](docs/feature-roadmap.md#sub-weapons-road11). |
 | `ROAD#13` | UNSCOPED | LOW | XL | More tool archetypes (Splatoon brush, blaster, splatling, dualies, brella), each with art, audio and bot ballistics. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#14` | UNSCOPED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#28` | UNSCOPED | MED | L | Cycling and paint-driven lifts are done (2026-11-03, Lift and Paint Lift Trials; trial values accepted 2026-11-05). Left: deliberate bot lift routing, including a stuck check that discounts carried y; never scoped. [Slice](docs/feature-roadmap.md#paint-driven-lift-second-slice-road28) |

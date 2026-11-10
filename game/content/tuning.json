@@ -23,6 +23,8 @@
         "refill_off_enemy_paint": true,
         "_sub_throw_miss": "ROAD#11: a bot throws its grenade only on a flight passing this many units from a visible enemy, and plants its sprinkler only on one landing this close to the floor ahead.",
         "sub_throw_miss": 120.0,
+        "_sub_reserve": "ROAD#11: a bot throws its grenade at an enemy beyond its tool's reach only when at least this much of the tank is left after it, so the throw does not send it back to refill before it reaches the enemy. 0.38-0.45 pass bot_team_trials; 0.30-0.35 and 0.50 do not.",
+        "sub_reserve": 0.40,
         "easy": { "reaction_steps": 24, "replan_steps": 90, "territory_candidates": 8, "aim_error_radians": 0.28 },
         "normal": { "reaction_steps": 12, "replan_steps": 45, "territory_candidates": 16, "aim_error_radians": 0.14 },
         "hard": { "reaction_steps": 4, "replan_steps": 15, "territory_candidates": 32, "aim_error_radians": 0.05 }

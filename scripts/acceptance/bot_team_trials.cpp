@@ -803,8 +803,11 @@ int main(int argc, char** argv)
         require(off_home_misses.empty(), "A two-bot mixed-tool team retained no paint outside its home band");
         for (const std::string& miss : lone_off_home_misses)
         {
-            // The fixed home-band loop: its lone Sprayer now reaches scoring ground.
-            require(miss != "close_quarters seed=3946 human=a rotation=0 team=a",
+            // The fixed home-band loop: its lone Sprayer now reaches scoring
+            // ground, on either side. The side-swapped trial's miss was fixed
+            // by bots.sub_reserve (ROAD#11).
+            require(miss != "close_quarters seed=3946 human=a rotation=0 team=a" &&
+                miss != "close_quarters seed=3946 human=b rotation=0 team=b",
                 "The Close Quarters seed-3946 (formerly 61403) home-band loop returned");
         }
         std::cout << "MEASURE mixed one-bot teams retaining off-home paint=" << 120 - lone_off_home_misses.size() << "/120\n";
