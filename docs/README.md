@@ -22,7 +22,7 @@ What is in `docs/`, grouped by what you would come for. Open work is indexed in
 | [debug-console-record.md](debug-console-record.md) | how each `DBG` row was done or why it waits, and `CI#1` |
 | [level-editor.md](level-editor.md) | `ColourWarsEditor.exe`, the desktop level editor |
 | [level-format.md](level-format.md), [level.schema.json](../game/contracts/level.schema.json) | the level file format and its schema |
-| [gameplay-tuning.md](gameplay-tuning.md) | `tuning.json`: its key rules, tool angles and accepted ranges, and the headless balance runner (`TOOL#1`-`TOOL#3`) |
+| [gameplay-tuning.md](gameplay-tuning.md) | `tuning.json`: its key rules, tool angles and accepted ranges, the headless balance runner (`TOOL#1`-`TOOL#3`) and the two-bot team measurement (`REV#22`) |
 | [menu-presentation.md](menu-presentation.md) | `presentation.json`'s menu geometry, artwork and text |
 | [localisation.md](localisation.md) | locales: the overlay files, what they may change, fallback, font coverage and numbers |
 
