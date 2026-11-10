@@ -3773,8 +3773,8 @@ What the local run found, on MattPC with MSVC 14.51 (2026-11-10):
   of them about 64 KiB; four in `game/` outside the console, three in
   `editor/`, one in `game/debug/`), C6011 at `game/debug/tune/tune_target.cpp:103`, C6387 at
   `editor/window_dpi.cpp:13` and C28251 on the editor's `wWinMain`. Two are
-  the engine's and Labrador's to judge: C6262 in `engine/assets/json.cpp` and
-  C28020 in `engine/audio/xwb_file.cpp`. None has been triaged.
+  the engine's: C6262 in `engine/assets/json.cpp` and C28020 in
+  `engine/audio/xwb_file.cpp`. The verdicts are below.
 
 `nightly.yml` gained two legs. `asan` builds the preset and runs the default
 cases; a failure joins the `Nightly sweep failed` issue like any other leg.
@@ -3795,12 +3795,75 @@ Not checked:
 - Leaks. MSVC's AddressSanitizer has no leak detection.
 - clang-tidy was not attempted.
 
-What is left, and why the row is `OPEN`: the next step is local. Run
-`scripts/report-analyze.ps1` and judge each of the eleven warnings that are
-this repository's: fix it, or record here why it stands. The two engine
-warnings are Labrador's and need nothing here. The hosted legs are confirmed
-on the nightly trial of the pull request that carries the presets, which
-needs a push the author authorises; the row is deleted once both are done.
+#### The `/analyze` verdicts (2026-11-10)
+
+Each of the eleven was read against its code. Two were fixed, nine stand, and
+none was a defect that could be reached. The rerun reports 11 distinct
+warnings: nine here (eight C6262 and C6011) and the same two in the engine. No
+suppression was added, so the nine stay in the report, and a number other than
+nine on a later run is the thing to read.
+
+Fixed, both in `editor/` and neither changing what the editor does:
+
+- **C28251, `editor/main.cpp`.** `wWinMain` now carries the annotations of the
+  SDK's declaration (`_In_`, `_In_opt_`, `_In_`, `_In_`), as the game's does.
+- **C6387, `editor/window_dpi.cpp`.** `user_function` passed
+  `GetModuleHandleW(L"user32.dll")` straight to `GetProcAddress`, whose module
+  parameter may not be null. It now returns no function when the module is
+  missing, which both callers already treat as a Windows without that
+  function. The editor imports `user32.dll`, so the branch is not expected to
+  run.
+
+The eight C6262 frames stand. No stack size is set anywhere: the executables
+link with the default 1 MiB reserve, and the engine's pool
+(`CreateThreadpool`) sets none, so its workers get the same. None of the eight
+functions is recursive or is called from a recursion, and the largest is 9% of
+that reserve.
+
+| Frame | Bytes | What fills it | Where it runs |
+|---|---|---|---|
+| `Presentation::Validation::validate_results_contributions` | 89,384 | 1,001 cached percentage suffixes, each a string and six glyph pointers (the Debug layout; Release's string is smaller) | the main thread: startup, and Debug `reload` and `tune` |
+| `LevelDocument::load` (`editor/level_document.cpp`) | 66,008 | a 64 KiB read chunk | the editor's main thread; the parse it then calls nests at most 64 deep, which `check_nesting` enforces first |
+| `read_stage_snapshot` (`game/objects/level_loaded_info.cpp`) | 65,856 | a 64 KiB read chunk | the main thread, at startup and on a user-stage rescan; a leaf that returns before any parse |
+| `Editor::choose_file`, `Editor::choose_user_stage` | 65,780 and 65,784 | the 32,768-character path buffer a file dialog needs for a long path | the editor's main thread, from a menu command |
+| `MovementFeedback::draw_puff` | 40,000 | 1,225 spans, the fixed bound its comment derives | a draw, on the main thread or a pool worker |
+| `wWinMain` (`game/main.cpp`) | 34,964 | the save, tuning, presentation and the other objects that must outlive `Application` | the bottom frame of the main thread, once |
+| `DebugPerf::reset` | 17,456 | the temporary `DebugPerf` it assigns from | the main thread, on a console command; Debug only |
+
+Moving any of these to the heap would add an allocation (in `draw_puff`, one a
+frame for each puff) to guard a stack that is not near its limit.
+
+- **C6011, `game/debug/tune/tune_target.cpp:103`, stands as a false positive.**
+  The analysis follows `context` as null from the locale lookup at line 87 into
+  the branch at line 99, but that branch is `can_check_resources(context)`,
+  which returns false for a null `context`. The analysis does not look inside
+  that function. `TuningTarget::validate` has the same shape and no warning,
+  only because nothing earlier in it tests the pointer. Restating the null test
+  at the call would be code written for the tool.
+
+The two engine warnings are not reported to Labrador from here. Both were read
+and neither is a defect:
+
+- C6262 in `read_json_file` is the same 64 KiB read chunk on a 1 MiB stack, in
+  a function that returns the text before parsing it.
+- C28020 at `xwb_file.cpp:208` indexes the 16-entry `adaptation` table with
+  `nibble`, which is `byte >> 4` or `byte & 0x0F` of an `unsigned char` and so
+  0 to 15. The analysis does not carry that range through the conditional.
+
+They are Labrador's to silence or leave, and its own build would show them
+under the same flag.
+
+Checked after the two edits: `x64-debug` and `x64-release` build,
+`check-level-editor.ps1` passes in both, and the report was rerun from clean.
+No file under `game/` changed, so no acceptance case was rerun.
+
+What is left, and why the row is `DECISION`: nothing local. The hosted `asan`
+and `analyze` legs are confirmed on the nightly trial of the pull request that
+carries the presets, and that needs a push only the author can authorise. No
+other row holds it up, so it is not `BLOCKED`, and with no local step it cannot
+be `OPEN`. The row is deleted when both legs have run there; what to expect
+from `analyze` is nine warnings here and two in the engine, if the hosted
+toolset matches MSVC 14.51.
 
 ## Open shortlist (2026-10-29)
 

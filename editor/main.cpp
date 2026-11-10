@@ -12,7 +12,7 @@
 using colourwars_editor::Editor;
 using colourwars_editor::wide;
 
-int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show)
+int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ PWSTR, _In_ int show)
 {
     try
     {
