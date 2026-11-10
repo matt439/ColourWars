@@ -879,3 +879,155 @@ every stage, difficulty and duration for each table here.
 Not decided here: bot difficulty, tool tuning and whether a bot is a good
 teammate for a person. The first two were `ROAD#10` and `POL#27`, accepted by
 the author on 2026-11-05; the last is a play question.
+
+## Weapon profiles (2026-11-10)
+
+**Decided by the author, 2026-11-10.** A tool is judged on two measures, not
+one: **eliminating opponents** and **painting the arena**. Each tool has an
+intended profile on the two, and a balance finding is a tool missing its own
+profile, not a tool scoring below the others on paint:
+
+| Tool | Profile |
+|---|---|
+| Sprayer | The all-rounder: paints and fights about evenly. |
+| Sniper | The killer: the most eliminations, the least paint. |
+| Roller | A painter that dies often. |
+| Mister | A painter that dies often. |
+| Bucket | Between the all-rounder and the painters. |
+
+The Sniper's low held-paint share (about an eighth of the painted area in
+[`TOOL#3`](#turbulence-bands-and-hard-five-tool-rerun-tool3-2026-10-29)) is therefore
+its intended trade, not a fault by itself.
+
+The profiles are data, in [`scripts/balance/profiles.json`](../scripts/balance/profiles.json),
+which the `TOOL#4` analyser checks every run against. Bucket's "between" is
+written there as between Sprayer, Roller and Mister.
+
+**What the existing evidence says.** `TOOL#3`'s 875 Hard matrix CSVs, read by
+that analyser ([below](#analyser-on-the-tool3-matrix-2026-11-10)): the Sniper
+and Mister sit on their profiles, and so do every tool's eliminations and
+deaths. Paint departs twice. The all-rounder out-paints the Roller (Sprayer
+0.614, Roller 0.573), so the Roller is not shown to be a painter beside it.
+Bucket paints less than the all-rounder and both painters (0.520), above only
+the Sniper. These are Hard bots on the
+2026-10-30 build, before paint underfoot shipped (`POL#30`) and before sub
+weapons (`ROAD#11`), over five chosen seeds: they show direction, not today's
+balance, and nothing here says a person plays a tool as the bot does.
+
+**What follows for measurement.** Score is still painted area, so a 1v1 Sniper
+loses on purpose; its eliminations are worth something only when they let a
+teammate paint. A role tool is therefore checked by its **team result in 2v2**
+(a Sniper and a painter against two painters), which no sweep has measured yet.
+The balance matrix tool reports both measures for every tool and flags a tool
+against its profile ([`TOOL#4`](#balance-matrix-tool-tool4)).
+
+## Balance matrix tool (`TOOL#4`)
+
+**Plan, 2026-11-10.** The headless runner plays real, deterministic matches,
+but each past sweep (`TOOL#1`-`TOOL#3`, `REV#22`) used a driver and analyser
+kept only in a gitignored `out/validation/` folder. Their seeds were chosen by
+hand and they report medians and min/max, not confidence intervals. The runner
+seats every bot with the default grenade (`scripts/acceptance/balance_runner/runner.cpp`
+sets no sub) and can try a tuning value only by editing `tuning.json`, which
+`run-balance.ps1` refuses. No matrix has measured the game as it ships, with
+paint underfoot on and subs carried.
+
+`TOOL#4` makes the runner a repeatable report and an A/B comparison. It reports
+evidence and never proposes or applies a tuning value: the five-tool values
+were accepted under `POL#27`, and the arena owners say not to retune from bot
+observations. Slices, in order:
+
+1. **Analyser (done 2026-11-10,
+   [below](#analyser-on-the-tool3-matrix-2026-11-10)).**
+2. **Matrix driver.** `scripts/run-balance-matrix.ps1` with one design file,
+   `cases.psd1`-style. It compiles once, runs jobs in parallel, resumes after a
+   kill, and repeats one job as a byte-identity check.
+3. **Loadout and tuning patch.** Runner flags for each seat's sub and an
+   in-memory tuning patch, limited to `weapons`, `projectiles`, `subs` and
+   `bots`. An empty patch reproduces the rows byte for byte. The runner stays
+   Debug-only.
+4. **The shipped game.** Every ordered tool pair on the four Random stages,
+   over a consecutive seed block, at Hard and Normal 1v1, plus 2v2 rosters
+   pairing each tool with each painter. Filed here as evidence.
+5. **A/B.** `analyze.py --compare` between two runs of one design: per-cell
+   and per-tool change with intervals, and a check that nothing moved beyond a
+   margin set in the design file. This serves future changes (new tools,
+   pickups, an elimination burst) rather than reopening the accepted values.
+
+Bot results stay evidence, not acceptance (see [above](#headless-balance-runner-tool1-2026-10-25)).
+
+### Analyser on the `TOOL#3` matrix (2026-11-10)
+
+[`scripts/balance/analyze.py`](../scripts/balance/analyze.py) is standard-library
+Python, so it needs no build; its test runs in CI's lint job. Give it CSVs or
+folders:
+
+```
+python scripts/balance/analyze.py out/validation/<run> --out out/validation/<run>-summary
+```
+
+It writes `summary.md` and `summary.json`, and refuses an output folder inside
+the repository but outside `out/`. Runs are split by roster, bot and duration.
+For 1v1, one seed's two matches of a tool pair on a stage, X on team A and X on
+team B, form one unit. A tool's figure is the equal-weight mean of its cells
+against other tools (stage x opponent), mirrors left out. Every estimate,
+whether a tool's figure, the gap between two tools or a tool against the field,
+is a weighted sum of cells. Its interval comes from the spread over seeds of
+each unit's contribution, with Welch-Satterthwaite degrees of freedom, so two
+tools' complementary shares of the same matches count with their covariance.
+Where a stratum has one seed, or no spread at all, it reports no interval
+rather than a false certainty. A pair missing its swapped match is counted
+and left out of the estimates, since one side carries the whole side advantage.
+
+The profile levels are an order, `least` < `low` < `mid` < `high` < `most`, and
+a tool is judged against the other tools' stated levels on the same measure: a
+tool stated higher than another should be significantly above it. A reversed
+order makes both tools `off`, and the note names the other. When every stated
+order holds significantly, the tool's level is `confirmed`; otherwise it is
+`consistent`. `most` and `least` are also judged against every tool, and `mid`
+is also off as the outright most or least. A tool with no differently stated
+tool to compare with is judged against the median of the others. `between`
+lists tools that have their own entries: confirmed when above one and below
+another, off when beyond all of them. A level is `no interval` when the data
+cannot give one, and `not in data` when the tool did not play. The comparisons
+are unadjusted at 95%, so among many checks one can flip by chance.
+
+**Method check on `TOOL#3`.** The input is the 875 retained Hard 1v1 CSVs:
+seven stages, five seeds, 350 side-swapped pairs and 175 mirrors. Output is in
+`out/validation/tool4-analyzer-tool3/`.
+
+| Tool | Share of painted | Eliminations / min | Deaths / min | Profile |
+|---|---|---|---|---|
+| Sprayer | 0.614 ± 0.008 | 0.668 ± 0.091 | 0.425 ± 0.069 | kills mid confirmed; **paint mid off** (above Roller) |
+| Sniper | 0.124 ± 0.004 | 1.143 ± 0.112 | 0.104 ± 0.034 | kills most, paint least: both confirmed |
+| Roller | 0.573 ± 0.009 | 0.439 ± 0.066 | 1.060 ± 0.105 | deaths high confirmed; **paint high off** (below Sprayer) |
+| Mister | 0.669 ± 0.008 | 0.446 ± 0.073 | 0.993 ± 0.104 | paint high, deaths high: both confirmed |
+| Bucket | 0.520 ± 0.009 | 0.593 ± 0.085 | 0.707 ± 0.098 | deaths between confirmed; **paint between off** (below all three) |
+
+What the method check shows about the method:
+
+- **Paint is precise; eliminations are not.** One unit's paint share varies by
+  a median 0.038 within a cell, so five seeds resolve a tool's paint to ±0.008,
+  and an A/B change of 0.017 is detectable. Eliminations vary by 0.45 a minute
+  within a cell, and a tool's rate is only resolved to about ±0.09; a change of
+  0.17 a minute needs this much data to be seen. Elimination claims therefore
+  need more seeds than paint claims, which slice 4's design has to size for.
+- **The side swap balances sides but does not pair.** Team A's advantage is
+  0.001 ± 0.005 of the painted area. Within a cell, a tool's two orientations
+  correlate at 0.05, so the two matches of one seed are nearly independent. An
+  A/B comparison on the same seeds is therefore analysed unpaired (slice 5).
+
+These describe the 2026-10-30 build and its bots, not today's game.
+
+## Bot diagnostics (`TOOL#5`)
+
+**Plan, 2026-11-10.** The shipping bot plays every tool by one policy
+(`REV#20`), so each number is bot and tool together. The Sniper's profile is
+intended, but its bot paints only when no enemy is in view, and its reach
+exceeds `bots.sight_distance`, so any visible enemy holds its aim. How much of
+its low paint is the tool and how much the bot is unmeasured. `TOOL#5` adds
+per-seat counters to the runner, with no change to game code: time engaged
+(derived from `bot_world()` by the bot's own sight, line-of-sight and reach
+rule), time refilling (`MatchBot::refilling()`), shots and sub uses. With
+`TOOL#4`'s tuning patch it also runs an aim-error and reaction ladder on the
+`bots.hard` record. Its output feeds `REV#20` and decides nothing.

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "source": "docs/gameplay-tuning.md#weapon-profiles-2026-11-10",
+  "decided": "2026-11-10",
+  "tools": {
+    "sprayer": { "paint": "mid", "kills": "mid" },
+    "sniper": { "paint": "least", "kills": "most" },
+    "roller": { "paint": "high", "deaths": "high" },
+    "mister": { "paint": "high", "deaths": "high" },
+    "bucket": {
+      "paint": { "between": ["sprayer", "roller", "mister"] },
+      "deaths": { "between": ["sprayer", "roller", "mister"] }
+    }
+  }
+}
