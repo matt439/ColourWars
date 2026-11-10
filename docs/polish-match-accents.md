@@ -143,8 +143,9 @@ the result is what the cards showed.
 | Close Quarters | blue / yellow | 1080p | 0.244 | 2-3 px (about half each) | 2-3 px | 95% | same match | [image](images/polish-match-accents/reveal-4p-close-quarters-blue-yellow-1080p.png) |
 
 The coloured band is a little thinner than the review's arithmetic. A strip is
-`paint.thickness` 12 units deep, but its colour is drawn `thickness` less
-`edge_width`, 10 units (`game/objects/structure_paintable.cpp`), which is
+`paint.thickness` 12 units deep, but `PaintTile::draw_surface`
+(`game/objects/paint_tile.cpp`) draws a black inward edge `edge_width` deep
+over the tint, which leaves 10 units of colour. That is
 2.65, 3.98, 1.62 and 2.44 px at the four scales above and is what the pixels
 show. [Enlarged crops](images/polish-match-accents/reveal-4p-strip-crops.png)
 of one block and one slab at each size confirm the counts.
