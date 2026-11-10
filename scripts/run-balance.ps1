@@ -9,6 +9,10 @@ param(
     [ValidateSet('idle','walk','jump','chase','paint','skirmish','match')][string] $Bot = 'paint',
     # match only: the shipping bot's difficulty per seat (default Normal for every seat).
     [ValidateSet('easy','normal','hard')][string[]] $Difficulty,
+    [ValidateSet('grenade','sprinkler','wall')][string[]] $Subs,
+    [string] $TuningPatch,
+    # Reuse a runner compiled once by the matrix driver.
+    [string] $RunnerExecutable,
     [string] $Csv,
     [string] $PaintCsv,
     [string] $OutputDirectory,
@@ -132,6 +136,9 @@ if ($Tools.Count -ne $Players) { throw 'Tools must contain exactly one weapon fo
 if ($Difficulty -and $Bot -ne 'match') { throw 'Difficulty applies only to the match bot.' }
 if ($Bot -eq 'match' -and -not $Difficulty) { $Difficulty = @('normal') * $Players }
 if ($Bot -eq 'match' -and $Difficulty.Count -ne $Players) { throw 'Difficulty must name exactly one level for each player.' }
+if ($Subs -and $Subs.Count -ne $Players) { throw 'Subs must contain exactly one sub for each player.' }
+if ($TuningPatch) { $TuningPatch = (Resolve-Path -LiteralPath $TuningPatch).ProviderPath }
+if ($RunnerExecutable) { $RunnerExecutable = (Resolve-Path -LiteralPath $RunnerExecutable).ProviderPath }
 $run = if ($PSBoundParameters.ContainsKey('OutputDirectory')) {
     Resolve-BalancePath $OutputDirectory
 } else {
@@ -171,13 +178,13 @@ foreach ($target in @($mainFuture,$paintFuture)) {
 $build = Join-Path $repo "out/build/$Preset"
 $content = Join-Path $build 'game'
 $compile = Join-Path $run 'compile'
-$exe = Join-Path $compile "$Preset/balance_runner.exe"
+$exe = if ($RunnerExecutable) { $RunnerExecutable } else { Join-Path $compile "$Preset/balance_runner.exe" }
 $receipt = Join-Path $run 'run-info.json'
 $result = [ordered]@{
     outcome='running'; started_utc=[DateTime]::UtcNow.ToString('o'); preset=$Preset
     stages=$Stage; seeds=$Seed; players=$Players; requested_duration=$Duration
-    tools=$Tools; bot=$Bot; difficulty=$Difficulty; csv=$csvPath; paint_csv=$paintPath; executable=$exe
-    main_schema=2; main_columns=81; paint_schema=1; paint_columns=29
+    tools=$Tools; subs=$Subs; tuning_patch=$TuningPatch; bot=$Bot; difficulty=$Difficulty; csv=$csvPath; paint_csv=$paintPath; executable=$exe
+    main_schema=3; main_columns=101; paint_schema=1; paint_columns=29
     publication_convention='companion-first-main-last-completion-marker'; joint_physical_atomicity=$false
     device_free=$true; human_acceptance=$false; failure=$null
 }
@@ -187,7 +194,7 @@ Save-Result
 $previousPath = $env:PATH
 $previousNativeEncoding = [Console]::OutputEncoding
 try {
-    & (Join-Path $PSScriptRoot 'run-acceptance.ps1') -Preset $Preset -SkipBuild:$SkipBuild -Cases @('balance_runner') -CompileOnly -OutputDirectory $compile *> (Join-Path $run 'compile.log')
+    if (-not $RunnerExecutable) { & (Join-Path $PSScriptRoot 'run-acceptance.ps1') -Preset $Preset -SkipBuild:$SkipBuild -Cases @('balance_runner') -CompileOnly -OutputDirectory $compile *> (Join-Path $run 'compile.log') }
     if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) { throw 'Balance executable was not produced.' }
     $arguments = @($content)
     foreach ($id in $Stage) { $arguments += @('--stage',$id) }
@@ -197,11 +204,14 @@ try {
         '--tools',(($Tools | ForEach-Object { $_.ToLowerInvariant() }) -join ','),
         '--bot',$Bot.ToLowerInvariant(),'--csv',$csvPath,'--paint-csv',$paintPath)
     if ($Bot -eq 'match') { $arguments += @('--difficulty',(($Difficulty | ForEach-Object { $_.ToLowerInvariant() }) -join ',')) }
+    if ($Subs) { $arguments += @('--subs', (($Subs | ForEach-Object { $_.ToLowerInvariant() }) -join ',')) }
+    if ($TuningPatch) { $arguments += @('--tuning-patch', $TuningPatch) }
     $result.arguments=$arguments
     $result.input_pins=@((Get-Pin (Join-Path $content 'tuning.json')),(Get-Pin (Join-Path $content 'presentation.json')),
         (Get-Pin (Join-Path $content 'manifest.json')),(Get-Pin (Join-Path $build 'generated/build-info.txt')),
         (Get-Pin (Join-Path $content 'ColourWars.exe')),(Get-Pin $exe))
     foreach ($id in @($Stage | Select-Object -Unique)) { $result.input_pins += Get-Pin (Join-Path $content "levels/$id.json") }
+    if ($TuningPatch) { $result.input_pins += Get-Pin $TuningPatch }
     $result.source_pins=@((Get-Pin $PSCommandPath),(Get-Pin (Join-Path $PSScriptRoot 'run-acceptance.ps1')),
         (Get-Pin (Join-Path $PSScriptRoot 'acceptance/balance_runner.cpp')))
     $parts=Join-Path $PSScriptRoot 'acceptance/balance_runner'

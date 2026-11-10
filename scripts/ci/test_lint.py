@@ -123,7 +123,7 @@ class ChangeChecks(unittest.TestCase):
                 self.assertEqual(self.push(before, self.commit()), docs_only)
 
     def test_deleting_packaged_markdown_requires_full_ci(self) -> None:
-        for path in ("README.md", "game/audio/paint_exe/PROVENANCE.md"):
+        for path in ("game/audio/paint_exe/PROVENANCE.md",):
             with self.subTest(path=path):
                 self.write(path)
                 before = self.commit()
@@ -142,10 +142,13 @@ class ChangeChecks(unittest.TestCase):
         self.assertFalse(self.push(before, self.commit()))
 
     def test_deleting_ordinary_markdown_remains_docs_only(self) -> None:
-        self.write("docs/obsolete.md")
-        before = self.commit()
-        self.git("rm", "docs/obsolete.md")
-        self.assertTrue(self.push(before, self.commit()))
+        # The player guide replaces the developer README in the Release ZIP.
+        for path in ("docs/obsolete.md", "README.md"):
+            with self.subTest(path=path):
+                self.write(path)
+                before = self.commit()
+                self.git("rm", path)
+                self.assertTrue(self.push(before, self.commit()))
 
     def test_empty_diff_does_not_skip_builds(self) -> None:
         self.assertFalse(self.push(self.initial, self.initial))

@@ -903,7 +903,7 @@ The profiles are data, in [`scripts/balance/profiles.json`](../scripts/balance/p
 which the `TOOL#4` analyser checks every run against. Bucket's "between" is
 written there as between Sprayer, Roller and Mister.
 
-**What the existing evidence says.** `TOOL#3`'s 875 Hard matrix CSVs, read by
+**What the earlier evidence said.** `TOOL#3`'s 875 Hard matrix CSVs, read by
 that analyser ([below](#analyser-on-the-tool3-matrix-2026-11-10)): the Sniper
 and Mister sit on their profiles, and so do every tool's eliminations and
 deaths. Paint departs twice. The all-rounder out-paints the Roller (Sprayer
@@ -923,14 +923,13 @@ against its profile ([`TOOL#4`](#balance-matrix-tool-tool4)).
 
 ## Balance matrix tool (`TOOL#4`)
 
-**Plan, 2026-11-10.** The headless runner plays real, deterministic matches,
-but each past sweep (`TOOL#1`-`TOOL#3`, `REV#22`) used a driver and analyser
+**Complete, 2026-11-10.** The headless runner plays real, deterministic matches.
+Before this slice, each sweep (`TOOL#1`-`TOOL#3`, `REV#22`) used a driver and analyser
 kept only in a gitignored `out/validation/` folder. Their seeds were chosen by
-hand and they report medians and min/max, not confidence intervals. The runner
-seats every bot with the default grenade (`scripts/acceptance/balance_runner/runner.cpp`
-sets no sub) and can try a tuning value only by editing `tuning.json`, which
-`run-balance.ps1` refuses. No matrix has measured the game as it ships, with
-paint underfoot on and subs carried.
+hand and reported medians and min/max, not confidence intervals. The runner
+seated every bot with the default grenade and could try a tuning value only
+by editing `tuning.json`, which `run-balance.ps1` refused. The shipped-game
+matrix below now measures paint underfoot on and carried subs.
 
 `TOOL#4` makes the runner a repeatable report and an A/B comparison. It reports
 evidence and never proposes or applies a tuning value: the five-tool values
@@ -939,22 +938,151 @@ observations. Slices, in order:
 
 1. **Analyser (done 2026-11-10,
    [below](#analyser-on-the-tool3-matrix-2026-11-10)).**
-2. **Matrix driver.** `scripts/run-balance-matrix.ps1` with one design file,
+2. **Matrix driver (implemented 2026-11-10).** `scripts/run-balance-matrix.ps1` with one design file,
    `cases.psd1`-style. It compiles once, runs jobs in parallel, resumes after a
    kill, and repeats one job as a byte-identity check.
-3. **Loadout and tuning patch.** Runner flags for each seat's sub and an
+3. **Loadout and tuning patch (implemented 2026-11-10).** Runner flags for each seat's sub and an
    in-memory tuning patch, limited to `weapons`, `projectiles`, `subs` and
    `bots`. An empty patch reproduces the rows byte for byte. The runner stays
    Debug-only.
-4. **The shipped game.** Every ordered tool pair on the four Random stages,
+4. **The shipped game (measured 2026-11-10).** Every ordered tool pair on the four Random stages,
    over a consecutive seed block, at Hard and Normal 1v1, plus 2v2 rosters
    pairing each tool with each painter. Filed here as evidence.
-5. **A/B.** `analyze.py --compare` between two runs of one design: per-cell
+5. **A/B (implemented 2026-11-10).** `analyze.py --compare` between two runs of one design: per-cell
    and per-tool change with intervals, and a check that nothing moved beyond a
    margin set in the design file. This serves future changes (new tools,
    pickups, an elimination burst) rather than reopening the accepted values.
 
 Bot results stay evidence, not acceptance (see [above](#headless-balance-runner-tool1-2026-10-25)).
+
+### Running and resuming a matrix (2026-11-10)
+
+From an x64 Developer shell:
+
+```powershell
+scripts/run-balance-matrix.ps1 -Design scripts/balance/shipped.psd1 -OutputDirectory out/validation/shipped-matrix -PlanOnly
+scripts/run-balance-matrix.ps1 -Design scripts/balance/shipped.psd1 -OutputDirectory out/validation/shipped-matrix -Parallel 6
+```
+
+The data file names stages, difficulties, one consecutive `SeedStart`/`SeedCount`
+block (1-64 seeds), duration, roster generators and variants. The shipped design
+has 344 jobs / 5,504 matches: all 25 ordered 1v1 tool pairs, and each tool with
+Roller or Mister against two of that painter, side-swapped, on the four Random
+arenas at Normal and Hard. Sixteen seeds (1000-1015) improve the sparse
+elimination evidence over TOOL#3's five; the reported intervals, not that count,
+say what a cell resolves. The diagnostic ladder uses the same stages, tools and
+seed block at Hard, changing only aim error or reaction delay in each variant.
+`-PlanOnly` validates and prints counts without compiling or creating evidence.
+The driver compiles the Debug runner once; `-RunnerExecutable` reuses an explicitly
+chosen compiled runner. `-SkipBuild` skips the game build, not that one compile.
+
+Outputs must be in a dedicated directory below this checkout's `out/`. Run the
+same command there to resume. A success is reused only when its signature and
+both CSV hashes match. Changed executable, game library, source, reviewed
+runtime assets, design or driver refuses resume and needs a new directory.
+The staging allowlist in `cmake/runtime_assets.cmake` defines asset pins; an absent
+optional bank is recorded as absent, and private/source-only files are excluded.
+Generated variant patches are hashed before and after each job and at the end.
+Failed and interrupted attempts stay in their own folders. A dead driver lock
+is retained as a stale-lock receipt and reclaimed after its PID is verified gone;
+a live owner is refused. Each Windows native job is assigned to a private
+kill-on-close Job Object at process creation; cancellation or a killed driver
+cannot leave its runner processes behind. `-RunTimeoutSeconds` bounds each job,
+and cancellation skips queued jobs and terminates only owned runners.
+
+`matrix-info.json` records the design, input pins and final outcome. Every job
+has arguments, logs, timing, hashes and its attempt path in `jobs/<id>/job.json`.
+The first job is repeated byte for byte, main and companion, outside the report's
+observations. Each variant's aggregate is `variants/<name>/matches.csv` and
+`matches.paint.csv`; companion `match_row` joins are renumbered to the aggregate.
+Analyse one variant at a time:
+
+```powershell
+python scripts/balance/analyze.py out/validation/shipped-matrix/variants/baseline --out out/validation/shipped-summary
+python scripts/balance/analyze.py out/validation/changed/variants/baseline --compare out/validation/shipped-matrix/variants/baseline --design-file out/validation/shipped-matrix/matrix-info.json --out out/validation/ab-summary
+```
+
+A/B refuses different observed stage/seed/team/tool/sub cells. It reports current
+minus baseline with independent Welch intervals for each cell and tool, including
+whole-team 2v2 rosters. `ComparisonMargins` in the design gives a symmetric margin
+per measure. **Within margin** requires the complete interval inside it;
+**beyond margin** requires the interval entirely outside it; **inconclusive**
+certifies neither. A seed with no spread or only one observation still gets no
+interval. Unadjusted checks across many cells are descriptive evidence.
+
+### Runner loadouts, patches and schema 3 (2026-11-10)
+
+`run-balance.ps1 -Subs grenade,wall -TuningPatch <file>` adds one concrete sub
+per seat and a read-only JSON patch, for example:
+
+```json
+{"bots.hard.reaction_steps": 1, "weapons.sniper.ammo_usage": 0.10}
+```
+
+A patch is a flat object of existing dotted numeric/boolean leaves under
+`weapons`, `projectiles`, `subs` or `bots`. Repeated, missing, string, container,
+unknown and type-changing entries are refused. The result is parsed and
+validated as an in-memory `GameTuning`; neither staged nor authored tuning is
+written. `{}` reproduces unpatched row and companion bytes. Omitted subs retain
+the game's grenade default. The native flags are `--subs` and `--tuning-patch`.
+
+The main CSV is now schema **3**, **101 columns**: the original 81 fields retain
+their order, followed by `sub`, `engaged_ticks`, `refilling_ticks`,
+`ready_fire_intents` and `observed_sub_cooldown_resets` for each of four seats.
+Companion schema 1 remains 29 columns and names main schema 3. Earlier schema-2
+records above remain records of that version. The analyser reads both versions,
+separates per-seat sub configurations and reports whole-team paint and
+elimination rates for the side-swapped 2v2 rosters as well as individual tools.
+
+
+### Shipped-game matrix (2026-11-10)
+
+The checked-in design completed **5,504 device-free Debug matches**: 1,600
+1v1 and 1,152 2v2 at each of Normal and Hard, over the four Random arenas,
+60 seconds, consecutive seeds 1000-1015 and default grenades. The clean game
+revision is `94783857`, with Labrador `e7fc50e`. All 566 input pins were
+unchanged, every job's two output hashes checked, and the separate 16-match
+repeat reproduced its main and paint CSVs byte for byte. These results close
+`TOOL#4`; the bot counter boundary remains `TOOL#5` below.
+
+The 1v1 figures below are equal-weight cell means excluding mirrors, with
+unadjusted 95% intervals. They describe these bots, tools, stages and horizon.
+
+| Tool | Normal share of painted | Hard share of painted |
+|---|---|---|
+| Sprayer | 0.579 ± 0.008 | 0.586 ± 0.008 |
+| Sniper | 0.128 ± 0.004 | 0.154 ± 0.004 |
+| Roller | 0.617 ± 0.008 | 0.611 ± 0.008 |
+| Mister | 0.662 ± 0.007 | 0.646 ± 0.007 |
+| Bucket | 0.514 ± 0.007 | 0.503 ± 0.007 |
+
+Every stated 1v1 profile comparison except Bucket's paint is confirmed at
+both difficulties. Sniper has the most eliminations (Normal 1.681 ± 0.088
+per minute; Hard 1.457 ± 0.097) and the least paint. Bucket remains below the
+all-rounder and both painters on held paint. Roller now meets its painter
+profile; changed stages, seeds and build prevent attributing the difference
+from `TOOL#3` to any one change.
+
+In whole-team 2v2 results against two of the matching painter, Sniper+Mister
+holds 0.367 ± 0.013 of the painted area at Normal and 0.372 ± 0.012 at Hard.
+Sniper+Roller holds 0.387 ± 0.026 and 0.436 ± 0.024 respectively. These teams'
+eliminations do not establish a paint-score benefit from replacing a painter
+with Sniper in these one-minute bot rosters. This does not reverse the
+Sniper's intended profile or select a tuning change. Human play and longer
+matches were not measured.
+
+Evidence: `out/validation/overnight-20261110/shipped16/` has the design,
+566 input hashes, 344 job receipts plus the repeat, logs, retained attempts
+and both aggregate CSVs in `variants/baseline/`.
+`shipped16-analysis/summary.md` and `summary.json` hold all cells, profiles,
+whole-team rosters and descriptive diagnostic proxies. Main CSV SHA256:
+`F72842C9694EB821B41D62692F8D3E81AE5CCF40D9E55FC0EB1AE22DD4147155`;
+paint CSV:
+`0D1124BA255DA7564AEF7B839F65926E730A59B126B2A386C0FD811F180C1881`;
+summary:
+`EB00CEF6739DBCC6BF54FF17C21E59529F6A4E3082A84F0D285AAB99228C5C07`.
+The native mixed-loadout smoke, resume and A/B report also pass, as do the
+42 Python checks; no gameplay tuning was changed.
 
 ### Analyser on the `TOOL#3` matrix (2026-11-10)
 
@@ -1021,13 +1149,89 @@ These describe the 2026-10-30 build and its bots, not today's game.
 
 ## Bot diagnostics (`TOOL#5`)
 
-**Plan, 2026-11-10.** The shipping bot plays every tool by one policy
+**Diagnostic slice measured, 2026-11-10.** The shipping bot plays every tool by one policy
 (`REV#20`), so each number is bot and tool together. The Sniper's profile is
 intended, but its bot paints only when no enemy is in view, and its reach
 exceeds `bots.sight_distance`, so any visible enemy holds its aim. How much of
-its low paint is the tool and how much the bot is unmeasured. `TOOL#5` adds
-per-seat counters to the runner, with no change to game code: time engaged
-(derived from `bot_world()` by the bot's own sight, line-of-sight and reach
-rule), time refilling (`MatchBot::refilling()`), shots and sub uses. With
-`TOOL#4`'s tuning patch it also runs an aim-error and reaction ladder on the
-`bots.hard` record. Its output feeds `REV#20` and decides nothing.
+its low paint is the tool and how much the bot is only partly measured. The
+runner now records per-seat engagement/refilling and action proxies and has
+run the aim/reaction ladder below, with no change to game code. The original
+scope also asked for exact shots and sub uses; that part needs the author to
+allow an observer, as recorded below. The output feeds `REV#20` and decides
+nothing about the accepted bot values.
+
+**Implemented diagnostic slice, 2026-11-10.** Schema 3 exports per-seat engaged
+and refilling ticks, ready primary-fire intents and observed sub cooldown resets.
+Engagement re-evaluates the bot driver's living-enemy, sight, line-of-sight and
+ballistic reach rule against the current `bot_world()`; it describes opportunity,
+not the policy's held decision between reactions. Refilling reads the driver's
+post-think `MatchBot::refilling()`. The analyser pools engaged/refilling over alive
+ticks and the two action proxies over active minutes. The separate
+[`bot-ladder.psd1`](../scripts/balance/bot-ladder.psd1) measures baseline, zero and
+0.20-radian aim error, and 1-step and 24-step reaction delay, changing one factor
+at a time; it is evidence and never applies its values to the game.
+
+**Remaining decision: exact paid-event counters.** A ready intent can be killed
+by a contact later in the tick, before its weapon runs. An observed cooldown
+rise identifies a sub use at shipped cooldowns but can miss a patched cooldown
+at or below one tick, including zero. The public weapon APIs expose no exact
+paid-event observer, and their visual pulses intentionally coalesce stream
+shots. These columns are named as proxies and are not shots or exact sub-use
+counts. Completing that part requires the author to allow a passive game-code
+observer, which the original no-game-code-change scope forbids. The diagnostic
+slice therefore does not close TOOL#5.
+
+### Aim and reaction ladder (2026-11-10)
+
+`bot-ladder.psd1` completed **8,000 Debug matches**, 1,600 per variant, on the
+same four arenas, 60-second horizon and seeds 1000-1015 as the shipped matrix.
+Every ordered tool pair plays Hard 1v1 with grenades. One factor changes at a
+time from the shipped Hard record; the patch lives only in the runner's memory.
+The measured game remains `94783857` / engine `e7fc50e`.
+
+Sniper's equal-weight 1v1 marginals (unadjusted 95% intervals):
+
+| Variant | Aim error, radians | Reaction steps | Share of painted | Eliminations / min |
+|---|---|---|---|---|
+| Baseline | 0.05 | 4 | 0.154 ± 0.004 | 1.457 ± 0.097 |
+| Perfect aim | 0 | 4 | 0.154 ± 0.004 | 1.400 ± 0.088 |
+| Wide aim | 0.20 | 4 | 0.146 ± 0.004 | 1.339 ± 0.082 |
+| Fast reaction | 0.05 | 1 | 0.155 ± 0.004 | 1.533 ± 0.104 |
+| Slow reaction | 0.05 | 24 | 0.121 ± 0.004 | 1.207 ± 0.073 |
+
+Sniper keeps its least-paint/most-eliminations profile in every variant.
+Perfect aim does not show an elimination increase over baseline in this
+sample, and its low paint remains. Slow reaction changes Sniper paint by
+-0.033 ± 0.005 and eliminations by -0.250 ± 0.121 per minute. Both changes
+have a direction, but neither interval lies entirely beyond its design margin
+(0.03 paint and 0.20 eliminations/min), so the A/B magnitude verdict is
+**inconclusive**, not an equivalence or an accepted balance change. The ladder
+measures these two bot inputs; it does not separate all bot policy from tool
+mechanics, or describe human play. Each patch changes both Hard opponents
+and every tool, so it does not isolate a Sniper-only bot effect.
+
+All 566 pinned inputs stayed unchanged and all 501 final job receipts (500
+jobs plus the repeat) passed independent output-hash verification. The repeat
+reproduced both CSVs byte for byte. A controlled hard stop after 235 completed
+jobs closed all four owned native processes with zero survivors; restarting
+with ten workers reused those 235 jobs under the same input signature. The
+interrupted attempts and stale lock remain as evidence.
+
+The aggregate audit also checks all 316,209 regional rows against the main
+match metadata and preserves the source main/regional row contents. All 100
+Hard 1v1 cells shared with the shipped design reproduce both CSVs byte for
+byte across the two drivers. The descriptive diagnostic fractions have no
+intervals; the full reports distinguish those proxies from their statistical
+paint/elimination estimates.
+
+Receipts and per-variant main/paint CSVs:
+`out/validation/overnight-20261110/ladder16/`.
+The independent audit and five summaries, including four A/B comparisons,
+are in `ladder16-analysis/`; `controlled-resume.json` records the ownership
+and reuse check. The full reports include every tool, cell, descriptive
+engagement/refill fraction and action proxy. No tuning value was applied to
+the game. Audit SHA256:
+`5F3BCEF6A1BEA8F4667ECFFB545120EA531595608D0C274BB42CEEC6882029C1`;
+aggregate audit:
+`AC14B4FDA651C1B9760B91BCFEBD6343F332FD6509C090BB7D837A3ECE6BBFD9`.
+The exact paid-event observer remains an author decision.

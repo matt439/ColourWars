@@ -215,7 +215,7 @@
       "connection": {
         "join_reconnect_suffix": "[ - Reconnect]",
         "join_ready": "[Everyone joined. Player 1 can continue.]",
-        "join_waiting": "[Press A / Enter on each device to join. Reconnect reserved pads.]",
+        "join_waiting": "[A / Enter joins. Reconnect reserved pads. Add Xbox pads or bots.]",
         "pause_title": "[Pause Menu]",
         "pause_player_title": "[Pause Menu P{player}]",
         "controller_lost": "[Controller lost]",

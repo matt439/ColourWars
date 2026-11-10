@@ -97,6 +97,7 @@ namespace balance_regions
         std::string bot;
         float duration = 0.0f;
         std::uint64_t final_fingerprint = 0;
+        int main_schema_version = 2;
     };
     struct Record
     {

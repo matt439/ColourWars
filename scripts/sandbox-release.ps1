@@ -34,10 +34,11 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'release-package-path.ps1')
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if ($Run -and $HostTrial) { throw 'Choose either -Run (Windows Sandbox) or -HostTrial (this machine).' }
-if (-not $Zip) { $Zip = Join-Path $repo 'out/build/x64-release/packages/ColourWars-windows-x64.zip' }
+if (-not $Zip) { $Zip = Get-ColourWarsReleasePackagePath $repo }
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $repo 'out/validation/sandbox' }
 
 $zipPath = Resolve-CheckFileSystemPath $Zip
@@ -72,7 +73,7 @@ Copy-Item -LiteralPath $zipPath -Destination (Join-Path $package $zipName)
 if ((Get-FileHash -LiteralPath (Join-Path $package $zipName) -Algorithm SHA256).Hash -ne $hostRecord.zip_sha256) {
     throw 'The ZIP changed while it was copied.'
 }
-Expand-Archive -LiteralPath $zipPath -DestinationPath $package
+Expand-Archive -LiteralPath $zipPath -DestinationPath (Join-Path $package $releaseName)
 if (-not (Test-Path -LiteralPath (Join-Path $package "$releaseName/ColourWars.exe") -PathType Leaf)) {
     throw "$zipName has no $releaseName/ColourWars.exe."
 }

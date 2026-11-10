@@ -42,8 +42,18 @@ something accepted or waived on 2026-11-05, `REV#38` among them now that its rev
 exist. None is ordered here until the author sets an aim.
 The 2026-11-10 first-run review added the `FTR` rows
 ([First-run review](#first-run-review-2026-11-10)): what a newcomer meets from the GitHub page to
-a first match. Three are `DECISION`: cutting the first tag (`FTR#1`), the fresh-save arena
+a first match. Its ready rows are complete, with local build, startup, package,
+dialog and focused painter evidence in [code hygiene](docs/code-hygiene.md#first-run-build-and-package-follow-up-ftr3-ftr6-ftr7-ftr9).
+The long-path report is drafted as `ENG#37`; filing stays with the author.
+Three are `DECISION`: cutting the first tag (`FTR#1`), the fresh-save arena
 (`FTR#13`) and the README's shape (`FTR#15`).
+
+The overnight ready queue is worked through (2026-11-10): twelve first-run
+rows and `TOOL#4` are complete. The shipped matrix and bot ladder record
+13,504 match rows, with repeats and pinned inputs verified. `TOOL#5`'s
+diagnostic slice is measured; exact paid-event counters now need the author's
+decision on allowing a passive game-code observer. Results and limits are in
+[gameplay tuning](docs/gameplay-tuning.md#balance-matrix-tool-tool4).
 
 ## Art direction, characters and the UI
 
@@ -97,6 +107,7 @@ answers one is when its workaround is deleted.
 | `ENG#26`, `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed 2026-11-05 as [labrador#122](https://github.com/matt439/Labrador/issues/122) (27 with the 26 rider), #123, #124 and #125 (the Bug). Waits on the engine. When one is answered, spend it at the next pin bump; for 34, also settle what CI's strict gates accept. [Ledger](docs/review/engine-reports.md#live) |
 | `ENG#35` | DECISION | LOW | S | Drafted 2026-11-05 from the hygiene review: `AudioResources` has no non-throwing sound-group lookup, so `sound_groups.cpp` catches `out_of_range`. Checked at master `5cbc6b3`. The author decides whether to file. [Report](docs/review/engine-reports.md#35-audioresources-has-no-non-throwing-sound-group-lookup---draft-with-find-or-add-exhibit) |
 | `ENG#36` | DEFERRED | LOW | S | The pinned engine parses JSON recursively, so `reader_mutations` stops a save's nesting at 64; master `8362e2d` parses iteratively. At the pin bump that includes it, drop `save_max_nesting` and give the save the deep depths. Never filed. [Report](docs/review/engine-reports.md#36-json-parsing-recurses-once-per-nesting-level---answered-on-master-before-it-was-drafted) |
+| `ENG#37` | DECISION | LOW | S | Long golden-image filenames break ordinary deep Windows clones. Drafted from `FTR#4`, reproduced against current master; the author decides whether to file. [Report](docs/review/engine-reports.md#37-long-render-golden-filenames-break-ordinary-windows-clones---draft-with-checkout-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
@@ -116,8 +127,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `TOOL#4` | OPEN | LOW | L | Balance matrix tool: the analyser is done (2026-11-10). Left: a parallel, resumable matrix driver, sub and tuning-patch runner inputs, the first matrix of the shipped game (1v1 and 2v2), and A/B comparison. Evidence only. [Plan](docs/gameplay-tuning.md#balance-matrix-tool-tool4). |
-| `TOOL#5` | OPEN | LOW | M | Per-seat bot counters in the balance runner (engaged, refilling, shots, sub uses) and an aim/reaction ladder, so the bot's part of each tool's numbers is measured. No game-code change. [Plan](docs/gameplay-tuning.md#bot-diagnostics-tool5). |
+| `TOOL#5` | DECISION | LOW | M | Diagnostics and the aim/reaction ladder are measured. Exact paid-shot/sub-use counts need a passive game-code observer, excluded by the original scope; the author decides whether to allow it. [Boundary](docs/gameplay-tuning.md#bot-diagnostics-tool5). |
 | `CI#7` | DEFERRED | LOW | S | The first hosted trial passed 96 of 97 painter leaves and paint-fx in both presets; music flow is skipped without an audio endpoint. After a week of scheduled nightlies (from 2026-11-11), promote what is stable and short to `ci.yml`. [Hygiene](docs/code-hygiene.md#promote-stable-nightly-checks-ci7). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console-record.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
@@ -157,7 +167,7 @@ was proposed and given no row.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `REV#19` | UNSCOPED | MED | L | Bots chase any sighted enemy at any range, stand still once in range, and observe no clock, health or score. Four possible slices (paint/fight weighting, final-seconds push, retreat, strafing); sits beside the accepted ROAD#10 and is unmeasured. [Record](docs/review/2026-11-10-project-review.md#bots-chase-sighted-enemies-and-ignore-the-clock-rev19). |
-| `REV#20` | UNSCOPED | MED | L | One bot policy plays all five tools. The Sniper's low paint share is its intended trade (author, 2026-11-10: [profiles](docs/gameplay-tuning.md#weapon-profiles-2026-11-10)); left: how much is the bot (`TOOL#5`), and whether per-tool roles are wanted. [Record](docs/review/2026-11-10-project-review.md#one-bot-policy-plays-all-five-tools-rev20). |
+| `REV#20` | UNSCOPED | MED | L | One bot policy plays all five tools. Aim/reaction sensitivity is measured in `TOOL#5`; exact event counters need a decision, and per-tool roles remain unscoped. Sniper's low paint is intended. [Record](docs/review/2026-11-10-project-review.md#one-bot-policy-plays-all-five-tools-rev20). |
 | `REV#21` | BLOCKED | LOW | M | Bots never target an enemy sprinkler and fire into an enemy paint wall, since BotWorld has no planted-sub query and bot sight ignores the wall. Bounded to 4-8 s per use. Waits on ROAD#11's attended play review. [Record](docs/review/2026-11-10-project-review.md#bots-do-not-answer-enemy-sprinklers-or-walls-rev21). |
 | `REV#23` | DECISION | LOW | S | The bot's finishing window on a support is sized at the handicap refill rate, not the 1.25x own-paint rate that POL#30 ships on; the code calls it a sufficient minimum and ROAD#39's note left it undecided. Author decides: keep the safe bound or tighten. [Record](docs/review/2026-11-10-project-review.md#bot-finish-window-sized-without-own-paint-refill-rev23). |
 | `REV#25` | DECISION | MED | M | Stage records are keyed by stage only, so solo has nothing graded to beat. Two shapes: per-stage Easy/Normal/Hard win marks or coverage medals at a fixed duration. Author's call: it sits beside no-stats, no-variant-leaderboard (ROAD#22) and solo-is-practice. [Record](docs/review/2026-11-10-project-review.md#solo-play-has-no-graded-stage-goal-rev25). |
@@ -237,22 +247,11 @@ already had rows.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `FTR#1` | DECISION | HIGH | S | No release or tag, so README's "no Git, Visual Studio or terminal" promise leads to an expiring CI artifact or a source build. The publish job and 0.1.0 are ready: tag `v0.1.0`, then make step 1 one link. The first tag is the author's. [Record](docs/review/2026-11-10-first-run-review.md#no-release-exists-ftr1). |
-| `FTR#2` | OPEN | MED | S | README's build fallback lands on developer steps, omits Git, says `VCPKG_ROOT` is required and never gives size or time. Put an "Easy build" section first; fix the stale CMake-error line. [Record](docs/review/2026-11-10-first-run-review.md#the-build-fallback-leads-with-the-hard-route-ftr2). |
-| `FTR#3` | OPEN | LOW | M | `build.ps1`: no log, hidden vcvars output, no SDK check or VS version floor, unchecked stale `VCPKG_ROOT`, a message that loops back to `build.cmd`, no compile hint, no long-path warning. [Record](docs/review/2026-11-10-first-run-review.md#buildps1-failures-it-does-not-foresee-leave-no-next-step-ftr3). |
-| `FTR#4` | OPEN | LOW | S | Engine golden-image filenames make a clone under a root of about 93 characters print `Filename too long` and a failed submodule checkout. Draft a report for the ledger. [Record](docs/review/2026-11-10-first-run-review.md#long-engine-test-filenames-break-deep-clones-ftr4). |
-| `FTR#5` | OPEN | MED | S | No troubleshooting section anywhere. Add "If something goes wrong" after Play, linked from HOW-TO-PLAY and `build.ps1`'s failure lines. [Record](docs/review/2026-11-10-first-run-review.md#no-troubleshooting-section-ftr5). |
-| `FTR#6` | OPEN | LOW | S | The ZIP ships the developer README beside the guide, has no version in its name, nests its folder twice and gets generated PR notes. [Record](docs/review/2026-11-10-first-run-review.md#the-release-zips-contents-and-name-ftr6). |
-| `FTR#7` | OPEN | LOW | S | A clean build prints 44 "CMake Warning (dev)" blocks from `file(REAL_PATH)` on folders not yet made; guard with `if(EXISTS)`. [Record](docs/review/2026-11-10-first-run-review.md#clean-builds-print-44-cmake-warnings-ftr7). |
 
 **First launch and learning to play**
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `FTR#8` | OPEN | MED | S | PlayStation and Switch pads are silently ignored and nothing says so. Name them in README and HOW-TO-PLAY, and hint on Join Players; the reader is `ROAD#23`. [Record](docs/review/2026-11-10-first-run-review.md#non-xinput-pads-are-silently-ignored-ftr8). |
-| `FTR#9` | OPEN | LOW | S | HOW-TO-PLAY is unlinked and absent beside a source build; README omits the Remote Desktop/VM limit; `build.ps1` prints no guide or play-again path. [Record](docs/review/2026-11-10-first-run-review.md#the-player-guide-is-hard-to-find-ftr9). |
-| `FTR#10` | OPEN | LOW | S | The Movement Course lesson cards are the only tutorial and nothing points to them. One line in HOW-TO-PLAY and README. [Record](docs/review/2026-11-10-first-run-review.md#the-only-tutorial-cannot-be-found-ftr10). |
-| `FTR#11` | OPEN | MED | S | The fatal dialog shows raw developer text, ignores its own `no_hardware_device` class, and says nowhere where to report or that `last-error.log` lacks the error. [Record](docs/review/2026-11-10-first-run-review.md#startup-failures-show-developer-text-with-no-remedy-ftr11). |
-| `FTR#12` | OPEN | LOW | M | The first window is 1920x1080, unclamped, so the prompt bar can fall off a 1080p laptop screen; no Alt+Enter. Fit the first run to the work area. [Record](docs/review/2026-11-10-first-run-review.md#the-first-window-can-be-larger-than-the-screen-ftr12). |
 | `FTR#13` | DECISION | LOW | S | A fresh save opens Stage Select on King of the Hill, among six Trial stages, with Random last. Opening on Random and grouping the Trials sits beside the 2026-11-05 arena call. [Record](docs/review/2026-11-10-first-run-review.md#a-fresh-save-opens-the-arena-page-on-king-of-the-hill-ftr13). |
 | `FTR#14` | UNSCOPED | LOW | M | About eight confirm screens before a first match, and the save and `stages` folders are never shown. Quick Play, Open save folder, make `stages` on first run; none designed. [Record](docs/review/2026-11-10-first-run-review.md#the-setup-path-is-long-and-the-save-folder-is-hidden-ftr14). |
 
@@ -261,7 +260,6 @@ already had rows.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `FTR#15` | DECISION | LOW | M | README puts art history, review status, CI, the pin and repository history among player text. Trim Play to download, requirements, controls and help; `REV#12` called the shape a matter of taste. [Record](docs/review/2026-11-10-first-run-review.md#the-readme-mixes-audiences-ftr15). |
-| `FTR#16` | OPEN | LOW | S | `docs/README.md` opens with "Reading the code" and files HOW-TO-PLAY under tools. Add a Players block on top and a maintainer-material line. [Record](docs/review/2026-11-10-first-run-review.md#the-docs-index-is-written-for-maintainers-ftr16). |
 
 ## Areas with no open rows
 

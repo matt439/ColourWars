@@ -4,6 +4,18 @@ What is in `docs/`, grouped by what you would come for. Open work is indexed in
 [TODO.md](../TODO.md), and each row there points to the doc that owns it. The
 [README](../README.md) covers building, running and the release ZIP.
 
+## Players
+
+| Doc | What |
+|---|---|
+| [HOW-TO-PLAY.txt](HOW-TO-PLAY.txt) | extracting and starting the game, controllers and bots, controls, settings and removal; also included beside the executable |
+| [If something goes wrong](../README.md#if-something-goes-wrong) | help with startup, downloads, controllers and building; where to report an error |
+| [level-editor.md](level-editor.md), [level-format.md](level-format.md) | building and sharing a stage of your own; the editor currently needs a source build |
+| [backstory.md](backstory.md) | why the arena is an unsaved picture in a paint program |
+
+Everything below is maintainer material: code, development tools, design
+records and reviews. The open-work index is [TODO.md](../TODO.md).
+
 ## Reading the code
 
 | Doc | What |
@@ -17,7 +29,6 @@ What is in `docs/`, grouped by what you would come for. Open work is indexed in
 
 | Doc | What |
 |---|---|
-| [HOW-TO-PLAY.txt](HOW-TO-PLAY.txt) | the player's guide shipped at the root of the Release ZIP: extracting, SmartScreen, joining and bots, controls, settings, removal |
 | [debug-console.md](debug-console.md) | the Debug-only console, debug menu, launch arguments, live tuning, bots, record and play, scripts: the reference |
 | [debug-console-record.md](debug-console-record.md) | how each `DBG` row was done or why it waits, and `CI#1` |
 | [level-editor.md](level-editor.md) | `ColourWarsEditor.exe`, the desktop level editor |

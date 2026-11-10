@@ -14,6 +14,7 @@
 #include "game/states/game_states.h"
 #include "game/save/save.h"
 #include "game/config/settings_session.h"
+#include "game/config/initial_display.h"
 #include "game/contracts/simulation.h"
 #include "engine/core/step_timer.h"
 #include "game/config/sound_groups.h"
@@ -50,7 +51,8 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		// each round's seed; a build itself draws only from MatchRandom.
 		std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-		Save save;
+		const InitialDisplay initial_display = initial_display_for_primary_monitor();
+		Save save(initial_display.resolution, initial_display.fullscreen);
 		save.load_save_file();
 		// This run's settings: the save's, with any worn profiles laid over them.
 		SettingsSession settings_session(save);
@@ -101,6 +103,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		phase = FailurePhase::initialization;
 		Application app(std::move(options));
 		app.initialize();
+		fit_initial_window(app, save);
 
 		// Register the game's level resource kind. Level definitions survive device
 		// restoration, so this kind has no reload callback.

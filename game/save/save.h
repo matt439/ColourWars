@@ -53,9 +53,13 @@ public:
 	static constexpr int version = 9;
 
 	Save() = default;
+	// Only a missing save without a legacy file uses these first-run display
+	// defaults. The shell chooses them from the monitor before loading.
+	Save(labrador::ScreenResolution initial_resolution, bool initial_fullscreen);
 	// Reads the file, or a legacy one, or keeps the defaults. A SettingsSession
 	// borrowing this Save rereads through its own load_save_file instead.
 	void load_save_file();
+	bool first_run() const;
 	// A failed write leaves the active preferences intact and returns false.
 	// Interactive callers report that outcome in their own settings screen.
 	bool save_to_file() const;
@@ -118,6 +122,7 @@ public:
 	bool remember_match_setup_and_save(const LastMatchSetup& setup);
 private:
 	SaveData save_data_ = SaveData();
+	bool first_run_ = false;
 	PlayerProfile& profile_at(int profile);
 	SaveData load_from_json(const char* json_path) const;
 	bool write_save_file(const SaveData& data) const;

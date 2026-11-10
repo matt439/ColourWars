@@ -8,13 +8,16 @@ the team that has painted more of it when the clock runs out wins.
 Starting the game
 -----------------
 
+Built from source? Open the executable path printed by build.cmd; there is
+no ZIP to extract. For a downloaded ZIP:
+
 1. Extract the whole ZIP first. In Explorer, right-click the ZIP and choose
    "Extract All...". Running ColourWars.exe from inside the ZIP does not work:
    the game needs the files beside it.
 
-2. Open the extracted folder, then the ColourWars-windows-x64 folder inside
-   it, and double-click ColourWars.exe. You can put that folder anywhere, for
-   example Documents or the desktop. Nothing needs installing.
+2. Open the extracted folder and double-click ColourWars.exe. You can put
+   that folder anywhere, for example Documents or the desktop. Nothing needs
+   installing.
 
 3. Windows may say "Windows protected your PC". The game is not signed with a
    publisher certificate, so Windows does not recognise it yet. Choose
@@ -35,9 +38,13 @@ On Join Players, everyone else presses A on their pad (Enter for keyboard
 and mouse) to take a seat. No friends around? Player 1 can move to an empty
 seat with Up/Down and press Left/Right to turn it into a bot (Easy, Normal or
 Hard). For solo practice, choose Single Match, then 1 player.
+New? Choose Single Match > 1 Player > Movement Course for lesson cards on
+moving, jumping, dropping through platforms and refilling your paint.
 
 Up to four players: one may use the keyboard and mouse, the others need
-Xbox-style (XInput) controllers.
+Xbox-style (XInput) controllers. PlayStation and Switch controllers are not
+recognised directly; they need software that presents an Xbox controller to
+Windows, such as Steam Input.
 
                       Gamepad              Keyboard and mouse
   Move                Left stick           A / D
@@ -84,6 +91,12 @@ also want your settings gone.
 
 If the game stops with an error, the message box says why, and a short
 report is written to %LOCALAPPDATA%\ColourWars\last-error.log.
+Copy the full error dialog (Ctrl+C while it is focused) when reporting it:
+the short report does not contain that message. Include build-info.txt from
+beside the executable and last-error.log if it was saved.
+
+Help with startup, controllers, downloads and building:
+https://github.com/matt439/ColourWars#if-something-goes-wrong
 
 Source code, the level editor and full documentation:
 https://github.com/matt439/ColourWars

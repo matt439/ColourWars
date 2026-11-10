@@ -392,6 +392,16 @@ SaveData Save::load_from_json(const char* json_path) const
     }
     return data;
 }
+Save::Save(ScreenResolution initial_resolution, bool initial_fullscreen)
+{
+    if (convert_resolution_to_ivec(initial_resolution).x <= 0)
+    {
+        throw std::invalid_argument("Invalid initial display resolution");
+    }
+    this->save_data_.resolution = initial_resolution;
+    this->save_data_.fullscreen = initial_fullscreen;
+}
+
 // Only a file that is not there is missing. One that is there but will not
 // open (locked, denied) must reach the reader and be kept aside, not be
 // replaced with defaults, so a failed query counts as present too.
@@ -403,6 +413,7 @@ bool Save::file_exists(const std::string& path)
 }
 void Save::load_save_file()
 {
+    this->first_run_ = false;
     const std::string path = save_file_path();
 
     if (!file_exists(path))
@@ -410,7 +421,9 @@ void Save::load_save_file()
         // If there is no per-user save, try the executable-relative legacy
         // save before writing defaults. The legacy file is left intact.
         const std::string legacy = legacy_save_file_path();
-        if (file_exists(legacy))
+        const bool has_legacy = file_exists(legacy);
+        this->first_run_ = !has_legacy;
+        if (has_legacy)
         {
             try
             {
@@ -452,6 +465,8 @@ void Save::load_save_file()
         this->save_data_ = SaveData();
     }
 }
+
+bool Save::first_run() const { return this->first_run_; }
 
 bool Save::write_save_file(const SaveData& data) const
 {

@@ -4,6 +4,7 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/objects/player_team.h"
 #include "game/objects/weapon_type.h"
+#include "game/objects/sub_type.h"
 #include "game/match/player_control.h"
 #include "scripts/acceptance/balance_regions/metrics.h"
 #include <array>
@@ -31,6 +32,8 @@ namespace balance_runner
         // difficulty per seat (all Normal unless --difficulty names them).
         std::string bot = "paint";
         std::vector<BotDifficulty> difficulties;
+        std::vector<SubType> subs; // Empty preserves the shipped default grenade.
+        std::filesystem::path tuning_patch;
         std::filesystem::path csv;
         std::filesystem::path paint_csv;
     };
@@ -44,6 +47,11 @@ namespace balance_runner
         std::uint64_t alive_ticks = 0;
         std::uint64_t ammo_starved_ticks = 0;
         std::uint64_t fire_starved_ticks = 0;
+        std::uint64_t engaged_ticks = 0;
+        std::uint64_t refilling_ticks = 0;
+        std::uint64_t ready_fire_intents = 0;
+        std::uint64_t observed_sub_cooldown_resets = 0;
+        SubType sub = SubType::grenade;
         // Sampled alive -> dead state edges, NOT attacker eliminations.
         // A terminal lethal hit can precede its next-step state transition.
         std::uint64_t observed_death_edges = 0;
@@ -81,6 +89,7 @@ namespace balance_runner
         const std::vector<std::wstring>& arguments);
     void validate_options(const Options& options);
     float fixed_dt();
+    std::string patched_tuning_text(const std::filesystem::path& content, const std::filesystem::path& patch);
     std::string tool_name(WeaponType tool);
     std::string difficulty_name(BotDifficulty difficulty);
     // The main CSV's bot field: the behaviour, or match:<seat 1>:<seat 2>...

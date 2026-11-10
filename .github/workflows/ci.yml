@@ -37,7 +37,7 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Check CI selection, links, frame and balance analysis and study paths
+      - name: Check CI selection, links, frame and balance matrix analysis and study paths
         run: |
           python3 -m unittest discover -s scripts/ci -p test_*.py
           python3 -m unittest discover -s scripts/balance -p test_*.py
@@ -144,6 +144,10 @@ jobs:
       - name: Acceptance tooling preflight, ownership and deadlines
         if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.leg == 'debug-checks' }}
         run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-build.ps1
+          if errorlevel 1 exit /b 1
+          pwsh -NoProfile -File scripts/check-build.ps1
+          if errorlevel 1 exit /b 1
           powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-acceptance-selection.ps1
           if errorlevel 1 exit /b 1
           pwsh -NoProfile -File scripts/check-acceptance-selection.ps1
@@ -381,7 +385,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ColourWars-windows-x64
-          path: out/build/x64-release/packages/ColourWars-windows-x64.zip
+          path: out/build/x64-release/packages/ColourWars-*-windows-x64.zip
           if-no-files-found: error
           retention-days: 14
 
@@ -425,15 +429,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cat > notes.md <<'EOF'
-          **To play:** download `ColourWars-windows-x64.zip` below, right-click it and choose
-          **Extract All**, then run `ColourWars.exe` from the `ColourWars-windows-x64` folder inside. Windows 10/11
+          **To play:** download the `ColourWars-<version>-windows-x64.zip` below, right-click it and choose
+          **Extract All**, then run `ColourWars.exe` from the extracted folder. Windows 10/11
           x64 with a Direct3D 11 graphics card; nothing else needs installing. Windows may
           say "Windows protected your PC" because the game is unsigned: choose **More info**,
           then **Run anyway**. `HOW-TO-PLAY.txt` in the ZIP has the rest.
           EOF
-          gh release create "$GITHUB_REF_NAME" ColourWars-windows-x64.zip \
+          zip="ColourWars-${GITHUB_REF_NAME#v}-windows-x64.zip"
+          sed -i "s/<version>/${GITHUB_REF_NAME#v}/g" notes.md
+          gh release create "$GITHUB_REF_NAME" "$zip" \
             --verify-tag --title "ColourWars $GITHUB_REF_NAME" \
-            --notes-file notes.md --generate-notes
+            --notes-file notes.md
 
   # Only after every Windows job passed on the commit they checked out (a pull
   # request's test merge): its tree is what a later push may skip on.

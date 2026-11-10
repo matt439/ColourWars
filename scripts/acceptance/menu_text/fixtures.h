@@ -180,7 +180,7 @@ namespace menu_text_acceptance
     constexpr ConnectionText connection_text[]{
         { "join_reconnect_suffix", L" - Reconnect", &MenuConnectionText::join_reconnect_suffix },
         { "join_ready", L"Everyone joined. Player 1 can continue.", &MenuConnectionText::join_ready },
-        { "join_waiting", L"Press A / Enter on each device to join. Reconnect reserved pads.",
+        { "join_waiting", L"A / Enter joins. Reconnect reserved pads. Add Xbox pads or bots.",
             &MenuConnectionText::join_waiting },
         { "pause_title", L"Pause Menu", &MenuConnectionText::pause_title },
         { "pause_player_title", L"Pause Menu P{player}", &MenuConnectionText::pause_player_title },
