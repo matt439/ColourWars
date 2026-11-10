@@ -897,9 +897,10 @@ transition row is a navigation observation without a raw colour oracle.
 
 Debug adds seven actual query/edit/reset/Save commands and 12 paired rendered
 observations, preserving retained-page capture and exact private one-token
-Save/rebase. These navigation fixtures use 63 menu updates and 249 device polls
-in Release, or 97/363 in combined Debug. Positive-time, Level/player/Scene and
-gameplay-weapon updates and game Saves remain zero.
+Save/rebase. These navigation fixtures use 65 menu updates and 255 device polls
+in Release, or 107/393 in combined Debug; the counts grew from 63/249 and
+97/363 when `ROAD#11` gave Weapon Select its sub Confirm. Positive-time,
+Level/player/Scene and gameplay-weapon updates and game Saves remain zero.
 
 Targeted StagePaper and MenuText dependent checks pass in both presets. Two
 legacy preview-background references now independently premultiply their tint.

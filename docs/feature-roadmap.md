@@ -2522,13 +2522,38 @@ fought inside its own third, where the two opponents spend 423 and 663 of the
 1800 steps; they withdraw near step 1525 and it is back out at x 4312,
 fighting, when the trial ends. Run on past the horizon, it crosses at step 2395.
 Before the slices the same bot was outside its band for 124 of the 1800 steps,
-the thinnest margin in the matrix. So this is the outnumbered side being held,
-which the gate's own comment separates from navigation, and not the home-band
-loop the gate was written for. The choices are to count a one-bot side's bot
-that an opponent pinned inside its band as a measurement, as its final paint
-already is, or to have a bot hold a throw that leaves it this close to a
-refill, which changes every trial and needs the slice 6 balance figures
-measured again.
+the thinnest margin in the matrix.
+
+This trial is the side-swapped sibling of the pinned
+[Close Quarters `61403` loop](#home-band-loop-slow-tool-spending-and-sustained-middle-retention-2026-10-27):
+the same arena, seed (`3946`, formerly `61403`), rotation and lone Sprayer,
+with the human and the lone bot on team b where the pinned case has them on
+team a. It also logs an off-home-paint miss, `close_quarters seed=3946 human=b
+rotation=0 team=b (one bot)`, as does seed `8644` on the same side, so one-bot
+retention is 118/120 where the 2026-11-08 nightly had 120/120. The guard for
+the returned loop compares only the `human=a ... team=a` key, so it cannot see
+this side. The first life here shares one step of that loop: the tank is spent
+inside the band and the refill backs away from a visible enemy. What differs
+in the trace is the rest. The pinned loop's bot emptied its tank with
+untargeted fire on the non-scoring home floor, painted nothing that scores, and
+repeated the walk and the retreat from an enemy about 1500 units away. This
+bot paints scoring ground, spends the tank on one throw, retreats once, and
+loses the rest of the horizon to a death and two opponents in its third.
+
+The gate's comment does not yet allow for that. It calls a body leaving its
+home band navigation, and names only what a one-bot side still holds at the
+end as an outnumbered outcome; by that wording this miss is a navigation
+failure. The choices are:
+
+- *Reclassify.* Count a one-bot side's bot that opponents pinned inside its
+  band as a measurement, as its final paint already is. This changes what the
+  gate says navigation is, not something its comment already permits. The
+  guard for the returned loop then needs a decision too: extended to the
+  `human=b ... team=b` key it fails today on this trial's off-home miss, and
+  left one-sided it needs its reason written down.
+- *Change the bot.* Have a bot hold a throw that leaves it this close to a
+  refill, which changes every trial and needs the slice 6 balance figures
+  measured again.
 
 ### Input
 
