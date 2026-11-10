@@ -565,7 +565,9 @@ private:
 	// True for a stage from the player's stage folder (ROAD#16), which shows
 	// menu_text.stage.user_hint instead of browse_hint.
 	bool is_user_stage(int slot) const;
-	// Chooses a random stage slot.
+	// Chooses a Random stage slot from one rand() draw. Never the setup's
+	// current stage (the last one played from it) while another Random stage
+	// exists (REV#24).
 	int pick_random_stage() const;
 	void cycle_stages(labrador::Direction direction);
 	void set_level_settings() const;

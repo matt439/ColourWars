@@ -28,9 +28,31 @@ namespace
 		std::string text;
 		char chunk[64 * 1024];
 		while (file.read(chunk, sizeof(chunk)) || file.gcount() > 0)
-		{ text.append(chunk, static_cast<std::size_t>(file.gcount())); }
+		{
+			text.append(chunk, static_cast<std::size_t>(file.gcount()));
+			// Stop at the format's file limit rather than reading the rest.
+			try { level_format::limit::check_file_bytes(text.size()); }
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(std::string("LevelLoadedInfo - '") + path + "' " + error.what());
+			}
+		}
 		if (file.bad()) { throw std::runtime_error(std::string("LevelLoadedInfo - read error in '") + path + "'"); }
 		return text;
+	}
+
+	// The format's nesting limit, before any parse: both parses below and the
+	// hash's walk spend a native frame for each level of nesting, so a small
+	// file of brackets would overflow the stack instead of being refused.
+	const std::string& within_nesting_limit(const std::string& snapshot, const char* path)
+	{
+		try { level_format::limit::check_nesting(snapshot); }
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(std::string("LevelLoadedInfo - '") + (path != nullptr ? path : "") +
+				"' " + error.what());
+		}
+		return snapshot;
 	}
 
 	class StageSemanticHash
@@ -146,7 +168,7 @@ LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :
 }
 
 LevelLoadedInfo::LevelLoadedInfo(const char* json_path, std::string snapshot) :
-	json_doc_(parse_json(snapshot, json_path))
+	json_doc_(parse_json(within_nesting_limit(snapshot, json_path), json_path))
 {
 	// An untagged legacy level has exactly the format-1 meaning. Reject a
 	// future or malformed tag before interpreting any of its content fields.
@@ -179,8 +201,14 @@ void LevelLoadedInfo::validate() const
 	this->zoom_out_start_bounds_rectangle();
 	this->zoom_out_finish_bounds_rectangle();
 
-	this->collision_objects_json();
-	this->non_collision_objects_json();
+	for (const JsonValue& objects : { this->collision_objects_json(), this->non_collision_objects_json() })
+	{
+		try { level_format::limit::check_object_count(objects.size()); }
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(objects.where() + " " + error.what());
+		}
+	}
 
 	this->sound_bank_name();
 	this->music_name();
@@ -439,6 +467,15 @@ RectangleF LevelLoadedInfo::bounds_rectangle(const char* bounds_key) const
 	{
 		throw std::runtime_error(bounds.where() +
 			" needs finite coordinates and positive width and height");
+	}
+	try
+	{
+		level_format::limit::check_bounds_rectangle(rectangle.x, rectangle.y,
+			rectangle.width, rectangle.height);
+	}
+	catch (const std::invalid_argument& error)
+	{
+		throw std::runtime_error(bounds.where() + " " + error.what());
 	}
 	return rectangle;
 }

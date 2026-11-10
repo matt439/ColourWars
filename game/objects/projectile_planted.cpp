@@ -76,9 +76,10 @@ void ProjectilePlanted::set_rectangle(const RectangleF& rectangle)
 	this->rectangle_ = rectangle;
 }
 
-void ProjectilePlanted::resolve_travel(std::span<CollisionObject* const> objects)
+void ProjectilePlanted::resolve_travel(std::span<CollisionObject* const> objects,
+	std::optional<ProjectileTargetFlags> known)
 {
-	if (!this->planted_) { Projectile::resolve_travel(objects); }
+	if (!this->planted_) { Projectile::resolve_travel(objects, known); }
 }
 
 void ProjectilePlanted::on_structure_contact(const Structure& /*other*/,

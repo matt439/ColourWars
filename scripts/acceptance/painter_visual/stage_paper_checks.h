@@ -67,6 +67,13 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     {
         std::vector<size_t> result; for (size_t i = 0; i < stages.size(); ++i) { if (stages[i].include_in_random) { result.push_back(i); } } return result;
     };
+    // REV#24: a Random start draws from the eligible arenas without the
+    // setup's stage while another remains. Written out here, not through
+    // random_stage_index, so the page's draw is checked independently.
+    const auto drawable = [&]
+    {
+        auto result = eligible(); if (result.size() > 1) { std::erase_if(result, [&](size_t i) { return stages[i].name == initial.stage(); }); } return result;
+    };
     const auto open = [&](int count, int best_of = 1, int selected = 0)
     {
         stack.clear(); context.cancel_music_exit(); script_menu_music(context, {}); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
@@ -207,7 +214,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
             {
                 open(count, best_of, selected == static_cast<int>(stages.size()) ? 0 : selected); if (selected == static_cast<int>(stages.size())) { browse(false); tick(settled); }
                 lock(true); tick(settled); const Frame outgoing = compare("before-start"); int music_updates = 0; script_menu_music(context, [&](float) { ++music_updates; });
-                std::srand(4937); const auto candidates = eligible(); committed = selected == static_cast<int>(stages.size()) ? stages[candidates[static_cast<size_t>(std::rand()) % candidates.size()]].name : stages[static_cast<size_t>(selected)].name;
+                std::srand(4937); const auto candidates = drawable(); committed = selected == static_cast<int>(stages.size()) ? stages[candidates[static_cast<size_t>(std::rand()) % candidates.size()]].name : stages[static_cast<size_t>(selected)].name;
                 const int after = std::rand(); std::srand(4937); tap(count - 1, GamepadButton::a);
                 require(std::rand() == after && settings.stage() == committed && context.music_exit_pending() && stack.depth() == 2 && music_updates == 1 && outgoing.pixels == frame().pixels, "Stage paper final start changed its RNG budget, outgoing page or state boundary");
                 compare("pending-start", 0, 0, capture && selected == static_cast<int>(stages.size()));
@@ -233,7 +240,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         browse(true); stack.push(std::make_unique<MainMenuCredits>(&context)); stack.pop(); compare("cover-return"); tick(); browse(false); active->debug_reset_input(slots[0]); compare("developer-reset");
         play.reduce_effects = true; browse(true); const Frame quiet = compare("reduced-input"); tick(settled); require(quiet.pixels == frame().pixels, "Reduced Stage input restarted its accent"); play.reduce_effects = false;
         open(4, 3); browse(false); lock(true); compare("rapid-lock", motion.arrow_travel, motion.press_fraction); script_menu_music(context, [](float) {});
-        std::srand(4937); const auto candidates = eligible(); committed = stages[candidates[static_cast<size_t>(std::rand()) % candidates.size()]].name; const int after = std::rand(); std::srand(4937); tap(0, GamepadButton::a);
+        std::srand(4937); const auto candidates = drawable(); committed = stages[candidates[static_cast<size_t>(std::rand()) % candidates.size()]].name; const int after = std::rand(); std::srand(4937); tap(0, GamepadButton::a);
         require(std::rand() == after && context.music_exit_pending(), "Rapid Stage paper final start changed Random RNG or failed to latch"); const Frame pending = compare("rapid-final-random", 0, 0, true);
         static_cast<WindowNotify&>(app).on_deactivated(); tick(); static_cast<WindowNotify&>(app).on_activated(); tick(); tap(0, GamepadButton::dpad_left); tap(1, GamepadButton::b); tap(0, GamepadButton::a); tick(settled);
         require(pending.pixels == frame().pixels, "Focus interruption changed the latched outgoing Stage paper"); plan(); context.complete_music_exit();

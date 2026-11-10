@@ -7,12 +7,16 @@ arena, and a scoreboard that counts painted surface rather than kills.
 
 You don't need Git, Visual Studio or a terminal to play.
 
-1. Download `ColourWars-windows-x64.zip` from the
-   [latest release](https://github.com/matt439/ColourWars/releases/latest).
-   Until the first release is out, a signed-in GitHub account can take the
-   `ColourWars-windows-x64` artifact from a passing
-   [CI run](https://github.com/matt439/ColourWars/actions/workflows/ci.yml?query=branch%3Amaster+is%3Asuccess)
-   (it comes wrapped in a second ZIP), or use `build.cmd` (see [Building](#building)).
+1. Get `ColourWars-windows-x64.zip`. If the
+   [releases page](https://github.com/matt439/ColourWars/releases) lists a
+   release, download the ZIP from there. If it is empty, a signed-in
+   GitHub account can take the `ColourWars-windows-x64` artifact from a passing
+   [pull-request CI run](https://github.com/matt439/ColourWars/actions/workflows/ci.yml?query=event%3Apull_request+is%3Asuccess):
+   open a run and look under **Artifacts** at the bottom of its summary (the
+   download comes wrapped in a second ZIP). Only a run that built the game has
+   one, so a pull request that changed only documents does not, and GitHub
+   deletes it 14 days after the run. If no listed run has it, use `build.cmd`
+   (see [Building](#building)).
 2. Right-click the ZIP and choose **Extract All**. Running the game from
    inside the ZIP doesn't work.
 3. Open the extracted folder, then the `ColourWars-windows-x64` folder inside
@@ -126,12 +130,13 @@ Use D-pad/arrows on that page so the sticks stay free for testing.
 These settings follow the pad slot, independently of player numbers, unless the
 pad wears a **profile**. Old saves keep their existing deadzones until edited.
 Mouse aim follows the cursor and the roller keeps its fixed aim.
-Open **Pad Buttons** to choose Jump, Shoot and Pause for each Pad 1-4 slot, each
-with an optional second control: A/B/X/Y, LB/RB, LT/RT, a stick press (LS/RS) or
-Start. The defaults are A / LT Jump, RT Shoot and Start Pause, and a control in use
-on that pad is skipped. **Keyboard Keys** changes the shared keyboard player's
-Move left, Move right, Jump, Drop, Shoot (a key or a mouse button) and an extra
-Pause key: select a row and press the new key. Esc always pauses, Down always
+Open **Pad Buttons** to choose Jump, Shoot, Pause and Sub for each Pad 1-4 slot
+from A/B/X/Y, LB/RB, LT/RT, a stick press (LS/RS) or Start; all but Sub may take
+an optional second control. The defaults are A / LT Jump, RT Shoot, Start Pause
+and RB Sub, and a control in use on that pad is skipped. **Keyboard Keys** changes
+the shared keyboard player's Move left, Move right, Jump, Drop, Shoot and Sub
+(each of those two a key or a mouse button) and an extra Pause key: select a row
+and press the new key. Esc always pauses, Down always
 drops and a key in use is refused. These choices leave menu and intro controls
 unchanged.
 **Profiles** keeps up to eight named profiles, each carrying a person's
@@ -162,12 +167,25 @@ The following controls are the defaults:
 | Jump | A or left trigger | Space |
 | Aim | Right stick | Mouse cursor |
 | Shoot | Right trigger | Left mouse button |
+| Sub | Right bumper (RB) | Right mouse button |
 | Drop through a platform | Left stick down | S or Down |
 | Pause/resume | Start | Escape |
 | Debug overlay | Back/View | F1 |
 | Menu navigation | Left stick or D-pad | Arrow keys or WASD |
 | Menu confirm | A | Enter or Space |
 | Menu back | B | Escape or Backspace |
+
+Each player carries a **sub weapon** beside their tool for the whole match. On
+Weapon Select a row picks its tool, then its sub: A/Enter confirms the tool,
+Left/Right chooses the Grenade, Sprinkler, Paint wall or Random, and A/Enter
+again readies the row. The grenade is lobbed along the aim and bursts into a
+ring of paint that hurts enemies caught in it. The sprinkler sticks where it
+lands and sprays paint around it until its time runs out or enemy shots break
+it. The paint wall stands beside the player, on the side they aim, stops enemy
+shots and drips paint on the floor beneath it. A sub costs half the paint tank,
+fires only with that much in it and then waits out a short cooldown; under
+Endless paint the cost is dropped and the cooldown alone paces it. The square
+after the HUD's PAINT label is solid when a Sub press would release it.
 
 ## Your own stages
 
@@ -189,6 +207,12 @@ count; press **Down** while browsing to read the filename and reason.
 **Left/Right** changes issue, **Up/Down** changes page, and **A/Enter** or
 **B/Esc** returns to your arena choice. The game also prints the reason to
 stderr, which you can retain with `ColourWars.exe 2> stages.txt`.
+
+A stage file can be up to 1 MiB and nest 64 levels deep, and the game reads
+the first 256 `.json` files in the folder by file name. The size limits on a
+stage itself are far
+above anything the built-in stages use;
+[the level format](docs/level-format.md#limits) lists them.
 
 The level editor makes these files: **File > Save to My Stages** (Ctrl+M)
 saves into that folder, checking the name as the game does. The editor is
@@ -313,6 +337,9 @@ same checks; `-SkipBuild` is for an already-current build.
 
 CI lints changed lines for whitespace errors and conflict markers on every run,
 and checks that relative Markdown links and their heading anchors resolve.
+The root [.editorconfig](.editorconfig) gives an editor the whitespace the tree
+already has; it leaves indent style unset where a folder mixes tabs and spaces,
+and there is no `.clang-format`.
 Pushes and pull requests containing only Markdown or images/videos under
 `docs/images/` stop after lint. Code, build files, scripts, schemas, runtime assets,
 submodule changes and deletion of packaged Markdown still run the full Windows
@@ -385,10 +412,12 @@ changes and `source-archive` when Git metadata is unavailable. Rebuild after
 committing to produce a package labelled with that commit. The release version
 is `project(VERSION)` in the root `CMakeLists.txt`; it is CPack's package version,
 heads `build-info.txt` and is stamped into `ColourWars.exe` (Properties >
-Details). CI keeps each passing Release ZIP as the `ColourWars-windows-x64` run
-artifact. A `v*` tag on `master` that matches `project(VERSION)` (`v0.1.0` for
-`0.1.0`) runs full CI, and its `publish` job attaches that run's checked ZIP to a
-new GitHub Release.
+Details). A pull request's full CI run keeps its checked Release ZIP as the
+`ColourWars-windows-x64` run artifact for 14 days. The push run that follows a
+merge to `master` normally has none: it skips the Windows jobs when its tree
+already passed on the pull request. A `v*` tag on `master` that matches
+`project(VERSION)` (`v0.1.0` for `0.1.0`) runs full CI, and its `publish` job
+attaches that run's checked ZIP to a new GitHub Release.
 
 Only the assets listed in [cmake/runtime_assets.cmake](cmake/runtime_assets.cmake)
 are staged and packaged; configure checks that the list matches the runtime manifest.

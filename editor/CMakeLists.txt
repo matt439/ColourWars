@@ -57,6 +57,7 @@ add_executable(colourwars_editor_acceptance EXCLUDE_FROM_ALL
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/fixtures.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/content_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/format_checks.cpp"
+    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/limit_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/empty_key_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/alignment_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/field_checks.cpp"

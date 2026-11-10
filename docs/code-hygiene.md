@@ -5,7 +5,9 @@ for source-file splits and comment audits on 2026-10-28. These are independent
 maintenance slices alongside the gameplay backlog; they do not change its
 arena/tuning order. Since 2026-10-29 it also owns the CI-gate rows `CI#2` to
 `CI#8`; `CI#1`, the foreground debug-console check, stays with
-[the debug console](debug-console-record.md#foreground-checks-ci1).
+[the debug console](debug-console-record.md#foreground-checks-ci1). It also
+records the outcomes of three rows of the frozen 2026-11-10 project review,
+`REV#6`, `REV#61` and `REV#62`.
 
 ## Hygiene review (2026-11-05)
 
@@ -3503,6 +3505,366 @@ Both presets build under `/W4 /WX`. The full default acceptance list passed in
 Release (76 cases) and in Debug (77, with the slow cases), including the bot trials' replay fingerprints and
 `debug_console`'s record and play, which replay matches bit for bit with the
 Debug guard running. `check-startup.ps1` passed on the Debug executable.
+
+## Project review (2026-11-10)
+
+These entries are not part of the architecture review above. They record the
+outcomes of rows from the 2026-11-10 project review, whose findings are frozen
+in [the review](review/2026-11-10-project-review.md) and are not edited there.
+Each entry links its section of that record.
+
+### Projectile target answers asked once (`REV#6`)
+
+**Done 2026-11-10.** From the 2026-11-10 project review
+([record](review/2026-11-10-project-review.md#small-per-frame-waste-on-the-match-hot-path-rev6)),
+which scoped the fix to caching two per-level answers. No player-visible
+effect. No gain is claimed: the performance captures were waived (`POL#25`),
+so the saving is unmeasured, and the record itself calls the cost negligible at
+20 to 41 collision objects an arena.
+
+[LevelStructures](../game/objects/level_structures.h) now asks its projectile
+targets two questions once, in `admit()`, and keeps the answers as a
+[ProjectileTargetFlags](../game/objects/projectile_target_flags.h): whether any
+target is a `Structure` with a `mover()`, and whether any is tagged
+`structure_fixed_slab`. `Level` passes them with the target list to
+`Player::update_weapon_and_get_projectiles`,
+`Projectile::resolve_launch_obstruction` and
+`Projectile::resolve_movement_contacts`. Before, `Projectile::resolve_travel`
+ran an `any_of` with a `Collider::of` cast over every target for each swept
+shot each tick, and `resolve_sweep` an `any_of` over every target's tag for
+each travel and each launch
+([projectile_contacts.cpp](../game/objects/projectile_contacts.cpp)). The two
+predicates moved verbatim into `ProjectileTargetFlags::any_mover` and
+`any_fixed_slab`. The flags are an optional, defaulted argument: a caller that
+passes none, which is every probe, gets the scan where it always ran, with the
+same casts and the same throw on a non-`Collider`. The one-target
+`resolve_sweep` calls inside the translating and slab sweeps pass none either,
+because one target's answer is not the list's.
+
+`admit()` also keeps the `Structure*` of each target, and
+`Level::refresh_views` walks that list to set the miniature mode instead of
+casting every target on each of its up to four calls a frame. The order is the
+same and `set_miniature` is a plain setter. `Collider::of` and the role lookup
+are unchanged, as is every hierarchy; the lookups are asked once instead of
+repeatedly.
+
+The answers cannot go stale because the list cannot change. It is filled only
+in `admit()`, which `Level::build_opening_frame` calls once at the end of the
+constructor. After that the only collision objects `Level` adds to its scene
+are projectiles (`update_players`, `burst_projectiles`, `admit_projectile`),
+which are never targets; the idle drips and the Debug station labels are not
+collision objects; and no game code removes a scene object. A planted
+sprinkler or paint wall is a `ProjectilePlanted`, struck through
+`Level::strike_breakables`, so a sub appearing or breaking does not touch the
+list. A replay or restart builds a new `Level` and admits again. Both answers
+are fixed per object: `mover()` is decided by class and a structure's tag by
+its constructor argument. So there is no invalidation hook, and none should be
+added. `check_projectiles()` enforces it in Debug after every scene tick: once
+the targets are admitted they must be the scene's non-projectile collision
+objects in scene order, and the kept flags must equal a fresh scan, or it
+throws `std::logic_error`. It found no disagreement.
+
+The per-tick vectors the record lists are left alone, each for a reason.
+`was_dead` and `by_participant` in `Level` hold at most four elements, reuse
+would need new members, and `by_participant` is handed to the bot driver and
+the seat filter. `take_rumble_events`, the round tape's per-step seat copy and
+`MatchBotDriver`'s obstacle, support and ramp copies are returned or stored
+values, so reusing a buffer would change an interface; the tape's copy is the
+tape. None is obviously behaviour-neutral under bit-exact replays, which is
+the record's own objection.
+
+Both presets build under `/W4 /WX`. The full default acceptance list passed in
+Release (80 cases) and in Debug (81, with the slow cases and the guard
+running on every tick), including `moving_structure`'s replay checks,
+`instant_replay`, `sub_weapons` and `debug_console`'s record and play, with no
+pinned number edited. The Release `Quick` opt-in cases passed (12 cases), among
+them the bot trials' replay fingerprints, and the opt-in cases compile in both
+presets (16 each). Not run: `check-startup.ps1`, the painter and any performance
+capture.
+
+### Mutation probe for the save and user-stage readers (`REV#62`)
+
+**Done 2026-11-10; one behaviour change, the level format's nesting limit.**
+From the 2026-11-10 project review
+([record](review/2026-11-10-project-review.md#no-mutation-probe-for-outside-file-readers-rev62)):
+the two readers that take files from outside the build had only hand-written
+negative fixtures.
+
+[reader_mutations.cpp](../scripts/acceptance/reader_mutations.cpp) is a new
+opt-in case, declared `Quick`, so every pull request and the nightly run it
+in Release; CI only compiles it in Debug. It mutates each of the thirteen staged
+levels 64 times and each of three saves 200 times (832 and 600 mutants;
+iteration 0 of each source is the source itself and must load). The saves are
+the defaults a first run writes, a save populated through `Save`'s own
+setters (a profile, a remembered match, a record, display settings) and the
+flat version-0 layout. The generator is a SplitMix64 in the probe with the
+constant seed `0x5245563632`; a mutant depends on its source index and
+iteration alone, so a failure names both and can be rebuilt. No clock,
+`rand()` or `<random>` distribution is used to make a mutant.
+
+Six operators, chosen by the generator:
+
+- one to four bit flips or byte overwrites;
+- truncation at any offset, zero included;
+- one number token replaced from a fixed table: the edges of `int` and
+  `float`, values on each side of every `level_format::limit`, exponents that
+  overflow and underflow, spellings JSON does not allow (`NaN`, `Infinity`,
+  `0x10`, `01`, `--1`) and values of another type;
+- one member removed;
+- one member's name repeated in its object, with its own value or another
+  member's, placed first or last;
+- one number, or a new root member nothing reads, wrapped in nested arrays or
+  objects: for a level 1 to 64 deep or, as often, 64, 65, 100, 1,000, 10,000
+  or 100,000 deep; for a save 1 to 64 deep.
+
+A level mutant is written as the one file of a private stage folder and read
+by `load_user_stages` against the manifest's catalog. The scan must not
+throw, must answer once, and must either list the stage or return one refusal
+line naming the file and a reason; the shipped list must be unchanged
+afterwards. A save mutant replaces the private save and is read by
+`Save::load_save_file`, which must not throw. What was loaded must then pass
+its first readers (`checked_play_settings`, `InputBindings::validate`,
+`PlayerProfiles::validate`, `LastMatchSetup::restore` against the shipped
+list), and, unless the file was set aside as unreadable, `save_to_file` must
+write it back as a file the reader takes whole. Each sweep must both load and
+refuse at least one mutant, so a harness that refuses everything cannot pass.
+Counts by operator are printed and not pinned: they move with every level
+edit.
+
+Everything is under one `acceptance::IsolatedSave` root in `%TEMP%`: the save,
+the stage folder and the captured stderr. The player's save and stage folder
+are never opened. A failed check copies the mutant beside the probe as
+`reader_mutations-failed-<kind>-<source>-<iteration>.json`.
+
+Hangs and crashes: a watchdog thread in the probe fails the case when one
+mutant takes over 120 seconds, naming it; the runner's deadline
+(`-RunTimeoutSeconds`) is only the backstop. The probe turns off the fault,
+abort and Debug CRT assertion dialogs, none of which a probe or the runner
+suppressed before, and an unhandled-exception filter names the mutant in hand.
+Both paths were exercised with temporary edits that are not committed. Before
+the level fix, deep nesting ended the run with
+`FAIL reader mutations: crashed on level source 0, iteration 3` and exit code
+`0xC00000FD`; with the save's bound lifted it ended with `crashed on save
+source 0, iteration 13` and the same code; and with the deadline set to zero
+it ended with `the per-mutant deadline passed on level source 0, iteration
+14`. The runner reported the case failed each time.
+
+One defect was found, by the first deep mutant. A level nested a few thousand
+arrays deep overflowed the stack inside the reader and ended the process:
+at startup for a shipped level, at startup or on opening Stage Select for a
+file in the user stage folder. `LevelLoadedInfo` parses the file twice (the
+engine's `parse_json`, then rapidjson again for the content hash) and walks
+it once (`StageSemanticHash::append`), and all three recurse. The fix is a
+limit in the level format, [`level_format::limit::max_nesting`](level-format.md#limits),
+64 against a shipped maximum of 5, checked on the file's text before the
+first parse (`check_nesting`). The level editor applies it at open, before its
+own parse, which is the same recursive rapidjson parser (not driven to an
+overflow here). Two files 100,000 deep, one of
+arrays and one of objects, are named regression inputs that the probe runs
+before its sweep. `user_stages` and the editor's document acceptance cover
+the limit, the step past it and a deep file.
+
+The save has the same overflow and it is not fixed here: `Save` reads through
+the engine's `read_json_file`, whose parse is recursive at the pinned
+revision, and no game code runs first. Engine master already parses
+iteratively, so this is ledger
+[report 36](review/engine-reports.md#36-json-parsing-recurses-once-per-nesting-level---answered-on-master-before-it-was-drafted),
+answered before it was drafted and spent at the pin bump that brings the
+answer: the probe's `save_max_nesting` bound of 64 goes then (`ENG#36`).
+Until then a save nested thousands deep, which only a hand edit or a
+corrupted disk produces, still ends the game at startup.
+
+Nothing else failed. No mutant made either reader throw past its contract,
+hold a loaded value its first reader refused, or write a save it could not
+read back.
+
+Limits of the case: it tests the readers. No `Level` is built or stepped from
+an accepted mutant beyond what `validate_stage_objects` builds, so a number
+that loads and then misbehaves in play is not found here. The replay codec is
+Debug-only and out of scope. The counts are a fixed sample: 64 mutants of a
+35 KB level touch a small part of it. Because the inputs are the shipped
+levels, a later level edit changes every mutant of that level and can surface
+a reader defect in an unrelated pull request; that is the case working.
+
+Both presets build under `/W4 /WX`. `reader_mutations` passed in Release
+(12 and 21 seconds over two runs, with identical logs) and in Debug
+(16 seconds) on MattPC; the spread is disk time, mostly the save's
+replacing writes. The default acceptance list passed in Release (80 cases)
+and in Debug with `-SkipSlowDebug` (77), the Release `Quick` opt-in cases
+passed (13, this one among them), the opt-in cases compile in both presets
+(17 each), `check-acceptance-selection.ps1` passed under Windows PowerShell
+5.1, and `check-level-editor.ps1` passed in both presets. Not run: Debug's
+four slow cases, `check-startup.ps1`, the painter and the nightly's `-OptIn`
+run.
+
+### Sanitizer and static analysis presets (`REV#61`)
+
+**Presets, runner support and nightly legs landed 2026-11-10, and both hosted
+legs passed on the pull request's nightly trial the same day.** From the 2026-11-10 project review
+([record](review/2026-11-10-project-review.md#no-sanitizer-or-static-analysis-leg-rev61)):
+nothing outside `external/` ran AddressSanitizer or `/analyze`.
+
+Two configure and build presets were added to `CMakePresets.json`. Neither
+changes a CMake file or anything under `external/`.
+
+- `x64-asan` is RelWithDebInfo with `/fsanitize=address`. Debug cannot be
+  used: its `/RTC1` is refused alongside the sanitizer. RelWithDebInfo already
+  writes debug information, so reports are symbolised and warning C5072 (ASan
+  without debug information) cannot fire under the engine's `/WX`; `_DEBUG` is
+  off, so class layouts and the case list are Release's. It is not Release, so
+  `cmake/release_package.cmake` refuses to package it. Its linker flags turn
+  incremental linking off, which the sanitizer does not support.
+- `x64-analyze` is Debug, so the developer console is analysed too, with
+  `/analyze /analyze:WX- /analyze:external-`. `/analyze:WX-` keeps analysis
+  warnings as warnings under `/WX`; the build completes whatever they say.
+
+The flags are in each preset's `CMAKE_CXX_FLAGS`, which therefore restates
+CMake's own defaults (`/DWIN32 /D_WINDOWS /EHsc`). That reaches every target,
+the engine's included, without touching `labrador_settings`, and it does not
+reach `rc.exe` as a directory compile option would.
+
+vcpkg stays on the stock `x64-windows` triplet. DirectXTK and XAudio2 are
+DLLs, so only their import libraries are linked, and every static library and
+object (engine, math, game, adapters, editor, probes) is compiled here with
+the flag. The STL's container annotations therefore agree across the link and
+no `_DISABLE_VECTOR_ANNOTATION` or overlay triplet is needed; the vcpkg binary
+cache key is unchanged. The cost is that nothing inside those two DLLs is
+checked.
+
+`run-acceptance.ps1 -Preset x64-asan` runs Release's default list. Through
+`probe-build.ps1` the probes compile with `/fsanitize=address /Z7` (`/Z7` so
+parallel compiles share no `.pdb`), and the runner puts the configured
+compiler's folder on the probes' `PATH`, because the runtime DLL
+(`clang_rt.asan_dynamic-x86_64.dll`) ships beside `cl.exe` and must be that
+toolset's; the preflight refuses a build configured without the flag or a
+toolset without the DLL. The two existing presets are unchanged: a Release
+`ammo.rsp` is identical before and after. The other check scripts still take
+only the two original presets.
+
+From an x64 Developer shell:
+
+```
+cmake --preset x64-asan
+cmake --build --preset x64-asan
+scripts/run-acceptance.ps1 -Preset x64-asan -SkipBuild -Parallel 4
+scripts/report-analyze.ps1
+```
+
+`report-analyze.ps1` configures `x64-analyze`, rebuilds it from clean (only a
+compile reports) and writes `build.log`, `analyze-warnings.log` and
+`analyze-summary.json` under `out/validation/analyze`: the distinct C6xxx,
+C26xxx and C28xxx lines, counted by code for this repository and for
+`external/labrador`. It exits non-zero only when the configure or build fails.
+
+What the local run found, on MattPC with MSVC 14.51 (2026-11-10):
+
+- The preset built with no compiler or linker warning. All 80 default cases
+  passed under AddressSanitizer with `-Parallel 4`, in 762 seconds against
+  124 for an earlier Release run at the same setting, and no log holds a
+  sanitizer report. The long cases were
+  `crossfeed` (741 seconds), `press_tower` (401) and `menu_text` (279). No
+  case was excluded and no defect was found.
+- The leg can fail: a throwaway probe compiled with a generated response
+  file's flags, reading one byte past a 16-byte heap block, exited 1 with
+  `ERROR: AddressSanitizer: heap-buffer-overflow` and a symbolised stack. It
+  is not committed.
+- `/analyze` completed and reported 13 distinct warnings. Eleven are this
+  repository's: eight C6262 (a function with a stack frame of 17 to 87 KiB, half
+  of them about 64 KiB; four in `game/` outside the console, three in
+  `editor/`, one in `game/debug/`), C6011 at `game/debug/tune/tune_target.cpp:103`, C6387 at
+  `editor/window_dpi.cpp:13` and C28251 on the editor's `wWinMain`. Two are
+  the engine's: C6262 in `engine/assets/json.cpp` and C28020 in
+  `engine/audio/xwb_file.cpp`. The verdicts are below.
+
+`nightly.yml` gained two legs. `asan` builds the preset and runs the default
+cases; a failure joins the `Nightly sweep failed` issue like any other leg.
+`analyze` runs the report with `continue-on-error`, uploads its logs and
+cannot fail the night. Neither is part of `gate`.
+
+Not checked:
+
+- `pwsh`. The two selection checkers and the runner ran under Windows
+  PowerShell 5.1 only.
+- The game itself. `ColourWars.exe` from `x64-asan` was built and not
+  started, and the opt-in cases, the painter, startup and the editor checks
+  were not run under the sanitizer.
+- Leaks. MSVC's AddressSanitizer has no leak detection.
+- clang-tidy was not attempted.
+
+#### The `/analyze` verdicts (2026-11-10)
+
+Each of the eleven was read against its code. Two were fixed, nine stand, and
+none was a defect that could be reached. The rerun reports 11 distinct
+warnings: nine here (eight C6262 and C6011) and the same two in the engine. No
+suppression was added, so the nine stay in the report, and a number other than
+nine on a later run is the thing to read.
+
+Fixed, both in `editor/` and neither changing what the editor does:
+
+- **C28251, `editor/main.cpp`.** `wWinMain` now carries the annotations of the
+  SDK's declaration (`_In_`, `_In_opt_`, `_In_`, `_In_`), as the game's does.
+- **C6387, `editor/window_dpi.cpp`.** `user_function` passed
+  `GetModuleHandleW(L"user32.dll")` straight to `GetProcAddress`, whose module
+  parameter may not be null. It now returns no function when the module is
+  missing, which both callers already treat as a Windows without that
+  function. The editor imports `user32.dll`, so the branch is not expected to
+  run.
+
+The eight C6262 frames stand. No stack size is set anywhere: the executables
+link with the default 1 MiB reserve, and the engine's pool
+(`CreateThreadpool`) sets none, so its workers get the same. None of the eight
+functions is recursive or is called from a recursion, and the largest is 9% of
+that reserve.
+
+| Frame | Bytes | What fills it | Where it runs |
+|---|---|---|---|
+| `Presentation::Validation::validate_results_contributions` | 89,384 | 1,001 cached percentage suffixes, each a string and six glyph pointers (the Debug layout; Release's string is smaller) | the main thread: startup, and Debug `reload` and `tune` |
+| `LevelDocument::load` (`editor/level_document.cpp`) | 66,008 | a 64 KiB read chunk | the editor's main thread; the parse it then calls nests at most 64 deep, which `check_nesting` enforces first |
+| `read_stage_snapshot` (`game/objects/level_loaded_info.cpp`) | 65,856 | a 64 KiB read chunk | the main thread, at startup and on a user-stage rescan; a leaf that returns before any parse |
+| `Editor::choose_file`, `Editor::choose_user_stage` | 65,780 and 65,784 | the 32,768-character path buffer a file dialog needs for a long path | the editor's main thread, from a menu command |
+| `MovementFeedback::draw_puff` | 40,000 | 1,225 spans, the fixed bound its comment derives | a draw, on the main thread or a pool worker |
+| `wWinMain` (`game/main.cpp`) | 34,964 | the save, tuning, presentation and the other objects that must outlive `Application` | the bottom frame of the main thread, once |
+| `DebugPerf::reset` | 17,456 | the temporary `DebugPerf` it assigns from | the main thread, on a console command; Debug only |
+
+Moving any of these to the heap would add an allocation (in `draw_puff`, one a
+frame for each puff) to guard a stack that is not near its limit.
+
+- **C6011, `game/debug/tune/tune_target.cpp:103`, stands as a false positive.**
+  The analysis follows `context` as null from the locale lookup at line 87 into
+  the branch at line 99, but that branch is `can_check_resources(context)`,
+  which returns false for a null `context`. The analysis does not look inside
+  that function. `TuningTarget::validate` has the same shape and no warning,
+  only because nothing earlier in it tests the pointer. Restating the null test
+  at the call would be code written for the tool.
+
+The two engine warnings are not reported to Labrador from here. Both were read
+and neither is a defect:
+
+- C6262 in `read_json_file` is the same 64 KiB read chunk on a 1 MiB stack.
+  Unlike `read_stage_snapshot` it parses in the same frame, so the chunk sits
+  beneath rapidjson's parse, which is recursive at the pinned revision and
+  bounded by nothing. The chunk costs 6% of the reserve and does not decide
+  whether a deeply nested file overflows: that is the save's overflow recorded
+  under [`REV#62`](#mutation-probe-for-the-save-and-user-stage-readers-rev62), ledger
+  [report 36](review/engine-reports.md#36-json-parsing-recurses-once-per-nesting-level---answered-on-master-before-it-was-drafted),
+  already answered on engine master and not a new report.
+- C28020 at `xwb_file.cpp:208` indexes the 16-entry `adaptation` table with
+  `nibble`, which is `byte >> 4` or `byte & 0x0F` of an `unsigned char` and so
+  0 to 15. The analysis does not carry that range through the conditional.
+
+They are Labrador's to silence or leave, and its own build would show them
+under the same flag.
+
+Checked after the two edits: `x64-debug` and `x64-release` build,
+`check-level-editor.ps1` passes in both, and the report was rerun from clean.
+No file under `game/` changed, so no acceptance case was rerun.
+
+The hosted legs ran on pull request 74's nightly trial (run 42753835866,
+2026-11-10), which closed the row. `asan` passed in 34 minutes on the hosted
+runner (`PASS acceptance (x64-asan)`), so the image carries the sanitizer
+component and the leg fits its timeout. `analyze` passed in 5 minutes and
+reported the same eleven warnings as the local run: nine here (C6262 x8,
+C6011 x1) and two in the engine.
 
 ## Open shortlist (2026-10-29)
 

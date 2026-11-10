@@ -121,8 +121,11 @@ void MainMenuWeaponSelect::set_level_settings() const
 		const WeaponType tool = loadout.tool();
 		this->level_settings()->set_player_weapon(i,
 			tool == WeaponType::random_primary ? random_weapon() : tool);
+		// Only a Random sub draws, as only a Random tool does: a concrete
+		// loadout commits without moving the seeded sequence.
 		this->level_settings()->set_player_sub(i,
-			loadout.resolved_sub(static_cast<unsigned int>(rand())));
+			loadout.sub_choice() == LoadoutChoice::random_sub ?
+				loadout.resolved_sub(static_cast<unsigned int>(rand())) : loadout.resolved_sub(0));
 		this->level_settings()->
 			set_player_handicap(i, this->select_states_[i].handicap);
 	}

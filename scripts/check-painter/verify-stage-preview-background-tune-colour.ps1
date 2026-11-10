@@ -16,7 +16,7 @@ if(@(Get-ChildItem -LiteralPath $captures -Filter 'stage-preview-background-fail
 $previewBackingSummary=Get-Content -LiteralPath $previewBackingSummaryPath -Raw|ConvertFrom-Json
 $previewBackingMain=@(Import-Csv -LiteralPath $previewBackingMainPath)
 $previewBackingLifetime=@(Import-Csv -LiteralPath $previewBackingLifetimePath)
-$previewBackingCounts=[ordered]@{readbacks=68;csv_rows=26;main_rows=16;lifetime_rows=10;crops=16;crop_width=64;crop_height=32;crop_pixels=32768;ppm_bytes=98512;roi_pixels=2048;roi_observations=25;roi_pixel_checks=51200;repeat_checks=26;raw_references=8;controls=8;full_page_lifetime_checks=9;weapon_transition_nonoracle_checks=1;explicit_stage_pushes=9;back_weapon_proceed_routes=1;tap_gestures=21;local_menu_updates=63;gamepad_polls=83;keyboard_polls=83;mouse_polls=83;input_polls=249;calibration_pixel_checks=2176}
+$previewBackingCounts=[ordered]@{readbacks=68;csv_rows=26;main_rows=16;lifetime_rows=10;crops=16;crop_width=64;crop_height=32;crop_pixels=32768;ppm_bytes=98512;roi_pixels=2048;roi_observations=25;roi_pixel_checks=51200;repeat_checks=26;raw_references=8;controls=8;full_page_lifetime_checks=9;weapon_transition_nonoracle_checks=1;explicit_stage_pushes=9;back_weapon_proceed_routes=1;tap_gestures=22;local_menu_updates=65;gamepad_polls=85;keyboard_polls=85;mouse_polls=85;input_polls=255;calibration_pixel_checks=2176}
 Assert-PainterKeys $previewBackingSummary (@($previewBackingCounts.Keys)+$previewBackingZeros+@('scope','control_discriminating_pixels')) 'shared'
 foreach($key in $previewBackingCounts.Keys) { Assert-PainterInteger $previewBackingSummary $key $previewBackingCounts[$key] }
 foreach($key in $previewBackingZeros) { Assert-PainterInteger $previewBackingSummary $key 0 }
@@ -59,14 +59,14 @@ $previewBackingPpmEvidence=@(foreach($crop in $previewBackingPlan) {
 })
 if(($previewBackingPpmEvidence.bytes|Measure-Object -Sum).Sum-ne98512) { throw 'Preview backing total native P6 bytes differ' }
 if(($painterSaveCounts.calls + $painterSaveCounts.successes) -or @(Get-Content -LiteralPath (Join-Path $run 'run.err')|Where-Object{$_-match'^save failure:'}).Count) { throw 'Preview scope unexpectedly called or failed a game Save' }
-$script:previewBackingObserved=[ordered]@{consumer=$previewBackingSummary;readbacks=68;csv_rows=26;crops=16;crop_pixels=32768;ppm_bytes=98512;controls=8;control_discriminating_pixels=$previewBackingControlPixels;calibration_pixel_checks=2176;local_menu_updates=63;gamepad_polls=83;keyboard_polls=83;mouse_polls=83;input_polls=249;private_game_saves=0;default_token='121827EE';old_default_pixel_parity=$false;underlays=[ordered]@{browse='445268';locked='75EDD7'};reference_scope='small actual-page backing ROI: opaque filled edge then explicit once-premultiplied selected tint; matching-state complete-page equality proves capture/adoption only; Weapon transition is not a raw colour oracle';png_count=0;png_crops=@();png_complete=$false}
+$script:previewBackingObserved=[ordered]@{consumer=$previewBackingSummary;readbacks=68;csv_rows=26;crops=16;crop_pixels=32768;ppm_bytes=98512;controls=8;control_discriminating_pixels=$previewBackingControlPixels;calibration_pixel_checks=2176;local_menu_updates=65;gamepad_polls=85;keyboard_polls=85;mouse_polls=85;input_polls=255;private_game_saves=0;default_token='121827EE';old_default_pixel_parity=$false;underlays=[ordered]@{browse='445268';locked='75EDD7'};reference_scope='small actual-page backing ROI: opaque filled edge then explicit once-premultiplied selected tint; matching-state complete-page equality proves capture/adoption only; Weapon transition is not a raw colour oracle';png_count=0;png_crops=@();png_complete=$false}
 if($debug) {
     $summaryPath=Join-Path $captures 'stage-preview-background-tune-summary.json'; $csvPath=Join-Path $captures 'stage-preview-background-tune.csv'; $transcript=Join-Path $captures 'stage-preview-background-tune-commands.log'
     foreach($path in @($summaryPath,$csvPath,$transcript)) {
         if(!(Test-Path -LiteralPath $path -PathType Leaf)) { throw 'Preview required Debug evidence missing' }; $previewBackingInputs.Add($path)
     }
     $tune=Get-Content -LiteralPath $summaryPath -Raw|ConvertFrom-Json; $rows=@(Import-Csv -LiteralPath $csvPath)
-    $counts=[ordered]@{commands=7;query_commands=1;tune_commands=3;reset_commands=2;presentation_save_commands=1;saved_tokens=1;states=12;readbacks=24;csv_rows=12;crops=0;roi_observations=12;roi_pixel_checks=24576;repeat_checks=12;explicit_stage_pushes=1;back_weapon_proceed_routes=4;tap_gestures=9;local_menu_updates=34;gamepad_polls=38;keyboard_polls=38;mouse_polls=38;input_polls=114;calibration_pixel_checks=768}
+    $counts=[ordered]@{commands=7;query_commands=1;tune_commands=3;reset_commands=2;presentation_save_commands=1;saved_tokens=1;states=12;readbacks=24;csv_rows=12;crops=0;roi_observations=12;roi_pixel_checks=24576;repeat_checks=12;explicit_stage_pushes=1;back_weapon_proceed_routes=4;tap_gestures=13;local_menu_updates=42;gamepad_polls=46;keyboard_polls=46;mouse_polls=46;input_polls=138;calibration_pixel_checks=768}
     Assert-PainterKeys $tune (@($counts.Keys)+$previewBackingZeros+@('scope')) 'Debug'
     foreach($key in $counts.Keys) { Assert-PainterInteger $tune $key $counts[$key] }; foreach($key in $previewBackingZeros) { Assert-PainterInteger $tune $key 0 }
     if($tune.scope-cne'debug-captured-next-screen-preview') { throw 'Preview Debug next-screen scope differs' }
@@ -89,8 +89,8 @@ if($debug) {
         if((Get-FileHash -LiteralPath $a).Hash-cne(Get-FileHash -LiteralPath $b).Hash) { throw 'Preview saved source/staged bytes differ' }
     }
     $script:previewBackingObserved.developer_commands=$tune; $script:previewBackingObserved.readbacks += $tune.readbacks; $script:previewBackingObserved.csv_rows += $tune.csv_rows
-    $script:previewBackingObserved.calibration_pixel_checks=2944; $script:previewBackingObserved.local_menu_updates=97
-    $script:previewBackingObserved.gamepad_polls=121; $script:previewBackingObserved.keyboard_polls=121; $script:previewBackingObserved.mouse_polls=121; $script:previewBackingObserved.input_polls=363
+    $script:previewBackingObserved.calibration_pixel_checks=2944; $script:previewBackingObserved.local_menu_updates=107
+    $script:previewBackingObserved.gamepad_polls=131; $script:previewBackingObserved.keyboard_polls=131; $script:previewBackingObserved.mouse_polls=131; $script:previewBackingObserved.input_polls=393
 } elseif(@(Get-ChildItem -LiteralPath $captures -Filter 'stage-preview-background-tune-*').Count) { throw 'Release preview leaf must contain no developer artifacts' }
 $script:previewBackingVerified=[ordered]@{directory=[IO.Path]::GetFullPath($captures);ppms=$previewBackingPpmEvidence;inputs=@(foreach($path in $previewBackingInputs){[ordered]@{path=$path;sha256=(Get-FileHash -LiteralPath $path).Hash}})}
 $result.observed_counts=$script:previewBackingObserved

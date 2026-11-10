@@ -10,7 +10,10 @@ namespace colourwars_editor
     {
         template<typename Function> Function user_function(const char* name)
         {
-            return std::bit_cast<Function>(GetProcAddress(GetModuleHandleW(L"user32.dll"), name));
+            // GetProcAddress requires a module; without one the caller falls
+            // back as it does for a function this Windows does not have.
+            const HMODULE user32 = GetModuleHandleW(L"user32.dll");
+            return user32 ? std::bit_cast<Function>(GetProcAddress(user32, name)) : nullptr;
         }
     }
 

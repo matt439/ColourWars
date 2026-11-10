@@ -699,3 +699,183 @@ Not decided here: arena acceptance, route or geometry changes, tool tuning and
 bot difficulty. Those were `POL#21`, `POL#27`, `POL#31` and `ROAD#10`, accepted
 by the author on 2026-11-05 (the slab trial and Press Tower joined Random). The 6200-wide `turbulence` candidate still has no bands; scoping them
 is not open work until that candidate is chosen for review.
+
+## Two-bot teams and teammate overlap (`REV#22`, 2026-11-10)
+
+**Measured 2026-11-10: no waste found, so no ally cost term was added and
+`REV#22` is closed.** The review asked whether two bots on one team duplicate
+each other's work, because `MatchBotObservation` lists enemies only and
+`MatchBot::choose_territory` costs a candidate by distance from the bot alone.
+Two things already limit overlap: the driver skips every surface the bot's team
+holds when it samples candidates, and each seat draws from its own seeded
+sequence. What was unmeasured is whether both bots still head for the same
+unpainted ground between replans.
+
+**Method.** `scripts/run-balance.ps1 -Bot match`, unchanged, on the four Random
+arenas (Crossfeed, Close Quarters, Press Tower, the Turbulence slab trial) at
+seeds 0, 1, 17, 42 and 2026, Sprayer on every seat, one difficulty across all
+seats, for Easy, Normal and Hard. The runner seats teams A/B/A/B, so
+`-Players 2` is 1v1, `-Players 3` is two bots against one (2v1) and
+`-Players 4` is 2v2. First pass: the three rosters at 20, 60 and 240 seconds
+(20 is before the arenas fill, 60 is the `TOOL#2`/`TOOL#3` horizon, 240 the
+default match). Second pass, added after the first was read: 1v1 at 40 and 120
+seconds and 2v2 at 120 seconds. **720 matches** in 36 jobs of 20, all exiting 0,
+plus one repeated job (Normal 2v2, 60 seconds) whose two CSVs have the same
+SHA256. Every `run-info.json` records Debug, a clean worktree at `e5bc7fae`,
+`ColourWars.exe` SHA256
+`185AA945F905BAD2C96B0E6969688254F06E98D36D00A9A1235F43C2FE74C5CF` and
+`tuning.json` SHA256
+`D0B0D926547C781A535E423A1C07F4098676FAF924DFAACD361ACBA4729DD3B3`.
+
+Measures, all from held paint at time-up:
+
+- **Team gain**: a team's held area with two bots over the same team's held
+  area in the 1v1 match of the same stage and seed. 2v1 keeps the opposition at
+  one bot; 2v2 doubles it too.
+- **Lesser teammate's share**: the smaller of the two teammates' held areas over
+  their sum. A friendly repaint keeps the first painter's credit
+  (`game/objects/paint_tile.cpp`), so a bot that trails its teammate over the same ground
+  holds almost nothing: near 0 is shadowing, 0.5 an even split.
+- **Equal bot-seconds**: painted area in 2v2 after T seconds over painted area
+  in 1v1 after 2T, same stage and seed. Both spend the same bot time on both
+  teams, so 1 means a second bot is worth as much as the first bot's next T
+  seconds.
+- **Band overlap**: over the cells of (region band, face), the sum of the
+  smaller of two seats' shares of their own held paint; 1 is the same cells in
+  the same proportions, 0 is disjoint. For scale, the same number between the
+  lone bots of one side in two 1v1 matches of different seeds, which is what
+  two bots that cannot affect each other produce.
+
+The criterion written before the run was a team gain of about 1.6 or more at 20
+seconds and a lesser share not near zero for "no waste", and a gain of 1.3 or
+less on most cells or a lesser share routinely under 0.15 for "clear waste".
+The gain half of it did not survive the first pass: one bot's own rate falls
+as the ground near it fills (Crossfeed, Normal, 1v1: 37.8% of the arena painted
+at 20 seconds, 50.2% at 40, 59.4% at 60, 75.8% at 120, 84.7% at 240), so a gain
+under 2 does not separate teammates getting in each other's way from an arena
+running out. The equal bot-seconds pass was added to separate them.
+
+**60 seconds.** Median [min, max]; painted / paintable and the 2v1 gain are
+over five matches, the 2v2 gain and lesser share over ten teams.
+
+| Stage | Difficulty | 1v1 painted / paintable % | 2v2 painted / paintable % | Team gain, 2v1 | Team gain, 2v2 | Lesser teammate's share, 2v2 | Credited eliminations 1v1 / 2v1 / 2v2 |
+|---|---|---|---|---|---|---|---|
+| crossfeed | easy | 66.6 [65.6, 75.7] | 73.6 [69.7, 79.2] | 1.62 [1.29, 1.93] | 1.07 [0.90, 1.31] | 0.46 [0.35, 0.50] | 3 / 17 / 30 |
+| crossfeed | normal | 59.4 [54.9, 70.9] | 78.7 [75.3, 82.2] | 1.76 [1.49, 1.90] | 1.33 [0.87, 1.81] | 0.43 [0.36, 0.49] | 9 / 11 / 19 |
+| crossfeed | hard | 64.7 [62.0, 72.6] | 85.5 [78.8, 86.6] | 1.28 [1.20, 1.58] | 1.27 [1.00, 1.58] | 0.45 [0.19, 0.50] | 11 / 16 / 23 |
+| close_quarters | easy | 31.3 [26.2, 45.3] | 47.6 [42.7, 54.4] | 2.78 [1.23, 5.69] | 1.23 [0.63, 5.56] | 0.41 [0.04, 0.49] | 11 / 27 / 31 |
+| close_quarters | normal | 32.2 [28.8, 38.6] | 40.8 [39.5, 52.3] | 1.60 [0.54, 4.66] | 1.38 [0.63, 2.78] | 0.37 [0.22, 0.47] | 17 / 17 / 30 |
+| close_quarters | hard | 32.8 [31.0, 48.5] | 52.8 [41.1, 65.9] | 2.79 [2.04, 3.56] | 1.55 [0.33, 2.96] | 0.39 [0.24, 0.49] | 13 / 15 / 28 |
+| press_tower | easy | 69.1 [64.8, 70.5] | 85.4 [77.6, 90.5] | 1.80 [1.09, 1.89] | 1.19 [0.87, 2.54] | 0.46 [0.41, 0.50] | 10 / 12 / 18 |
+| press_tower | normal | 61.3 [56.6, 66.8] | 82.7 [75.9, 86.2] | 1.71 [1.50, 1.78] | 1.34 [1.11, 1.84] | 0.46 [0.40, 0.49] | 10 / 20 / 26 |
+| press_tower | hard | 62.8 [61.7, 67.5] | 78.7 [74.0, 81.0] | 1.40 [1.00, 1.67] | 1.23 [0.95, 1.83] | 0.45 [0.34, 0.50] | 8 / 19 / 36 |
+| turbulence_slab_trial | easy | 56.4 [53.1, 67.0] | 71.2 [68.3, 75.0] | 1.55 [1.23, 2.26] | 1.27 [0.73, 2.09] | 0.41 [0.24, 0.49] | 2 / 11 / 23 |
+| turbulence_slab_trial | normal | 51.0 [43.8, 58.7] | 74.6 [68.5, 78.8] | 1.95 [1.73, 5.03] | 1.29 [0.92, 3.19] | 0.45 [0.21, 0.50] | 8 / 10 / 15 |
+| turbulence_slab_trial | hard | 57.0 [51.3, 61.2] | 77.0 [74.6, 80.4] | 1.46 [1.26, 2.10] | 1.31 [0.95, 2.00] | 0.41 [0.37, 0.47] | 2 / 11 / 13 |
+
+**The four arenas pooled**, by duration: 20 matches for the 2v1 gain, 40 teams
+for the 2v2 columns.
+
+| Duration | Difficulty | Team gain, 2v1 | Team gain, 2v2 | Lesser teammate's share, 2v2 | 2v2 teams with lesser share under 0.15 |
+|---|---|---|---|---|---|
+| 20 s | easy | 1.56 [1.05, 2.40] | 1.40 [0.68, 2.88] | 0.45 [0.08, 0.50] | 2/40 |
+| 20 s | normal | 2.02 [1.02, 19.22] | 1.44 [0.62, 21.26] | 0.42 [0.23, 0.50] | 0/40 |
+| 20 s | hard | 1.76 [1.15, 3.03] | 1.52 [1.07, 2.32] | 0.44 [0.32, 0.50] | 0/40 |
+| 60 s | easy | 1.71 [1.09, 5.69] | 1.17 [0.63, 5.56] | 0.45 [0.04, 0.50] | 3/40 |
+| 60 s | normal | 1.77 [0.54, 5.03] | 1.33 [0.63, 3.19] | 0.44 [0.21, 0.50] | 0/40 |
+| 60 s | hard | 1.55 [1.00, 3.56] | 1.31 [0.33, 2.96] | 0.43 [0.19, 0.50] | 0/40 |
+| 240 s | easy | 1.64 [1.19, 3.31] | 1.07 [0.66, 3.57] | 0.43 [0.31, 0.50] | 0/40 |
+| 240 s | normal | 1.58 [1.21, 3.43] | 1.16 [0.66, 5.53] | 0.43 [0.17, 0.50] | 0/40 |
+| 240 s | hard | 1.88 [1.13, 3.18] | 1.07 [0.67, 1.93] | 0.43 [0.15, 0.50] | 1/40 |
+
+At 240 seconds 2v2 has painted a median 90.2-96.6% of Crossfeed, Press Tower
+and the slab trial at every difficulty and 71.3-90.2% of Close Quarters, so the
+2v2 gain there is bounded by the arena, not by the bots. The extreme gains are
+Close Quarters matches where the 1v1 bot held almost nothing at time-up.
+
+**Equal bot-seconds**, pooled over the four arenas (20 matches per row):
+
+| T | Difficulty | Painted, 2v2 for T over 1v1 for 2T | Matches where 2v2 painted at least as much |
+|---|---|---|---|
+| 20 s | easy | 0.99 [0.79, 1.25] | 9/20 |
+| 20 s | normal | 1.07 [0.82, 1.29] | 14/20 |
+| 20 s | hard | 1.06 [0.75, 1.38] | 13/20 |
+| 60 s | easy | 0.99 [0.85, 1.74] | 9/20 |
+| 60 s | normal | 1.06 [0.87, 1.42] | 15/20 |
+| 60 s | hard | 0.99 [0.62, 1.60] | 9/20 |
+| 120 s | easy | 0.99 [0.75, 1.52] | 9/20 |
+| 120 s | normal | 1.03 [0.98, 1.63] | 18/20 |
+| 120 s | hard | 1.00 [0.58, 1.43] | 10/20 |
+
+By stage and difficulty the 36 medians run from 0.85 to 1.33. The lowest are
+Easy on Crossfeed (0.85 at 20 seconds, 0.92 at 60, 1.00 at 120) and Hard on
+Close Quarters at 120 seconds (0.91); the highest is Normal on Close Quarters
+at 120 seconds (1.33).
+
+**Band overlap at 60 seconds.** Ten teams per teammates cell, 20 seed pairs
+per solo cell.
+
+| Stage | Difficulty | Teammates in 2v2 | Solo bots, different seeds |
+|---|---|---|---|
+| crossfeed | easy | 0.51 [0.41, 0.75] | 0.67 [0.57, 0.82] |
+| crossfeed | normal | 0.54 [0.04, 0.71] | 0.79 [0.65, 0.88] |
+| crossfeed | hard | 0.60 [0.54, 0.77] | 0.77 [0.55, 0.89] |
+| close_quarters | easy | 0.90 [0.27, 0.98] | 0.85 [0.56, 1.00] |
+| close_quarters | normal | 0.90 [0.68, 0.98] | 0.91 [0.68, 0.98] |
+| close_quarters | hard | 0.72 [0.65, 0.95] | 0.93 [0.86, 0.99] |
+| press_tower | easy | 0.63 [0.31, 0.76] | 0.71 [0.52, 0.85] |
+| press_tower | normal | 0.55 [0.37, 0.76] | 0.70 [0.44, 0.87] |
+| press_tower | hard | 0.70 [0.49, 0.81] | 0.75 [0.51, 0.86] |
+| turbulence_slab_trial | easy | 0.53 [0.44, 0.72] | 0.70 [0.50, 0.88] |
+| turbulence_slab_trial | normal | 0.65 [0.36, 0.72] | 0.59 [0.31, 0.85] |
+| turbulence_slab_trial | hard | 0.68 [0.57, 0.90] | 0.75 [0.52, 0.90] |
+
+Over all three durations the teammates' median is below the solo scale in 31
+of 36 cells. Close Quarters has no bands (`stage_partition` gives it one
+`whole_arena` region), so its cells are faces only and read high for both.
+
+**Conclusion.** Nothing here shows two same-team bots wasting effort.
+
+- A second bot per team paints as much as doubling the match for one bot per
+  team: the pooled ratio is 0.99-1.07 at every difficulty and horizon. The
+  shortfall of the team gain from 2 is the arena filling, which one bot meets
+  as well.
+- With the opposition held at one bot, the second bot adds a median 0.55-1.02
+  of a solo bot's held paint (pooled 2v1 gain 1.55-2.02).
+- Neither teammate shadows the other: the lesser teammate holds a median
+  0.42-0.45 of the pair's paint, and under 0.15 in 6 of 360 teams.
+- Teammates' held paint is spread over the bands no more alike than two
+  independent bots' is, and usually less.
+
+An ally term in the territory cost would move every recorded outcome for
+rosters with two same-team bots, on a roster that is a minority in a four-seat
+couch game. What it could recover is the shortfall against bots that cannot
+get in each other's way: at most 1% in the pooled medians, 6-9% in four of the
+36 cells and 15% in the weakest. These numbers do not say what coordination
+beyond that would add. It was not added. The weakest cell, Easy on Crossfeed in the first minute, is where to
+look first if two-bot teams are ever seen crowding in play.
+
+**Limits.** Five chosen seeds and a Sprayer mirror: descriptive, with observed
+ranges, not confidence intervals. Debug build. Held paint at time-up is not
+paint laid: a team's repaint of its own ground and ground lost to the enemy are
+both invisible, and the runner does not export laid area. No direct sample of
+the two bots' chosen goals exists, because `MatchBot` exposes none; the credit
+split and band overlap stand in for it. The opt-in `bot_team_trials` case does
+count `ally` transitions (`ally_repaint_events`, `ally_transition_area`), but
+they are not an overlap measure either, since a friendly repaint changes no
+owner. 2v2 also
+doubles the fighting (eliminations rise with every added bot), and the equal
+bot-seconds comparison gives the 1v1 bots twice as long to travel and respawn.
+A human teammate, mixed difficulties and mixed tools were not run.
+
+Receipts: `out/validation/rev22-two-bot-teams-20261110/` - one
+`<difficulty>-<roster>-<duration>s/` folder per job (`run-info.json` with
+arguments, pins and CSV hashes, `matches.csv`, `matches.paint.csv`, logs),
+`normal-2v2-60s-repeat/`, `driver.log`, the driver `rev22-matrix.ps1`, the
+analyzer `rev22_analyze.py` and its output `summary.md` (SHA256
+`D837B9B9098971E172B00304A2D1C2D643DF1ABB09C7619EEDDEA5AB8D26764F`), which has
+every stage, difficulty and duration for each table here.
+
+Not decided here: bot difficulty, tool tuning and whether a bot is a good
+teammate for a person. The first two were `ROAD#10` and `POL#27`, accepted by
+the author on 2026-11-05; the last is a play question.

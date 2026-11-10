@@ -26,3 +26,8 @@ using StageList = std::vector<Stage>;
 // Explicit selection always offers every stage; Random offers only authored candidates.
 std::vector<size_t> random_stage_indices(const StageList& stages);
 size_t random_stage_index(const StageList& stages, size_t random_value);
+// Stage Select's Random (REV#24): as above, but never last_stage while another
+// candidate exists. An empty name, a stage outside the pool or a pool of one
+// draws exactly as the two-argument form.
+size_t random_stage_index(const StageList& stages, size_t random_value,
+	const std::string& last_stage);

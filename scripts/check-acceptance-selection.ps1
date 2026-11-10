@@ -248,6 +248,7 @@ try {
     } $missingCmake @('settings', 'text_wrap') -CheckNames
     Check-Selection 'default-debug' @{ Preset = 'x64-debug' } $missingCmake
     Check-Selection 'default-release' @{ Preset = 'x64-release' } $missingCmake
+    Check-Selection 'default-asan' @{ Preset = 'x64-asan' } $missingCmake
 
     $defaultRecord = [ordered]@{ name = 'default-preset-relationship'; outcome = 'running' }
     $checks.Add($defaultRecord)
@@ -258,6 +259,8 @@ try {
         Require (@($debugNames | Where-Object { $_ -ceq 'balance_runner' }).Count -eq 1) 'Debug defaults repeat balance_runner.'
         Require (@($releaseNames | Where-Object { $_ -ceq 'balance_runner' }).Count -eq 0) 'Release defaults include balance_runner.'
         Require-Names ([string[]]@($debugNames | Where-Object { $_ -cne 'balance_runner' })) $releaseNames
+        # The sanitizer preset runs Release's list.
+        Require-Names ([string[]]@($observations['default-asan'].selected)) $releaseNames
         $defaultRecord.debug_cases = $debugNames.Count
         $defaultRecord.release_cases = $releaseNames.Count
         $defaultRecord.outcome = 'passed'
@@ -304,6 +307,7 @@ try {
     Check-Selection 'skip-slow-debug' @{ Preset = 'x64-debug'; SkipSlowDebug = $true } $missingCmake `
         ([string[]]@($observations['default-debug'].selected | Where-Object { $_ -cnotin $slowNames })) -CheckNames
     Check-Selection 'skip-slow-release' @{ Preset = 'x64-release'; SkipSlowDebug = $true } 'SkipSlowDebug applies only to x64-debug.'
+    Check-Selection 'skip-slow-asan' @{ Preset = 'x64-asan'; SkipSlowDebug = $true } 'SkipSlowDebug applies only to x64-debug.'
     Check-Selection 'opt-in-with-cases' @{ OptIn = $true; Cases = [string[]]@('ammo') } 'Choose -Cases or -OptIn, not both.'
     Check-Selection 'empty-explicit-array' @{ Cases = [string[]]@() } 'Cases must contain at least one case name.'
     Check-Selection 'whitespace-entry' @{ Cases = [string[]]@('ammo', ' ') } 'Cases must contain nonempty names.'

@@ -1581,9 +1581,9 @@ Implemented:
   refreshes on each build, including local-change markers.
 - The executable carries a VERSIONINFO resource stamped from the root
   `project(VERSION)`, the number CPack also uses; `check-startup.ps1` fails an
-  executable that is not stamped with it. CI keeps the inspected, started Release
-  ZIP as the `ColourWars-windows-x64` run artifact for 14 days. No tag or release
-  job exists yet.
+  executable that is not stamped with it. A pull request's full CI run keeps the
+  inspected, started Release ZIP as the `ColourWars-windows-x64` run artifact for
+  14 days. CI's `publish` job turns a matching `v*` tag into a GitHub Release.
 
 Original package validation: Debug and Release builds; ZIP extraction into a temporary directory
 outside the checkout; all 16 packaged assets matched against their sources; no
@@ -2476,6 +2476,84 @@ author accepted all six on 2026-11-09, recorded as an amendment in
 [acceptance.json](../game/audio/paint_exe/acceptance.json); the bank holds 106
 waves. The bursts and drops stay paint balls, and the empty click is the
 tools'. What remains is the author's attended play review.
+
+**Player documents, 2026-11-10.** `HOW-TO-PLAY.txt` and the README gained the
+Sub control row and a loadout paragraph, and the README's Pad Buttons and
+Keyboard Keys sentences now name Sub (`REV#9`). The `SeatSetup::sub` comment
+says what slice 5 made true (`REV#8`). The Movement Course still has no sub
+station (`REV#56`).
+
+**Nightly follow-up, 2026-11-10.** No scheduled nightly ran between the
+slices. The first after them failed eight Release painter leaves, one Debug
+leaf, the plain matrix and one opt-in case, for three reasons.
+
+*Stale painter drivers.* The fixtures still readied a Weapon Select row with
+one Confirm. They now send the tool's Confirm and then the sub's, and two
+Backs from ready to the tool: the series re-pick (`EndMenuOnly` and the plain
+matrix), `RememberedSetupOnly`, `WeaponCatalogOnly`, `WeaponPaperOnly`,
+`BotPlayersOnly`, `SetupMotionOnly`, `StagePreviewBackgroundTuneColourOnly`
+and Debug's `WeaponTuneColoursOnly`. `ControlsMenuOnly` pressed Down one row
+short of Apply on Keyboard Keys, which had gained the Sub row. The plain
+matrix's menu-music flow was one Confirm short too; the hosted runner has no
+audio endpoint and skips that flow, so only a run on a machine with one showed
+it. The setup-motion leaf records two more rows per size (`weapon-sub`,
+`weapon-sub-back`), and the preview-backing leaf's pinned tap, update and poll
+budgets grow by its extra Confirms.
+
+*One regression, fixed.* Slice 5 made Weapon Select's commit call `rand()`
+once per seat for the sub whether or not the sub was Random, so committing a
+concrete loadout moved the seeded sequence that Stage Select's Random and each
+round's seed draw from; before the slice only a Random tool drew.
+`MainMenuWeaponSelect::set_level_settings` now draws for a sub only when it is
+Random, after that seat's tool. The preview-backing leaf pins that a concrete
+commit draws nothing, and the weapon-paper leaf one draw per Random tool.
+
+*One call left for the author.* `bot_team_trials` requires every bot's body to
+leave its home band and now counts 559/560, so the nightly's opt-in leg stays
+red; the gate was not changed. The miss is trial 66: Close Quarters, mixed
+rotation 0, seed `3946`, human on team b, whose lone team-b Sprayer faces a
+Roller and a Bucket. A per-step trace (a scratch probe, not kept) shows no
+loop. The bot runs out to the scoring floor and paints. At step 454 it throws
+its grenade with 0.79 of a tank, reaches the reserve floor by step 500 at
+x 4117, a hundred units inside its band's edge (x 4016.7), and backs away to
+refill from the Bucket bot 350 units off. It comes back and dies at step 637
+at x 4021.6, five units short of the edge. Its second life, from step 818, is
+fought inside its own third, where the two opponents spend 423 and 663 of the
+1800 steps; they withdraw near step 1525 and it is back out at x 4312,
+fighting, when the trial ends. Run on past the horizon, it crosses at step 2395.
+Before the slices the same bot was outside its band for 124 of the 1800 steps,
+the thinnest margin in the matrix.
+
+This trial is the side-swapped sibling of the pinned
+[Close Quarters `61403` loop](#home-band-loop-slow-tool-spending-and-sustained-middle-retention-2026-10-27):
+the same arena, seed (`3946`, formerly `61403`), rotation and lone Sprayer,
+with the human and the lone bot on team b where the pinned case has them on
+team a. It also logs an off-home-paint miss, `close_quarters seed=3946 human=b
+rotation=0 team=b (one bot)`, as does seed `8644` on the same side, so one-bot
+retention is 118/120 where the 2026-11-08 nightly had 120/120. The guard for
+the returned loop compares only the `human=a ... team=a` key, so it cannot see
+this side. The first life here shares one step of that loop: the tank is spent
+inside the band and the refill backs away from a visible enemy. What differs
+in the trace is the rest. The pinned loop's bot emptied its tank with
+untargeted fire on the non-scoring home floor, painted nothing that scores, and
+repeated the walk and the retreat from an enemy about 1500 units away. This
+bot paints scoring ground, spends the tank on one throw, retreats once, and
+loses the rest of the horizon to a death and two opponents in its third.
+
+The gate's comment does not yet allow for that. It calls a body leaving its
+home band navigation, and names only what a one-bot side still holds at the
+end as an outnumbered outcome; by that wording this miss is a navigation
+failure. The choices are:
+
+- *Reclassify.* Count a one-bot side's bot that opponents pinned inside its
+  band as a measurement, as its final paint already is. This changes what the
+  gate says navigation is, not something its comment already permits. The
+  guard for the returned loop then needs a decision too: extended to the
+  `human=b ... team=b` key it fails today on this trial's off-home miss, and
+  left one-sided it needs its reason written down.
+- *Change the bot.* Have a bot hold a throw that leaves it this close to a
+  refill, which changes every trial and needs the slice 6 balance figures
+  measured again.
 
 ### Input
 
@@ -3546,7 +3624,9 @@ beside the save (`directory_consts::user_stage_directory`; the
 executable-relative `save/stages` when there is no `LOCALAPPDATA`, as for the
 screenshots and replays). The game does not create it. After the manifest
 loads, `load_user_stages` (`game/config/stage_loading.h`) reads every `*.json` directly
-in it, in file-name order, and checks each on its own:
+in it, in file-name order, and checks each on its own. Since 2026-11-10 it
+reads at most the first 256 by file name, and a file over 1 MiB is refused
+unread past that point ([Limits](level-format.md#limits), `REV#2`):
 
 - the file name is the stage's id: 1 to 64 ASCII letters, digits, `_` or `-`,
   not starting with `-` (the registration helper's rule, so the file can
@@ -3807,6 +3887,59 @@ three behaviours were accepted as built:
 
 The practice hint moved beside Single Match, and Mode's row spacing went from
 100 to 96, to make room for the row; that is an art-pass call too.
+
+### Random does not repeat the last stage (`REV#24`)
+
+**Done 2026-11-10.** Stage Select's Random used to map one `rand()` draw onto
+the whole Random pool, so from the shipped pool of four a new Random start
+landed on the arena just played about one time in four. It now draws from the
+pool without the setup's current stage whenever the pool holds more than one
+stage, and the remaining stages stay equally likely. A pool of one, a setup
+with no stage yet, and a setup whose stage is not a Random candidate all draw
+exactly as before.
+
+- **Where the last stage comes from.** It is the stage in the setup the page
+  edits, read just before the confirmation overwrites it. In the main menu
+  that is the save's `last_match` at launch and then each Stage confirmation.
+  Between series rounds (Change Level, Loser's pick) it is the stage of the
+  round just played. It is the stage last played from that setup whether
+  Random or the player chose it.
+- **The limit.** The main menu's setup keeps the stage that started a series
+  ([Series stage rule](#series-stage-rule-road20)). After a series under
+  Rotate or Loser's pick, a new Random start therefore avoids the series'
+  opening stage, not its final one, and can land on the arena the series
+  ended on. Making that exact would mean writing a series' last stage back
+  into the remembered setup, which this change does not do.
+- **What is unchanged.** Rotate and Loser's pick (`rotated_stage`,
+  `series_next_stage`) never used this draw and are not touched. The Debug
+  planner's `stage random` keeps the plain draw over the whole pool. The
+  Random hint still counts the whole pool, one more than a draw can reach
+  when the setup's stage is in it.
+- **Seeds.** The pick still takes exactly one `rand()` draw, so every later
+  draw under a Debug `seed` is the same as before. The stage a seeded menu
+  Random pick lands on does change whenever the setup's stage is in the pool:
+  it is now a function of the seed and that stage. One probe pinned a seed to
+  a menu stage: the painter's stage-paper check starts Random under seed 4937
+  from a fixture pool of three with the setup's stage in it, and expected the
+  whole-pool draw (`close_quarters`; the page now commits `turbulence`). Its
+  two expectations now leave out the setup's stage as the page does, still
+  written out in the probe and not through `random_stage_index`.
+
+`random_stage_index` (`game/objects/stage.h`) takes the last stage as a third
+argument and stays a pure function; the two-argument form is the same draw
+with nothing left out. The `stage_selection` acceptance case pins it: a pool
+of two always returns the other stage, a pool of four gives each of the other
+three an equal share in manifest order, a pool of one still returns its stage,
+an empty, explicit-only or unknown last stage matches the two-argument draw,
+and each of the four shipped Random arenas as the last stage is never drawn
+again while the other three get four draws in twelve each. `stage_selection`,
+`series_stage_rule`, `remembered_setup`, `user_stages`, `menu_navigation` and
+`turbulence_slab_stage` pass in Debug and Release. On MattPC (2026-11-10)
+`check-painter.ps1 -StagePaperOnly` passes in both presets with the updated
+expectations. Not run: the other painter checks that drive the real Stage page
+on a GPU (the join and stage motion check and the Random text check confirm
+Random from a pool of one and expect one consumed draw, which this keeps), and
+how it plays.
 
 ### Teammate markers (`ROAD#18`)
 

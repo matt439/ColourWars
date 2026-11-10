@@ -29,6 +29,69 @@ namespace
 			rejected = std::string(error.what()).find("no eligible arenas") != std::string::npos;
 		}
 		require(rejected, "Random with no candidates must fail clearly rather than pick an excluded stage");
+		const std::string last = stages.empty() ? std::string("not_a_stage") : stages.front().name;
+		rejected = false;
+		try
+		{
+			random_stage_index(stages, 0, last);
+		}
+		catch (const std::runtime_error& error)
+		{
+			rejected = std::string(error.what()).find("no eligible arenas") != std::string::npos;
+		}
+		require(rejected, "Random with no candidates and a last stage must fail the same way");
+	}
+
+	// REV#24: Stage Select's Random leaves out the last stage while another
+	// candidate exists, and shares the draw evenly among the rest in manifest order.
+	void check_last_stage_mapping(const StageList& mixed)
+	{
+		for (size_t draw = 0; draw < 12; ++draw)
+		{
+			require(random_stage_index(mixed, draw, "first_arena") == 3u &&
+				random_stage_index(mixed, draw, "second_arena") == 1u,
+				"Random repeated the last stage from a pool of two");
+			const size_t plain = random_stage_index(mixed, draw);
+			require(random_stage_index(mixed, draw, "") == plain &&
+				random_stage_index(mixed, draw, "first_excluded") == plain &&
+				random_stage_index(mixed, draw, "not_a_stage") == plain,
+				"No last stage, or one outside the pool, must draw as the two-argument form");
+		}
+
+		const StageList wide{
+			{ "arena_a", "Arena A", "" },
+			{ "excluded_a", "Excluded A", "", false },
+			{ "arena_b", "Arena B", "" },
+			{ "arena_c", "Arena C", "" },
+			{ "excluded_b", "Excluded B", "", false },
+			{ "arena_d", "Arena D", "" }
+		};
+		const std::vector<size_t> pool = random_stage_indices(wide);
+		require(pool == std::vector<size_t>{ 0, 2, 3, 5 }, "The wide fixture needs four candidates");
+		for (const size_t last : pool)
+		{
+			std::vector<size_t> remaining;
+			for (const size_t index : pool)
+			{
+				if (index != last) { remaining.push_back(index); }
+			}
+			for (size_t draw = 0; draw < 3 * remaining.size(); ++draw)
+			{
+				require(random_stage_index(wide, draw, wide[last].name) ==
+					remaining[draw % remaining.size()],
+					"Random must share the draw evenly among the stages other than the last, in manifest order");
+			}
+		}
+
+		const StageList lone{
+			{ "explicit_only", "Explicit only", "", false },
+			{ "only_arena", "Only arena", "" }
+		};
+		for (size_t draw = 0; draw < 4; ++draw)
+		{
+			require(random_stage_index(lone, draw, "only_arena") == 1u,
+				"A Random pool of one must still return its stage after playing it");
+		}
 	}
 
 	void check_mapping()
@@ -47,6 +110,7 @@ namespace
 			require(random_stage_index(mixed, draw) == (draw % 2 == 0 ? 1u : 3u),
 				"Random selection returned an excluded index or skipped an eligible index");
 		}
+		check_last_stage_mapping(mixed);
 		check_no_candidates({});
 		check_no_candidates({ mixed.front(), mixed.back() });
 	}
@@ -105,6 +169,23 @@ namespace
 				expected_random.at(stages[index].name),
 				"Shipped Random selection admitted an explicit-only stage");
 		}
+		for (const size_t last : candidates)
+		{
+			std::map<size_t, int> hits;
+			for (size_t draw = 0; draw < 12; ++draw)
+			{
+				const size_t index = random_stage_index(stages, draw, stages[last].name);
+				require(index != last, "Shipped Random repeated the last stage: " + stages[last].name);
+				require(stages[index].include_in_random,
+					"Shipped Random after a last stage admitted an explicit-only stage");
+				++hits[index];
+			}
+			require(hits.size() == 3, "Shipped Random after a last stage must reach the other three arenas");
+			for (const auto& [index, count] : hits)
+			{
+				require(count == 4, "Shipped Random after a last stage favoured " + stages[index].name);
+			}
+		}
 		std::cout << "Shipped stage selection: " << stages.size() << " explicit stages; "
 			<< candidates.size() << " Random candidates.\n";
 	}
@@ -147,7 +228,7 @@ int main(int argc, char** argv)
 		check_mapping();
 		check_shipped_stages(argv[1]);
 		check_invalid_metadata(argv[1], std::filesystem::absolute(argv[0]).parent_path());
-		std::cout << "PASS stage selection: explicit course, originals and Turbulence trials, Crossfeed, Press Tower and slab trial in Random, eligible Random mapping, defaults and rejection guards.\n";
+		std::cout << "PASS stage selection: explicit course, originals and Turbulence trials, Crossfeed, Press Tower and slab trial in Random, eligible Random mapping, no repeat of the last stage, defaults and rejection guards.\n";
 		return 0;
 	});
 }

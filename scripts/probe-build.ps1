@@ -19,7 +19,7 @@ function Get-ProbeCaptureLimit([string] $Repo) {
 function Get-ProbeBuild {
     param(
         [Parameter(Mandatory = $true)][string] $Repo,
-        [Parameter(Mandatory = $true)][ValidateSet('x64-debug', 'x64-release')][string] $Preset,
+        [Parameter(Mandatory = $true)][ValidateSet('x64-debug', 'x64-release', 'x64-asan')][string] $Preset,
         [ValidateSet('rumble_gamepads', 'display_awake')][string[]] $Adapters = @('rumble_gamepads', 'display_awake'),
         [string[]] $RequiredContent = @()
     )
@@ -38,12 +38,28 @@ function Get-ProbeBuild {
         if (-not $cache.ContainsKey($key)) { throw "Configured build is missing $key." }
     }
     $debug = $Preset -eq 'x64-debug'
-    $configuration = if ($debug) { 'Debug' } else { 'Release' }
+    # x64-asan is RelWithDebInfo: the Release runtime and dependency libraries,
+    # with every translation unit of this tree instrumented.
+    $asan = $Preset -eq 'x64-asan'
+    $configuration = if ($debug) { 'Debug' } elseif ($asan) { 'RelWithDebInfo' } else { 'Release' }
     if (-not [StringComparer]::OrdinalIgnoreCase.Equals([IO.Path]::GetFullPath($cache.CMAKE_HOME_DIRECTORY), $Repo) -or
         $cache.CMAKE_BUILD_TYPE -ne $configuration -or $cache.LABRADOR_RENDER_BACKEND -ne 'd3d11' -or
         $cache.LABRADOR_AUDIO_BACKEND -ne 'xaudio2' -or $cache.LABRADOR_INPUT_BACKEND -ne 'xinput' -or
         $cache.VCPKG_TARGET_TRIPLET -ne 'x64-windows') {
         throw 'The probe requires this checkout and the selected d3d11/xaudio2/xinput x64-windows preset.'
+    }
+    $sanitizerRuntimeDirectory = $null
+    if ($asan) {
+        if (-not $cache.ContainsKey('CMAKE_CXX_FLAGS') -or
+            @($cache.CMAKE_CXX_FLAGS -split '\s+') -cnotcontains '/fsanitize=address') {
+            throw 'The x64-asan build was not configured with /fsanitize=address.'
+        }
+        # The runtime DLL ships beside the compiler, and must be that compiler's.
+        $sanitizerRuntimeDirectory = Split-Path -Parent $cache.CMAKE_CXX_COMPILER
+        $runtime = Join-Path $sanitizerRuntimeDirectory 'clang_rt.asan_dynamic-x86_64.dll'
+        if (-not (Test-Path -LiteralPath $runtime -PathType Leaf)) {
+            throw "Missing $runtime. Install Visual Studio's 'C++ AddressSanitizer' component."
+        }
     }
     $game = Join-Path $build 'game'
     $installed = Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET
@@ -65,6 +81,9 @@ function Get-ProbeBuild {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
+    # /Z7 keeps the debug information in each object, so parallel probe
+    # compiles share no .pdb; the link then writes the .pdb reports symbolise from.
+    if ($asan) { $arguments += @('/fsanitize=address', '/Z7') }
     foreach ($include in @($Repo, (Join-Path $Repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (ConvertTo-ProbeResponsePath $include)
     }
@@ -76,6 +95,7 @@ function Get-ProbeBuild {
     }
     [pscustomobject]@{
         Cache = $cache; Debug = $debug; Configuration = $configuration
+        Asan = $asan; SanitizerRuntimeDirectory = $sanitizerRuntimeDirectory
         GameDirectory = $game; Installed = $installed; DependencyLibraries = $dependencyLibraries
         Libraries = $libraries; CompileArguments = $arguments
         WindowsLibraries = @('d3d11.lib', 'dxgi.lib', 'dxguid.lib', 'kernel32.lib', 'user32.lib',

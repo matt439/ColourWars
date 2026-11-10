@@ -84,6 +84,14 @@ cmake --build --preset x64-debug
 out/build/x64-debug/game/ColourWars.exe
 ```
 
+Two more presets are for checking, not playing. `x64-asan` is RelWithDebInfo
+with MSVC AddressSanitizer over the game, the engine and the probes; its
+`ColourWars.exe` needs the Developer shell's `PATH` to find the sanitizer's
+runtime DLL, and it cannot be packaged. `x64-analyze` is Debug with `/analyze`,
+built by `scripts/report-analyze.ps1` for its warning counts. Both are
+described in
+[docs/code-hygiene.md](docs/code-hygiene.md#sanitizer-and-static-analysis-presets-rev61).
+
 ### Developer console (Debug only)
 
 Debug builds take launch arguments and have a console and a debug menu; Release
@@ -147,7 +155,8 @@ linking its library or defining the adapter's symbols itself.
 Consumer acceptance checks live under `scripts/acceptance/`. From an x64 VS
 Developer shell, `scripts/run-acceptance.ps1 -Preset x64-debug` (or
 `x64-release`) builds the game and checks the game library for ammunition,
-paint coverage and save regressions. They do not create a graphics/audio device
+paint coverage and save regressions. `-Preset x64-asan` runs Release's list
+under AddressSanitizer. They do not create a graphics/audio device
 or touch the player's save. `scripts/check-startup.ps1` separately checks a
 hidden game process, its per-monitor DPI awareness, isolated save, diagnostics
 and graceful shutdown.
@@ -243,7 +252,7 @@ Release (the `publish` job); the first tag is the author's call. Change detectio
 Full CI runs five parallel Windows legs, each building for itself: Debug
 `crossfeed`, the rest of Debug's cases, Debug's other checks, Release's cases
 and Release's other checks. It compiles without running the opt-in probes
-(the sixteen opt-in acceptance cases, `-OptIn`, `check-painter.ps1 -CompileOnly` with
+(the seventeen opt-in acceptance cases, `-OptIn`, `check-painter.ps1 -CompileOnly` with
 both pad readers, `check-paint-fx.ps1 -CompileOnly` and, in Debug,
 `check-frame-pacing.ps1 -CompileOnly`), runs consumer acceptance, the `Quick`
 opt-in cases in Release, movement feedback and display awake in both presets,
@@ -263,6 +272,9 @@ CI. Release also builds and inspects the redistributable ZIP.
 [nightly.yml](.github/workflows/nightly.yml) runs what is too long or too exact
 for a pull request on `master`'s tip: the painter (plain matrix and leaves, through
 `scripts/check-painter-sweep.ps1`), paint effects and every runnable opt-in case.
+Two more legs came with `REV#61`: `asan` builds `x64-asan` and runs the default cases
+under AddressSanitizer, and `analyze` uploads `scripts/report-analyze.ps1`'s
+`/analyze` counts and cannot fail.
 It is not a required check. A scheduled failure opens or updates one issue,
 `Nightly sweep failed`, and its Configure keeps `master`'s vcpkg cache current for
 pull requests. `scripts/check-painter/hosted-known-failures.txt` names any leaf

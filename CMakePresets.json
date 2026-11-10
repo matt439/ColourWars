@@ -22,10 +22,31 @@
       "displayName": "x64 Release",
       "inherits": "base",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "x64-asan",
+      "displayName": "x64 AddressSanitizer",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_FLAGS": "/DWIN32 /D_WINDOWS /EHsc /fsanitize=address",
+        "CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO": "/debug /INCREMENTAL:NO"
+      }
+    },
+    {
+      "name": "x64-analyze",
+      "displayName": "x64 Debug static analysis",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "/DWIN32 /D_WINDOWS /EHsc /analyze /analyze:WX- /analyze:external-"
+      }
     }
   ],
   "buildPresets": [
     { "name": "x64-debug", "configurePreset": "x64-debug" },
-    { "name": "x64-release", "configurePreset": "x64-release" }
+    { "name": "x64-release", "configurePreset": "x64-release" },
+    { "name": "x64-asan", "configurePreset": "x64-asan" },
+    { "name": "x64-analyze", "configurePreset": "x64-analyze" }
   ]
 }

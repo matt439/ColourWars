@@ -1149,7 +1149,8 @@ void Player::update(float dt)
 }
 std::vector<std::unique_ptr<Projectile>>
     Player::update_weapon_and_get_projectiles(float dt,
-    std::span<CollisionObject* const> objects)
+    std::span<CollisionObject* const> objects,
+    std::optional<ProjectileTargetFlags> known)
 {
     this->weapon_contact_dt_ = dt;
     // Moving projectile contacts can be fatal before this phase, while state_
@@ -1205,7 +1206,8 @@ std::vector<std::unique_ptr<Projectile>>
         // The vector may grow below; the projectile itself does not move.
         Projectile& projectile = *projectiles[index];
         projectile.resolve_launch_obstruction(index < launched ?
-            projectile.launch_origin(this->center()) : projectile.bounds().center(), objects);
+            projectile.launch_origin(this->center()) : projectile.bounds().center(), objects,
+            known);
         if (this->paint_audio_ != nullptr)
         {
             projectile.flush_paint_audio(*this->paint_audio_);

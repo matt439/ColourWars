@@ -28,16 +28,22 @@ function Write-Cache($Cache, [string] $Path) {
         Set-Content -LiteralPath $Path -Encoding utf8
 }
 
-foreach ($preset in 'x64-debug', 'x64-release') {
+foreach ($preset in 'x64-debug', 'x64-release', 'x64-asan') {
     $debug = $preset -eq 'x64-debug'
+    $asan = $preset -eq 'x64-asan'
     $build = Join-Path $repo "out/build/$preset"
     $cachePath = Join-Path $build 'CMakeCache.txt'
     $installed = Join-Path $repo 'vcpkg_installed'
     $cache = @{
-        CMAKE_HOME_DIRECTORY = $repo; CMAKE_BUILD_TYPE = $(if ($debug) { 'Debug' } else { 'Release' })
+        CMAKE_HOME_DIRECTORY = $repo; CMAKE_BUILD_TYPE = $(if ($debug) { 'Debug' } elseif ($asan) { 'RelWithDebInfo' } else { 'Release' })
         CMAKE_CXX_COMPILER = (Join-Path $repo 'cl.exe'); VCPKG_INSTALLED_DIR = $installed
         LABRADOR_RENDER_BACKEND = 'd3d11'; LABRADOR_AUDIO_BACKEND = 'xaudio2'
         LABRADOR_INPUT_BACKEND = 'xinput'; VCPKG_TARGET_TRIPLET = 'x64-windows'
+    }
+    $sanitizerRuntime = Join-Path $repo 'clang_rt.asan_dynamic-x86_64.dll'
+    if ($asan) {
+        $cache.CMAKE_CXX_FLAGS = '/EHsc /fsanitize=address'
+        [IO.File]::WriteAllText($sanitizerRuntime, 'preflight fixture, not a runtime')
     }
     $dependency = Join-Path $installed ('x64-windows/' + $(if ($debug) { 'debug/lib' } else { 'lib' }))
     $files = @($cache.CMAKE_CXX_COMPILER,
@@ -59,6 +65,21 @@ foreach ($preset in 'x64-debug', 'x64-release') {
     Assert-Helper ($contract.CompileArguments -contains '/DUSING_XINPUT') "$preset XInput definition"
     Assert-Helper ($contract.CompileArguments -contains ('/external:I' + (ConvertTo-ProbeResponsePath (Join-Path $repo 'external/rapidjson/include')))) "$preset client RapidJSON include"
     Assert-Helper ($contract.CompileArguments -contains $(if ($debug) { '/MDd' } else { '/DNDEBUG' })) "$preset runtime flags"
+    Assert-Helper ($contract.Asan -eq $asan -and ($contract.CompileArguments -contains '/fsanitize=address') -eq $asan -and
+        ($contract.CompileArguments -contains '/Z7') -eq $asan) "$preset sanitizer flags"
+    Assert-Helper ($contract.SanitizerRuntimeDirectory -eq $(if ($asan) { $repo } else { $null })) "$preset sanitizer runtime folder"
+    if ($asan) {
+        foreach ($flags in '/EHsc', '/EHsc /fsanitize=address,fuzzer') {
+            $cache.CMAKE_CXX_FLAGS = $flags
+            Write-Cache $cache $cachePath
+            Assert-Refused { Get-ProbeBuild -Repo $repo -Preset $preset } 'not configured with /fsanitize=address'
+        }
+        $cache.CMAKE_CXX_FLAGS = '/EHsc /fsanitize=address'
+        Write-Cache $cache $cachePath
+        Remove-Item -LiteralPath $sanitizerRuntime -Force
+        Assert-Refused { Get-ProbeBuild -Repo $repo -Preset $preset } "Install Visual Studio's 'C++ AddressSanitizer' component"
+        [IO.File]::WriteAllText($sanitizerRuntime, 'preflight fixture, not a runtime')
+    }
     $fakeAdapters = Get-ProbeBuild -Repo $repo -Preset $preset -Adapters @()
     Assert-Helper ($fakeAdapters.Libraries.Count -eq 5 -and -not ($fakeAdapters.Libraries -match 'colourwars_(rumble_gamepads|display_awake)\.lib$')) "$preset fake adapter omissions"
     Assert-Refused { Get-ProbeBuild -Repo $repo -Preset $preset -RequiredContent 'missing.json' } 'Missing build output'

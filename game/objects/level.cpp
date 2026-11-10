@@ -492,7 +492,8 @@ void Level::update_players(float dt)
 	{
 		for (std::unique_ptr<Projectile>& projectile :
 			player->update_weapon_and_get_projectiles(
-				dt, this->structures_.projectile_targets()))
+				dt, this->structures_.projectile_targets(),
+				this->structures_.target_flags()))
 		{
 			// Scene owns the shot; the typed pointer add() returns is what the
 			// tick's projectile walks use. Pending until end_tick() admits it.
@@ -534,7 +535,7 @@ void Level::burst_projectiles()
 		// A drop starts inside whatever stopped the grenade only by overlap:
 		// it has not travelled, so its launch is its own position.
 		drop->resolve_launch_obstruction(drop->bounds().center(),
-			this->structures_.projectile_targets());
+			this->structures_.projectile_targets(), this->structures_.target_flags());
 		drop->flush_paint_audio(*this->paint_audio_);
 		if (const auto contact = drop->take_blocked_contact())
 		{
@@ -552,9 +553,11 @@ void Level::resolve_projectile_movement()
 {
 	// Resolve the first hit along each projectile's travel before endpoint contacts
 	// can consume it in scene order or miss a thin paintable face.
+	// What the targets answer about movers and slabs was asked at admission.
+	const ProjectileTargetFlags flags = this->structures_.target_flags();
 	for (Projectile* projectile : this->projectiles_)
 	{
-		projectile->resolve_movement_contacts(this->structures_.projectile_targets());
+		projectile->resolve_movement_contacts(this->structures_.projectile_targets(), flags);
 	}
 }
 
@@ -603,6 +606,12 @@ void Level::check_projectiles() const
 	// The list must be the scene's projectiles, in scene order; a disagreement
 	// would make the walks above skip, repeat or reorder a shot.
 	// The perf overlay counted projectile tags, so the count must agree too.
+	// The projectile targets are checked the same way once they are admitted
+	// (the opening frame ends a scene tick before admission, with none): they
+	// must be the scene's other collision objects in scene order, and their
+	// cached mover and slab answers must be what the list answers now (REV#6).
+	const std::span<CollisionObject* const> targets = this->structures_.projectile_targets();
+	size_t target_index = 0;
 	size_t index = 0;
 	size_t tagged = 0;
 	for (const CollisionObject* object : this->scene_->collision_objects())
@@ -619,6 +628,19 @@ void Level::check_projectiles() const
 			}
 			++index;
 		}
+		else if (!targets.empty())
+		{
+			if (target_index >= targets.size() || targets[target_index] != object)
+			{
+				throw std::logic_error("Level: the projectile targets disagree with the scene");
+			}
+			++target_index;
+		}
+	}
+	if (!targets.empty() && (target_index != targets.size() ||
+		!(this->structures_.target_flags() == ProjectileTargetFlags::scan(targets))))
+	{
+		throw std::logic_error("Level: the projectile targets disagree with the scene");
 	}
 	if (index != this->projectiles_.size() || tagged != index ||
 		!this->pending_projectiles_.empty())
@@ -708,14 +730,11 @@ void Level::refresh_views()
 	// before drawing; Scene's workers only read each shared structure.
 	const bool miniature = this->intro_showing() || this->reveal_showing() ||
 		(this->state_ != LevelState::start_countdown && this->state_ != LevelState::active);
-	// These existing stable targets include every structure and player, but no
-	// retiring projectile. This is mode configuration, not a draw-order mirror.
-	for (CollisionObject* object : this->structures_.projectile_targets())
+	// Every structure among the stable projectile targets, picked out once at
+	// admission. This is mode configuration, not a draw-order mirror.
+	for (Structure* structure : this->structures_.structure_targets())
 	{
-		if (Structure* structure = Collider::of(*object).structure())
-		{
-			structure->set_miniature(miniature);
-		}
+		structure->set_miniature(miniature);
 	}
 	this->scene_->clear_views();
 

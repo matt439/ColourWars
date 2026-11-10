@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "ColourWars level format 1",
-    "description": "Structural checks for the runtime format. Unknown keys are retained by the editor and ignored by the runtime. Resource resolution, float conversion, geometry relationships and station-name uniqueness still require runtime validation; collision objects take an optional material whose allowed values depend on collision_type; see level-format.md.",
+    "description": "Structural checks for the runtime format. Unknown keys are retained by the editor and ignored by the runtime. Resource resolution, float conversion, geometry relationships and station-name uniqueness still require runtime validation; collision objects take an optional material whose allowed values depend on collision_type; The size limits of level_format.h (namespace limit) appear here as coordinate ranges, rectangle width and height maxima and maxItems on the two object arrays; a rectangle's right and bottom edge, the extent of a rectangle_tlbr or triangle, the stage's total paint length, the file size and the user folder's file count cannot be stated in Draft-04 and stay runtime and editor checks. See level-format.md.",
     "type": "object",
     "required": [
         "display_name", "icon_frame", "sound", "spawn_locations", "level_bounds",
@@ -62,6 +62,7 @@
         },
         "collision_objects": {
             "type": "array",
+            "maxItems": 512,
             "items": {
                 "oneOf": [
                     { "$ref": "#/definitions/structure" },
@@ -73,6 +74,7 @@
         },
         "non_collision_objects": {
             "type": "array",
+            "maxItems": 512,
             "items": { "$ref": "#/definitions/visual" }
         }
     },
@@ -89,10 +91,10 @@
             "type": "object",
             "required": ["x", "y", "width", "height"],
             "properties": {
-                "x": { "type": "number" },
-                "y": { "type": "number" },
-                "width": { "type": "number", "minimum": 0, "exclusiveMinimum": true },
-                "height": { "type": "number", "minimum": 0, "exclusiveMinimum": true }
+                "x": { "type": "number", "minimum": -1048576, "maximum": 1048576 },
+                "y": { "type": "number", "minimum": -1048576, "maximum": 1048576 },
+                "width": { "type": "number", "minimum": 0, "exclusiveMinimum": true, "maximum": 1048576 },
+                "height": { "type": "number", "minimum": 0, "exclusiveMinimum": true, "maximum": 1048576 }
             },
             "additionalProperties": true
         },
@@ -100,10 +102,10 @@
             "type": "object",
             "required": ["left", "top", "right", "bottom"],
             "properties": {
-                "left": { "type": "number" },
-                "top": { "type": "number" },
-                "right": { "type": "number" },
-                "bottom": { "type": "number" }
+                "left": { "type": "number", "minimum": -1048576, "maximum": 1048576 },
+                "top": { "type": "number", "minimum": -1048576, "maximum": 1048576 },
+                "right": { "type": "number", "minimum": -1048576, "maximum": 1048576 },
+                "bottom": { "type": "number", "minimum": -1048576, "maximum": 1048576 }
             },
             "additionalProperties": true
         },
@@ -124,9 +126,9 @@
             "type": "object",
             "required": ["x1", "y1", "x2", "y2", "x3", "y3"],
             "properties": {
-                "x1": { "type": "number" }, "y1": { "type": "number" },
-                "x2": { "type": "number" }, "y2": { "type": "number" },
-                "x3": { "type": "number" }, "y3": { "type": "number" }
+                "x1": { "type": "number", "minimum": -1048576, "maximum": 1048576 }, "y1": { "type": "number", "minimum": -1048576, "maximum": 1048576 },
+                "x2": { "type": "number", "minimum": -1048576, "maximum": 1048576 }, "y2": { "type": "number", "minimum": -1048576, "maximum": 1048576 },
+                "x3": { "type": "number", "minimum": -1048576, "maximum": 1048576 }, "y3": { "type": "number", "minimum": -1048576, "maximum": 1048576 }
             },
             "additionalProperties": true
         },

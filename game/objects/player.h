@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/objects/horizontal_motion.h"
+#include "game/objects/projectile_target_flags.h"
 
 #include "game/config/play_settings.h"
 #include "game/contracts/match_variant.h"
@@ -159,7 +160,8 @@ public:
     void update(float dt) override;
     std::vector<std::unique_ptr<Projectile>>
         update_weapon_and_get_projectiles(float dt,
-        std::span<labrador::CollisionObject* const> objects);
+        std::span<labrador::CollisionObject* const> objects,
+        std::optional<ProjectileTargetFlags> known = std::nullopt);
     // Borrowed from the owning Level; launch hits are flushed before retired
     // shots leave this function, rather than disappearing before Scene sees them.
     void set_paint_audio(PaintAudio* audio);

@@ -282,7 +282,7 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
     tap(Key::j); tick();
     require(preferences_session.input_bindings().keyboard_jump == Key::space,
         "Capturing a pending Jump key applied it without confirmation");
-    for (int row = 2; row < 7; ++row) { tap(Key::down); } // Apply.
+    for (int row = 2; row < 8; ++row) { tap(Key::down); } // Past Sub's row (ROAD#11) and Reset to Apply.
     tap(Key::enter); tick();
     require(preferences_session.input_bindings().keyboard_jump == Key::j,
         "Actual Keyboard Jump child did not apply its captured key");

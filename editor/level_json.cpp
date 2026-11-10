@@ -331,6 +331,29 @@ namespace colourwars_editor
             return collision && level_format::may_carry(type, *collision);
         }
 
+        // The format's size limits, on the game's float values so both refuse
+        // the same rectangle; `what` names it in the message.
+        void check_limits(const Rect& rectangle, const std::string& what, bool bounds)
+        {
+            const double x = static_cast<float>(rectangle.x), y = static_cast<float>(rectangle.y);
+            const double width = static_cast<float>(rectangle.width), height = static_cast<float>(rectangle.height);
+            try
+            {
+                if (bounds) { level_format::limit::check_bounds_rectangle(x, y, width, height); }
+                else { level_format::limit::check_object_rectangle(x, y, width, height); }
+            }
+            catch (const std::invalid_argument& error) { fail(what + " " + error.what() + "."); }
+        }
+
+        // A rectangle, ramp or decoration: usable, and inside the limits.
+        Rect checked_object_rectangle(const Json& object)
+        {
+            const Rect rectangle = object_rectangle(object);
+            check_rectangle(rectangle);
+            check_limits(rectangle, "An object's rectangle", false);
+            return rectangle;
+        }
+
         void validate_object(const Json& object, bool collision)
         {
             if (!object.IsObject())
@@ -387,7 +410,7 @@ namespace colourwars_editor
                 {
                     fail("Decoration entries must use type Visual.");
                 }
-                check_rectangle(object_rectangle(object));
+                checked_object_rectangle(object);
                 return;
             }
             const std::string collision_type = string(object, key::collision_type);
@@ -397,8 +420,7 @@ namespace colourwars_editor
                 {
                     fail("A ramp needs STRUCTURE_RAMP_RIGHT or STRUCTURE_RAMP_LEFT collision.");
                 }
-                const Rect box = object_rectangle(object);
-                check_rectangle(box);
+                const Rect box = checked_object_rectangle(object);
                 const Json& triangle = member(object, key::triangle);
                 const bool right = level_format::collision_named(collision_type) ==
                     level_format::Collision::structure_ramp_right;
@@ -443,7 +465,7 @@ namespace colourwars_editor
             }
             else { fail("Unknown collision object type: " + type); }
             validate_material(object, collision_type);
-            check_rectangle(object_rectangle(object));
+            checked_object_rectangle(object);
         }
     }
 
@@ -498,7 +520,7 @@ namespace colourwars_editor
                 fail("end_sting_volume must be 0..1.");
             }
             const Json& bounds = member(document, key::level_bounds);
-            for (const char* name : bounds_names) { plain_rectangle(member(bounds, name)); }
+            for (const char* name : bounds_names) { check_limits(plain_rectangle(member(bounds, name)), name, true); }
             const Rect arena = plain_rectangle(member(bounds, key::out_of_bounds));
             const Json& spawns = member(document, key::spawn_locations);
             for (const char* team : { key::team_a, key::team_b })
@@ -521,9 +543,26 @@ namespace colourwars_editor
                     }
                 }
             }
+            // The format's limits on each array's length and on the stage's
+            // paint, by the rule the game applies at load.
+            for (const char* name : { key::collision_objects, key::non_collision_objects })
+            {
+                try { level_format::limit::check_object_count(array(document, name).Size()); }
+                catch (const std::invalid_argument& error) { fail(std::string(name) + " " + error.what() + "."); }
+            }
+            double paint_length = 0.0;
             for (const Json& object : array(document, key::collision_objects).GetArray())
             {
                 validate_object(object, true);
+                if (string(object, key::type) != object_type::structure_paintable) { continue; }
+                const Rect rectangle = object_rectangle(object);
+                const Json& faces = member(object, key::paintable_faces);
+                paint_length += level_format::limit::paint_length(static_cast<float>(rectangle.width),
+                    static_cast<float>(rectangle.height), faces[level_format::face::left].GetBool(),
+                    faces[level_format::face::top].GetBool(), faces[level_format::face::right].GetBool(),
+                    faces[level_format::face::bottom].GetBool());
+                try { level_format::limit::check_paint_length(paint_length); }
+                catch (const std::invalid_argument& error) { fail(std::string("A paintable structure ") + error.what() + "."); }
             }
             for (const Json& object : array(document, key::non_collision_objects).GetArray())
             {

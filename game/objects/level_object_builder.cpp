@@ -96,7 +96,39 @@ namespace
 			throw std::runtime_error(json.where() +
 				" needs finite coordinates and positive width and height");
 		}
+		try
+		{
+			level_format::limit::check_object_rectangle(rectangle.x, rectangle.y,
+				rectangle.width, rectangle.height);
+		}
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(json.where() + " " + error.what());
+		}
 		return rectangle;
+	}
+
+	// A ramp's triangle, with its bounding box inside the format's limits.
+	TriangleRightAxisAligned decode_triangle(const JsonValue& json)
+	{
+		const JsonValue triangle_json = json.object(key::triangle);
+		const TriangleRightAxisAligned triangle(
+			triangle_json.number("x1"),
+			triangle_json.number("y1"),
+			triangle_json.number("x2"),
+			triangle_json.number("y2"),
+			triangle_json.number("x3"),
+			triangle_json.number("y3"));
+		const RectangleF box = triangle.bounding_box();
+		try
+		{
+			level_format::limit::check_object_rectangle(box.x, box.y, box.width, box.height);
+		}
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(triangle_json.where() + " " + error.what());
+		}
+		return triangle;
 	}
 
 	RectangleF decode_rectangle(const JsonValue& json)
@@ -324,6 +356,26 @@ namespace
 		}
 		return gate;
 	}
+
+	// What a StructurePaintable record adds to the stage's paint length
+	// (level_format::limit). A record that cannot be read adds nothing:
+	// building it reports what is wrong, in the builder's own order.
+	double authored_paint_length(const JsonValue& json)
+	{
+		try
+		{
+			if (json.string(key::type) != object_type::structure_paintable) { return 0.0; }
+			const RectangleF rectangle = decode_rectangle(json);
+			const JsonValue faces = json.object(key::paintable_faces);
+			return level_format::limit::paint_length(rectangle.width, rectangle.height,
+				faces.boolean(level_format::face::left), faces.boolean(level_format::face::top),
+				faces.boolean(level_format::face::right), faces.boolean(level_format::face::bottom));
+		}
+		catch (const std::exception&)
+		{
+			return 0.0;
+		}
+	}
 }
 
 LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
@@ -436,14 +488,7 @@ std::unique_ptr<CollisionObject>
 	{
 		const CollisionObjectType collision_type = collision_type_of(json, type);
 
-		const JsonValue triangle_json = json.object(key::triangle);
-		const TriangleRightAxisAligned triangle = TriangleRightAxisAligned(
-			triangle_json.number("x1"),
-			triangle_json.number("y1"),
-			triangle_json.number("x2"),
-			triangle_json.number("y2"),
-			triangle_json.number("x3"),
-			triangle_json.number("y3"));
+		const TriangleRightAxisAligned triangle = decode_triangle(json);
 
 		// The sheet's ramp frame is right-handed; mirror it for left-handed collision geometry.
 		const SpriteFlip flip =
@@ -538,9 +583,7 @@ LevelObjectBuilder::StageContext
 		}
 		else if (type == object_type::structure_ramp)
 		{
-			const JsonValue t = object.object(key::triangle);
-			context.solid.push_back(TriangleRightAxisAligned(t.number("x1"), t.number("y1"),
-				t.number("x2"), t.number("y2"), t.number("x3"), t.number("y3")).bounding_box());
+			context.solid.push_back(decode_triangle(object).bounding_box());
 		}
 		else if (type == object_type::fixed_slab_paintable)
 		{
@@ -700,11 +743,16 @@ void LevelObjectBuilder::validate_objects(const JsonValue& collision_objects,
 {
 	const TeamColour colours;
 	const StageContext context = stage_context(collision_objects);
+	// The authored length of every paintable face so far: paint is built as
+	// tiles along them, so the format caps the total before a record builds.
+	double paint_length = 0.0;
 	for (size_t index = 0; index < collision_objects.size(); ++index)
 	{
 		const JsonValue object = collision_objects.at(index);
 		try
 		{
+			paint_length += authored_paint_length(object);
+			level_format::limit::check_paint_length(paint_length);
 			build_collision_object(object, colours, context);
 		}
 		catch (const std::exception& error)

@@ -151,6 +151,9 @@ void menu_music_flow_matrix(Application& app, GameData& data, const Presentation
     page("player-count", Key::enter, 2);
     page("join", Key::enter, 2);
     page("weapon", Key::enter, 2);
+    // The row confirms its tool, then its sub (ROAD#11); the second Enter
+    // readies it and opens Stage Select.
+    tap(Key::enter);
     page("stage", Key::enter, 2);
     // The shared fixture lists Movement Course first and Close Quarters next.
     tap(Key::right);

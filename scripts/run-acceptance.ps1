@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('x64-debug', 'x64-release')]
+    [ValidateSet('x64-debug', 'x64-release', 'x64-asan')]
     [string] $Preset = 'x64-debug',
     [switch] $SkipBuild,
     [string] $OutputDirectory,
@@ -232,6 +232,11 @@ try {
     # DLL imports still resolve from the same staged folder as the game.
     # A case may own a same-named folder of extra .cpp sources.
     $env:PATH = "$gameDirectory;$previousPath"
+    # An x64-asan probe loads the sanitizer runtime of the compiler that built
+    # it, whichever toolset the caller's PATH would have found first.
+    if ($probeBuild.Asan) {
+        $env:PATH = "$gameDirectory;$($probeBuild.SanitizerRuntimeDirectory);$previousPath"
+    }
     if (-not $CompileOnly) {
         . (Join-Path $PSScriptRoot 'acceptance-process.ps1')
         Initialize-AcceptanceProcess

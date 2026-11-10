@@ -4,7 +4,8 @@
 # scripts/acceptance/<Name>.cpp, then its Sources, then every .cpp in a
 # same-named folder, against the game library and both platform adapters.
 #
-#   Group        'default' (omitted): in the default list of both presets.
+#   Group        'default' (omitted): in the default list of every preset
+#                (x64-asan runs Release's list).
 #                'debug-only': in the Debug default list; refused in Release.
 #                'opt-in': never run by default; -OptIn selects all of them.
 #                CI compiles them all; nightly.yml runs them.
@@ -258,6 +259,13 @@ Cases = @(
     @{
         Name = 'turbulence_slab_tools'
         NeedsTrial = $true
+        Group = 'opt-in'
+    }
+    @{
+        # Fixed-seed mutants of the shipped levels and of three saves, through
+        # the user-stage scan and Save: each loads or is refused (REV#62).
+        Name = 'reader_mutations'
+        Quick = $true
         Group = 'opt-in'
     }
 )

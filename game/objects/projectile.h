@@ -4,6 +4,7 @@
 #include "game/objects/projectile_type.h"
 #include "game/objects/blocked_shot_contact.h"
 #include "game/objects/horizontal_motion.h"
+#include "game/objects/projectile_target_flags.h"
 #include "game/config/tuning.h"
 #include "game/carried/animation_object.h"
 #include "game/carried/moving_object.h"
@@ -93,12 +94,17 @@ public:
 	{ return owner_centre; }
 	// A muzzle can extend through cover even when its owner cannot. Check
 	// the launch volume before Scene defers its first collision sweep.
+	// known, here and below, is what objects answers about movers and fixed
+	// slabs when the caller already asked (a Level, of its own targets). It
+	// must be the answers for exactly this list; without it the sweep asks.
 	void resolve_launch_obstruction(const labrador::Vector2F& origin,
-		std::span<labrador::CollisionObject* const> objects);
+		std::span<labrador::CollisionObject* const> objects,
+		std::optional<ProjectileTargetFlags> known = std::nullopt);
 	// Resolve this tick's travel (resolve_travel) before the scene dispatches
 	// endpoint contacts in object-list order, once per actual update.
 	void resolve_movement_contacts(
-		std::span<labrador::CollisionObject* const> objects);
+		std::span<labrador::CollisionObject* const> objects,
+		std::optional<ProjectileTargetFlags> known = std::nullopt);
 	// Completed moving Roller contacts suppress only duplicate endpoint paint.
 	// IDs are Level-local values, never borrowed collision-object pointers.
 	bool moving_paint_completed(HorizontalMotionId id) const;
@@ -131,7 +137,9 @@ protected:
 
 	// A flying shot stops at its first impact along this tick's travel, if
 	// its kind is swept (is_swept). Rollers keep their one-step volume.
-	virtual void resolve_travel(std::span<labrador::CollisionObject* const> objects);
+	// known is resolve_movement_contacts' argument, passed through.
+	virtual void resolve_travel(std::span<labrador::CollisionObject* const> objects,
+		std::optional<ProjectileTargetFlags> known);
 	// Whether a launch volume crossing an enemy between owner and muzzle hits
 	// them, as it hits cover there.
 	virtual bool launch_hits_players() const { return true; }
@@ -182,9 +190,12 @@ private:
 	std::vector<HorizontalMotionId> moving_paint_completed_;
 
 
+	// fixed_slabs is whether objects holds a fixed slab, when the caller knows
+	// it for this exact list; the one-target calls inside the sweeps pass none.
 	void resolve_sweep(const labrador::RectangleF& start,
 		const labrador::RectangleF& finish,
-		std::span<labrador::CollisionObject* const> objects, bool launch);
+		std::span<labrador::CollisionObject* const> objects, bool launch,
+		std::optional<bool> fixed_slabs = std::nullopt);
 	void resolve_fixed_slab_sweep(const labrador::RectangleF& start,
 		const labrador::RectangleF& finish,
 		std::span<labrador::CollisionObject* const> objects, bool launch);

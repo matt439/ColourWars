@@ -152,7 +152,7 @@ match setup, persistence and replay one vocabulary for named variants:
 
 | Header | Holds |
 |---|---|
-| `level_format.h` | the level format's one owner: its version and compatibility rule, key names, the paintable-face names, the scenery greys, object and collision vocabulary, which tags each object type may carry, the material table and the fixed slab's refused fields; [level.schema.json](../game/contracts/level.schema.json) sits beside it |
+| `level_format.h` | the level format's one owner: its version and compatibility rule, key names, the paintable-face names, the scenery greys, object and collision vocabulary, which tags each object type may carry, the material table, the fixed slab's refused fields and the format's size limits (`level_format::limit`); [level.schema.json](../game/contracts/level.schema.json) sits beside it |
 | `simulation.h` | `simulation::simulation_hz` and `simulation::seconds_per_step`, the fixed rate and the step length the engine's timer derives from it (0.0166666 s), written once |
 | `rectangle_contract.h` | the one rectangle the station, gate and motion contracts take |
 | `horizontal_motion_contract.h` | authored horizontal and vertical motion, its heading names and its envelope arithmetic (uses `simulation.h`) |

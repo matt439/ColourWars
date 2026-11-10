@@ -13,7 +13,9 @@
 > [#124](https://github.com/matt439/Labrador/issues/124) and 34 as the Bug
 > [#125](https://github.com/matt439/Labrador/issues/125). Each waits on the
 > engine's answer. A sixth, **35**, is a draft from the 2026-11-05 hygiene
-> review and is not filed.
+> review and is not filed. A seventh, **36**, was answered on engine master
+> before it was drafted (2026-11-10) and was never filed; it stays live only
+> until a pin bump brings the answer here.
 > **Twenty-nine are closed** (1–25, 28, 29, 31 and 32) and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
@@ -236,8 +238,9 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 | 27, 30, 33 | Three still live from the 2026-10-30 architecture review (28 declined, 29 withdrawn; 31 and 32 answered in `v0.3.0`) | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | filed 2026-11-05 as [#122](https://github.com/matt439/Labrador/issues/122), [#123](https://github.com/matt439/Labrador/issues/123) and [#124](https://github.com/matt439/Labrador/issues/124); awaiting answers |
 | 34 | `RenderDeviceKind::hardware` describes a software rasteriser | [the hosted runner's Basic Render Driver](#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit) logged as `kind=hardware`, which the strict painter, paint-fx and frame-pacing gates rely on | filed 2026-11-05 as the Bug [#125](https://github.com/matt439/Labrador/issues/125), saying this client will adapt its gates to the engine's answer; what those gates accept is settled when it lands |
 | 35 | `AudioResources` has no non-throwing sound-group lookup | [`sound_groups.cpp`](../../game/config/sound_groups.cpp)'s find-or-add catches `std::out_of_range` as control flow | drafted 2026-11-05 from the [hygiene review](2026-11-05-code-hygiene-review.md#engine-report-owed), checked against master `5cbc6b3`; not filed, the author decides |
+| 36 | JSON parsing recurses once per nesting level | the [`save_max_nesting`](../../scripts/acceptance/reader_mutations.cpp) bound in the `reader_mutations` case | found 2026-11-10; already answered on master by `8362e2d` (iterative parse), which the pin `e7fc50e` predates; never filed; spent at the pin bump that includes it |
 
-Nothing else is outstanding, on either side, beyond reports 26, 34 and 35 below, the three still live
+Nothing else is outstanding, on either side, beyond reports 26, 34, 35 and 36 below, the three still live
 [from the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
@@ -715,6 +718,59 @@ the client then keeps its own added-groups flag instead of the `catch`.
 ### What an answer lets this repository delete
 
 The `try`/`catch` in `sound_groups.cpp`'s `group` helper, which becomes one call.
+
+---
+
+## 36. JSON parsing recurses once per nesting level - **answered on master before it was drafted**
+
+**Found 2026-11-10** by the `reader_mutations` acceptance case
+([record](../code-hygiene.md#mutation-probe-for-the-save-and-user-stage-readers-rev62)),
+and checked the same day against Labrador master `043589e`, as
+[the rule that governs this file](#the-rule-that-governs-this-file) asks.
+Master already has the answer: `8362e2d` (2026-11-05, "Bound what files can ask
+of the core and asset readers") makes `parse_into` in `engine/assets/json.cpp`
+parse with `rapidjson::kParseIterativeFlag`, and `CHANGES.md` says "Deeply
+nested JSON is refused with the parse error instead of overflowing the stack."
+The pin `e7fc50e` is 46 commits behind it and still calls
+`document.Parse(text, length)` (`json.cpp:56`). So nothing was filed and
+nothing is owed: this entry is here because the ledger is what gets read after
+a pin bump, and the bump has something to spend.
+
+### Exhibit
+
+[`scripts/acceptance/reader_mutations.cpp`](../../scripts/acceptance/reader_mutations.cpp),
+`save_max_nesting`: the case wraps a value of a save in nested arrays or
+objects, and stops at 64 deep for a save. For a level it goes to 100,000.
+
+### What happens
+
+At the pin, `read_json_file` and `parse_json` spend a native stack frame for
+each open array or object. A save whose text opens a few thousand brackets
+overflows the 1 MB stack inside `Save::load_save_file` and the process ends
+with `0xC00000FD`; no game code has run, so there is nothing for the game to
+catch. The same parse overflowed on a level, confirmed with the probe's bound
+raised (`crashed on level source 0, iteration 3`). `SECURITY.md:76-78`
+discloses it at the pin, and still reads that way on master, where the code
+no longer matches it.
+
+The level half is closed in this repository, not by the engine: the level
+format has its own nesting limit (`level_format::limit::max_nesting`, 64),
+checked on the text before `parse_json` is called. It has to stay after the
+bump, because `LevelLoadedInfo` has two recursive walks of its own behind the
+engine's parse (a second rapidjson parse for the content hash, and
+`StageSemanticHash::append`), which an iterative engine parse would otherwise
+reach with a deep document.
+
+### What the pin bump lets this repository delete
+
+The `save_max_nesting` bound and its comment in `reader_mutations.cpp`: give
+the save the level's deep depths and require a load or a refusal. Nothing
+between `read_json_file` and the save's sections recurses (they read by key),
+so no game change is expected; if the case then fails, that is a new finding.
+In the same commit range master's `JsonValue::number` throws for a number
+outside `float`'s range, which moves this case's printed counts; they are not
+pinned. Master's repeated-key refusal is in the manifest, sprite-sheet and
+sound-bank loaders, which this case does not feed. Then strike this entry.
 
 ---
 

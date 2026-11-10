@@ -231,6 +231,13 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         require(frame().pixels == selecting.pixels && same_plan(settings, before),
             "Weapon Select confirmed before a fresh Enter release");
         app.keyboard()->on_key_up(Key::enter); tick();
+        // The first Confirm only moves on to the sub (ROAD#11); the second
+        // readies the row and commits.
+        require(stack.depth() == 2 && same_plan(settings, before) && frame().pixels != selecting.pixels,
+            "The first Confirm did not move to the sub, or committed the tool before it");
+        app.keyboard()->on_key_down(Key::enter); tick();
+        require(same_plan(settings, before), "Weapon Select readied before a fresh second Enter release");
+        app.keyboard()->on_key_up(Key::enter); tick();
         const WeaponType expected = choice == 5 ? random : static_cast<WeaponType>(choice);
         require(settings.player_weapon(0) == expected && same_plan(settings, before, false) &&
             stack.depth() == 2 && frame().pixels == reference_page(true).pixels,

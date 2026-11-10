@@ -180,11 +180,17 @@ void LevelStructures::admit(const Scene& scene, std::span<Player* const> players
     }
     for (CollisionObject* object : scene.collision_objects())
     {
-        if (Collider::of(*object).projectile() == nullptr)
+        Collider& collider = Collider::of(*object);
+        if (collider.projectile() == nullptr)
         {
             this->projectile_targets_.push_back(object);
+            if (Structure* structure = collider.structure())
+            {
+                this->structure_targets_.push_back(structure);
+            }
         }
     }
+    this->target_flags_ = ProjectileTargetFlags::scan(this->projectile_targets_);
 }
 
 void LevelStructures::admit_horizontal(const Scene& scene, std::span<Player* const> players,
@@ -512,4 +518,14 @@ std::span<const TeamGateStructurePaintable* const> LevelStructures::team_gates()
 std::span<CollisionObject* const> LevelStructures::projectile_targets() const
 {
     return this->projectile_targets_;
+}
+
+ProjectileTargetFlags LevelStructures::target_flags() const
+{
+    return this->target_flags_;
+}
+
+std::span<Structure* const> LevelStructures::structure_targets() const
+{
+    return this->structure_targets_;
 }

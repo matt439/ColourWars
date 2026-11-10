@@ -47,8 +47,13 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
         app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuWeaponSelect>(&context)); tick(); tick();
-    painter_scripted_pads::states[3].buttons = static_cast<uint16_t>(1u << static_cast<unsigned int>(GamepadButton::a)); tick();
-    painter_scripted_pads::states[3].buttons = 0; tick(); tick(0.51f);
+    // P1 readies on its second A: the tool, then its sub (ROAD#11).
+    for (int press = 0; press < 2; ++press)
+    {
+        painter_scripted_pads::states[3].buttons = static_cast<uint16_t>(1u << static_cast<unsigned int>(GamepadButton::a)); tick();
+        painter_scripted_pads::states[3].buttons = 0; tick();
+    }
+    tick(0.51f);
     const auto unchanged = [&]
     {
         require(stack.depth() == 2 && settings.player_count() == before.player_count() && settings.stage() == before.stage() &&
