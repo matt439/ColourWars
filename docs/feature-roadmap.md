@@ -2483,6 +2483,53 @@ Keyboard Keys sentences now name Sub (`REV#9`). The `SeatSetup::sub` comment
 says what slice 5 made true (`REV#8`). The Movement Course still has no sub
 station (`REV#56`).
 
+**Nightly follow-up, 2026-11-10.** No scheduled nightly ran between the
+slices. The first after them failed eight Release painter leaves, one Debug
+leaf, the plain matrix and one opt-in case, for three reasons.
+
+*Stale painter drivers.* The fixtures still readied a Weapon Select row with
+one Confirm. They now send the tool's Confirm and then the sub's, and two
+Backs from ready to the tool: the series re-pick (`EndMenuOnly` and the plain
+matrix), `RememberedSetupOnly`, `WeaponCatalogOnly`, `WeaponPaperOnly`,
+`BotPlayersOnly`, `SetupMotionOnly`, `StagePreviewBackgroundTuneColourOnly`
+and Debug's `WeaponTuneColoursOnly`. `ControlsMenuOnly` pressed Down one row
+short of Apply on Keyboard Keys, which had gained the Sub row. The plain
+matrix's menu-music flow was one Confirm short too; the hosted runner has no
+audio endpoint and skips that flow, so only a run on a machine with one showed
+it. The setup-motion leaf records two more rows per size (`weapon-sub`,
+`weapon-sub-back`), and the preview-backing leaf's pinned tap, update and poll
+budgets grow by its extra Confirms.
+
+*One regression, fixed.* Slice 5 made Weapon Select's commit call `rand()`
+once per seat for the sub whether or not the sub was Random, so committing a
+concrete loadout moved the seeded sequence that Stage Select's Random and each
+round's seed draw from; before the slice only a Random tool drew.
+`MainMenuWeaponSelect::set_level_settings` now draws for a sub only when it is
+Random, after that seat's tool. The preview-backing leaf pins that a concrete
+commit draws nothing, and the weapon-paper leaf one draw per Random tool.
+
+*One call left for the author.* `bot_team_trials` requires every bot's body to
+leave its home band and now counts 559/560, so the nightly's opt-in leg stays
+red; the gate was not changed. The miss is trial 66: Close Quarters, mixed
+rotation 0, seed `3946`, human on team b, whose lone team-b Sprayer faces a
+Roller and a Bucket. A per-step trace (a scratch probe, not kept) shows no
+loop. The bot runs out to the scoring floor and paints. At step 454 it throws
+its grenade with 0.79 of a tank, reaches the reserve floor by step 500 at
+x 4117, a hundred units inside its band's edge (x 4016.7), and backs away to
+refill from the Bucket bot 350 units off. It comes back and dies at step 637
+at x 4021.6, five units short of the edge. Its second life, from step 818, is
+fought inside its own third, where the two opponents spend 423 and 663 of the
+1800 steps; they withdraw near step 1525 and it is back out at x 4312,
+fighting, when the trial ends. Run on past the horizon, it crosses at step 2395.
+Before the slices the same bot was outside its band for 124 of the 1800 steps,
+the thinnest margin in the matrix. So this is the outnumbered side being held,
+which the gate's own comment separates from navigation, and not the home-band
+loop the gate was written for. The choices are to count a one-bot side's bot
+that an opponent pinned inside its band as a measurement, as its final paint
+already is, or to have a bot hold a throw that leaves it this close to a
+refill, which changes every trial and needs the slice 6 balance figures
+measured again.
+
 ### Input
 
 - **Non-XInput controllers (`ROAD#23`).** INVERSUS and most Steam releases
