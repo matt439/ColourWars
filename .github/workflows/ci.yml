@@ -37,9 +37,10 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Check CI selection, links, frame analysis and study paths
+      - name: Check CI selection, links, frame and balance analysis and study paths
         run: |
           python3 -m unittest discover -s scripts/ci -p test_*.py
+          python3 -m unittest discover -s scripts/balance -p test_*.py
           python3 -m unittest discover -s scripts/perf -p test_*.py
           python3 -m unittest discover -s scripts/studies -p test_*.py
 

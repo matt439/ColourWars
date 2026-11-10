@@ -116,7 +116,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `TOOL#4` | OPEN | LOW | L | Make the Debug balance runner a repeatable report: a committed analyser and matrix driver, a sub and tuning-patch input, and the first matrix of the shipped game. Scores each tool on paint and eliminations against its profile. Evidence only. [Plan](docs/gameplay-tuning.md#balance-matrix-tool-tool4). |
+| `TOOL#4` | OPEN | LOW | L | Balance matrix tool: the analyser is done (2026-11-10). Left: a parallel, resumable matrix driver, sub and tuning-patch runner inputs, the first matrix of the shipped game (1v1 and 2v2), and A/B comparison. Evidence only. [Plan](docs/gameplay-tuning.md#balance-matrix-tool-tool4). |
 | `TOOL#5` | OPEN | LOW | M | Per-seat bot counters in the balance runner (engaged, refilling, shots, sub uses) and an aim/reaction ladder, so the bot's part of each tool's numbers is measured. No game-code change. [Plan](docs/gameplay-tuning.md#bot-diagnostics-tool5). |
 | `CI#7` | DEFERRED | LOW | S | The first hosted trial passed 96 of 97 painter leaves and paint-fx in both presets; music flow is skipped without an audio endpoint. After a week of scheduled nightlies (from 2026-11-11), promote what is stable and short to `ci.yml`. [Hygiene](docs/code-hygiene.md#promote-stable-nightly-checks-ci7). |
 | `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console-record.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
