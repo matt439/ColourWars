@@ -16,6 +16,8 @@
 > review and is not filed. A seventh, **36**, was answered on engine master
 > before it was drafted (2026-11-10) and was never filed; it stays live only
 > until a pin bump brings the answer here.
+> An eighth, **37**, is the unfiled long-checkout-path draft from the first-run
+> review, reproduced against upstream master `3fe88f64` on 2026-11-10.
 > **Twenty-nine are closed** (1–25, 28, 29, 31 and 32) and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
@@ -771,6 +773,39 @@ In the same commit range master's `JsonValue::number` throws for a number
 outside `float`'s range, which moves this case's printed counts; they are not
 pinned. Master's repeated-key refusal is in the manifest, sprite-sheet and
 sound-bank loaders, which this case does not feed. Then strike this entry.
+
+---
+
+## 37. Long render golden filenames break ordinary Windows clones - **draft with checkout exhibit**
+
+**Drafted 2026-11-10 for first-run review `FTR#4`, not filed.** Rechecked
+against upstream master `3fe88f640332b97a25643aabc0c4ff9878096a4f`, fetched
+from origin that day. Its longest tracked golden path is still 148 characters:
+`tests/render/golden/contract-the-position-is-the-top-left-of-the-text-and-y-runs-down--every-pixel-of-it-is-inside-the-box-measure-text-promised.png`.
+With this game's `external/labrador/` prefix, a clone root around 93 characters
+reaches the ordinary Windows path limit before any build begins.
+
+**Exhibit.** The [Easy build instructions](../../README.md#easy-build) and
+[`build.ps1`](../../scripts/build.ps1) must tell newcomers to use a short
+checkout path even though these test images are not needed by a client build.
+The frozen [first-run review](2026-11-10-first-run-review.md#long-engine-test-filenames-break-deep-clones-ftr4)
+records seven checkout failures in a real recursive clone. The focused recheck
+uses a local shared, no-checkout clone of the engine under a 104-character
+client root, then runs `git -c core.longpaths=false checkout <master> -- <path>`.
+It exits 255 with `Filename too long` for the 271-character full filename.
+The checkout does not change the game's pin or engine files. Logs, exact paths
+and revision are retained in
+`out/validation/overnight-20261110/ftr4-long-path/result.json` and `checkout.log`.
+
+**The ask.** Shorten tracked golden filenames while retaining a readable map
+to their test cases, so a normal recursive Windows clone has useful path
+headroom without requiring global Git or Windows configuration. Naming and
+the test-to-image mapping are engine decisions.
+
+**What an answer lets this repository delete.** The engine-test-file reason
+for the short-clone warning. vcpkg/compiler paths also grow under a deep root,
+so shortening images alone does not remove all build-path guidance.
+Publication stays with the author; no issue has been sent.
 
 ---
 
