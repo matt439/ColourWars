@@ -112,8 +112,8 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     tap(Key::down); tap(Key::enter);
     still_open("Change Weapons between rounds closed the End frame instead of opening the tools");
     evidence("tools");
-    tap(Key::right); tap(Key::enter); // P1 Sniper, ready.
-    tap(Key::down); tap(Key::right); tap(Key::right); tap(Key::r); tap(Key::enter); // Bot Roller, +1, ready.
+    tap(Key::right); tap(Key::enter); tap(Key::enter); // P1 Sniper, its sub as it stands, ready.
+    tap(Key::down); tap(Key::right); tap(Key::right); tap(Key::r); tap(Key::enter); tap(Key::enter); // Bot Roller, +1, sub, ready.
     still_open("Readied tools between rounds skipped the stage page");
     require(settings.player_weapon(0) == WeaponType::sniper && settings.player_weapon(1) == WeaponType::roller &&
         settings.player_handicap(0) == 0 && settings.player_handicap(1) == 1,
@@ -164,7 +164,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     still_open("Back from the stages with a replay on offer left the End frame");
     replay_offered("Back from the between-rounds stages dropped Watch Replay");
     open(Session(), true); tap(Key::down); tap(Key::down); tap(Key::enter);
-    tap(Key::enter); tap(Key::down); tap(Key::enter); // Both seats ready on their tools.
+    tap(Key::enter); tap(Key::enter); tap(Key::down); tap(Key::enter); tap(Key::enter); // Both seats: tool, sub, ready.
     still_open("Readied tools with a replay on offer skipped the stage page");
     tap(Key::escape);
     still_open("Back from the stage after the tools left the End frame");

@@ -44,6 +44,10 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         else { const auto bit = static_cast<uint16_t>(1u << static_cast<unsigned int>(button)); auto& buttons = painter_scripted_pads::states[static_cast<size_t>(slot)].buttons; buttons = down ? static_cast<uint16_t>(buttons | bit) : static_cast<uint16_t>(buttons & static_cast<uint16_t>(~bit)); }
     };
     const auto tap = [&](int player, GamepadButton button) { hold(player, button, true); tick(); hold(player, button, false); tick(); };
+    // A row readies on its second A, the tool then the sub (ROAD#11), and
+    // steps back to the tool on its second B.
+    const auto ready_row = [&](int player) { tap(player, GamepadButton::a); tap(player, GamepadButton::a); ready[static_cast<size_t>(player)] = true; };
+    const auto unready_row = [&](int player) { tap(player, GamepadButton::b); tap(player, GamepadButton::b); ready[static_cast<size_t>(player)] = false; };
     const auto frame = [&] { return stack_frame(app); };
     const auto motion = original.menu().motion; const float settled = std::max(motion.focus_duration, motion.press_duration) + 0.01f;
     const auto open = [&](int count, int first = 0, TeamColourPair palette = TeamColourPair::random)
@@ -157,14 +161,14 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
             tap(0, GamepadButton::dpad_left); choices[0] = 5; tick(settled); compare("left-wrap", original); tap(0, GamepadButton::dpad_right); choices[0] = 0; tick(settled);
             if (count > 1)
             {
-                tap(0, GamepadButton::a); ready[0] = true; tick(settled); const Frame confirmed = compare("partly-ready", original, L"Weapon Select", {}, capture);
+                ready_row(0); tick(settled); const Frame confirmed = compare("partly-ready", original, L"Weapon Select", {}, capture);
                 tap(0, GamepadButton::dpad_right); tap(0, GamepadButton::a); require(confirmed.pixels == frame().pixels, "Confirmed Weapon input changed the tool or restarted motion");
-                tap(0, GamepadButton::b); ready[0] = false; tick(settled); compare("unready", original);
+                unready_row(0); tick(settled); compare("unready", original);
             }
             tap(0, GamepadButton::b); require(frame().pixels == destination(count == 1 ? 0 : 1).pixels, "Weapon paper Back failed its ordinary Mode/Team route"); plan();
             open(count, 5); for (int player = 1; player < count; ++player) { while (choices[static_cast<size_t>(player)] != 5) { tap(player, GamepadButton::dpad_right); choices[static_cast<size_t>(player)] = (choices[static_cast<size_t>(player)] + 1) % 6; } }
             tick(settled); compare("all-random", original, L"Weapon Select", {}, capture);
-            for (int player = 0; player < count - 1; ++player) { tap(player, GamepadButton::a); ready[static_cast<size_t>(player)] = true; } tick(settled);
+            for (int player = 0; player < count - 1; ++player) { ready_row(player); } tap(count - 1, GamepadButton::a); tick(settled); // The last row waits on its sub.
             std::srand(839); for (int& choice : choices) { choice = std::rand() % 5; } const int next_random = std::rand(); std::srand(839); tap(count - 1, GamepadButton::a);
             require(std::rand() == next_random, "Weapon paper Random commit changed its ordered per-seat RNG budget"); plan(true);
             require(frame().pixels == destination(2).pixels, "Weapon paper final confirmation failed its immediate Stage route");
@@ -186,7 +190,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
                 if (step < 6) { compare("palette-cycle-" + std::to_string(step), original); }
                 else { require(first.pixels == frame().pixels, "Weapon paper palette cycle failed its exact wrap"); }
             }
-            tap(3, GamepadButton::a); ready[3] = true; tick(settled); compare("palette-ready", original);
+            ready_row(3); tick(settled); compare("palette-ready", original);
         }
         std::cout << "PASS static Weapon paper " << size.x << 'x' << size.y << '\n';
     }
@@ -204,8 +208,8 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
             RectangleF box(original.menu().layout.position + Vector2F(original.main_menu().weapon_select.spacing.x * 2.0f, original.main_menu().weapon_select.spacing.y * static_cast<float>(player + 2)), original.main_menu().weapon_select.size); box.inflate(-1.0f);
             camera.calculate_view_rectangle(box); const auto pixels = pixel_bounds(box); require(foreground_crop(moving, pixels, 0).pixels == foreground_crop(resting, pixels, 0).pixels, "Weapon paper motion shifted its fixed tool, paint or supply pixels");
         }
-        tap(0, GamepadButton::a); ready[0] = true; compare("ready-press", original, L"Weapon Select", { motion.selection_inset_fraction * motion.press_fraction, 0, 0, 0 }, true); tick(settled);
-        tap(0, GamepadButton::b); ready[0] = false; compare("unready-press", original, L"Weapon Select", { motion.selection_inset_fraction * motion.press_fraction, 0, 0, 0 }); stack.notify_activation(false); compare("deactivated", original); stack.notify_activation(true); tick();
+        ready_row(0); compare("ready-press", original, L"Weapon Select", { motion.selection_inset_fraction * motion.press_fraction, 0, 0, 0 }, true); tick(settled);
+        unready_row(0); compare("unready-press", original, L"Weapon Select", { motion.selection_inset_fraction * motion.press_fraction, 0, 0, 0 }); stack.notify_activation(false); compare("deactivated", original); stack.notify_activation(true); tick();
         tap(0, GamepadButton::dpad_right); ++choices[0]; stack.push(std::make_unique<MainMenuCredits>(&context)); stack.pop(); compare("cover-return", original); tick();
         tap(0, GamepadButton::dpad_left); --choices[0]; active->debug_reset_input(slots[0]); compare("developer-reset", original);
         play.reduce_effects = true; tap(0, GamepadButton::dpad_right); ++choices[0]; const Frame quiet = compare("reduced-input", original); tick(settled); require(quiet.pixels == frame().pixels, "Reduced Weapon input restarted motion"); play.reduce_effects = false;
@@ -223,9 +227,9 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
     old.validate_resources(*app.render_resources(), *app.audio_resources()); next.validate_resources(*app.render_resources(), *app.audio_resources());
     presentation = old; open(3, 0, TeamColourPair::blue_orange); compare("old-art-font-catalog", old, L"Tools~"); presentation = next;
     require(preferences.set_display_settings_and_save(preferences.resolution(), false, TeamColourPair::pink_green), "Isolated Weapon palette replacement failed");
-    tap(0, GamepadButton::dpad_right); ++choices[0]; tick(settled); compare("old-choice-after-replacement", old, L"Tools~"); tap(0, GamepadButton::a); ready[0] = true; tick(settled); compare("old-ready-after-replacement", old, L"Tools~");
+    tap(0, GamepadButton::dpad_right); ++choices[0]; tick(settled); compare("old-choice-after-replacement", old, L"Tools~"); ready_row(0); tick(settled); compare("old-ready-after-replacement", old, L"Tools~");
     open(3, 0, TeamColourPair::pink_green); compare("reopened-art-font-catalog", next, L"Pick Tools", {}, true); presentation = original; tick(); compare("captured-art-live-fill-after-reversal", next, L"Pick Tools");
-    tap(0, GamepadButton::dpad_right); ++choices[0]; tick(settled); compare("new-choice-after-reversal", next, L"Pick Tools"); tap(0, GamepadButton::a); ready[0] = true; tick(settled); compare("new-ready-after-reversal", next, L"Pick Tools");
+    tap(0, GamepadButton::dpad_right); ++choices[0]; tick(settled); compare("new-choice-after-reversal", next, L"Pick Tools"); ready_row(0); tick(settled); compare("new-ready-after-reversal", next, L"Pick Tools");
     open(4); compare("restored-default", original);
     stack.clear();
     for (const bool description : { false, true })

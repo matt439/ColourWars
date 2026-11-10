@@ -374,6 +374,10 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         changed("weapon-middle", weapon_middle, weapon_rest, tiles);
         fixed_weapon_art(weapon_arrival, weapon_rest); fixed_weapon_art(weapon_middle, weapon_rest);
         require(weapon_arrival.pixels != weapon_middle.pixels, "Weapon tile response did not progress with positive time");
+        // A moves the row on to its sub (ROAD#11); a second A readies it.
+        tap(0, GamepadButton::a); const Frame weapon_sub = frame(); tick(settle_time);
+        const Frame weapon_sub_rest = frame(); changed("weapon-sub", weapon_sub, weapon_sub_rest, { weapon_box(0, true) });
+        fixed_weapon_art(weapon_sub, weapon_sub_rest);
         tap(0, GamepadButton::a); const Frame weapon_ready = frame(); tick(settle_time);
         const Frame weapon_ready_rest = frame(); changed("weapon-ready", weapon_ready, weapon_ready_rest, { weapon_box(0, true) });
         fixed_weapon_art(weapon_ready, weapon_ready_rest);
@@ -383,6 +387,9 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         tap(0, GamepadButton::b); const Frame weapon_unready = frame(); tick(settle_time);
         const Frame weapon_unready_rest = frame(); changed("weapon-unready", weapon_unready, weapon_unready_rest, { weapon_box(0, true) });
         fixed_weapon_art(weapon_unready, weapon_unready_rest);
+        // B stepped back to the sub; a second B returns the row to its tool.
+        tap(0, GamepadButton::b); const Frame weapon_tool_again = frame(); tick(settle_time);
+        changed("weapon-sub-back", weapon_tool_again, frame(), { weapon_box(0, true) });
         tap(0, GamepadButton::dpad_left); tap(0, GamepadButton::dpad_right); tap(0, GamepadButton::dpad_left);
         const Frame weapon_rapid = frame(); tick(settle_time); const Frame weapon_rapid_rest = frame();
         changed("weapon-rapid", weapon_rapid, weapon_rapid_rest, { weapon_box(0, true) });
@@ -406,7 +413,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
         require(before_resize.pixels == frame().pixels, "Settled setup changed after resize round-trip");
-        for (int player = 0; player < 4; ++player) { tap(player, GamepadButton::a); }
+        for (int player = 0; player < 4; ++player) { tap(player, GamepadButton::a); tap(player, GamepadButton::a); }
         require(frame().pixels == expected_page(1).pixels,
             "Final Weapon confirmation waited for motion or carried motion into Stage Select");
         std::cout << "PASS native setup motion " << size.x << 'x' << size.y << '\n';

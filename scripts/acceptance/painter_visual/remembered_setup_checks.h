@@ -184,9 +184,10 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         tap(4, GamepadButton::a);
         require(frame().pixels != reference(4, expected).pixels, "Remembered team readiness skipped the second player's confirmation");
         tap(3, GamepadButton::a); compare(4, expected, "weapons-unconfirmed");
-        tap(4, GamepadButton::a);
+        // Each seat confirms its tool, then its sub (ROAD#11).
+        tap(4, GamepadButton::a); tap(4, GamepadButton::a);
         require(frame().pixels != reference(5, expected).pixels, "Remembered weapon readiness skipped the second player's confirmation");
-        tap(3, GamepadButton::a); compare(5, expected, "arena-unconfirmed", true);
+        tap(3, GamepadButton::a); tap(3, GamepadButton::a); compare(5, expected, "arena-unconfirmed", true);
         tap(4, GamepadButton::a); tap(4, GamepadButton::b); compare(5, expected, "arena-unlocked");
         tap(4, GamepadButton::dpad_left); tap(4, GamepadButton::b);
         compare(4, expected, "arena-edit-cancelled");
@@ -239,11 +240,13 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     compare(3, expected, "provisional-weapon-cancelled"); unchanged();
     tap(3, GamepadButton::a); tap(4, GamepadButton::a); compare(4, expected, "weapon-reconfirmation");
     tap(3, GamepadButton::dpad_right); tap(4, GamepadButton::dpad_right);
-    tap(3, GamepadButton::a); tap(4, GamepadButton::a);
+    // A row readies on its second A: the tool, then the sub (ROAD#11).
+    const auto ready_tools = [&] { for (const int slot : { 3, 3, 4, 4 }) { tap(slot, GamepadButton::a); } };
+    ready_tools();
     expected.set_player_weapon(0, WeaponType::sniper); expected.set_player_weapon(1, WeaponType::bucket);
     compare(5, expected, "arena-browse"); tap(3, GamepadButton::dpad_right); tap(3, GamepadButton::b);
     compare(4, expected, "arena-cancel-preserves-tools"); unchanged();
-    tap(3, GamepadButton::a); tap(4, GamepadButton::a); compare(5, expected, "arena-reopened");
+    ready_tools(); compare(5, expected, "arena-reopened");
     for (int step = 0; step < 3; ++step) { tap(3, GamepadButton::dpad_right); }
     expected.set_stage("movement_course"); compare(5, expected, "chosen-arena", true); unchanged();
     tap(3, GamepadButton::a); unchanged(); note("first-arena-confirm-does-not-save", expected, true);
@@ -341,7 +344,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     command("play stop"); command("bot all off"); command("menu"); tick(); open(true); command("bot 1 paint");
     tap(3, GamepadButton::a); tap(3, GamepadButton::a); tap(3, GamepadButton::a); tap(3, GamepadButton::a);
     tap(4, GamepadButton::a); tap(3, GamepadButton::a); tap(3, GamepadButton::a); tap(4, GamepadButton::a);
-    tap(3, GamepadButton::dpad_right); tap(3, GamepadButton::a); tap(4, GamepadButton::a);
+    tap(3, GamepadButton::dpad_right); ready_tools();
     tap(3, GamepadButton::a); tap(3, GamepadButton::a, false);
     for (int step = 0; step < 600 && !impl.in_match(); ++step) { tick(dt); }
     require(impl.in_match() && impl.bot_for_seat(0, 3) == "paint", "The normal menu bot exclusion did not install the explicit first-seat bot");

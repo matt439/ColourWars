@@ -135,7 +135,9 @@ public:
     { require(!locked_, "Back reconstruction needs an unconfirmed page"); tap(Key::escape); }
     void proceed_from_weapon()
     {
-        tap(Key::enter); captured_ = look_.preview_background; slot_ = 0; locked_ = false;
+        // The tool, then its sub as it stands (ROAD#11): the second Enter readies
+        // the row and commits, drawing nothing for a concrete loadout.
+        tap(Key::enter); tap(Key::enter); captured_ = look_.preview_background; slot_ = 0; locked_ = false;
         ++counts_.reopens; tick(); tick(); unchanged();
     }
     void reopen() { back_to_weapon(); proceed_from_weapon(); }
@@ -347,18 +349,18 @@ PreviewBackingEvidence stage_preview_background_consumer_checks(Application& app
     probe.proceed_from_weapon(); retained("weapon-proceed-reopened", "2060C080", 0, 0, 2);
     probe.close(); const auto counts = probe.counts();
     require(csv.good() && life.good() && rows == 16 && life_rows == 10 && crops == 16 && controls == 8 &&
-        changed_pixels > 0 && changed_pixels <= 16384 && counts.reads == 68 && counts.updates == 63 &&
-        counts.polls == 83 && counts.taps == 21 && counts.opens == 9 && counts.reopens == 1,
+        changed_pixels > 0 && changed_pixels <= 16384 && counts.reads == 68 && counts.updates == 65 &&
+        counts.polls == 85 && counts.taps == 22 && counts.opens == 9 && counts.reopens == 1,
         "Preview backing shared finite read/row/crop/update/poll/lifetime budget differs");
     std::ofstream summary(output / "stage-preview-background-colour-consumer-summary.json");
     summary << "{\"scope\":\"captured-preview-backing-two-underlays\",\"readbacks\":68,\"csv_rows\":26,\"main_rows\":16,\"lifetime_rows\":10,\"crops\":16,\"crop_width\":64,\"crop_height\":32,"
         "\"crop_pixels\":32768,\"ppm_bytes\":98512,\"roi_pixels\":2048,\"roi_observations\":25,\"roi_pixel_checks\":51200,\"repeat_checks\":26,\"raw_references\":8,\"controls\":8,"
         "\"control_discriminating_pixels\":" << changed_pixels << ",\"full_page_lifetime_checks\":9,\"weapon_transition_nonoracle_checks\":1,\"explicit_stage_pushes\":9,\"back_weapon_proceed_routes\":1,"
-        "\"tap_gestures\":21,\"local_menu_updates\":63,\"gamepad_polls\":83,\"keyboard_polls\":83,\"mouse_polls\":83,\"input_polls\":249,\"calibration_pixel_checks\":2176,"
+        "\"tap_gestures\":22,\"local_menu_updates\":65,\"gamepad_polls\":85,\"keyboard_polls\":85,\"mouse_polls\":85,\"input_polls\":255,\"calibration_pixel_checks\":2176,"
         "\"positive_time_updates\":0,\"level_updates\":0,\"player_updates\":0,\"scene_updates\":0,\"gameplay_weapon_updates\":0,\"private_game_saves\":0}\n";
     require(summary.good(), "Cannot retain preview backing shared summary");
     std::cout << "PASS Stage preview backing: 68 reads, 26 rows, 16 native 64 by 32 crops; actual Random/Crossfeed browse/locked composites, "
-        "eight default/partial/zero controls, captured source edits and real Back/Weapon/Proceed reopen. 63 zero-dt menu updates and 249 explicit device polls.\n";
+        "eight default/partial/zero controls, captured source edits and real Back/Weapon/Proceed reopen. 65 zero-dt menu updates and 255 explicit device polls.\n";
     return evidence;
 }
 
@@ -457,16 +459,16 @@ void stage_preview_background_command_checks(Application& app, Registry<LevelLoa
     command("tune.reset " + full); probe.tick(); observe("reset-saved-retained", "2060C080", 2);
     probe.reopen(); observe("reset-saved-reopened", "2060C080", 2);
     probe.close(); unchanged(); const auto counts = probe.counts();
-    require(csv.good() && commands == 7 && rows == 12 && counts.reads == 24 && counts.updates == 34 && counts.polls == 38 &&
-        counts.taps == 9 && counts.opens == 1 && counts.reopens == 4 && impl.tune_document("presentation")->edits().empty() &&
+    require(csv.good() && commands == 7 && rows == 12 && counts.reads == 24 && counts.updates == 42 && counts.polls == 46 &&
+        counts.taps == 13 && counts.opens == 1 && counts.reopens == 4 && impl.tune_document("presentation")->edits().empty() &&
         impl.tune_document("tuning")->edits().empty(), "Preview Debug finite command/read/row/update/poll/reopen budget or final ledger differs");
     std::ofstream summary(output / "stage-preview-background-tune-summary.json");
     summary << "{\"scope\":\"debug-captured-next-screen-preview\",\"commands\":7,\"query_commands\":1,\"tune_commands\":3,\"reset_commands\":2,\"presentation_save_commands\":1,\"saved_tokens\":1,"
         "\"states\":12,\"readbacks\":24,\"csv_rows\":12,\"crops\":0,\"roi_observations\":12,\"roi_pixel_checks\":24576,\"repeat_checks\":12,\"explicit_stage_pushes\":1,\"back_weapon_proceed_routes\":4,"
-        "\"tap_gestures\":9,\"local_menu_updates\":34,\"gamepad_polls\":38,\"keyboard_polls\":38,\"mouse_polls\":38,\"input_polls\":114,\"calibration_pixel_checks\":768,"
+        "\"tap_gestures\":13,\"local_menu_updates\":42,\"gamepad_polls\":46,\"keyboard_polls\":46,\"mouse_polls\":46,\"input_polls\":138,\"calibration_pixel_checks\":768,"
         "\"positive_time_updates\":0,\"level_updates\":0,\"player_updates\":0,\"scene_updates\":0,\"gameplay_weapon_updates\":0,\"private_game_saves\":0}\n";
     require(summary.good(), "Cannot retain preview backing Debug summary");
     std::cout << "PASS Stage preview next-screen commands: 7 statements, 12 retained/fresh observations, 24 additional reads, one exact private token saved/rebased/reset. "
-        "34 zero-dt menu updates and 114 explicit device polls; no gameplay simulation or game Save.\n";
+        "42 zero-dt menu updates and 138 explicit device polls; no gameplay simulation or game Save.\n";
 }
 #endif

@@ -188,9 +188,11 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         host_open(input_slots::keyboard_and_mouse, 1, 2, 1, false);
         host_open(0, 2, 1, 0, true, true);
 
-        // Commit a manual Boost by readying both weapon rows, then return via
+        // Commit a manual Boost by readying both weapon rows, each through its
+        // tool and then its sub (ROAD#11), then return via
         // Stage -> Weapon -> Team -> Weapon without beginning new device claims.
-        host_tap(0, GamepadButton::x); host_tap(0, GamepadButton::a); host_tap(3, GamepadButton::a);
+        host_tap(0, GamepadButton::x);
+        for (const int slot : { 0, 0, 3, 3 }) { host_tap(slot, GamepadButton::a); }
         host_observe("manual-commit", 2, 2); host_expect_page(3, 2, 2);
         host_tap(0, GamepadButton::b); host_expect_page(2, 2, 2);
         host_tap(0, GamepadButton::b); host_expect_page(1, 2, 2);
@@ -342,14 +344,16 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         expect_page(2, "All readied bot teams did not open Weapon Select");
         save(frame(), output / ("bot-setup-tools-" + std::to_string(size.x) + "x" + std::to_string(size.y) + ".ppm"));
 
-        tap(Key::right); tap(Key::enter); // P1 Sniper, ready.
-        tap(Key::down); tap(Key::right); tap(Key::right); tap(Key::enter); // P2 Roller, ready.
+        // A row readies on its second Enter, the tool then the sub (ROAD#11),
+        // and steps back to the tool on its second Escape.
+        tap(Key::right); tap(Key::enter); tap(Key::enter); // P1 Sniper, ready.
+        tap(Key::down); tap(Key::right); tap(Key::right); tap(Key::enter); tap(Key::enter); // P2 Roller, ready.
         tap(Key::down); tap(Key::right); tap(Key::right); tap(Key::right); // P3 Mister.
-        tap(Key::up); tap(Key::escape); tap(Key::right); // P2 unready, change to Mister.
-        tap(Key::down); tap(Key::enter);
+        tap(Key::up); tap(Key::escape); tap(Key::escape); tap(Key::right); // P2 back to its tool, change to Mister.
+        tap(Key::down); tap(Key::enter); tap(Key::enter);
         require(settings.player_weapon(0) == WeaponType::sprayer,
             "A bot Back did not require that row to be readied again");
-        tap(Key::up); tap(Key::enter);
+        tap(Key::up); tap(Key::enter); tap(Key::enter);
         require(settings.player_weapon(0) == WeaponType::sniper && settings.player_weapon(1) == WeaponType::mister &&
             settings.player_weapon(2) == WeaponType::mister, "Host tool changes affected the wrong participant");
         expect_page(3, "All readied human/bot tools did not open Arena Select");
