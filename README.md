@@ -182,10 +182,10 @@ again readies the row. The grenade is lobbed along the aim and bursts into a
 ring of paint that hurts enemies caught in it. The sprinkler sticks where it
 lands and sprays paint around it until its time runs out or enemy shots break
 it. The paint wall stands beside the player, on the side they aim, stops enemy
-shots and drips paint on the floor beneath it. A sub costs half the paint tank
-and fires only with that much in it; under Endless paint a cooldown paces it
-instead. The square after the HUD's PAINT label is solid when a Sub press would
-release it.
+shots and drips paint on the floor beneath it. A sub costs half the paint tank,
+fires only with that much in it and then waits out a short cooldown; under
+Endless paint the cost is dropped and the cooldown alone paces it. The square
+after the HUD's PAINT label is solid when a Sub press would release it.
 
 ## Your own stages
 

@@ -62,8 +62,9 @@ then press A / Enter again.
   Random              Picks one of the three for you.
 
 A sub costs half a tank of paint and only fires when that much is in the
-tank. The small square beside PAINT on your HUD is solid when it is ready.
-With Endless paint, a short wait between uses takes the place of the cost.
+tank, and there is a short wait between uses. The small square beside PAINT
+on your HUD is solid when it is ready. With Endless paint the cost goes and
+only the wait remains.
 
 Menus: left stick or D-pad / arrow keys to move, A / Enter to choose,
 B / Escape to go back. Controls, volume, window size and full screen are
