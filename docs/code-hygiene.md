@@ -3591,8 +3591,8 @@ the two readers that take files from outside the build had only hand-written
 negative fixtures.
 
 [reader_mutations.cpp](../scripts/acceptance/reader_mutations.cpp) is a new
-opt-in case, declared `Quick`, so every pull request runs it in Release and
-the nightly runs it in both presets. It mutates each of the thirteen staged
+opt-in case, declared `Quick`, so every pull request and the nightly run it
+in Release; CI only compiles it in Debug. It mutates each of the thirteen staged
 levels 64 times and each of three saves 200 times (832 and 600 mutants;
 iteration 0 of each source is the source itself and must load). The saves are
 the defaults a first run writes, a save populated through `Save`'s own

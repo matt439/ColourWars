@@ -767,9 +767,10 @@ The `save_max_nesting` bound and its comment in `reader_mutations.cpp`: give
 the save the level's deep depths and require a load or a refusal. Nothing
 between `read_json_file` and the save's sections recurses (they read by key),
 so no game change is expected; if the case then fails, that is a new finding.
-Master's other reader changes in the same commit range (a duplicate key and a
-number outside `float` now throw) move this case's printed counts, which are
-not pinned. Then strike this entry.
+In the same commit range master's `JsonValue::number` throws for a number
+outside `float`'s range, which moves this case's printed counts; they are not
+pinned. Master's repeated-key refusal is in the manifest, sprite-sheet and
+sound-bank loaders, which this case does not feed. Then strike this entry.
 
 ---
 
