@@ -1037,7 +1037,10 @@ command or shipping bot policy.
   never reads or moves `rand()`.
 - **The menus' `rand()`.** The random teams, weapon and stage stay on `rand()`.
   `seed n` seeds it at once, and every seeded build seeds it again with the
-  round seed, so the menus' picks after any build under `seed` repeat.
+  round seed, so the menus' picks after any build under `seed` repeat. Stage
+  Select's Random pick also depends on the setup's current stage, which it
+  leaves out, so a seeded pick repeats only from the same remembered stage
+  ([`REV#24`](feature-roadmap.md#random-does-not-repeat-the-last-stage-rev24)).
 - **The planner and the scripted bots.** The planner's `stage random` and
   `weapon all random` are re-seeded for each plan, so every one draws the
   same, and the Debug bots take the seed directly.

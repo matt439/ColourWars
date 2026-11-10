@@ -79,6 +79,8 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 				this->play_wave(this->confirm_sound_);
 				if (this->select_state_.slot == this->random_slot())
 				{
+					// Before set_level_settings: the pick leaves out the stage
+					// the setup still holds, which that call overwrites.
 					this->select_state_.slot = this->pick_random_stage();
 				}
 				this->set_level_settings();
@@ -320,7 +322,7 @@ bool MainMenuStageSelect::is_user_stage(int slot) const
 int MainMenuStageSelect::pick_random_stage() const
 {
 	return static_cast<int>(random_stage_index(*this->data()->stages(),
-		static_cast<size_t>(rand())));
+		static_cast<size_t>(rand()), this->level_settings()->stage()));
 }
 void MainMenuStageSelect::init()
 {

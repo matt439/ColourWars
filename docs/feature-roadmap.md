@@ -3815,6 +3815,53 @@ three behaviours were accepted as built:
 The practice hint moved beside Single Match, and Mode's row spacing went from
 100 to 96, to make room for the row; that is an art-pass call too.
 
+### Random does not repeat the last stage (`REV#24`)
+
+**Done 2026-11-10.** Stage Select's Random used to map one `rand()` draw onto
+the whole Random pool, so from the shipped pool of four a new Random start
+landed on the arena just played about one time in four. It now draws from the
+pool without the setup's current stage whenever the pool holds more than one
+stage, and the remaining stages stay equally likely. A pool of one, a setup
+with no stage yet, and a setup whose stage is not a Random candidate all draw
+exactly as before.
+
+- **Where the last stage comes from.** It is the stage in the setup the page
+  edits, read just before the confirmation overwrites it. In the main menu
+  that is the save's `last_match` at launch and then each Stage confirmation.
+  Between series rounds (Change Level, Loser's pick) it is the stage of the
+  round just played. It is the stage last played from that setup whether
+  Random or the player chose it.
+- **The limit.** The main menu's setup keeps the stage that started a series
+  ([Series stage rule](#series-stage-rule-road20)). After a series under
+  Rotate or Loser's pick, a new Random start therefore avoids the series'
+  opening stage, not its final one, and can land on the arena the series
+  ended on. Making that exact would mean writing a series' last stage back
+  into the remembered setup, which this change does not do.
+- **What is unchanged.** Rotate and Loser's pick (`rotated_stage`,
+  `series_next_stage`) never used this draw and are not touched. The Debug
+  planner's `stage random` keeps the plain draw over the whole pool. The
+  Random hint still counts the whole pool, one more than a draw can reach
+  when the setup's stage is in it.
+- **Seeds.** The pick still takes exactly one `rand()` draw, so every later
+  draw under a Debug `seed` is the same as before. The stage a seeded menu
+  Random pick lands on does change whenever the setup's stage is in the pool:
+  it is now a function of the seed and that stage. No document or probe pinned
+  a seed to a menu stage.
+
+`random_stage_index` (`game/objects/stage.h`) takes the last stage as a third
+argument and stays a pure function; the two-argument form is the same draw
+with nothing left out. The `stage_selection` acceptance case pins it: a pool
+of two always returns the other stage, a pool of four gives each of the other
+three an equal share in manifest order, a pool of one still returns its stage,
+an empty, explicit-only or unknown last stage matches the two-argument draw,
+and each of the four shipped Random arenas as the last stage is never drawn
+again while the other three get four draws in twelve each. `stage_selection`,
+`series_stage_rule`, `remembered_setup`, `user_stages`, `menu_navigation` and
+`turbulence_slab_stage` pass in Debug and Release. Not run: the painter checks
+that drive the real Stage page on a GPU (`check-painter.ps1`; its join and
+stage motion check confirms Random twice from a pool of one and expects one
+consumed draw, which this keeps), and how it plays.
+
 ### Teammate markers (`ROAD#18`)
 
 **Teammate half done 2026-10-28; no threat markers (the author, 2026-11-05).** In each
