@@ -177,17 +177,24 @@ def read_matches(files):
                     raise ValueError(f"{path}:{line}: seat {seat} has no tool or team")
                 seats.append({
                     "seat": seat, "team": team, "tool": tool,
+                    "sub": row.get(prefix + "sub", "grenade"),
                     "paint": number(row, prefix + "share_of_painted", path, line),
                     "kills": number(row, prefix + "credited_enemy_eliminations", path, line) / minutes,
                     "deaths": number(row, prefix + "credited_enemy_projectile_deaths", path, line) / minutes,
                 })
+                counters = ("alive_ticks", "engaged_ticks", "refilling_ticks", "ready_fire_intents", "observed_sub_cooldown_resets")
+                if all(prefix + name in row for name in counters):
+                    values = {name:number(row,prefix+name,path,line) for name in counters}
+                    if any(v < 0 or int(v) != v for v in values.values()) or any(values[n] > values['alive_ticks'] for n in counters[1:]):
+                        raise ValueError(f"{path}:{line}: impossible diagnostic counters for seat {seat}")
+                    seats[-1]["diagnostics"] = values
             match = {
                 "stage": row["stage"], "seed": int(number(row, "seed", path, line)),
                 "players": players, "bot": row["bot"],
                 "seconds": number(row, "requested_active_seconds", path, line), "seats": seats,
             }
             key = (match["stage"], match["seed"], players, match["bot"], match["seconds"],
-                   tuple((s["team"], s["tool"]) for s in seats))
+                   tuple((s["team"], s["tool"], s["sub"]) for s in seats))
             if key in seen:
                 raise ValueError(f"{path}:{line}: repeats the match at {seen[key]}; pass each run once")
             seen[key] = f"{path}:{line}"
@@ -467,6 +474,8 @@ def analyze_group(matches, profiles, include_mirrors):
     result = {
         "kind": kind, "players": players, "bot": matches[0]["bot"], "seconds": matches[0]["seconds"],
         "matches": len(matches), "stages": stages, "tools": tools,
+        "design_observations": sorted((m['stage'],m['seed'],tuple((s['team'],s['tool'],s.get('sub','grenade')) for s in m['seats'])) for m in matches),
+        "subs": [s.get("sub", "grenade") for s in matches[0]["seats"]],
         "seeds": sorted({m["seed"] for m in matches}),
         "units": sum(len(u) for u in strata.values()),
         "marginals": {t: {m: contrast(strata, m, weights[t]) for m in MEASURES} for t in weights},
@@ -490,6 +499,30 @@ def analyze_group(matches, profiles, include_mirrors):
         halves = counts["side_halves"]
         result["side_effect"] = side_effect(halves)
         result["orientation_correlation"] = orientation_correlation(halves)
+    totals = {}
+    for match in matches:
+        for seat in match["seats"]:
+            if "diagnostics" not in seat:
+                continue
+            item=totals.setdefault(seat['tool'],dict(alive_ticks=0,engaged_ticks=0,refilling_ticks=0,ready_fire_intents=0,observed_sub_cooldown_resets=0,minutes=0))
+            for name,value in seat['diagnostics'].items():
+                item[name]+=value
+            item['minutes']+=match['seconds']/60.0
+    result['diagnostics']={tool:dict(values,
+        engaged_fraction=values['engaged_ticks']/values['alive_ticks'] if values['alive_ticks'] else None,
+        refilling_fraction=values['refilling_ticks']/values['alive_ticks'] if values['alive_ticks'] else None,
+        ready_fire_intents_per_minute=values['ready_fire_intents']/values['minutes'],observed_sub_cooldown_resets_per_minute=values['observed_sub_cooldown_resets']/values['minutes'])
+        for tool,values in totals.items()}
+    if players == 4 and all(sum(s['team']==team for s in match['seats']) == 2 for match in matches for team in ('a','b')):
+        teams=[]
+        for match in matches:
+            seats=[]
+            for team in ('a','b'):
+                members=[s for s in match['seats'] if s['team']==team]
+                seats.append(dict(team=team,tool='+'.join(sorted(s['tool'] for s in members)),
+                                  **{measure:math.fsum(s[measure] for s in members) for measure in MEASURES}))
+            teams.append(dict(match,players=2,seats=seats))
+        result['team_rosters']=analyze_group(teams,{},True)
     result["sensitivity"] = sensitivity(result, strata, cells, kind, include_mirrors)
     return result
 
@@ -556,8 +589,79 @@ def analyze(matches, profiles, include_mirrors=False):
     validate_profiles(profiles)
     groups = {}
     for match in matches:
-        groups.setdefault((match["players"], match["bot"], match["seconds"]), []).append(match)
+        groups.setdefault((match["players"], match["bot"], match["seconds"], tuple(s.get("sub", "grenade") for s in match["seats"])), []).append(match)
     return [analyze_group(members, profiles, include_mirrors) for _, members in sorted(groups.items())]
+
+
+# --- Independent A/B comparison ---
+
+def group_key(group):
+    return (group["players"], group["bot"], group["seconds"], tuple(group.get("subs", [])))
+
+
+def independent_change(before, after, margin):
+    delta = after["mean"] - before["mean"]
+    result = {"mean": delta, "se": None, "df": None, "half_width": None, "margin": margin,
+              "verdict": "inconclusive"}
+    if before["se"] is None or after["se"] is None:
+        return result
+    a, b = before["se"]**2, after["se"]**2
+    variance = a+b
+    df = variance**2 / (a*a/before["df"] + b*b/after["df"])
+    half = two_sided(df)*math.sqrt(variance)
+    result.update(se=math.sqrt(variance), df=df, half_width=half)
+    if abs(delta)+half <= margin:
+        result["verdict"] = "within margin"
+    elif abs(delta)-half > margin:
+        result["verdict"] = "beyond margin"
+    return result
+
+
+def compare_groups(before, after, margins):
+    if set(margins) != set(MEASURES) or any(type(v) not in (int,float) or not math.isfinite(v) or v < 0 for v in margins.values()):
+        raise ValueError("Comparison needs finite nonnegative paint/kills/deaths margins from the design")
+    a, b = {group_key(g):g for g in before}, {group_key(g):g for g in after}
+    if set(a) != set(b):
+        raise ValueError("A/B groups differ in roster size, bot, duration or subs; compare one design")
+    comparisons=[]
+    for key in sorted(a):
+        first, second = a[key], b[key]
+        if (first["seeds"] != second["seeds"] or first.get("design_observations") != second.get("design_observations")
+            or set(first["table"]) != set(second["table"]) or set(first["marginals"]) != set(second["marginals"])):
+            raise ValueError("A/B cells, tools or consecutive seed block differ; compare one design")
+        cells={k: independent_change(v,second["table"][k],margins[k[0]]) for k,v in first["table"].items()}
+        tools={t:{m:independent_change(first["marginals"][t][m],second["marginals"][t][m],margins[m]) for m in MEASURES}
+               for t in first["marginals"]}
+        verdicts=[v["verdict"] for v in cells.values()]+[v["verdict"] for m in tools.values() for v in m.values()]
+        team_changes=None
+        if 'team_rosters' in first or 'team_rosters' in second:
+            if 'team_rosters' not in first or 'team_rosters' not in second:
+                raise ValueError('A/B team roster data differ')
+            team_changes=compare_groups([first['team_rosters']],[second['team_rosters']],margins)
+        comparisons.append({"team_rosters":team_changes,"group":list(key),"tools":tools,"cells":[dict(key=list(k),**v) for k,v in sorted(cells.items())],
+                            "counts":{v:verdicts.count(v) for v in ('within margin','beyond margin','inconclusive')}})
+    return comparisons
+
+
+def render_comparison(comparisons):
+    lines=["", "## A/B change (current minus comparison)", "",
+           "Independent Welch intervals at 95%; the same seed block is not treated as a paired sample. "
+           "Within margin requires the whole interval inside the design's symmetric margin; "
+           "inconclusive does not certify unchanged behavior. Comparisons are unadjusted and are evidence only."]
+    for group in comparisons:
+        lines += ["", str(group["group"]), "", "| Tool | Measure | Change | Margin | Result |", "|---|---|---|---|---|"]
+        for tool,measures in sorted(group["tools"].items()):
+            for measure,value in measures.items():
+                lines.append(f"| {tool} | {measure} | {pm(value)} | {value['margin']:g} | {value['verdict']} |")
+        if group.get('team_rosters'):
+            lines += ["", "Whole-team roster changes (same intervals and design margins):"]
+            for team_group in group['team_rosters']:
+                for item in team_group['cells']:
+                    measure,stage,team,other=item['key']
+                    lines.append(f"- {stage}, {team} against {other}, {measure}: {pm(item)}, {item['verdict']}.")
+        lines += ["", "Cell and tool checks: " + ", ".join(f"{n} {v}" for v,n in group["counts"].items()) + ".",
+                  "Per-cell changes and intervals are in summary.json."]
+    return "\n".join(lines)+"\n"
 
 
 # --- Output ---
@@ -611,6 +715,17 @@ def render(groups, sources, label):
             text = "; ".join(describe(m, v) for m, v in prof.items()) or "none stated"
             lines.append(f"| {tool} | " + " | ".join(pm(g["marginals"][tool][m]) for m in MEASURES)
                          + f" | {text} |")
+        if g.get('diagnostics'):
+            lines += ["", "### Bot diagnostics", "", "| Tool | Engaged / alive | Refilling / alive | Ready fire intents / active min | Observed sub cooldown resets / active min |", "|---|---|---|---|---|"]
+            for tool,item in sorted(g['diagnostics'].items()):
+                lines.append(f"| {tool} | {fmt(item['engaged_fraction'])} | {fmt(item['refilling_fraction'])} | {fmt(item['ready_fire_intents_per_minute'],2)} | {fmt(item['observed_sub_cooldown_resets_per_minute'],2)} |")
+            lines += ["", "Pooled descriptive counters. Engaged is the current living visible enemy within sight and tool reach; it is not the policy's held decision. Refilling is the driver's post-think flag. Ready fire intents are sampled before contacts, so a later lethal hit can prevent emission. Sub resets count only a strict observed cooldown rise, so cooldowns at or below one tick can be missed; these proxies are not paid-event counts."]
+        if g.get('team_rosters'):
+            teams=g['team_rosters']
+            lines += ["", "### 2v2 team rosters", "", "Side-swapped seed units; paint and eliminations are the whole team's sum, so a role tool is judged with its painter.", "", "| Stage | Team | Opponent | Team share of painted | Eliminations / min |", "|---|---|---|---|---|"]
+            cells=sorted(k[1:] for k in teams['table'] if k[0]=='paint')
+            for stage,team,other in cells:
+                lines.append(f"| {stage} | {team} | {other} | {pm(teams['table'][('paint',stage,team,other)])} | {pm(teams['table'][('kills',stage,team,other)])} |")
         absent = sorted(t for t, prof in g["profiles"].items() if t not in g["marginals"])
         if absent:
             lines += ["", "Stated in the profiles but not in this data: " + ", ".join(absent) + "."]
@@ -653,6 +768,8 @@ def jsonable(groups, sources):
     for g in groups:
         item = {k: v for k, v in g.items() if k != "table"}
         item["table"] = [dict(key=list(k), **v) for k, v in sorted(g["table"].items())]
+        if 'team_rosters' in item:
+            item['team_rosters']=jsonable([item['team_rosters']],[])['groups'][0]
         out.append(item)
     return {"schema_version": 1, "sources": sources, "groups": out}
 
@@ -681,6 +798,8 @@ def main(argv=None):
     parser.add_argument("inputs", nargs="+", help="matches.csv files or folders searched for them")
     parser.add_argument("--out", type=Path, help="folder for summary.md and summary.json (default: print)")
     parser.add_argument("--profiles", type=Path, default=DEFAULT_PROFILES)
+    parser.add_argument("--compare", nargs="+", help="baseline matches.csv or folders (current minus baseline)")
+    parser.add_argument("--design-file", type=Path, help="matrix-info.json or normalized JSON design supplying ComparisonMargins")
     parser.add_argument("--label", default="", help="a title for the summary")
     parser.add_argument("--include-mirrors", action="store_true",
                         help="count a tool against itself in its marginals")
@@ -692,11 +811,24 @@ def main(argv=None):
         matches, sources = read_matches(find_csvs(args.inputs))
         groups = analyze(matches, profiles, args.include_mirrors)
         text = render(groups, sources, args.label)
+        comparison, comparison_sources = None, None
+        if args.compare:
+            if not args.design_file:
+                raise ValueError("--compare requires --design-file with the design's ComparisonMargins")
+            design = json.loads(args.design_file.read_text(encoding="utf-8-sig"))
+            design = design.get("design", design)
+            baseline, comparison_sources = read_matches(find_csvs(args.compare))
+            comparison = compare_groups(analyze(baseline, profiles, args.include_mirrors), groups, design["ComparisonMargins"])
+            text += render_comparison(comparison)
+        payload = jsonable(groups, sources)
+        if comparison is not None:
+            payload["comparison"] = comparison
+            payload["comparison_sources"] = comparison_sources
         if args.out:
             args.out.mkdir(parents=True, exist_ok=True)
             (args.out / "summary.md").write_text(text, encoding="utf-8", newline="\n")
             (args.out / "summary.json").write_text(
-                json.dumps(jsonable(groups, sources), indent=1, sort_keys=True) + "\n",
+                json.dumps(payload, indent=1, sort_keys=True) + "\n",
                 encoding="utf-8", newline="\n")
             print(f"Wrote {args.out / 'summary.md'}")
         else:

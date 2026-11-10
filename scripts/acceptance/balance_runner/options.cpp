@@ -358,6 +358,10 @@ namespace balance_runner
             if (tool < WeaponType::sprayer || tool >= WeaponType::random_primary)
             { throw std::invalid_argument("Runner needs concrete primary tools only"); }
         }
+        if (!options.subs.empty() && options.subs.size() != static_cast<std::size_t>(options.players))
+        { throw std::invalid_argument("Supply exactly one sub per player"); }
+        for (SubType sub : options.subs)
+        { if (sub_name(sub) == nullptr) { throw std::invalid_argument("Runner needs concrete subs"); } }
         if (!Bot::is_behaviour(options.bot) && options.bot != "match")
         { throw std::invalid_argument("Unknown bot behaviour: " + options.bot); }
         if (options.bot == "match" ? options.difficulties.size() != static_cast<std::size_t>(options.players) :
@@ -387,17 +391,19 @@ namespace balance_runner
             const std::string option = ascii(arguments[at]);
             if (option != "--stage" && option != "--seed" && option != "--players" &&
                 option != "--duration" && option != "--tools" && option != "--bot" && option != "--difficulty" &&
-                option != "--csv" && option != "--paint-csv")
+                option != "--csv" && option != "--paint-csv" && option != "--subs" && option != "--tuning-patch")
             { throw std::invalid_argument("Unknown option: " + option); }
             if (at + 1 >= arguments.size()) { throw std::invalid_argument("Missing value for " + option); }
             if (option != "--stage" && option != "--seed" && !seen.insert(option).second)
             { throw std::invalid_argument("Duplicate option: " + option); }
             const std::wstring& wide_value = arguments[++at];
-            if (option == "--csv" || option == "--paint-csv")
+            if (option == "--csv" || option == "--paint-csv" || option == "--tuning-patch")
             {
                 if (wide_value.empty()) { throw std::invalid_argument("CSV path must not be empty"); }
                 const std::filesystem::path path(wide_value);
-                if (option == "--csv") { options.csv = path; } else { options.paint_csv = path; }
+                if (option == "--csv") { options.csv = path; }
+                else if (option == "--tuning-patch") { options.tuning_patch = path; }
+                else { options.paint_csv = path; }
                 continue;
             }
             const std::string value = ascii(wide_value);
@@ -418,6 +424,17 @@ namespace balance_runner
                 options.players = static_cast<int>(count);
             }
             else if (option == "--duration") { options.duration = seconds(value); }
+            else if (option == "--subs")
+            {
+                std::istringstream input(value); std::string name;
+                if (value.empty() || value.back() == ',') { throw std::invalid_argument("Empty sub name"); }
+                while (std::getline(input, name, ','))
+                {
+                    const std::optional<SubType> sub = sub_from_name(name);
+                    if (!sub) { throw std::invalid_argument("Unknown sub: " + name); }
+                    options.subs.push_back(*sub);
+                }
+            }
             else if (option == "--tools") { options.tools = parse_tools(value); }
             else if (option == "--bot") { options.bot = value; }
             else if (option == "--difficulty") { options.difficulties = parse_difficulties(value); }
@@ -460,6 +477,12 @@ namespace balance_runner
                 "uncredited_projectile_lethals" })
             { out << prefix << name; }
         }
+        for (int seat = 1; seat <= 4; ++seat)
+        {
+            const std::string prefix = ",p" + std::to_string(seat) + '_';
+            for (const char* name : { "sub", "engaged_ticks", "refilling_ticks", "ready_fire_intents", "observed_sub_cooldown_resets" })
+            { out << prefix << name; }
+        }
         return out.str();
     }
 
@@ -469,7 +492,7 @@ namespace balance_runner
         out.imbue(std::locale::classic());
         out << std::setprecision(std::numeric_limits<double>::max_digits10);
         const double painted = static_cast<double>(result.team_a_area) + result.team_b_area;
-        out << 2 << ',' << field(result.stage) << ',' << result.seed << ',' << result.players << ','
+        out << 3 << ',' << field(result.stage) << ',' << result.seed << ',' << result.players << ','
             << field(result.bot) << ',' << result.duration << ',' << labrador::StepTimer::TicksPerSecond / 60 << ','
             << std::bit_cast<std::uint32_t>(fixed_dt()) << ',' << result.active_ticks << ','
             << static_cast<double>(result.active_ticks) * fixed_dt() << ',' << result.team_a_area << ','
@@ -490,6 +513,11 @@ namespace balance_runner
         {
             out << ',' << seat.credited_enemy_eliminations << ',' << seat.credited_enemy_projectile_deaths << ','
                 << seat.uncredited_projectile_lethals;
+        }
+        for (const SeatResult& seat : result.seats)
+        {
+            out << ',' << (seat.team == PlayerTeam::none ? "none" : sub_name(seat.sub)) << ',' << seat.engaged_ticks << ','
+                << seat.refilling_ticks << ',' << seat.ready_fire_intents << ',' << seat.observed_sub_cooldown_resets;
         }
         return out.str();
     }
@@ -525,7 +553,7 @@ namespace balance_runner
                     !equal(runtime.player_areas.at(static_cast<std::size_t>(seat.paint_owner)), seat.paint_area))
                 { throw std::invalid_argument("Paint report does not match its main seat ownership/tool"); }
             }
-            records.push_back({ { index + 1, result.stage, result.seed, result.bot, result.duration, result.final_fingerprint }, report });
+            records.push_back({ { index + 1, result.stage, result.seed, result.bot, result.duration, result.final_fingerprint, 3 }, report });
         }
         return balance_regions::csv_text(records);
     }

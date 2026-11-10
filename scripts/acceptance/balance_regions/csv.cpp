@@ -86,7 +86,7 @@ namespace balance_regions
             {
                 const bool outside = cell.region == partition.bands.size();
                 const std::string region = outside ? "outside_partition" : partition.bands.at(cell.region).name;
-                out << 1 << ',' << match.main_row << ',' << 2 << ',' << field(match.stage) << ',' << match.seed << ','
+                out << 1 << ',' << match.main_row << ',' << match.main_schema_version << ',' << field(match.stage) << ',' << match.seed << ','
                     << metrics.roster().size() << ',' << field(match.bot) << ',' << match.duration << ','
                     << match.final_fingerprint << ',' << field(roster_text(metrics.roster())) << ',' << field(partition.name)
                     << ',' << field(region) << ',';

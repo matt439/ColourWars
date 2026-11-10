@@ -2,6 +2,10 @@
 #include "scripts/acceptance/balance_runner/runner.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/ai/match_bot_driver.h"
+#include "game/ai/match_bot_ballistics.h"
+#include "game/debug/tune/tune_document.h"
+#include <fstream>
+#include <iterator>
 #include "game/debug/replay/bot_driver.h"
 #include "game/debug/replay/match_fingerprint.h"
 #include "game/input/input_slots.h"
@@ -35,8 +39,8 @@ namespace balance_runner
         class CpuWorld final
         {
         public:
-            explicit CpuWorld(const std::filesystem::path& content) :
-                tuning_(path_to_utf8(content / "tuning.json").c_str()),
+            explicit CpuWorld(const std::filesystem::path& content, const std::filesystem::path& patch) :
+                tuning_(parse_json(patched_tuning_text(content, patch), "balance tuning (memory)")),
                 presentation_(path_to_utf8(content / "presentation.json").c_str())
             {
                 // The accepted bank is not read: this tool has no audio backend/device
@@ -78,6 +82,7 @@ namespace balance_runner
                 {
                     settings.set_player_team(view, view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);
                     settings.set_player_weapon(view, options.tools.at(static_cast<std::size_t>(view)));
+                    if (!options.subs.empty()) { settings.set_player_sub(view, options.subs.at(static_cast<std::size_t>(view))); }
                 }
                 // Keep each seat unclaimed (-1): BotDriver addresses views,
                 // while PlayerBuilder allocates distinct device-less paint owners.
@@ -120,7 +125,7 @@ namespace balance_runner
         class MetricsSeats final : public SeatInputFilter
         {
         public:
-            MetricsSeats(const GameTuning& tuning, std::uint32_t seed, const Options& options)
+            MetricsSeats(const GameTuning& tuning, std::uint32_t seed, const Options& options) : tuning_(&tuning)
             {
                 if (options.bot == "match")
                 {
@@ -150,6 +155,31 @@ namespace balance_runner
                     SeatResult& result = this->seats_.at(static_cast<std::size_t>(view));
                     if (player.state() != PlayerState::alive || player.health() <= 0.0f) { continue; }
                     ++result.alive_ticks;
+                    const PlayerInputData& input = seats.at(static_cast<std::size_t>(view));
+                    // Sample ready intent before contacts: a lethal contact later in this
+                    // step can prevent emission. This is not a paid-shot counter.
+                    if (input.primary_shoot && player.primary_weapon().ready_to_shoot()) { ++result.ready_fire_intents; }
+                    const SubWeapon* sub = player.sub_weapon();
+                    this->sub_before_.at(static_cast<std::size_t>(view)) = sub ? sub->cooldown_remaining() : 0.0f;
+                    if (this->match_ != nullptr)
+                    {
+                        if (this->match_->bot(view)->refilling()) { ++result.refilling_ticks; }
+                        const BotWorld& world = level.bot_world();
+                        const BotBody body = world.body(view);
+                        const WeaponTuning& tool = this->tuning_->weapon(body.weapon);
+                        const ProjectileTuning& projectile = this->tuning_->projectile(tool.details.proj_type);
+                        const float reach = match_bot_ballistics::horizontal_reach(tool, projectile) + body.muzzle_reach +
+                            projectile.details.col_rect_size.x * 0.5f + this->tuning_->player().size.x * 0.5f;
+                        const float radius = std::min(reach, this->tuning_->bots().sight_distance);
+                        for (int other = 0; other < world.participant_count(); ++other)
+                        {
+                            const BotBody enemy = world.body(other);
+                            if (other != view && enemy.alive && enemy.health > 0.0f && enemy.team != body.team &&
+                                Vector2F::distance_squared(body.center, enemy.center) <= radius * radius &&
+                                world.line_of_sight(body.center, enemy.center))
+                            { ++result.engaged_ticks; break; }
+                        }
+                    }
                     if (player.primary_weapon().readiness() == WeaponReadiness::empty)
                     {
                         ++result.ammo_starved_ticks;
@@ -161,6 +191,10 @@ namespace balance_runner
             {
                 for (int view = 0; view < level.player_count(); ++view)
                 {
+                    const SubWeapon* sub = level.player(view).sub_weapon();
+                    if (before.at(static_cast<std::size_t>(view)) == PlayerState::alive && sub != nullptr &&
+                        sub->cooldown_remaining() > this->sub_before_.at(static_cast<std::size_t>(view)))
+                    { ++this->seats_.at(static_cast<std::size_t>(view)).observed_sub_cooldown_resets; }
                     if (before.at(static_cast<std::size_t>(view)) == PlayerState::alive &&
                         level.player(view).state() == PlayerState::dead)
                     { ++this->seats_.at(static_cast<std::size_t>(view)).observed_death_edges; }
@@ -172,6 +206,8 @@ namespace balance_runner
             const MatchBotDriver* match() const { return this->match_; }
 
         private:
+            const GameTuning* tuning_;
+            std::array<float, 4> sub_before_{};
             std::unique_ptr<SeatInputFilter> bots_;
             const MatchBotDriver* match_ = nullptr;
             std::uint64_t active_ticks_ = 0;
@@ -233,6 +269,8 @@ namespace balance_runner
             result.paintable_area = end.total_area;
             result.final_fingerprint = MatchFingerprint::of(*level, static_cast<int>(updates)).hash;
             result.seats = samples.seats();
+            for (int view = 0; view < options.players; ++view)
+            { result.seats[static_cast<std::size_t>(view)].sub = level->player(view).sub_weapon()->type(); }
             result.activity_observed = activity_observed;
             for (int view = 0; view < level->player_count(); ++view)
             {
@@ -272,6 +310,40 @@ namespace balance_runner
             { throw std::runtime_error("Read-only final paint snapshot changed the existing match fingerprint"); }
             return result;
         }
+    }
+
+    std::string patched_tuning_text(const std::filesystem::path& content, const std::filesystem::path& patch)
+    {
+        const auto read = [](const std::filesystem::path& path)
+        {
+            std::ifstream input(path, std::ios::binary);
+            if (!input) { throw std::invalid_argument("Cannot read balance tuning input: " + labrador::path_to_utf8(path)); }
+            std::string text{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+            if (input.bad()) { throw std::runtime_error("Cannot finish reading balance tuning input"); }
+            return text;
+        };
+        TuneDocument baseline("tuning", read(content / "tuning.json"));
+        if (patch.empty()) { return baseline.current().text(); }
+        const std::string patch_text = read(patch);
+        const labrador::JsonDocument values = labrador::parse_json(patch_text, "balance patch");
+        const JsonSpanDocument spans(patch_text, "balance patch");
+        const std::vector<std::string> keys = values.root().keys();
+        if (keys.size() != spans.leaves().size())
+        { throw std::invalid_argument("Balance patch must be a flat object of existing dotted numeric/boolean paths"); }
+        std::set<std::string> seen;
+        for (const std::string& key : keys)
+        {
+            if (!seen.insert(key).second || !(key.starts_with("weapons.") || key.starts_with("projectiles.") ||
+                key.starts_with("subs.") || key.starts_with("bots.")))
+            { throw std::invalid_argument("Balance patch key is repeated or outside the allowed sections: " + key); }
+            const JsonLeaf* replacement = spans.find(key);
+            const JsonLeaf* original = baseline.find(key);
+            if (replacement == nullptr || original == nullptr || original->kind != replacement->kind ||
+                replacement->kind == JsonLeaf::Kind::string)
+            { throw std::invalid_argument("Balance patch requires an existing same-type numeric/boolean leaf: " + key); }
+            baseline.commit(baseline.edited(*original, spans.token(*replacement)), key);
+        }
+        return baseline.current().text();
     }
 
     void attribute_eliminations(Result& result, const std::vector<PlayerLethalProjectiles>& victims)
@@ -328,7 +400,7 @@ namespace balance_runner
     std::vector<Result> run_sweep(const Options& options)
     {
         validate_options(options);
-        CpuWorld world(options.content);
+        CpuWorld world(options.content, options.tuning_patch);
         // Validate the complete request before the first match, including
         // manifest membership (never build an arbitrary level path).
         for (const std::string& stage : options.stages)

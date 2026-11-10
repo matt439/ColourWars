@@ -16,7 +16,7 @@ int wmain(int argc, wchar_t* argv[])
         {
             std::cerr << "usage: balance_runner <content> [--stage id ... --seed uint32 ... "
                 "--players 1..4 --duration 0.05..600 --tools sprayer,sniper,... "
-                "--bot paint|chase|walk|jump|idle|skirmish --csv new-file [--paint-csv new-file]]\n"
+                "--bot match|paint|chase|walk|jump|idle|skirmish --subs grenade,wall,... --tuning-patch file --csv new-file [--paint-csv new-file]]\n"
                 "With <content> only, run bounded device-free self-tests.\n";
             return 2;
         }

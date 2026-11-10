@@ -939,22 +939,102 @@ observations. Slices, in order:
 
 1. **Analyser (done 2026-11-10,
    [below](#analyser-on-the-tool3-matrix-2026-11-10)).**
-2. **Matrix driver.** `scripts/run-balance-matrix.ps1` with one design file,
+2. **Matrix driver (implemented 2026-11-10).** `scripts/run-balance-matrix.ps1` with one design file,
    `cases.psd1`-style. It compiles once, runs jobs in parallel, resumes after a
    kill, and repeats one job as a byte-identity check.
-3. **Loadout and tuning patch.** Runner flags for each seat's sub and an
+3. **Loadout and tuning patch (implemented 2026-11-10).** Runner flags for each seat's sub and an
    in-memory tuning patch, limited to `weapons`, `projectiles`, `subs` and
    `bots`. An empty patch reproduces the rows byte for byte. The runner stays
    Debug-only.
 4. **The shipped game.** Every ordered tool pair on the four Random stages,
    over a consecutive seed block, at Hard and Normal 1v1, plus 2v2 rosters
    pairing each tool with each painter. Filed here as evidence.
-5. **A/B.** `analyze.py --compare` between two runs of one design: per-cell
+5. **A/B (implemented 2026-11-10).** `analyze.py --compare` between two runs of one design: per-cell
    and per-tool change with intervals, and a check that nothing moved beyond a
    margin set in the design file. This serves future changes (new tools,
    pickups, an elimination burst) rather than reopening the accepted values.
 
 Bot results stay evidence, not acceptance (see [above](#headless-balance-runner-tool1-2026-10-25)).
+
+### Running and resuming a matrix (2026-11-10)
+
+From an x64 Developer shell:
+
+```powershell
+scripts/run-balance-matrix.ps1 -Design scripts/balance/shipped.psd1 -OutputDirectory out/validation/shipped-matrix -PlanOnly
+scripts/run-balance-matrix.ps1 -Design scripts/balance/shipped.psd1 -OutputDirectory out/validation/shipped-matrix -Parallel 6
+```
+
+The data file names stages, difficulties, one consecutive `SeedStart`/`SeedCount`
+block (1-64 seeds), duration, roster generators and variants. The shipped design
+has 344 jobs / 5,504 matches: all 25 ordered 1v1 tool pairs, and each tool with
+Roller or Mister against two of that painter, side-swapped, on the four Random
+arenas at Normal and Hard. Sixteen seeds (1000-1015) improve the sparse
+elimination evidence over TOOL#3's five; the reported intervals, not that count,
+say what a cell resolves. The diagnostic ladder uses the same stages, tools and
+seed block at Hard, changing only aim error or reaction delay in each variant.
+`-PlanOnly` validates and prints counts without compiling or creating evidence.
+The driver compiles the Debug runner once; `-RunnerExecutable` reuses an explicitly
+chosen compiled runner. `-SkipBuild` skips the game build, not that one compile.
+
+Outputs must be in a dedicated directory below this checkout's `out/`. Run the
+same command there to resume. A success is reused only when its signature and
+both CSV hashes match. Changed executable, game library, source, reviewed
+runtime assets, design or driver refuses resume and needs a new directory.
+The staging allowlist in `cmake/runtime_assets.cmake` defines asset pins; an absent
+optional bank is recorded as absent, and private/source-only files are excluded.
+Generated variant patches are hashed before and after each job and at the end.
+Failed and interrupted attempts stay in their own folders. A dead driver lock
+is retained as a stale-lock receipt and reclaimed after its PID is verified gone;
+a live owner is refused. Each Windows native job is assigned to a private
+kill-on-close Job Object at process creation; cancellation or a killed driver
+cannot leave its runner processes behind. `-RunTimeoutSeconds` bounds each job,
+and cancellation skips queued jobs and terminates only owned runners.
+
+`matrix-info.json` records the design, input pins and final outcome. Every job
+has arguments, logs, timing, hashes and its attempt path in `jobs/<id>/job.json`.
+The first job is repeated byte for byte, main and companion, outside the report's
+observations. Each variant's aggregate is `variants/<name>/matches.csv` and
+`matches.paint.csv`; companion `match_row` joins are renumbered to the aggregate.
+Analyse one variant at a time:
+
+```powershell
+python scripts/balance/analyze.py out/validation/shipped-matrix/variants/baseline --out out/validation/shipped-summary
+python scripts/balance/analyze.py out/validation/changed/variants/baseline --compare out/validation/shipped-matrix/variants/baseline --design-file out/validation/shipped-matrix/matrix-info.json --out out/validation/ab-summary
+```
+
+A/B refuses different observed stage/seed/team/tool/sub cells. It reports current
+minus baseline with independent Welch intervals for each cell and tool, including
+whole-team 2v2 rosters. `ComparisonMargins` in the design gives a symmetric margin
+per measure. **Within margin** requires the complete interval inside it;
+**beyond margin** requires the interval entirely outside it; **inconclusive**
+certifies neither. A seed with no spread or only one observation still gets no
+interval. Unadjusted checks across many cells are descriptive evidence.
+
+### Runner loadouts, patches and schema 3 (2026-11-10)
+
+`run-balance.ps1 -Subs grenade,wall -TuningPatch <file>` adds one concrete sub
+per seat and a read-only JSON patch, for example:
+
+```json
+{"bots.hard.reaction_steps": 1, "weapons.sniper.ammo_usage": 0.10}
+```
+
+A patch is a flat object of existing dotted numeric/boolean leaves under
+`weapons`, `projectiles`, `subs` or `bots`. Repeated, missing, string, container,
+unknown and type-changing entries are refused. The result is parsed and
+validated as an in-memory `GameTuning`; neither staged nor authored tuning is
+written. `{}` reproduces unpatched row and companion bytes. Omitted subs retain
+the game's grenade default. The native flags are `--subs` and `--tuning-patch`.
+
+The main CSV is now schema **3**, **101 columns**: the original 81 fields retain
+their order, followed by `sub`, `engaged_ticks`, `refilling_ticks`,
+`ready_fire_intents` and `observed_sub_cooldown_resets` for each of four seats.
+Companion schema 1 remains 29 columns and names main schema 3. Earlier schema-2
+records above remain records of that version. The analyser reads both versions,
+separates per-seat sub configurations and reports whole-team paint and
+elimination rates for the side-swapped 2v2 rosters as well as individual tools.
+
 
 ### Analyser on the `TOOL#3` matrix (2026-11-10)
 
@@ -1031,3 +1111,24 @@ per-seat counters to the runner, with no change to game code: time engaged
 rule), time refilling (`MatchBot::refilling()`), shots and sub uses. With
 `TOOL#4`'s tuning patch it also runs an aim-error and reaction ladder on the
 `bots.hard` record. Its output feeds `REV#20` and decides nothing.
+
+**Implemented diagnostic slice, 2026-11-10.** Schema 3 exports per-seat engaged
+and refilling ticks, ready primary-fire intents and observed sub cooldown resets.
+Engagement re-evaluates the bot driver's living-enemy, sight, line-of-sight and
+ballistic reach rule against the current `bot_world()`; it describes opportunity,
+not the policy's held decision between reactions. Refilling reads the driver's
+post-think `MatchBot::refilling()`. The analyser pools engaged/refilling over alive
+ticks and the two action proxies over active minutes. The separate
+[`bot-ladder.psd1`](../scripts/balance/bot-ladder.psd1) measures baseline, zero and
+0.20-radian aim error, and 1-step and 24-step reaction delay, changing one factor
+at a time; it is evidence and never applies its values to the game.
+
+**Remaining decision: exact paid-event counters.** A ready intent can be killed
+by a contact later in the tick, before its weapon runs. An observed cooldown
+rise identifies a sub use at shipped cooldowns but can miss a patched cooldown
+at or below one tick, including zero. The public weapon APIs expose no exact
+paid-event observer, and their visual pulses intentionally coalesce stream
+shots. These columns are named as proxies and are not shots or exact sub-use
+counts. Completing that part requires the author to allow a passive game-code
+observer, which the original no-game-code-change scope forbids. The diagnostic
+slice therefore does not close TOOL#5.

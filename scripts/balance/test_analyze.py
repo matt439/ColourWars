@@ -297,5 +297,38 @@ class BalanceAnalysis(unittest.TestCase):
         analyze.refuse_tree_output("\\\\?\\" + root + "\\out\\x")
 
 
+class ComparisonTests(unittest.TestCase):
+    def test_unpaired_variance_and_margin_need_whole_interval(self):
+        before=dict(mean=0.5,se=.01,df=9,half_width=.02)
+        after=dict(mean=.51,se=.01,df=9,half_width=.02)
+        result=analyze.independent_change(before,after,.05)
+        self.assertAlmostEqual(result['se'],2**.5*.01)
+        self.assertAlmostEqual(result['df'],18)
+        self.assertEqual(result['verdict'],'within margin')
+        self.assertEqual(analyze.independent_change(before,dict(after,mean=.65),.05)['verdict'],'beyond margin')
+        self.assertEqual(analyze.independent_change(before,dict(after,mean=.54),.05)['verdict'],'inconclusive')
+        self.assertEqual(analyze.independent_change(dict(before,se=None),after,.05)['verdict'],'inconclusive')
+    def test_compare_refuses_changed_cells_or_missing_margins(self):
+        group=dict(players=2,bot='match:hard:hard',seconds=60,subs=['grenade']*2,seeds=[1,2],
+                   table={},marginals={})
+        with self.assertRaises(ValueError): analyze.compare_groups([group],[group],{'paint':.03})
+        with self.assertRaises(ValueError): analyze.compare_groups([group],[dict(group,seeds=[3,4])],dict(paint=.03,kills=.2,deaths=.2))
+    def test_two_player_teams_report_whole_team_paint(self):
+        matches=[]
+        for seed,share in enumerate((.55,.60,.65)):
+            for swapped in (False,True):
+                a=[('sniper',share*.2),('roller',share*.8)]
+                b=[('roller',(1-share)/2)]*2
+                if swapped: a,b=b,a
+                seats=[dict(team=team,tool=tool,paint=paint,kills=1.,deaths=1.)
+                       for team,group in [('a',a),('b',b)] for tool,paint in group]
+                matches.append(dict(stage='arena',seed=seed,players=4,bot='match:hard:hard:hard:hard',seconds=60.,seats=seats))
+        result=analyze.analyze(matches,{})[0]
+        team=result['team_rosters']['table'][('paint','arena','roller+sniper','roller+roller')]
+        self.assertAlmostEqual(team['mean'],.6)
+        self.assertIsNotNone(team['half_width'])
+        __import__('json').dumps(analyze.jsonable([result],[]))
+
+
 if __name__ == "__main__":
     unittest.main()

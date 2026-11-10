@@ -15,7 +15,8 @@ full.
 
 | Script | What |
 |---|---|
-| [build.ps1](build.ps1), [../build.cmd](../build.cmd) | builds a preset from a plain shell or a double-click: fetches the submodule, finds Visual Studio with vswhere, loads vcvars64, falls back to its bundled vcpkg (`-Preset`, `-Package`, `-Run`) |
+| [build.ps1](build.ps1), [../build.cmd](../build.cmd) | builds from a plain shell or double-click: VS/SDK/vcpkg checks, retained `out/build-<preset>.log`, guide and play-again paths (`-Preset`, `-Package`, `-Run`) |
+| [check-build.ps1](check-build.ps1) | first-run helper failures (invalid package preset, Download ZIP, missing Visual Studio); isolated subprocess fixtures, no compiler or download |
 
 ## Acceptance
 
@@ -92,7 +93,8 @@ to `cases.psd1`.
 | [check-painter-selection.ps1](check-painter-selection.ps1) | checks the painter probe's selectors and routing without a compiler or GPU |
 | [check-painter-evidence.ps1](check-painter-evidence.ps1) | checks the shared painter PPM, finite-number, key-set, CSV, save and PNG evidence helpers without the game or a GPU |
 | [check-frame-pacing.ps1](check-frame-pacing.ps1) | frame-pacing capture ([polish-frame-pacing.md](../docs/polish-frame-pacing.md)); analysed by [perf/](perf/) |
-| [run-balance.ps1](run-balance.ps1) | headless seeded bot matches for balance comparisons ([gameplay-tuning.md](../docs/gameplay-tuning.md)) |
+| [run-balance.ps1](run-balance.ps1) | headless seeded bot matches, per-seat subs and an in-memory numeric/boolean tuning patch, with bot counters ([gameplay-tuning.md](../docs/gameplay-tuning.md)) |
+| [run-balance-matrix.ps1](run-balance-matrix.ps1) | one compile, bounded parallel jobs, hashed resume and byte-identity repeat; `balance/shipped.psd1` and `balance/bot-ladder.psd1` designs (`-PlanOnly` previews the count) |
 
 ## Editor checks
 
@@ -125,6 +127,6 @@ to `cases.psd1`.
 |---|---|
 | [debug/](debug/) | the shipped developer-console scripts (`exec <name>`), listed in [debug-console.md](../docs/debug-console.md#scripts) |
 | [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the engine pin's check against Labrador, the Markdown link check, and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
-| [balance/](balance/) | `TOOL#4`'s analyser for `run-balance.ps1` CSVs: each tool's paint, eliminations and deaths with intervals, checked against the tool profiles in `profiles.json` ([gameplay-tuning.md](../docs/gameplay-tuning.md#balance-matrix-tool-tool4)), and its test |
+| [balance/](balance/) | `TOOL#4`'s matrix driver/designs and analyser: tool and 2v2 team paint/eliminations, bot counters, profile checks and independent A/B intervals with design margins ([gameplay-tuning.md](../docs/gameplay-tuning.md#balance-matrix-tool-tool4)), and its test |
 | [perf/](perf/) | frame-pacing analysis and its test |
 | [studies/](studies/README.md) | the kits for the drawing-mistake human studies ([drawing-mistakes-research.md](../docs/drawing-mistakes-research.md#8-human-tests)): Study A's references, sheets and analysis, Study B's stimulus capture, test page and analysis |

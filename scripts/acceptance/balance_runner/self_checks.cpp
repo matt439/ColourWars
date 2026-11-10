@@ -62,7 +62,7 @@ namespace balance_runner
             const auto header_end = paint.find('\n');
             require(header_end != std::string::npos && paint.find('\r') == std::string::npos, "Companion needs a complete LF header");
             const auto header = fields(paint.substr(0, header_end));
-            require(main_header.size() == 81 && header.size() == 29, "Main 81/companion 29 column contract changed");
+            require(main_header.size() == 101 && header.size() == 29, "Main 101/companion 29 column contract changed");
             std::vector<bool> seen(rows.size(), false);
             for (std::size_t start = header_end + 1; start < paint.size();)
             {
@@ -77,7 +77,7 @@ namespace balance_runner
                 const auto main = fields(csv_row(rows[match - 1]));
                 for (const char* name : { "stage", "seed", "players", "bot", "requested_active_seconds", "final_fingerprint" })
                 { require(row.at(column(header, name)) == main.at(column(main_header, name)), std::string("Companion metadata differs from main row: ") + name); }
-                require(row.at(column(header, "region_schema_version")) == "1" && row.at(column(header, "main_schema_version")) == "2",
+                require(row.at(column(header, "region_schema_version")) == "1" && row.at(column(header, "main_schema_version")) == "3",
                     "Companion schema/main-schema join changed");
                 start = end + 1;
             }
@@ -292,8 +292,8 @@ namespace balance_runner
             const std::size_t extension = header.find(",credited_enemy_eliminations,uncredited_projectile_lethals");
             require(extension != std::string::npos &&
                 std::count(header.begin(), header.begin() + static_cast<std::ptrdiff_t>(extension), ',') == 66 &&
-                std::count(header.begin(), header.end(), ',') == 80 && csv_row(result).rfind("2,", 0) == 0,
-                "Schema 2 must append 14 columns after the 67-field legacy schema");
+                std::count(header.begin(), header.end(), ',') == 100 && csv_row(result).rfind("3,", 0) == 0,
+                "Schema 3 must preserve the original 81 columns and append 20 loadout/diagnostic fields");
         }
     }
 
@@ -335,7 +335,8 @@ namespace balance_runner
             { L"--seed", L"4294967296" }, { L"--seed", L"1x" }, { L"--duration", L"nan" },
             { L"--duration", L"inf" }, { L"--duration", L"0" }, { L"--duration", L"601" },
             { L"--duration", L"0.05x" }, { L"--tools", L"sprayer" },
-            { L"--tools", L"sprayer,random" }, { L"--bot", L"not_a_bot" },
+            { L"--subs", L"grenade" }, { L"--subs", L"grenade,unknown" },
+            { L"--subs", L"grenade,wall," }, { L"--tools", L"sprayer,random" }, { L"--bot", L"not_a_bot" },
             { L"--stage", L"crossfeed", L"--stage", L"crossfeed" },
             { L"--seed", L"0", L"--seed", L"0" },
             { L"--players", L"2", L"--players", L"2" }, { L"--unknown", L"value" }, { L"--duration" },
@@ -392,6 +393,19 @@ namespace balance_runner
         swapped.difficulties = { BotDifficulty::hard, BotDifficulty::easy };
         require(csv_text(run_sweep(swapped)) != csv_text(shipped_first), "Swapping the difficulties changed nothing");
 
+        const auto patch_file = std::filesystem::temp_directory_path() /
+            (L"colourwars_balance_patch_" + std::to_wstring(_getpid()) + L"_" + std::to_wstring(GetTickCount64()) + L".json");
+        fresh_bytes(patch_file, "{}");
+        Options empty_patch = shipped; empty_patch.tuning_patch = patch_file;
+        require(csv_text(run_sweep(empty_patch)) == csv_text(shipped_first), "Empty in-memory patch changed row bytes");
+        Options subs = shipped; subs.subs = { SubType::sprinkler, SubType::wall };
+        const auto sub_rows = run_sweep(subs);
+        require(sub_rows.front().seats[0].sub == SubType::sprinkler && sub_rows.front().seats[1].sub == SubType::wall,
+            "Per-seat subs were not built into the real match");
+        for (const SeatResult& seat : shipped_row.seats)
+        { require(seat.engaged_ticks <= seat.alive_ticks && seat.refilling_ticks <= seat.alive_ticks &&
+            seat.ready_fire_intents <= seat.alive_ticks && seat.observed_sub_cooldown_resets <= seat.alive_ticks, "Diagnostics exceed alive active steps"); }
+
         Options sweep = zero;
         sweep.duration = 0.25f; sweep.seeds = { 0, std::numeric_limits<std::uint32_t>::max() };
         const std::vector<Result> rows = run_sweep(sweep);
@@ -417,7 +431,7 @@ namespace balance_runner
         require(!evidence.empty(), "Cannot allocate a fresh private CSV receipt directory");
         publication_checks(evidence, rows);
         resolved_alias_check(content);
-        std::cout << "PASS balance runner: 7 real CPU matches (3 under the shipping MatchBotDriver), nontrivial active state, whole-row seeded byte identity, "
+        std::cout << "PASS balance runner: 9 real CPU matches (5 under the shipping MatchBotDriver), nontrivial active state, whole-row seeded byte identity, "
             "2/4-player device-less owner mapping, 0/uint32-max seeds, bounded Crossfeed sweep, CLI refusals, "
             "exact Unicode paired-file publication, no-overwrite and actual partial-failure preservation. "
             "Metrics are held paint, pre-step full-shot empty readiness, sampled death edges and validated enemy credit; "
