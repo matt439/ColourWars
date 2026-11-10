@@ -3699,8 +3699,8 @@ run.
 
 ### Sanitizer and static analysis presets (`REV#61`)
 
-**Presets, runner support and nightly legs landed 2026-11-10; the hosted legs
-have not run.** From the 2026-11-10 project review
+**Presets, runner support and nightly legs landed 2026-11-10, and both hosted
+legs passed on the pull request's nightly trial the same day.** From the 2026-11-10 project review
 ([record](review/2026-11-10-project-review.md#no-sanitizer-or-static-analysis-leg-rev61)):
 nothing outside `external/` ran AddressSanitizer or `/analyze`.
 
@@ -3783,10 +3783,6 @@ cannot fail the night. Neither is part of `gate`.
 
 Not checked:
 
-- The hosted legs. Nothing was pushed, so whether the runner image carries
-  the sanitizer component, and how long `crossfeed` takes there, is unknown.
-  The pull request that carries this change runs the whole nightly as a trial
-  because it edits `nightly.yml`.
 - `pwsh`. The two selection checkers and the runner ran under Windows
   PowerShell 5.1 only.
 - The game itself. `ColourWars.exe` from `x64-asan` was built and not
@@ -3863,13 +3859,12 @@ Checked after the two edits: `x64-debug` and `x64-release` build,
 `check-level-editor.ps1` passes in both, and the report was rerun from clean.
 No file under `game/` changed, so no acceptance case was rerun.
 
-What is left, and why the row is `DECISION`: nothing local. The hosted `asan`
-and `analyze` legs are confirmed on the nightly trial of the pull request that
-carries the presets, and that needs a push only the author can authorise. No
-other row holds it up, so it is not `BLOCKED`, and with no local step it cannot
-be `OPEN`. The row is deleted when both legs have run there; what to expect
-from `analyze` is nine warnings here and two in the engine, if the hosted
-toolset matches MSVC 14.51.
+The hosted legs ran on pull request 74's nightly trial (run 42753835866,
+2026-11-10), which closed the row. `asan` passed in 34 minutes on the hosted
+runner (`PASS acceptance (x64-asan)`), so the image carries the sanitizer
+component and the leg fits its timeout. `analyze` passed in 5 minutes and
+reported the same eleven warnings as the local run: nine here (C6262 x8,
+C6011 x1) and two in the engine.
 
 ## Open shortlist (2026-10-29)
 

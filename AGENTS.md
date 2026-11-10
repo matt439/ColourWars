@@ -272,7 +272,7 @@ CI. Release also builds and inspects the redistributable ZIP.
 [nightly.yml](.github/workflows/nightly.yml) runs what is too long or too exact
 for a pull request on `master`'s tip: the painter (plain matrix and leaves, through
 `scripts/check-painter-sweep.ps1`), paint effects and every runnable opt-in case.
-Two more legs came with `REV#61` and have not yet run hosted: `asan` builds `x64-asan` and runs the default cases
+Two more legs came with `REV#61`: `asan` builds `x64-asan` and runs the default cases
 under AddressSanitizer, and `analyze` uploads `scripts/report-analyze.ps1`'s
 `/analyze` counts and cannot fail.
 It is not a required check. A scheduled failure opens or updates one issue,
