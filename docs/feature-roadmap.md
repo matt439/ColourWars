@@ -1569,9 +1569,12 @@ accessibility qualification is claimed.
 
 Implemented:
 
-- The Release `package` target produces `ColourWars-windows-x64.zip` with an
+- The Release `package` target produces `ColourWars-<version>-windows-x64.zip` with an
   explicit runtime asset list checked against the manifest. It includes the
   required DirectXTK, XAudio2Redist and release MSVC DLLs, plus licence notices.
+  Since `FTR#6` (2026-11-10), the archive opens directly on the executable and
+  `HOW-TO-PLAY.txt`; there is no extra enclosing folder or developer README.
+  The version is the root `project(VERSION)`, and release notes are player instructions.
 - Packages exclude source art, source audio, tools, saves and private legacy
   audio. Since the 2026-10-15 runtime migration they include the validated,
   distributable replacement bank. The optional-bank silent fallback remains
@@ -1621,7 +1624,7 @@ non-paravirtual GPU.
 
 **The driver.** `scripts/sandbox-release.ps1 [-Zip <zip>] [-VGpu
 Default|Enable|Disable] [-Run | -HostTrial]` uses
-`out/build/x64-release/packages/ColourWars-windows-x64.zip` unless `-Zip` names
+`out/build/x64-release/packages/ColourWars-<version>-windows-x64.zip` unless `-Zip` names
 another. It writes a run folder under `out/validation/sandbox/` containing:
 
 - `package/`: the ZIP and its extraction, mapped into the sandbox read-only.

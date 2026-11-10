@@ -163,7 +163,7 @@ file(WRITE "${OPTIONAL_FILE}" "${optional}\n")
         'cmake/manifest_asset_kinds.cmake', 'cmake/manifest_asset_kinds.json',
         'cmake/stage_runtime_assets.cmake', 'cmake/check_wave_bank.cmake',
         'cmake/check_sprite_fonts.cmake', 'scripts/audio/runtime-bank.json',
-        'game/art/sources/fonts/fonts.json')
+        'game/art/sources/fonts/fonts.json', 'docs/HOW-TO-PLAY.txt')
     foreach ($file in $support) {
         $from = Join-Path $repo $file
         $sourceHashes[$from] = Get-Hash $from
@@ -279,7 +279,9 @@ include(cmake/release_assets.cmake)
             $stagedInventory[$name].sha256 -ceq $shellBefore[$name].sha256) "Staging changed an unrelated game-root file: $name"
     }
     $presentAssets = @($registeredAssets | Where-Object { Test-Path -LiteralPath (Join-Path $content $_) -PathType Leaf })
-    Assert-Check ($stagedInventory.Count -eq $shellBefore.Count + $presentAssets.Count) 'Fresh game contains unreviewed staged files.'
+    Assert-Check ($stagedInventory.Contains('HOW-TO-PLAY.txt') -and
+        $stagedInventory['HOW-TO-PLAY.txt'].sha256 -ceq (Get-Hash (Join-Path $scratch 'docs/HOW-TO-PLAY.txt'))) 'Fresh game is missing the reviewed player guide.'
+    Assert-Check ($stagedInventory.Count -eq $shellBefore.Count + $presentAssets.Count + 1) 'Fresh game contains unreviewed staged files.'
     foreach ($asset in $presentAssets) {
         Assert-Check ($stagedInventory.Contains($asset) -and
             $stagedInventory[$asset].sha256 -ceq (Get-Hash (Join-Path $content $asset))) "Staged runtime asset differs: $asset"

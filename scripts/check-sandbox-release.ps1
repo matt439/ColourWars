@@ -29,14 +29,14 @@ function Assert-True([bool]$Condition, [string]$Message) {
 
 function New-FakeZip([string]$Name, [bool]$WithExecutable) {
     $stage = Join-Path $root "stage-$Name"
-    $folder = Join-Path $stage 'ColourWars-windows-x64'
+    $folder = $stage
     $null = New-Item -ItemType Directory -Path $folder -Force
     if ($WithExecutable) { [IO.File]::WriteAllText((Join-Path $folder 'ColourWars.exe'), 'not a real executable') }
     [IO.File]::WriteAllText((Join-Path $folder 'build-info.txt'), "check-sandbox-release $Name")
     $zipFolder = Join-Path $root "zip-$Name"
     $null = New-Item -ItemType Directory -Path $zipFolder -Force
-    $path = Join-Path $zipFolder 'ColourWars-windows-x64.zip'
-    Compress-Archive -LiteralPath $folder -DestinationPath $path
+    $path = Join-Path $zipFolder 'ColourWars-0.1.0-windows-x64.zip'
+    Compress-Archive -Path (Join-Path $folder '*') -DestinationPath $path
     return $path
 }
 
@@ -51,8 +51,8 @@ function Assert-Prepared([string]$Run, [string]$ZipPath, [string]$VGpu, [int]$Se
     $hash = (Get-FileHash -LiteralPath $ZipPath -Algorithm SHA256).Hash
     $package = Join-Path $Run 'package'
     $results = Join-Path $Run 'results'
-    Assert-True ((Get-FileHash -LiteralPath (Join-Path $package 'ColourWars-windows-x64.zip') -Algorithm SHA256).Hash -eq $hash) 'the copied ZIP differs'
-    Assert-True (Test-Path -LiteralPath (Join-Path $package 'ColourWars-windows-x64/ColourWars.exe') -PathType Leaf) 'the ZIP was not extracted beside itself'
+    Assert-True ((Get-FileHash -LiteralPath (Join-Path $package 'ColourWars-0.1.0-windows-x64.zip') -Algorithm SHA256).Hash -eq $hash) 'the copied ZIP differs'
+    Assert-True (Test-Path -LiteralPath (Join-Path $package 'ColourWars-0.1.0-windows-x64/ColourWars.exe') -PathType Leaf) 'the ZIP was not extracted beside itself'
     Assert-True (@(Get-ChildItem -LiteralPath $package -Filter '*.zip' -File).Count -eq 1) 'the package folder must hold one ZIP'
     $copied = Get-Content -LiteralPath (Join-Path $results 'logon.ps1') -Raw
     Assert-True ($copied -ceq (Get-Content -LiteralPath (Join-Path $PSScriptRoot 'sandbox/logon.ps1') -Raw)) 'the logon script copy differs'
@@ -100,7 +100,7 @@ finally { Pop-Location }
 Assert-True (Test-Path -LiteralPath (Join-Path $root 'relative-runs') -PathType Container) 'a relative OutputDirectory did not resolve against the caller location'
 
 Assert-Refused @{ Zip = (Join-Path $root 'missing.zip'); OutputDirectory = (Join-Path $root 'runs') } 'No Release ZIP' 'a missing ZIP'
-Assert-Refused @{ Zip = (New-FakeZip 'empty' $false); OutputDirectory = (Join-Path $root 'runs') } 'has no ColourWars-windows-x64/ColourWars\.exe' 'a ZIP without the game'
+Assert-Refused @{ Zip = (New-FakeZip 'empty' $false); OutputDirectory = (Join-Path $root 'runs') } 'has no ColourWars-0\.1\.0-windows-x64/ColourWars\.exe' 'a ZIP without the game'
 Assert-Refused @{ Zip = $good; OutputDirectory = (Join-Path $root 'runs'); Run = $true; HostTrial = $true } 'Choose either' '-Run with -HostTrial'
 
 $trial = ''

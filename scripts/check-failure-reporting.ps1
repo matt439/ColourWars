@@ -195,11 +195,17 @@ function Test-FailureCase {
             -not $body.Contains("`n`n$expectedCause`n`n")) {
             throw 'The failure dialog did not preserve the complete original file/parser/offset cause.'
         }
-        $status = if ($BlockedLog) { 'Diagnostic metadata could not be saved.' } else {
-            "Diagnostic metadata saved to $reportPath."
+        $status = if ($BlockedLog) { 'A short error report could not be saved.' } else {
+            "A short error report was saved to $reportPath."
         }
-        if (-not $body.EndsWith($status, [StringComparison]::Ordinal)) {
+        if (-not $body.Contains($status)) {
             throw 'The failure dialog did not report the actual metadata-write outcome.'
+        }
+        if (-not $body.Contains('Extract the whole game ZIP') -or
+            -not $body.Contains('https://github.com/matt439/ColourWars/issues') -or
+            -not $body.Contains('Ctrl+C') -or
+            ((-not $BlockedLog) -and -not $body.Contains('it does not contain the error message'))) {
+            throw 'The failure dialog omitted content recovery or report instructions.'
         }
         if ([ColourWars.FatalWindowProbe]::HasGameWindow($process.Id)) {
             throw 'Malformed early tuning unexpectedly reached game-window/device initialization.'

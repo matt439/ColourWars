@@ -150,8 +150,27 @@ std::wstring FatalReport::dialog_text(const std::string& saved_path) const
 	text += ".\n\n";
 	text += this->message_;
 	if (this->message_truncated_) { text += "\n[Exception text truncated]"; }
-	text += saved_path.empty() ? std::string("\n\nDiagnostic metadata could not be saved.") :
-		"\n\nDiagnostic metadata saved to " + saved_path + ".";
+	const bool no_hardware = std::any_of(this->causes_.begin(), this->causes_.end(),
+		[](const Cause& cause)
+		{
+			return cause.reason != nullptr && std::strcmp(cause.reason, "no_hardware_device") == 0;
+		});
+	if (no_hardware)
+	{
+		text += "\n\nColourWars needs a Direct3D 11 graphics card. Update its driver and try "
+			"on the PC directly; Remote Desktop and most virtual machines cannot run it.";
+	}
+	else if (this->phase_ == FailurePhase::definitions || this->phase_ == FailurePhase::manifest ||
+		this->phase_ == FailurePhase::validation)
+	{
+		text += "\n\nExtract the whole game ZIP into one folder before playing. "
+			"If you built the game from source, rebuild it to restore its content.";
+	}
+	text += saved_path.empty() ? std::string("\n\nA short error report could not be saved.") :
+		"\n\nA short error report was saved to " + saved_path + ".";
+	text += "\n\nReport this at https://github.com/matt439/ColourWars/issues. "
+		"Press Ctrl+C to copy this message and include it in your report.";
+	if (!saved_path.empty()) { text += " Attach last-error.log too; it does not contain the error message."; }
 	return labrador::widen(text);
 }
 

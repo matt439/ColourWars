@@ -82,6 +82,33 @@ namespace ColourWars
         private static extern IntPtr GetWindowDpiAwarenessContext(IntPtr window);
         [DllImport("user32.dll")]
         private static extern bool AreDpiAwarenessContextsEqual(IntPtr a, IntPtr b);
+        [StructLayout(LayoutKind.Sequential)]
+        private struct Rect { public int Left, Top, Right, Bottom; }
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MonitorInfo { public int Size; public Rect Monitor, Work; public uint Flags; }
+        [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(IntPtr window, out Rect rect);
+        [DllImport("user32.dll")]
+        private static extern IntPtr MonitorFromWindow(IntPtr window, uint flags);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern bool GetMonitorInfo(IntPtr monitor, ref MonitorInfo info);
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
+
+        public static bool FitsMonitor(IntPtr window, bool fullscreen)
+        {
+            IntPtr previous = SetThreadDpiAwarenessContext(new IntPtr(-4));
+            try {
+                Rect outer;
+                var info = new MonitorInfo { Size = Marshal.SizeOf(typeof(MonitorInfo)) };
+                if (!GetWindowRect(window, out outer) ||
+                    !GetMonitorInfo(MonitorFromWindow(window, 2), ref info)) return false;
+                Rect area = fullscreen ? info.Monitor : info.Work;
+                return outer.Left >= area.Left && outer.Top >= area.Top &&
+                    outer.Right <= area.Right && outer.Bottom <= area.Bottom;
+            }
+            finally { if (previous != IntPtr.Zero) SetThreadDpiAwarenessContext(previous); }
+        }
 
         // PROCESS_DPI_AWARENESS: 0 unaware, 1 system, 2 per-monitor; -1 if the
         // query itself failed.
@@ -149,6 +176,7 @@ $result = [ordered]@{
     profile = $profileDirectory
     version = ''
     dpi_awareness = $null
+    first_window_fits_monitor = $false
     locale = $(if ($Locale) { $Locale } else { 'base' })
     audio_expectation = $(if ($RequireAudio) { 'published-bank' } elseif ($RequireNoAudio) { 'missing-bank' } else { 'optional' })
     outcome = 'failed'
@@ -224,6 +252,11 @@ try {
     if (-not (Test-Path -LiteralPath (Join-Path $profileDirectory 'ColourWars/save_data.json'))) {
         throw 'The game did not create its save in the isolated profile.'
     }
+    $initialSave = Get-Content -Raw -LiteralPath (Join-Path $profileDirectory 'ColourWars/save_data.json') | ConvertFrom-Json
+    if (-not [ColourWars.StartupWindow]::FitsMonitor($window, [bool]$initialSave.fullscreen)) {
+        throw 'The fresh-save window extends beyond its monitor work area (or fullscreen monitor).'
+    }
+    $result.first_window_fits_monitor = $true
     [string]$stderr = Read-StartupError
     Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context startup -RequireAudio:$RequireAudio -RequireNoAudio:$RequireNoAudio -AllowedPattern $userStageRefusal
     if ($userStageRefusal -and @($stderr -split '\r?\n' | Where-Object { $_ -match $userStageRefusal }).Count -ne 1) {

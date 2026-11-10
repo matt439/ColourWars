@@ -54,6 +54,17 @@ external/labrador/     the engine, a submodule at a pinned revision
 external/rapidjson/    vendored JSON reader for the save and level files
 ```
 
+On a first run with neither a per-user nor legacy save, the shell's
+`config/initial_display.cpp` chooses a windowed 1920x1080 or 1280x720 preset
+that fits the monitor's work area, accounting for the DPI-scaled frame. Below
+the smallest windowed preset it uses borderless fullscreen. After window
+creation it checks the monitor Windows actually selected and centres the
+window in its work area. Save writes that preference; later launches and
+legacy imports keep the saved choice. The `initial_display` CPU probe checks
+the thresholds and save behavior, and `check-startup.ps1` checks the actual
+fresh-save window rectangle. This completes first-run review `FTR#12`;
+mixed-monitor/DPI hardware combinations are not exhaustively exercised.
+
 [game/CMakeLists.txt](../game/CMakeLists.txt) builds every game source except
 `main.cpp` and the two platform adapters into the `colourwars_game` static
 library, `input/rumble_gamepads.cpp` into `colourwars_rumble_gamepads`,

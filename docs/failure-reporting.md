@@ -39,6 +39,15 @@ The sandbox trial's receipt reads this exact missing-adapter line
 status appears in the dialog, without adding another stderr line: the dialog
 names the path it wrote, or says it could not save.
 
+The dialog also gives a local-PC and graphics-driver remedy for the classified
+missing-hardware error, including when nested. Content-definition, manifest and
+validation failures point to extracting the whole ZIP or rebuilding source
+content. These last-resort strings live in C++ because presentation content may
+be the failure itself. It calls the metadata a short error report, links the
+issue tracker, and asks the player to copy the dialog with Ctrl+C and attach
+`last-error.log` when available: the file alone does not contain the error.
+This completes first-run review `FTR#11`.
+
 ## Persisted metadata and privacy
 
 The latest caught failure replaces

@@ -3444,6 +3444,51 @@ refused a copy with a stray `.pdb`; the export script, run with
 `-EnvironmentFile`, wrote 42 variables including `INCLUDE`, `LIB` and `Path`.
 The hosted run is the first test of the CI wiring.
 
+### First-run build and package follow-up (`FTR#3`, `FTR#6`, `FTR#7`, `FTR#9`)
+
+**2026-11-10.** The plain-shell build helper retains its output at
+`out/build-<preset>.log`, including a failure's remedy and troubleshooting link.
+It requires Visual Studio 2022 or newer, checks for the SDK shader compiler,
+validates a caller's `VCPKG_ROOT` before falling back to Visual Studio's copy,
+warns about long checkout paths, and explains the configure and compile waits.
+`vcvars64` has a separate log, shown on failure; its environment dump is never
+printed. A successful build names the executable to open next time and the
+player guide staged beside it.
+
+The Release ZIP now takes its version from `project(VERSION)`, opens directly
+on the executable and `HOW-TO-PLAY.txt`, and omits the developer README.
+The inspection and Sandbox preparation scripts use that same version for
+their default ZIP path; CI still extracts to its existing private folder.
+Release notes contain player instructions without generated pull-request notes.
+
+Runtime staging resolves an absent destination from its nearest existing
+ancestor before checking links, so a clean mirror prints no `REAL_PATH`
+warnings. Its regression refuses a warning on any successful stage and still
+checks unsafe roots, file/directory conflicts, links, stale removal and the
+optional-bank fallback; it also checks the staged guide's hash.
+The script-only checks passed: `check-build.ps1` 29 checks in each of Windows
+PowerShell 5.1 and pwsh, Sandbox preparation 68 in each, the runtime-staging
+fixture, and the 29 CI lint tests. The new build-helper failure fixtures run
+in CI's tooling preflight without a compiler or download.
+
+The log checks include a native process that writes stdout and stderr before
+waiting for an acknowledgement, then exits 0 or 7. Each line is re-emitted to
+the host as it arrives, so the transcript keeps native output even when the
+outer shell redirects it. The actual plain PowerShell 5.1 helper also passed
+with a deliberately invalid `VCPKG_ROOT`: bundled fallback, Release configure,
+build, package, and CMake/CPack output in the retained log were all checked.
+The versioned ZIP passed inspection (34 checks, 69 files) and isolated startup
+with a system-only PATH. The stage-registration integration's inventory now
+requires exactly one guide with its source hash, and passes.
+
+First-run follow-up evidence is under `out/validation/overnight-20261110/`.
+Both presets pass the focused save, initial-display, fatal-report and menu-text
+cases and the real entry-point failure-dialog check. Release's connection-text
+and Join-paper painter leaves pass on MattPC's GPU with scripted pads; those
+are raster/geometry checks, not physical-pad or human readability acceptance.
+The initial display's startup receipt confirms the fresh-save outer window
+fits its monitor; author decisions and waived attended checks are unchanged.
+
 ### Promote stable nightly checks (`CI#7`)
 
 **Deferred until a week of scheduled nightlies, from 2026-11-11.**

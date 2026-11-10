@@ -102,12 +102,21 @@ namespace
                 "Failure phase is missing from controlled metadata");
             const std::wstring unsaved = report.dialog_text(std::string());
             const std::wstring saved = report.dialog_text("D:\\Caf\xC3\xA9 profile\\ColourWars\\last-error.log");
-            const std::wstring saved_line = L"\n\nDiagnostic metadata saved to D:\\Caf\u00e9 profile\\ColourWars\\last-error.log.";
+            const std::wstring saved_line = L"\n\nA short error report was saved to D:\\Caf\u00e9 profile\\ColourWars\\last-error.log.";
             require(unsaved.find(L"exact original cause") != std::wstring::npos &&
-                unsaved.ends_with(L"\n\nDiagnostic metadata could not be saved.") &&
-                saved.find(L"exact original cause") != std::wstring::npos && saved.ends_with(saved_line) &&
+                unsaved.find(L"\n\nA short error report could not be saved.") != std::wstring::npos &&
+                saved.find(L"exact original cause") != std::wstring::npos && saved.find(saved_line) != std::wstring::npos &&
                 saved.find(L"could not be saved") == std::wstring::npos,
                 "Dialog omitted the original cause or did not name the path it saved to");
+            require(saved.find(L"https://github.com/matt439/ColourWars/issues") != std::wstring::npos &&
+                saved.find(L"Ctrl+C") != std::wstring::npos &&
+                saved.find(L"it does not contain the error message") != std::wstring::npos &&
+                unsaved.find(L"Attach last-error.log") == std::wstring::npos,
+                "Dialog did not explain how to report the original cause and available record");
+            const bool content = phase.value == FailurePhase::definitions ||
+                phase.value == FailurePhase::manifest || phase.value == FailurePhase::validation;
+            require((saved.find(L"Extract the whole game ZIP") != std::wstring::npos) == content,
+                "Content recovery advice appeared in the wrong failure phase");
         }
         const FatalReport no_hardware(FailurePhase::initialization,
             std::make_exception_ptr(std::runtime_error("No Direct3D hardware device found")));
@@ -116,6 +125,13 @@ namespace
             "The exact missing-hardware diagnostic used by startup qualification changed");
         require(parse_record(no_hardware.record_text()).at("cause_0_reason") == "no_hardware_device",
             "Controlled missing-hardware reason was not classified");
+        require(no_hardware.dialog_text("").find(L"Direct3D 11 graphics card") != std::wstring::npos &&
+            no_hardware.dialog_text("").find(L"Remote Desktop") != std::wstring::npos,
+            "Missing-hardware dialog gave no driver or local-PC remedy");
+        const FatalReport nested_hardware(FailurePhase::initialization,
+            nested(std::make_exception_ptr(std::runtime_error("No Direct3D hardware device found")), "renderer failed"));
+        require(nested_hardware.dialog_text("").find(L"Direct3D 11 graphics card") != std::wstring::npos,
+            "Nested missing-hardware cause lost its player remedy");
         const FatalReport bounds(FailurePhase::running, std::make_exception_ptr(PlayerOutOfBounds()));
         const Record bounds_record = parse_record(bounds.record_text());
         require(bounds_record.at("cause_0_reason") == "player_out_of_bounds" &&

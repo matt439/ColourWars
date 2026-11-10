@@ -7,7 +7,7 @@ arena, and a scoreboard that counts painted surface rather than kills.
 
 You don't need Git, Visual Studio or a terminal to play.
 
-1. Get `ColourWars-windows-x64.zip`. If the
+1. Get `ColourWars-<version>-windows-x64.zip`. If the
    [releases page](https://github.com/matt439/ColourWars/releases) lists a
    release, download the ZIP from there. If it is empty, a signed-in
    GitHub account can take the `ColourWars-windows-x64` artifact from a passing
@@ -16,21 +16,27 @@ You don't need Git, Visual Studio or a terminal to play.
    download comes wrapped in a second ZIP). Only a run that built the game has
    one, so a pull request that changed only documents does not, and GitHub
    deletes it 14 days after the run. If no listed run has it, use `build.cmd`
-   (see [Building](#building)).
+   (see [Easy build](#easy-build)).
 2. Right-click the ZIP and choose **Extract All**. Running the game from
    inside the ZIP doesn't work.
-3. Open the extracted folder, then the `ColourWars-windows-x64` folder inside
-   it, and run `ColourWars.exe`. If Windows says
+3. Open the extracted folder and run `ColourWars.exe`. If Windows says
    "Windows protected your PC", choose **More info**, then **Run anyway**: the
    game isn't signed with a publisher certificate.
 
 It needs Windows 10 or 11 (64-bit) and a Direct3D 11 graphics card, which nearly
-every PC from the last ten years has. Nothing needs installing. Play with
-Xbox-style controllers, or one player on keyboard and mouse. On your own,
-practise solo or fill the empty seats with bots: on Join Players, Player 1
+every PC from the last ten years has. It does not run over Remote Desktop or
+in most virtual machines. Nothing needs installing. Play with Xbox-style
+(XInput) controllers, or one player on keyboard and mouse. PlayStation and
+Switch controllers are not recognised directly; they need software that
+presents them to Windows as Xbox controllers, such as
+[Steam Input](https://partner.steamgames.com/doc/features/steam_controller/getting_started_for_players).
+On your own, practise solo or fill the empty seats with bots: on Join Players, Player 1
 picks a seat with Up/Down and makes it a bot with Left/Right.
-`HOW-TO-PLAY.txt` in the ZIP has the controls, where settings are saved and how
-to remove the game. Building from source is under [Building](#building).
+[HOW-TO-PLAY.txt](docs/HOW-TO-PLAY.txt), included in the ZIP and beside a source
+build's executable, has the controls, where settings are saved and how to
+remove the game. New? Choose **Single Match > 1 Player > Movement Course**
+for lesson cards on moving, jumping, dropping and refilling.
+Building from source is under [Building](#building).
 
 The arena is a picture left unsaved in a paint program: everything in it is
 grey, and the palette has one empty slot. Each match opens full screen on the
@@ -187,6 +193,45 @@ fires only with that much in it and then waits out a short cooldown; under
 Endless paint the cost is dropped and the cooldown alone paces it. The square
 after the HUD's PAINT label is solid when a Sub press would release it.
 
+## If something goes wrong
+
+- **The game cannot find a file.** Extract the whole ZIP with **Extract All**,
+  then run `ColourWars.exe` from the extracted folder. Keep its files and
+  subfolders together; copying just the executable is not enough.
+- **The game cannot start graphics.** Run it on the PC's local desktop, with a
+  Direct3D 11-capable graphics card and its manufacturer's current driver.
+  Remote Desktop and most virtual machines cannot run it.
+- **Windows blocks the download or executable.** The game is unsigned, so
+  SmartScreen may show **Windows protected your PC**. For a copy you trust
+  from this repository, **More info > Run anyway** opens it. If antivirus
+  removed a file, check Windows Security's **Protection history** for the
+  reason and verify the download's source before restoring it.
+- **A controller does nothing.** The game reads Xbox-style (XInput) pads.
+  PlayStation and Switch pads need a mapper that exposes an Xbox controller,
+  such as Steam Input. One player can use keyboard and mouse; Player 1 can
+  also turn an empty seat into a bot with Left/Right on Join Players.
+- **Cloning or building reports a long path.** Use a short folder such as
+  `C:\ColourWars`. Moving a partly built folder leaves old paths in CMake's
+  cache; a fresh clone in the short folder avoids them.
+- **The first build stops while downloading or compiling dependencies.**
+  Check your connection and free disk space, then run `build.cmd` again.
+  It keeps completed work. The build prints its log's path
+  (`out/build-x64-release.log` by default); keep that log
+  if the same step fails again. Visual Studio needs **Desktop development
+  with C++**, its Windows SDK, CMake tools and vcpkg components; change the
+  installation through **Visual Studio Installer > Modify**.
+- **Another error stops the game.** Copy the full error dialog (Ctrl+C while
+  it is focused) and report it at
+  [GitHub Issues](https://github.com/matt439/ColourWars/issues). Attach
+  `build-info.txt` from beside the executable and, if it was saved,
+  `%LOCALAPPDATA%\ColourWars\last-error.log`. That short report records build
+  and failure categories; it does not contain the message, so include the
+  copied dialog too. For a build failure, attach the build log instead.
+
+The [player guide](docs/HOW-TO-PLAY.txt) covers controls, settings and removing
+the game. [Failure reporting](docs/failure-reporting.md) describes the report
+fields and the game's error boundary for maintainers.
+
 ## Your own stages
 
 To play a stage of your own, put its level file in
@@ -245,13 +290,49 @@ cmake/                               runtime-asset staging, the wave-bank,
 
 ## Building
 
+### Easy build
+
+If no ready-made ZIP is available, `build.cmd` handles the build from a normal
+Windows desktop. It finds the tools and configures them for you.
+
+1. Install [Git for Windows](https://git-scm.com/install/windows) and
+   [Visual Studio Community 2022 or newer](https://visualstudio.microsoft.com/downloads/).
+   In Visual Studio Installer choose **Desktop development with C++**, keeping
+   the Windows SDK, CMake tools and vcpkg components selected. The workload is
+   a download of several gigabytes; the installer shows its disk requirement.
+2. Open **PowerShell** from the Start menu and enter:
+
+   ```powershell
+   git clone --recurse-submodules https://github.com/matt439/ColourWars.git C:\ColourWars
+   ```
+
+   Use a short folder path. GitHub's **Download ZIP** does not include the
+   engine and cannot be built as downloaded.
+3. Open `C:\ColourWars` in Explorer and double-click `build.cmd`. It builds
+   Release, then opens the game. You do not need to set `VCPKG_ROOT` or open a
+   Developer prompt for this route.
+
+Allow roughly 1 GB for the checkout and Release build, plus Visual Studio and
+its package caches. The checkout measured about 311 MiB and a built Release
+tree about 0.58 GB on MattPC. After the tools were installed, the review's first
+build took about a minute there; allow several minutes on another PC or a
+slower connection for dependencies to download and build. Later builds reuse
+them. [Troubleshooting](#if-something-goes-wrong) covers common failures.
+
+`build.cmd -Preset x64-debug` builds Debug from a prompt, and
+`build.cmd -Package` also makes the Release ZIP. The script installs nothing;
+if a component is missing it names it. See [scripts/build.ps1](scripts/build.ps1).
+
+### Developer build
+
 **Windows only**: the game starts from `wWinMain` and builds the engine's
 default backends, Direct3D 11 for rendering and XAudio2 for audio.
 
 ### Clone
 
 The engine is a submodule, so a plain `git clone` gets you an empty
-`external/labrador` and a CMake error on the first configure.
+`external/labrador`. `build.cmd` fetches it when needed; for the by-hand route,
+clone with the submodule or fetch it before configuring:
 
 ```
 git clone --recurse-submodules https://github.com/matt439/ColourWars.git
@@ -263,24 +344,19 @@ Labrador is public, so the submodule needs no credentials of its own.
 
 ### Prerequisites
 
+- **Git for Windows**, to fetch the repository and its engine submodule.
 - **Visual Studio 2022 or newer**, with the "Desktop development with C++"
   workload. Ninja and CMake come with it.
 - **The Windows 10/11 SDK**, for `d3d11.h` and friends.
-- **vcpkg**, with `VCPKG_ROOT` set. `CMakePresets.json` reads it for the
-  toolchain file, and configuring fails without it. Visual Studio ships a copy
+- **vcpkg**, with `VCPKG_ROOT` set for this by-hand route. `CMakePresets.json`
+  reads it for the toolchain file, and configuring fails without it. Visual Studio ships a copy
   at `<VS install>\VC\vcpkg` if you have no other.
 
 DirectX Tool Kit is in `vcpkg.json` and is fetched at configure time.
 
 ### Configure and build
 
-The quickest way is `build.cmd` at the repository root. Double-click it and it
-fetches the engine submodule if it's missing, finds Visual Studio, uses its
-bundled vcpkg when `VCPKG_ROOT` isn't set, then builds Release and starts the
-game. From a prompt, `build.cmd -Preset x64-debug` builds Debug and
-`build.cmd -Package` also makes the Release ZIP. It installs nothing: if Visual
-Studio or one of its components is missing, it says which one. See
-[scripts/build.ps1](scripts/build.ps1).
+For the desktop helper, follow [Easy build](#easy-build).
 
 By hand, from an x64 Developer prompt with `VCPKG_ROOT` set:
 
@@ -399,8 +475,9 @@ cmake --build --preset x64-release --target package
 ```
 
 The shareable build is
-`out/build/x64-release/packages/ColourWars-windows-x64.zip`. Extract the entire
-folder and run `ColourWars.exe` on Windows 10/11 x64 with a Direct3D 11-capable
+`out/build/x64-release/packages/ColourWars-<version>-windows-x64.zip`
+(`ColourWars-0.1.0-windows-x64.zip` for version 0.1.0). Extract the entire
+ZIP and run `ColourWars.exe` on Windows 10/11 x64 with a Direct3D 11-capable
 GPU. The ZIP includes DirectXTK, XAudio2Redist and the release MSVC runtime DLLs
 beside the executable; Visual Studio and vcpkg are not needed to play. Windows
 provides Direct3D, XInput and the Universal CRT.

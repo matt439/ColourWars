@@ -5,7 +5,7 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
 {
     using Words = std::array<std::wstring, 8>;
     const Words original_words{ L" - Reconnect", L"Everyone joined. Player 1 can continue.",
-        L"Press A / Enter on each device to join. Reconnect reserved pads.", L"Pause Menu",
+        L"A / Enter joins. Reconnect reserved pads. Extra seats need Xbox pads or bots.", L"Pause Menu",
         L"Pause Menu P{player}", L"Controller lost", L"All players connected.", L"Both teams need a player" };
     const Words replacement_words{ L" < plug back >", L"All claimed. Start when ready.", L"Waiting for a device.",
         L"Paint paused", L"Painter {player} paused", L"Pad missing", L"Devices ready.", L"Choose both sides before confirming." };

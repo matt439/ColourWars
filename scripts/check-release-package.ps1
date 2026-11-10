@@ -17,9 +17,10 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-path.ps1')
+. (Join-Path $PSScriptRoot 'release-package-path.ps1')
 
 $repository = Split-Path -Parent $PSScriptRoot
-if (-not $Zip) { $Zip = Join-Path $repository 'out/build/x64-release/packages/ColourWars-windows-x64.zip' }
+if (-not $Zip) { $Zip = Get-ColourWarsReleasePackagePath $repository }
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $repository 'out/validation/release-package' }
 $zipPath = Resolve-CheckFileSystemPath $Zip
 $destination = Resolve-CheckFileSystemPath $OutputDirectory
@@ -28,17 +29,26 @@ if (-not (Test-Path -LiteralPath $zipPath -PathType Leaf)) {
 }
 
 $package = Join-Path $destination 'ColourWars-windows-x64'
+# Only this fixed child belongs to the extractor; prove that before cleanup.
+$package = [IO.Path]::GetFullPath($package)
+if ([IO.Path]::GetDirectoryName($package) -ine $destination.TrimEnd('\', '/')) {
+    throw "check-release-package: extraction path escaped its output directory: $package"
+}
+if ((Test-Path -LiteralPath $package) -and
+    ((Get-Item -LiteralPath $package -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+    throw "check-release-package: refusing a linked extraction directory: $package"
+}
 if (Test-Path -LiteralPath $package) { Remove-Item -LiteralPath $package -Recurse -Force }
-$null = New-Item -ItemType Directory -Path $destination -Force
-Expand-Archive -LiteralPath $zipPath -DestinationPath $destination
-if (-not (Test-Path -LiteralPath $package -PathType Container)) {
-    throw 'check-release-package: the ZIP does not hold a ColourWars-windows-x64 folder.'
+$null = New-Item -ItemType Directory -Path $package -Force
+Expand-Archive -LiteralPath $zipPath -DestinationPath $package
+if (-not (Test-Path -LiteralPath (Join-Path $package 'ColourWars.exe') -PathType Leaf)) {
+    throw 'check-release-package: the ZIP does not hold ColourWars.exe at its root.'
 }
 $checks = 0
 
 $files = @(Get-ChildItem -LiteralPath $package -File -Recurse)
 $leaked = @($files | Where-Object {
-    $_.Extension -in '.wav', '.mp3', '.ogg', '.pdb' -or
+    $_.Extension -in '.wav', '.mp3', '.ogg', '.pdb' -or $_.FullName -eq (Join-Path $package 'README.md') -or
     ($_.Extension -eq '.xwb' -and $_.FullName -ne (Join-Path $package 'sounds\paint_exe.xwb')) -or
     ($_.Extension -eq '.exe' -and $_.Name -ne 'ColourWars.exe')
 })
