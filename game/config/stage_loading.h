@@ -43,6 +43,9 @@ struct UserStageScan
 // most 64 characters) that no stage already has, compared without case. A
 // file that fails is refused with one line and the scan goes on; a missing
 // folder is no stages and no line. Never throws for what is in the folder.
+// The format's limits (level_format::limit) apply: a file over the size limit
+// is refused like any other, and past the folder limit only the first files by
+// name are read, with one line giving the folder's count.
 // User stages are marked `user` and are Random candidates only when the file
 // says "include_in_random": true; without the key, unlike a shipped stage,
 // they are explicit-only.

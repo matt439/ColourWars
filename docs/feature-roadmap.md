@@ -3553,7 +3553,9 @@ beside the save (`directory_consts::user_stage_directory`; the
 executable-relative `save/stages` when there is no `LOCALAPPDATA`, as for the
 screenshots and replays). The game does not create it. After the manifest
 loads, `load_user_stages` (`game/config/stage_loading.h`) reads every `*.json` directly
-in it, in file-name order, and checks each on its own:
+in it, in file-name order, and checks each on its own. Since 2026-11-10 it
+reads at most the first 256 by file name, and a file over 1 MiB is refused
+unread past that point ([Limits](level-format.md#limits), `REV#2`):
 
 - the file name is the stage's id: 1 to 64 ASCII letters, digits, `_` or `-`,
   not starting with `-` (the registration helper's rule, so the file can

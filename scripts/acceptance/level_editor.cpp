@@ -21,6 +21,7 @@ int wmain(int argc, wchar_t* argv[])
         check_alignment(repo, scratch);
         check_shipped_levels(repo, scratch);
         check_format_versions(scratch);
+        check_format_limits(scratch);
         check_ending_audio(repo);
         check_resource_names(repo, scratch);
         check_blockout_aids(repo, scratch);

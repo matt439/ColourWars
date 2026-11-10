@@ -69,6 +69,7 @@ namespace level_editor_acceptance
     void check_resource_names(const fs::path& repo, const fs::path& scratch);
     void check_shipped_levels(const fs::path& repo, const fs::path& scratch);
     void check_format_versions(const fs::path& scratch);
+    void check_format_limits(const fs::path& scratch);
     void check_empty_property_keys(const fs::path& scratch);
     void check_alignment(const fs::path& repo, const fs::path& scratch);
     void check_unknown_fields_and_rectangles(const fs::path& scratch);

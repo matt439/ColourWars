@@ -208,6 +208,11 @@ count; press **Down** while browsing to read the filename and reason.
 **B/Esc** returns to your arena choice. The game also prints the reason to
 stderr, which you can retain with `ColourWars.exe 2> stages.txt`.
 
+A stage file can be up to 1 MiB, and the game reads the first 256 `.json`
+files in the folder by file name. The size limits on a stage itself are far
+above anything the built-in stages use;
+[the level format](docs/level-format.md#limits) lists them.
+
 The level editor makes these files: **File > Save to My Stages** (Ctrl+M)
 saves into that folder, checking the name as the game does. The editor is
 built from source and does not come in the ZIP; see

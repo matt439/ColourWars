@@ -8,6 +8,11 @@
 // own location. The structural schema is level.schema.json beside this file,
 // and docs/level-format.md is the prose.
 //
+// It also owns the format's size limits (namespace limit): how far a
+// coordinate may lie from the origin, how large a rectangle, an object array,
+// a stage's paint and a level file may be, and how many files the user stage
+// folder is read for.
+//
 // The rules for the format's larger records live in their own contracts, which
 // are part of this format: station_contract.h (stations and lessons),
 // team_gate_contract.h (gates), horizontal_motion_contract.h (a mover's drive)
@@ -15,6 +20,7 @@
 #include <array>
 #include <cstddef>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
@@ -272,4 +278,112 @@ namespace level_format
 		key::motion, key::drift, "rotation", key::rectangle, key::rectangle_tlbr, key::triangle };
 	inline constexpr std::array<const char*, 6> fixed_slab_refused_slab_keys = {
 		"width", "height", "thickness", "angle", "rotation", "motion" };
+
+	// Upper limits. The largest shipped stage is 35,076 bytes with bounds 6200
+	// wide, an object 7000 tall, an edge 7388 from the origin, 41 collision and
+	// 24 decorative objects and 26,560 units of paintable face; every cap sits
+	// an order of magnitude or more above that, so only a mistake meets one
+	// (docs/level-format.md, "Limits"). The check functions throw
+	// std::invalid_argument carrying the rule's words; each caller adds its own
+	// location. Comparisons are negated so a NaN fails.
+	namespace limit
+	{
+		// Every edge of a bounds rectangle, an object rectangle or a ramp's
+		// bounding box lies within +/- this many world units. At 2^20 a float
+		// still resolves an eighth of a unit; far beyond it the game's 32-unit
+		// steps stop advancing.
+		inline constexpr double max_coordinate = 1048576.0;
+		// Width and height of a level_bounds rectangle and of an object. The
+		// schema has one rectangle definition, so the two are the same number.
+		inline constexpr double max_bounds_extent = 1048576.0;
+		inline constexpr double max_object_extent = 1048576.0;
+		// Entries in collision_objects, and in non_collision_objects.
+		inline constexpr std::size_t max_objects = 512;
+		// The stage's StructurePaintable faces as authored: width for each
+		// enabled top and bottom face, height for each enabled left and right.
+		// Paint is built as tiles along them, so this bounds the tile count.
+		inline constexpr double max_paint_length = 524288.0;
+		// Tiles on one face strip, whatever tile size tuning.json gives. The
+		// game checks it before the float-to-int conversion that counts them.
+		inline constexpr int max_face_tiles = 1048576;
+		// A level file, shipped or user.
+		inline constexpr std::size_t max_file_bytes = 1048576;
+		// .json files read from the user stage folder, first by file name.
+		inline constexpr std::size_t max_user_stage_files = 256;
+
+		inline std::string whole(double value)
+		{
+			return std::to_string(static_cast<long long>(value));
+		}
+
+		inline void check_edges(double x, double y, double width, double height)
+		{
+			for (const double edge : { x, y, x + width, y + height })
+			{
+				if (!(edge >= -max_coordinate && edge <= max_coordinate))
+				{
+					throw std::invalid_argument("has an edge outside the level format's coordinate limit of +/-" +
+						whole(max_coordinate) + " world units");
+				}
+			}
+		}
+
+		inline void check_extent(double width, double height, double most)
+		{
+			if (!(width <= most && height <= most))
+			{
+				throw std::invalid_argument("is wider or taller than the level format's limit of " +
+					whole(most) + " world units");
+			}
+		}
+
+		// One of the four level_bounds rectangles.
+		inline void check_bounds_rectangle(double x, double y, double width, double height)
+		{
+			check_edges(x, y, width, height);
+			check_extent(width, height, max_bounds_extent);
+		}
+
+		// An object's rectangle, in either encoding, or a ramp's bounding box.
+		inline void check_object_rectangle(double x, double y, double width, double height)
+		{
+			check_edges(x, y, width, height);
+			check_extent(width, height, max_object_extent);
+		}
+
+		inline void check_object_count(std::size_t count)
+		{
+			if (count > max_objects)
+			{
+				throw std::invalid_argument("holds " + std::to_string(count) +
+					" objects; the level format's limit is " + std::to_string(max_objects) + " in one array");
+			}
+		}
+
+		// What one StructurePaintable record adds to the stage's paint length.
+		inline double paint_length(double width, double height, bool left, bool top, bool right, bool bottom)
+		{
+			return width * ((top ? 1.0 : 0.0) + (bottom ? 1.0 : 0.0)) +
+				height * ((left ? 1.0 : 0.0) + (right ? 1.0 : 0.0));
+		}
+
+		// The running total over the stage's StructurePaintable records.
+		inline void check_paint_length(double total)
+		{
+			if (!(total <= max_paint_length))
+			{
+				throw std::invalid_argument("brings the stage's paintable faces past the level format's limit of " +
+					whole(max_paint_length) + " world units of paint");
+			}
+		}
+
+		inline void check_file_bytes(std::size_t bytes)
+		{
+			if (bytes > max_file_bytes)
+			{
+				throw std::invalid_argument("is larger than the level format's limit of " +
+					std::to_string(max_file_bytes) + " bytes for one level file");
+			}
+		}
+	}
 }

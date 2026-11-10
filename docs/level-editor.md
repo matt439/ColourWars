@@ -830,7 +830,8 @@ you." in the briefing, and `+stage <name>` starts it from the Debug command
 line. It joins Random only when its file says `"include_in_random": true`
 (the author's 2026-11-05 call for `ROAD#16`); without the key, or with `false`,
 it stays out. The game checks it as it checks a
-shipped stage. A file that fails prints one `user stage refused: <file>:
+shipped stage, including the format's size [limits](level-format.md#limits),
+which the editor applies at open, on each edit and at save. A file that fails prints one `user stage refused: <file>:
 <reason>` line on stderr and is left out; the game goes on without it. Main-menu
 Stage Select also shows an issue count: Down while browsing opens the retained
 filename/reason details, with issue/page controls and a return to the same

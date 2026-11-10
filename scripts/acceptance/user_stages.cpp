@@ -11,6 +11,8 @@
 #include "game/config/stage_scan_diagnostics.h"
 #include "game/states/menu_context.h"
 #include "game/config/tuning.h"
+#include "game/contracts/level_format.h"
+#include "game/objects/level_object_builder.h"
 #include "game/contracts/user_stage_contract.h"
 #include "engine/assets/json.h"
 #include "engine/assets/sprite_sheet_loader.h"
@@ -718,6 +720,163 @@ namespace
 			"keeping the shipped stages first\n";
 	}
 
+	// REV#2: the format's upper limits (level_format::limit). A stage past one
+	// is refused with one line naming the rule, the same reader refuses it as a
+	// shipped stage, and a folder past its file limit is read for its first
+	// files by name.
+	void check_limits(const Fixture& fixture, const std::filesystem::path& content,
+		const std::filesystem::path& scratch)
+	{
+		namespace limit = level_format::limit;
+		const std::filesystem::path folder = fresh(scratch / "limits");
+		const rapidjson::Document base = read_document(content / "levels" / "close_quarters.json");
+		const std::string stage = acceptance::read_text(content / "levels" / "close_quarters.json");
+		// close_quarters' floor: a StructurePaintable with a material and its top face on.
+		constexpr rapidjson::SizeType floor_index = 4;
+		require(std::string(base["collision_objects"][floor_index]["type"].GetString()) == "StructurePaintable" &&
+			base["collision_objects"][floor_index].HasMember("material") &&
+			base["collision_objects"][floor_index]["paintable_faces"]["top"].GetBool(),
+			"The limits fixture needs close_quarters' paintable floor");
+
+		write_level(base, folder / "wide_bounds.json", [](rapidjson::Document& d)
+		{
+			// The record's case: a width typed with four extra digits.
+			d["level_bounds"]["out_of_bounds"]["width"].SetDouble(60000000.0);
+		});
+		write_level(base, folder / "wide_object.json", [&](rapidjson::Document& d)
+		{
+			// Every edge inside the coordinate limit; only the width is over.
+			d["collision_objects"][floor_index]["rectangle"]["x"].SetDouble(-limit::max_coordinate + 1000.0);
+			d["collision_objects"][floor_index]["rectangle"]["width"].SetDouble(limit::max_object_extent + 500.0);
+		});
+		write_level(base, folder / "far_object.json", [&](rapidjson::Document& d)
+		{
+			// An ordinary width a billion units out, where a float's spacing
+			// is wider than the terrain outline's step.
+			d["collision_objects"][floor_index]["rectangle"]["x"].SetDouble(1.0e9);
+		});
+		write_level(base, folder / "far_ramp.json", [&](rapidjson::Document& d)
+		{
+			rapidjson::Value ramp(rapidjson::kObjectType);
+			ramp.CopyFrom(d["collision_objects"][0], d.GetAllocator());
+			ramp["type"].SetString("StructureRamp");
+			ramp["collision_type"].SetString("STRUCTURE_RAMP_RIGHT");
+			ramp["material"].SetString("set_square");
+			ramp.RemoveMember("rectangle");
+			rapidjson::Value triangle(rapidjson::kObjectType);
+			triangle.AddMember("x1", 1.0e9, d.GetAllocator()); triangle.AddMember("y1", 5000.0, d.GetAllocator());
+			triangle.AddMember("x2", 1.0e9 + 512.0, d.GetAllocator()); triangle.AddMember("y2", 5000.0, d.GetAllocator());
+			triangle.AddMember("x3", 1.0e9 + 512.0, d.GetAllocator()); triangle.AddMember("y3", 4800.0, d.GetAllocator());
+			ramp.AddMember("triangle", triangle, d.GetAllocator());
+			d["collision_objects"].PushBack(ramp, d.GetAllocator());
+		});
+		const auto decorations = [](rapidjson::Document& d, std::size_t count)
+		{
+			rapidjson::Value& visuals = d["non_collision_objects"];
+			while (visuals.Size() > count) { visuals.PopBack(); }
+			while (visuals.Size() < count)
+			{
+				rapidjson::Value copy(rapidjson::kObjectType);
+				copy.CopyFrom(visuals[0], d.GetAllocator());
+				visuals.PushBack(copy, d.GetAllocator());
+			}
+		};
+		write_level(base, folder / "many_objects.json",
+			[&](rapidjson::Document& d) { decorations(d, limit::max_objects + 1); });
+		write_level(base, folder / "most_objects.json",
+			[&](rapidjson::Document& d) { decorations(d, limit::max_objects); });
+		write_level(base, folder / "long_paint.json", [&](rapidjson::Document& d)
+		{
+			// One face inside the object limit and past the paint limit.
+			const double width = (limit::max_paint_length + limit::max_object_extent) / 2.0;
+			require(width > limit::max_paint_length && width < limit::max_object_extent,
+				"The paint limit must sit below the object limit for this fixture");
+			d["collision_objects"][floor_index]["rectangle"]["x"].SetDouble(-width / 2.0);
+			d["collision_objects"][floor_index]["rectangle"]["width"].SetDouble(width);
+		});
+		require(stage.size() < limit::max_file_bytes, "The shipped stage must be inside the file limit");
+		acceptance::write_text(folder / "file_at_limit.json",
+			stage + std::string(limit::max_file_bytes - stage.size(), ' '));
+		acceptance::write_text(folder / "file_over_limit.json",
+			stage + std::string(limit::max_file_bytes + 1 - stage.size(), ' '));
+
+		Shipped shipped;
+		const UserStageScan result = scan(fixture, content, folder, shipped);
+		for (const std::string& line : result.refused)
+		{
+			require(line.rfind("user stage refused: ", 0) == 0 && line.find('\n') == std::string::npos &&
+				line.find('\r') == std::string::npos, "A limit refusal must be one refusal line: " + line);
+			std::cout << "  " << line << '\n';
+		}
+		require(result.accepted == std::vector<std::string>{ "file_at_limit", "most_objects" } &&
+			result.refused.size() == 7 && shipped.stages.size() == shipped.count + 2,
+			"A stage at the file limit and one at the object limit must load, and the seven past a limit must not; got " +
+			std::to_string(result.accepted.size()) + " accepted and " + std::to_string(result.refused.size()) + " refused");
+		const std::string coordinate = "coordinate limit of +/-" + limit::whole(limit::max_coordinate);
+		const std::string extent = "wider or taller than the level format's limit of " + limit::whole(limit::max_bounds_extent);
+		require(refused(result, "wide_bounds.json", "level_bounds") && refused(result, "wide_bounds.json", coordinate),
+			"Over-wide bounds were not refused naming level_bounds and the limit");
+		require(refused(result, "wide_object.json", "collision_objects") && refused(result, "wide_object.json", extent),
+			"An over-size object was not refused naming collision_objects and the limit");
+		require(refused(result, "far_object.json", "collision_objects") && refused(result, "far_object.json", coordinate),
+			"An object far from the origin was not refused naming collision_objects and the limit");
+		require(refused(result, "far_ramp.json", "triangle") && refused(result, "far_ramp.json", coordinate),
+			"A ramp far from the origin was not refused naming its triangle and the limit");
+		require(refused(result, "many_objects.json", "non_collision_objects") &&
+			refused(result, "many_objects.json", "holds " + std::to_string(limit::max_objects + 1) + " objects"),
+			"Too many objects were not refused naming the array and its count");
+		require(refused(result, "long_paint.json", "collision_objects") &&
+			refused(result, "long_paint.json", limit::whole(limit::max_paint_length) + " world units of paint"),
+			"Too much paintable face was not refused naming the paint limit");
+		require(refused(result, "file_over_limit.json", std::to_string(limit::max_file_bytes) + " bytes"),
+			"A file one byte over the limit was not refused naming the limit");
+
+		// The manifest's reader (wWinMain's "level" kind): a shipped stage past
+		// a limit throws, which fails startup like any content bug. The object
+		// and paint limits throw from the content check every stage then gets.
+		const LevelObjectBuilder builder(&fixture.world->render, &fixture.play_settings, &fixture.tuning->paint());
+		for (const char* name : { "wide_bounds", "many_objects", "file_over_limit", "wide_object", "far_object",
+			"far_ramp", "long_paint" })
+		{
+			bool thrown = false;
+			try
+			{
+				const StageDefinition definition = read_stage_definition(
+					path_to_utf8(folder / (std::string(name) + ".json")), name);
+				validate_stage_objects(*fixture.tuning, builder, fixture.world->render, fixture.world->audio,
+					*definition.info);
+			}
+			catch (const std::runtime_error&) { thrown = true; }
+			require(thrown, std::string("A shipped stage past a limit did not fail its startup checks: ") + name);
+		}
+
+		// One file more than the folder limit: the first by name are read and
+		// the last is neither loaded nor refused by name.
+		const std::filesystem::path crowded = fresh(scratch / "limits-count");
+		acceptance::write_text(crowded / "a-first.json", stage);
+		for (std::size_t index = 0; index + 2 < limit::max_user_stage_files + 1; ++index)
+		{
+			acceptance::write_text(crowded / ("m-" + std::to_string(1000 + index) + ".json"), "{");
+		}
+		acceptance::write_text(crowded / "zz-last.json", stage);
+		Shipped counted;
+		const UserStageScan count = scan(fixture, content, crowded, counted);
+		const std::size_t files = limit::max_user_stage_files + 1;
+		require(count.accepted == std::vector<std::string>{ "a-first" } &&
+			count.refused.size() == limit::max_user_stage_files && !counted.levels.contains("zz-last"),
+			"A folder one file past the limit must load its first stage, refuse the broken files it read "
+			"and leave the last file unread");
+		require(refused(count, path_to_utf8(crowded), "holds " + std::to_string(files) + " .json files") &&
+			refused(count, path_to_utf8(crowded), "first " + std::to_string(limit::max_user_stage_files) + " by file name"),
+			"The folder line must give the folder's count and the limit");
+		require(std::none_of(count.refused.begin(), count.refused.end(),
+			[](const std::string& line) { return line.find("zz-last") != std::string::npos; }),
+			"The file past the folder limit must not be refused by name");
+		std::cout << "PASS format limits: bounds, object size and distance, ramp distance, object count, paint length "
+			"and file size refused with one line each and by the manifest's reader; a stage at the object and file "
+			"limits loads; a folder of " << files << " files is read for its first " << limit::max_user_stage_files << "\n";
+	}
+
 	void check_diagnostics(const Fixture& fixture)
 	{
 		using stage_scan_diagnostics::display_text;
@@ -883,6 +1042,7 @@ int main(int argc, char** argv)
 		check_user_collision(fixture, content, scratch);
 		check_stage_names(fixture, content, scratch);
 		check_rescan(fixture, content, scratch);
+		check_limits(fixture, content, scratch);
 		std::cout << "PASS user stages: per-user folder, per-file validation and refusal, "
 			"no shipped or user name collisions, Stage Select order and marker, Random only on request.\n";
 		return 0;

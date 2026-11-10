@@ -5,6 +5,7 @@
 #include "game/config/drawable_text.h"
 #include "game/objects/level_object_builder.h"
 #include "game/config/sound_groups.h"
+#include "game/contracts/level_format.h"
 #include "game/contracts/user_stage_contract.h"
 
 #include <algorithm>
@@ -115,6 +116,14 @@ UserStageScan load_user_stages(const std::filesystem::path& directory,
 		{
 			return first.filename().native() < second.filename().native();
 		});
+	// The format's folder limit: the rest are named by count, not read.
+	if (files.size() > level_format::limit::max_user_stage_files)
+	{
+		scan.refused.push_back(refusal(path_to_utf8(directory), "holds " + std::to_string(files.size()) +
+			" .json files; only the first " + std::to_string(level_format::limit::max_user_stage_files) +
+			" by file name are read"));
+		files.resize(level_format::limit::max_user_stage_files);
+	}
 
 	const LevelObjectBuilder builder(checks.render, checks.play_settings,
 		&checks.tuning->paint());

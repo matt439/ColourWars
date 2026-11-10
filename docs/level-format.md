@@ -6,8 +6,8 @@ resources and supplies a closed grey room, a paintable floor and four spawns per
 team. It is an authoring example, outside the runtime asset list and manifest;
 copy it before editing. Its geometry is not an accepted arena design.
 
-The format's key names, object and collision vocabulary and material table have
-one engine-free owner, [level_format.h](../game/contracts/level_format.h), which the game's
+The format's key names, object and collision vocabulary, material table and
+size [limits](#limits) have one engine-free owner, [level_format.h](../game/contracts/level_format.h), which the game's
 loader and the editor both read; the stations, gates, movers and slabs keep their
 rules in the contracts it names.
 [level.schema.json](../game/contracts/level.schema.json), beside it, is a JSON Schema Draft-04 structural check,
@@ -93,8 +93,8 @@ checks and full Release qualification in
 | `spawn_locations` | Object | `team_a` and `team_b` arrays of points, at least four entries each. |
 | `level_bounds` | Object | All four named rectangles, below. |
 | `stations` | Optional array | Named developer-console destinations, each with an optional practice `lesson`; defaults to no authored stations. |
-| `collision_objects` | Array | Structures, paintable structures and ramps; may be empty. |
-| `non_collision_objects` | Array | Decorative `Visual` entries; may be empty. |
+| `collision_objects` | Array | Structures, paintable structures and ramps; may be empty, at most 512 entries ([Limits](#limits)). |
+| `non_collision_objects` | Array | Decorative `Visual` entries; may be empty, at most 512 entries. |
 
 Keys and enum spellings are case sensitive. JSON numbers may be integral or
 fractional except `format`, which uses the integer representation. Coordinates
@@ -124,7 +124,9 @@ Each `level_bounds` member uses the following encoding:
 | `zoom_out_start_bounds` | Authored start framing for the ending camera transition. |
 | `zoom_out_finish_bounds` | Authored end/overview framing; also the editor's initial arena view. |
 
-All four require finite coordinates and positive width/height. They are separate
+All four require finite coordinates and positive width/height, with every edge
+within 1,048,576 units of the origin and neither side longer than that
+([Limits](#limits)). They are separate
 rectangles: the loader does not require them to nest or enforce an aspect ratio.
 Only object rectangles, not these bounds, accept `rectangle_tlbr`.
 
@@ -168,7 +170,9 @@ Flat terrain and visuals use either of these object members:
 ```
 
 Width and height must be finite and positive; for TLBR, `right > left` and
-`bottom > top`. If both encodings are present, `rectangle` takes precedence and
+`bottom > top`. Every edge lies within 1,048,576 units of the origin and
+neither side is longer than that; a ramp's `triangle` meets the same rule on
+its bounding box ([Limits](#limits)). If both encodings are present, `rectangle` takes precedence and
 the runtime ignores `rectangle_tlbr`, even if that ignored field is malformed.
 The schema preserves that precedence. Neither encoding accepts anchor names,
 relative positions or a layout expression.
@@ -544,12 +548,15 @@ loaded file the game would refuse is refused in the editor too
 lesson fonts stay a game-side check.
 
 The schema covers required keys, scalar/array types, positive rectangle sizes,
+the coordinate, extent and object-count [limits](#limits) it can state,
 spawn counts, type/collision combinations, material values and the collision
 types each allows, paint-face booleans, sound-pair
 presence, sting gain and station-name syntax/reserved names. It leaves these
 checks to their owners:
 
 - Runtime: finite bounds/object rectangles after float conversion; TLBR ordering;
+  every [limit](#limits), including the right and bottom edges, TLBR and
+  triangle extents, paint length and file size the schema cannot state;
   spawn/station containment and spawn halves; duplicate station names; lesson
   area size, camera containment and station containment, nonblank lesson text
   and its fonts; grey
@@ -563,8 +570,9 @@ checks to their owners:
   the clamp). The `tunnelling`
   acceptance case prints each shipped stage's margin. Flying paint is exempt
   because each shot's whole path is tested against the geometry every step.
-- Editor: its additional nonempty-string, numeric and upright-ramp checks,
-  and warnings, not refusals, for resource names that do not resolve.
+- Editor: the [limits](#limits) on coordinates, extents, object counts,
+  paint length and file size; its additional nonempty-string, numeric and
+  upright-ramp checks, and warnings, not refusals, for resource names that do not resolve.
   Unknown metadata, stations and their lessons remain preserved even when not
   exposed as dedicated editor controls. The editor applies the runtime station
   and lesson-geometry rules above through the shared contract (`ED#23`).
@@ -575,6 +583,96 @@ checks to their owners:
 Schema ranges apply to JSON numbers before conversion to game floats; rounding
 near a numeric boundary can therefore differ from a runtime comparison. Keep
 runtime validation in the authoring workflow even after a schema pass.
+
+## Limits
+
+The format has upper limits, named once in
+[level_format.h](../game/contracts/level_format.h) (`level_format::limit`).
+Before them a width typed with four extra digits passed validation: the game
+then built paint tiles along it at startup and again at Stage Select, and a
+large enough quotient reached an undefined float-to-int conversion. An object
+placed around a billion units from the origin was worse: a float there cannot
+represent the 32-unit step the terrain outline walks, so that loop never ended.
+
+| Limit | Value | Largest shipped | Headroom |
+|---|---|---|---|
+| Distance of any rectangle or ramp edge from the origin (`max_coordinate`) | 1,048,576 units | 7,388 | 142x |
+| Width or height of a `level_bounds` rectangle (`max_bounds_extent`) | 1,048,576 units | 6,200 | 169x |
+| Width or height of an object (`max_object_extent`) | 1,048,576 units | 7,000 | 150x |
+| Entries in `collision_objects`, and in `non_collision_objects` (`max_objects`) | 512 each | 41 and 24 | 12x and 21x |
+| Paintable face length over the stage (`max_paint_length`) | 524,288 units | 26,560 | 20x |
+| Paint tiles on one face (`max_face_tiles`) | 1,048,576 | 1,500 (a 6,000-unit face) | about 700x |
+| Level file size (`max_file_bytes`) | 1,048,576 bytes | 35,076 | 30x |
+| `.json` files read from the user stage folder (`max_user_stage_files`) | 256 | 13 shipped stages | 20x |
+
+The shipped figures were measured on 2026-11-10 over the thirteen files in
+`game/content/levels/` and `editor/template.json`; the largest file, object
+count and paint length are all King of the Hill's. Each limit sits an order of
+magnitude or more above the largest shipped value, so a stage several times
+the size of anything shipped is still inside all of them and only a mistake
+meets one.
+
+- **Coordinates** stop at 2^20, where a game float still resolves an eighth of
+  a unit. A rectangle is checked on all four edges, a ramp on its bounding box,
+  and a `rectangle_tlbr` after conversion.
+- **Bounds and object extent** are the same number because the schema has one
+  rectangle definition for both. Two acceptance fixtures use an arena 140,200
+  wide, so the limit could not usefully be much smaller.
+- **Object count** is per array so the schema can state it as `maxItems`.
+- **Paint length** is what bounds the work: for each `StructurePaintable`, its
+  width for each enabled top and bottom face plus its height for each enabled
+  left and right face, as authored. Clipping against other terrain only
+  shortens a face, so the sum is an upper bound on what is built. At the
+  shipped 4-unit tile the limit is 131,072 tiles. Fixed slabs are a fixed size
+  and are bounded by the object count.
+- **Face tiles** is the check that makes the tile count's float-to-int
+  conversion defined. The tile size comes from `tuning.json`, which only has to
+  be positive, so the game checks the quotient where it is computed
+  (`StructurePaintable::generate_paint_tiles`). With the shipped tile a face at
+  the extent limit is 262,144 tiles, so this one is reached only with a far
+  smaller tuned tile. No acceptance case drives it: that needs a tuning
+  fixture, and the object and paint limits are met first with the shipped one.
+- **File size**: a stage at both object limits is about 0.6 MB at the shipped
+  560 bytes an object, so the file limit and the object limit agree. The game
+  stops reading at the limit instead of reading the rest.
+- **File count**: past 256 the folder's first 256 `.json` files by file name
+  are read and one line gives the folder's count. The rest are not opened and
+  get no line of their own.
+
+Who enforces what:
+
+| Limit | Game | Editor | Schema |
+|---|---|---|---|
+| Coordinates | Yes | Yes | `x`, `y`, TLBR and triangle fields only; not a right or bottom edge, which is a sum |
+| Bounds and object extent | Yes | Yes | `width` and `height` only; not a TLBR or triangle extent, which is a difference |
+| Object count | Yes | Yes | `maxItems` |
+| Paint length | Yes | Yes | No |
+| Face tiles | Yes | No (it has no paint tuning) | No |
+| File size | Yes | At open and at save | No |
+| File count | Yes | No (it opens one file) | No |
+
+A stage past a limit is refused where any other invalid stage is. A user
+stage is left out with one `user stage refused: <file>: <reason>` line; a
+shipped stage goes through the same reader, so one past a limit fails startup
+like any content bug. The editor refuses the file at open, refuses an edit
+that would pass a limit and leaves the document as it was, and refuses to
+write a file over the size limit. The schema's `rectangle` definition also
+serves a lesson's `area`, which therefore takes the same ranges; the runtime
+already keeps that area inside `camera_bounds`.
+
+The limits bound each quantity. They are not a time budget: a folder of 256
+stages each at the paint limit still takes a long time to check, and nothing
+here measures or promises how long. Three things stay uncapped on purpose: a
+mover's `travel_x` and `travel_y` (bounded by level admission), the lengths of
+the spawn and `stations` arrays (bounded only by the file size), and the
+folder listing itself, which names every entry before the first 256 are kept.
+
+This closed `REV#2` of the
+[2026-11-10 project review](review/2026-11-10-project-review.md#user-stage-geometry-and-folder-have-no-caps-rev2).
+The `user_stages` case covers each refusal, the two at-limit acceptances, the
+manifest's reader and the folder count; `level_format` holds the schema's
+numbers to the header's and covers what the schema cannot see; the editor's
+document acceptance covers load, edit and save.
 
 ## Validation and authoring workflow
 
@@ -602,8 +700,8 @@ each. The case requires the exact registered count (thirteen at 2026-11-05,
 [level_format.cpp](../scripts/acceptance/level_format.cpp)), so registering or
 retiring a stage updates that number.
 Its fixtures also exercise invalid
-versions, structural failures, unknown and mismatched materials, unknown metadata, rectangle precedence and
-runtime checks beyond the schema. It also holds the editor's resource-name
+versions, structural failures, unknown and mismatched materials, unknown metadata, rectangle precedence,
+the format's [limits](#limits) and runtime checks beyond the schema. It also holds the editor's resource-name
 catalog to the engine's sprite-sheet and sound-bank loaders. Editor acceptance checks version compatibility,
 new-document versioning and template/unknown-field round trips.
 

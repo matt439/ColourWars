@@ -583,8 +583,13 @@ namespace
         { d["collision_objects"][0]["motion"]["phase"].SetDouble(1.0); });
         check("motion-phase-rounding", true, false, [](rapidjson::Document& d)
         { d["collision_objects"][0]["motion"]["phase"].SetDouble(0.999999999999); });
+        // Inside the format's coordinate limit, where a float still steps by
+        // a sixteenth: a hundredth of travel rounds back onto the anchor.
         check("motion-indistinct-edges", true, false, [](rapidjson::Document& d)
-        { d["collision_objects"][0]["rectangle"]["x"].SetDouble(1.0e20); });
+        {
+            d["collision_objects"][0]["rectangle"]["x"].SetDouble(999000.0);
+            d["collision_objects"][0]["motion"]["travel_x"].SetDouble(0.01);
+        });
         for (const char* field : { "axis", "travel_y", "rotation" })
         {
             check((std::string("motion-unsupported-") + field).c_str(), false, false,
@@ -714,7 +719,10 @@ namespace
                 [travel](rapidjson::Document& d) { d["collision_objects"][0]["motion"]["travel_y"].SetDouble(travel); });
         }
         check("lift-indistinct-edges", true, false, [](rapidjson::Document& d)
-        { d["collision_objects"][0]["rectangle"]["y"].SetDouble(1.0e20); });
+        {
+            d["collision_objects"][0]["rectangle"]["y"].SetDouble(999000.0);
+            d["collision_objects"][0]["motion"]["travel_y"].SetDouble(0.01);
+        });
         for (const char* field : { "axis", "rotation" })
         {
             check((std::string("lift-unsupported-") + field).c_str(), false, false,
@@ -722,6 +730,99 @@ namespace
                 { d["collision_objects"][0]["motion"].AddMember(rapidjson::StringRef(field), 0, d.GetAllocator()); });
         }
         std::cout << "PASS vertical lift schema/runtime fields, cycle and up/down paint drives, solid-only refusals, initial construction\n";
+    }
+
+    // REV#2: the format's upper limits (level_format::limit). The schema states
+    // the ones Draft-04 can (coordinate ranges, rectangle width and height,
+    // array lengths), with the contract's numbers; the runtime refuses all of
+    // them, including the ones the schema cannot subtract or add up to see.
+    void check_limit_fixtures(const rapidjson::Document& schema_json, const rapidjson::SchemaDocument& schema,
+        const rapidjson::Document& source, const std::filesystem::path& scratch,
+        const LevelObjectBuilder& builder, const RenderResources& render, const AudioResources& audio)
+    {
+        namespace limit = level_format::limit;
+        static_assert(limit::max_bounds_extent == limit::max_object_extent,
+            "The schema has one rectangle definition for bounds and objects");
+        const auto& definitions = schema_json["definitions"];
+        const auto ranged = [&](const char* definition, const char* field)
+        {
+            const auto& number = definitions[definition]["properties"][field];
+            return number["minimum"].GetDouble() == -limit::max_coordinate &&
+                number["maximum"].GetDouble() == limit::max_coordinate;
+        };
+        require(ranged("rectangle", "x") && ranged("rectangle", "y") &&
+            definitions["rectangle"]["properties"]["width"]["maximum"].GetDouble() == limit::max_object_extent &&
+            definitions["rectangle"]["properties"]["height"]["maximum"].GetDouble() == limit::max_object_extent,
+            "The schema's rectangle limits differ from level_format::limit");
+        for (const char* field : { "left", "top", "right", "bottom" })
+        { require(ranged("rectangle_tlbr", field), std::string("The schema's rectangle_tlbr limit differs: ") + field); }
+        for (const char* field : { "x1", "y1", "x2", "y2", "x3", "y3" })
+        { require(ranged("triangle", field), std::string("The schema's triangle limit differs: ") + field); }
+        for (const char* objects : { "collision_objects", "non_collision_objects" })
+        {
+            require(schema_json["properties"][objects]["maxItems"].GetUint64() == limit::max_objects,
+                std::string("The schema's maxItems differs from level_format::limit::max_objects: ") + objects);
+        }
+
+        const auto variant = [&](const char* name, bool schema_accepts, const std::string& refusal, auto edit)
+        {
+            auto document = copy_document(source);
+            edit(document);
+            schema_is(schema, document, schema_accepts, name);
+            const auto path = scratch / (std::string(name) + ".json");
+            acceptance::write_document(document, path);
+            runtime_rejects(path, refusal.c_str(), builder, render, audio);
+        };
+        const std::string coordinate = "coordinate limit of +/-" + limit::whole(limit::max_coordinate);
+        const std::string extent = "wider or taller than the level format's limit of " +
+            limit::whole(limit::max_object_extent);
+        // The template's left wall is collision_objects[0] and its paintable floor [3].
+        variant("limit-wide-bounds", false, coordinate, [](rapidjson::Document& d)
+        { d["level_bounds"]["out_of_bounds"]["width"].SetDouble(60000000.0); });
+        variant("limit-wide-object", false, extent, [](rapidjson::Document& d)
+        {
+            d["collision_objects"][0]["rectangle"]["x"].SetDouble(-limit::max_coordinate + 1000.0);
+            d["collision_objects"][0]["rectangle"]["width"].SetDouble(limit::max_object_extent + 500.0);
+        });
+        variant("limit-far-object", false, coordinate, [](rapidjson::Document& d)
+        { d["collision_objects"][0]["rectangle"]["x"].SetDouble(1.0e9); });
+        variant("limit-many-objects", false, "non_collision_objects", [](rapidjson::Document& d)
+        {
+            rapidjson::Value& visuals = d["non_collision_objects"];
+            while (visuals.Size() <= limit::max_objects)
+            {
+                rapidjson::Value copy(rapidjson::kObjectType);
+                copy.CopyFrom(visuals[0], d.GetAllocator());
+                visuals.PushBack(copy, d.GetAllocator());
+            }
+        });
+        // What the schema cannot see: an edge it would have to add up, an
+        // extent it would have to subtract, and a total over the stage.
+        variant("limit-far-edge", true, coordinate, [](rapidjson::Document& d)
+        {
+            d["collision_objects"][0]["rectangle"]["x"].SetDouble(limit::max_coordinate - 50.0);
+            d["collision_objects"][0]["rectangle"]["width"].SetDouble(100.0);
+        });
+        variant("limit-wide-tlbr", true, extent, [](rapidjson::Document& d)
+        {
+            auto& object = d["collision_objects"][0];
+            rapidjson::Value tlbr(rapidjson::kObjectType);
+            tlbr.AddMember("left", -limit::max_coordinate + 1000.0, d.GetAllocator());
+            tlbr.AddMember("top", 0, d.GetAllocator());
+            tlbr.AddMember("right", 1500.0, d.GetAllocator());
+            tlbr.AddMember("bottom", 1300, d.GetAllocator());
+            object.RemoveMember("rectangle");
+            object.AddMember("rectangle_tlbr", tlbr, d.GetAllocator());
+        });
+        variant("limit-long-paint", true, limit::whole(limit::max_paint_length) + " world units of paint",
+            [](rapidjson::Document& d)
+        {
+            const double width = (limit::max_paint_length + limit::max_object_extent) / 2.0;
+            d["collision_objects"][3]["rectangle"]["x"].SetDouble(-width / 2.0);
+            d["collision_objects"][3]["rectangle"]["width"].SetDouble(width);
+        });
+        std::cout << "PASS format limits: the schema carries the contract's coordinate, extent and count numbers; "
+            "the runtime refuses bounds, objects, counts, a summed edge, a TLBR extent and a paint total past them\n";
     }
 
     // The editor has no engine, so it reads the scenery greys from the format's
@@ -857,6 +958,7 @@ int main(int argc, char** argv)
         check_motion_fixtures(schema, source, scratch, builder, render, audio);
         check_lift_fixtures(schema, source, scratch, builder, render, audio);
         check_gate_fixtures(schema, source, scratch, builder, render, audio, tuning);
+        check_limit_fixtures(schema_json, schema, source, scratch, builder, render, audio);
         check_editor_catalog(content);
         check_scenery_greys();
         std::cout << "PASS level format 1: " << checked << " staged/source/template files, legacy object/paint parity, "

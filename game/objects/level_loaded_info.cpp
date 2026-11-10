@@ -28,7 +28,15 @@ namespace
 		std::string text;
 		char chunk[64 * 1024];
 		while (file.read(chunk, sizeof(chunk)) || file.gcount() > 0)
-		{ text.append(chunk, static_cast<std::size_t>(file.gcount())); }
+		{
+			text.append(chunk, static_cast<std::size_t>(file.gcount()));
+			// Stop at the format's file limit rather than reading the rest.
+			try { level_format::limit::check_file_bytes(text.size()); }
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(std::string("LevelLoadedInfo - '") + path + "' " + error.what());
+			}
+		}
 		if (file.bad()) { throw std::runtime_error(std::string("LevelLoadedInfo - read error in '") + path + "'"); }
 		return text;
 	}
@@ -179,8 +187,14 @@ void LevelLoadedInfo::validate() const
 	this->zoom_out_start_bounds_rectangle();
 	this->zoom_out_finish_bounds_rectangle();
 
-	this->collision_objects_json();
-	this->non_collision_objects_json();
+	for (const JsonValue& objects : { this->collision_objects_json(), this->non_collision_objects_json() })
+	{
+		try { level_format::limit::check_object_count(objects.size()); }
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(objects.where() + " " + error.what());
+		}
+	}
 
 	this->sound_bank_name();
 	this->music_name();
@@ -439,6 +453,15 @@ RectangleF LevelLoadedInfo::bounds_rectangle(const char* bounds_key) const
 	{
 		throw std::runtime_error(bounds.where() +
 			" needs finite coordinates and positive width and height");
+	}
+	try
+	{
+		level_format::limit::check_bounds_rectangle(rectangle.x, rectangle.y,
+			rectangle.width, rectangle.height);
+	}
+	catch (const std::invalid_argument& error)
+	{
+		throw std::runtime_error(bounds.where() + " " + error.what());
 	}
 	return rectangle;
 }

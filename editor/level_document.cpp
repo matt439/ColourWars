@@ -315,7 +315,15 @@ namespace colourwars_editor
         const std::string source = "Level file '" + path_text(path) + "': ";
         std::ifstream input(path, std::ios::binary);
         if (!input) { fail(source + "Could not open the level file."); }
-        const std::string text{ std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
+        // Stop at the format's file limit, which the game applies at load.
+        std::string text;
+        char chunk[64 * 1024];
+        while (input.read(chunk, sizeof(chunk)) || input.gcount() > 0)
+        {
+            text.append(chunk, static_cast<std::size_t>(input.gcount()));
+            try { level_format::limit::check_file_bytes(text.size()); }
+            catch (const std::invalid_argument& error) { fail(source + "The file " + error.what() + "."); }
+        }
         if (input.bad()) { fail(source + "Could not read the complete level file."); }
         Document document;
         try
@@ -357,6 +365,9 @@ namespace colourwars_editor
         std::filesystem::path saved_path = path;
         std::filesystem::path source_path = save_target(path);
         std::string saved_text = json_text(saved_document);
+        // The game would refuse the file at load; refuse before writing it.
+        try { level_format::limit::check_file_bytes(saved_text.size()); }
+        catch (const std::invalid_argument& error) { fail(std::string("The saved level ") + error.what() + "."); }
         std::string source_bytes = saved_text;
         std::vector<std::string> saved_history = impl_->history;
         saved_history[impl_->history_index] = saved_text;

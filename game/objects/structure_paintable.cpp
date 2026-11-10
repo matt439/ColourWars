@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/structure_paintable.h"
 #include "game/objects/projectile.h"
+#include "game/contracts/level_format.h"
 #include "game/contracts/paint_face_geometry.h"
 
 using namespace labrador;
@@ -347,7 +348,16 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
             }
             const float length = end - begin;
             const float authored_pitch = along_x ? paint.size.x : paint.size.y;
-            const int count = std::max(1, static_cast<int>(length / authored_pitch));
+            // The quotient must fit before it is converted: tuning only asks
+            // for a positive tile size, and a float past INT_MAX has no int.
+            const float wanted = length / authored_pitch;
+            if (!(wanted <= static_cast<float>(level_format::limit::max_face_tiles)))
+            {
+                throw std::invalid_argument("A paintable face of " + std::to_string(length) +
+                    " world units needs more than the level format's limit of " +
+                    std::to_string(level_format::limit::max_face_tiles) + " paint tiles.");
+            }
+            const int count = std::max(1, static_cast<int>(wanted));
             const float pitch = length / count;
             this->paint_strips_.push_back(PaintStrip{
                 static_cast<int>(paint_tiles.size()), count, begin, pitch, end, along_x,
