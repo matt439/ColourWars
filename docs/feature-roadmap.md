@@ -3846,8 +3846,12 @@ exactly as before.
 - **Seeds.** The pick still takes exactly one `rand()` draw, so every later
   draw under a Debug `seed` is the same as before. The stage a seeded menu
   Random pick lands on does change whenever the setup's stage is in the pool:
-  it is now a function of the seed and that stage. No document or probe pinned
-  a seed to a menu stage.
+  it is now a function of the seed and that stage. One probe pinned a seed to
+  a menu stage: the painter's stage-paper check starts Random under seed 4937
+  from a fixture pool of three with the setup's stage in it, and expected the
+  whole-pool draw (`close_quarters`; the page now commits `turbulence`). Its
+  two expectations now leave out the setup's stage as the page does, still
+  written out in the probe and not through `random_stage_index`.
 
 `random_stage_index` (`game/objects/stage.h`) takes the last stage as a third
 argument and stays a pure function; the two-argument form is the same draw
@@ -3858,10 +3862,12 @@ an empty, explicit-only or unknown last stage matches the two-argument draw,
 and each of the four shipped Random arenas as the last stage is never drawn
 again while the other three get four draws in twelve each. `stage_selection`,
 `series_stage_rule`, `remembered_setup`, `user_stages`, `menu_navigation` and
-`turbulence_slab_stage` pass in Debug and Release. Not run: the painter checks
-that drive the real Stage page on a GPU (`check-painter.ps1`; its join and
-stage motion check confirms Random twice from a pool of one and expects one
-consumed draw, which this keeps), and how it plays.
+`turbulence_slab_stage` pass in Debug and Release. On MattPC (2026-11-10)
+`check-painter.ps1 -StagePaperOnly` passes in both presets with the updated
+expectations. Not run: the other painter checks that drive the real Stage page
+on a GPU (the join and stage motion check and the Random text check confirm
+Random from a pool of one and expect one consumed draw, which this keeps), and
+how it plays.
 
 ### Teammate markers (`ROAD#18`)
 
