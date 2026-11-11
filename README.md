@@ -161,6 +161,14 @@ covers starting the game, controls, where settings are saved and removing it.
 Settings live in `%LOCALAPPDATA%\ColourWars`, independently of the extracted
 game folder. To update, extract a new ZIP; your settings stay.
 
+### Audio
+
+The download includes the game's sound bank. If startup reports that an
+optional bank is missing, the game continues silently. Extract the whole ZIP
+again to restore its files; Options > Controls / audio adjusts music and SFX
+volume. See [the audio reference](docs/development.md#audio) for the bank,
+licences and silent fallback.
+
 ## Your own stages
 
 Put level JSON files in `%LOCALAPPDATA%\ColourWars\stages\` (create that
