@@ -9,51 +9,27 @@ thread starts here: read **NOW**, then the owner of the row it picks up.
 **The only ordering in this file.** Keep this block to the current aim and the next few actions;
 results go in their owners, and `git log` is the changelog.
 
-**Aim reached; no new aim yet (2026-11-05).** The 2026-10-20 aim was to research comparable
-combat levels, make an original reference map, then tune movement and all five tools against
-it. Crossfeed was accepted on 2026-10-25. On 2026-11-05 the author accepted every open
-decision without the attended sessions:
-- **Arenas.** The Turbulence slab trial and Press Tower replace the original Turbulence and King
-  of the Hill in Random; the originals stay selectable ([Turbulence](docs/polish-turbulence.md),
-  [Press Tower](docs/polish-press-tower.md)).
-- **Values.** The current five-tool, movement, bot and Boost values are accepted. Paint underfoot
-  now ships on ([`POL#30`](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30)).
-  The series stage rule defaults to Rotate, user stages may opt into Random, display scaling
-  stays fractional, enemies get no threat markers and no translation language is chosen.
-- **Waived checks.** The hardware, participant and listening checks were waived by the author,
-  not performed: pads, the clean PC, performance and startup captures, Study B, fresh players
-  and the audio mix. Each owner says so.
-- **Engine reports.** The owed reports are filed as
-  [labrador#122-#125](docs/review/engine-reports.md#live), and 28 is closed as declined.
+**Aim: release preparation (the author, 2026-11-11), docs and packaging first.**
+The [release guide](docs/releasing.md) owns this pass and the candidate checks.
 
-The next aim is the author's to set. Until then, rows are picked from the sections below.
-The remaining queued hygiene rows (`HYG#81`, `HYG#88`-`HYG#92` and `CI#8`) are
-complete (2026-11-07), recorded in [their owner](docs/code-hygiene.md#hygiene-review-2026-11-05).
-The review's engine draft, `ENG#35`, still waits on the author's filing decision.
-`ROAD#22`'s endless-paint slice is complete (2026-11-07), recorded in the
-[roadmap](docs/feature-roadmap.md#endless-paint-road22). `ROAD#11` (sub weapons) is implemented
-(2026-11-09): all seven slices are done; the author's attended play review is the decision left.
-Art (`POL#16`) is unblocked but stays deferred. Bot lift routing, sponges and the controller
-rows remain unscoped.
-The 2026-11-10 project review added the `REV` rows
-([Project review](#project-review-2026-11-10)). Its ready rows were cleared the same day; the
-owners and `git log` hold the results. Twenty-one are `DECISION`, each a call beside
-something accepted or waived on 2026-11-05, `REV#38` among them now that its reveal captures
-exist. None is ordered here until the author sets an aim.
-The 2026-11-10 first-run review added the `FTR` rows
-([First-run review](#first-run-review-2026-11-10)): what a newcomer meets from the GitHub page to
-a first match. Its ready rows are complete, with local build, startup, package,
-dialog and focused painter evidence in [code hygiene](docs/code-hygiene.md#first-run-build-and-package-follow-up-ftr3-ftr6-ftr7-ftr9).
-The long-path report is drafted as `ENG#37`; filing stays with the author.
-Three are `DECISION`: cutting the first tag (`FTR#1`), the fresh-save arena
-(`FTR#13`) and the README's shape (`FTR#15`).
+The remaining author calls in this aim are:
 
-The overnight ready queue is worked through (2026-11-10): twelve first-run
-rows and `TOOL#4` are complete. The shipped matrix and bot ladder record
-13,504 match rows, with repeats and pinned inputs verified. `TOOL#5`'s
-diagnostic slice is measured; exact paid-event counters now need the author's
-decision on allowing a passive game-code observer. Results and limits are in
-[gameplay tuning](docs/gameplay-tuning.md#balance-matrix-tool-tool4).
+1. Review sub weapons (`ROAD#11`) and choose the README hero image/clip
+   (`REV#12`). Paint-underfoot documentation does not select a live cue (`REV#10`).
+2. Decide when to cut the first tag (`FTR#1`). A push, pull request and publication
+   need their own instructions; the required `gate` and up-to-date `master` rule
+   still apply.
+
+The release guide records the documentation scope and the clean-candidate build,
+package inspection and isolated startup procedure. Keep the candidate's build
+metadata, ZIP hash and local evidence together; rebuild it after any further commit.
+
+This scope leaves gameplay calls open: out-of-bounds handling (`REV#1`), stage
+ordering and the fresh-save default (`REV#26`, `FTR#13`), Random palette filtering
+(`REV#14`) and the other decisions below. Accepted arenas, movement, tools, bots,
+Boost and audio remain as recorded in their owners. The hardware, participant
+and listening checks waived on 2026-11-05 were not performed. Arena art (`POL#16`)
+stays deferred; bot lift routing, sponges and controller work remain unscoped.
 
 ## Art direction, characters and the UI
 
@@ -154,11 +130,10 @@ was proposed and given no row.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `REV#10` | DECISION | MED | M | Paint underfoot (POL#30) ships on with no HUD, audio or text cue. One line in HOW-TO-PLAY and the refill lesson text are the safe slice, not yet written; whether to build an enemy-paint cue on the meter or step sound is the author's call. [Record](docs/review/2026-11-10-project-review.md#paint-underfoot-has-no-player-cue-rev10). |
-| `REV#12` | DECISION | MED | S | README shows no screenshot, GIF or clip in 511 lines though docs/images holds captures. The author picks the hero image and clip, given POL#16's art is unfinished; trimming settings and CI prose is a separate M. [Record](docs/review/2026-11-10-project-review.md#readme-has-no-screenshot-or-clip-rev12). |
+| `REV#10` | DECISION | MED | M | The in-game refill lesson still omits paint underfoot; an enemy-paint cue on the meter or step sound remains the author's call. [Remaining scope](docs/releasing.md#current-preparation-scope), [record](docs/review/2026-11-10-project-review.md#paint-underfoot-has-no-player-cue-rev10). |
+| `REV#12` | DECISION | MED | S | The author still picks the README hero image and clip from the retained captures, given POL#16's arena art is unfinished. [Record](docs/review/2026-11-10-project-review.md#readme-has-no-screenshot-or-clip-rev12). |
 | `REV#13` | DECISION | LOW | S | The F1/Back per-player developer panel draws in Release and is listed in Controls help. Keep it as the Release frame-time readout, hide it from help, or compile it out: the author's call; no decision is recorded. [Record](docs/review/2026-11-10-project-review.md#developer-text-panel-ships-in-release-rev13). |
 | `REV#14` | DECISION | MED | S | Default Random palette still rolls pink_green and blue_yellow, the two pairs exempt from the colour-vision bar (one roll in three). A per-pair in-random flag would fix it but reopens ROAD#8's choice and changes seeded draws. [Record](docs/review/2026-11-10-project-review.md#random-palette-draws-the-exempt-pairs-rev14). |
-| `REV#15` | DEFERRED | LOW | S | No CONTRIBUTING, issue form or SECURITY file. A short CONTRIBUTING (OOP rule, engine changes go to Labrador) and a bug form asking for build-info.txt and last-error.log; rides with the first release, which is the author's call. [Record](docs/review/2026-11-10-project-review.md#no-contributor-or-issue-files-rev15). |
 | `REV#16` | UNSCOPED | LOW | S | Actions are pinned by major tag with no Dependabot, and the nightly's eleven legs each rebuild. All are first-party actions and runner minutes are free, so weight is small; per-leg builds on pull requests are a recorded choice. [Record](docs/review/2026-11-10-project-review.md#ci-action-pins-and-nightly-rebuilds-rev16). |
 | `REV#18` | UNSCOPED | LOW | L | feature-roadmap, code-hygiene and level-editor docs interleave reference with closed records. Only a level-editor manual split (M) has a clear reader; the rest is L, cosmetic and risks anchors TODO rows link to. [Record](docs/review/2026-11-10-project-review.md#large-docs-mix-manual-and-records-rev18). |
 
@@ -254,12 +229,6 @@ already had rows.
 |---|---|---|---|---|
 | `FTR#13` | DECISION | LOW | S | A fresh save opens Stage Select on King of the Hill, among six Trial stages, with Random last. Opening on Random and grouping the Trials sits beside the 2026-11-05 arena call. [Record](docs/review/2026-11-10-first-run-review.md#a-fresh-save-opens-the-arena-page-on-king-of-the-hill-ftr13). |
 | `FTR#14` | UNSCOPED | LOW | M | About eight confirm screens before a first match, and the save and `stages` folders are never shown. Quick Play, Open save folder, make `stages` on first run; none designed. [Record](docs/review/2026-11-10-first-run-review.md#the-setup-path-is-long-and-the-save-folder-is-hidden-ftr14). |
-
-**Finding help**
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `FTR#15` | DECISION | LOW | M | README puts art history, review status, CI, the pin and repository history among player text. Trim Play to download, requirements, controls and help; `REV#12` called the shape a matter of taste. [Record](docs/review/2026-11-10-first-run-review.md#the-readme-mixes-audiences-ftr15). |
 
 ## Areas with no open rows
 

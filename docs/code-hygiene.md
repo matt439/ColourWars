@@ -3501,6 +3501,30 @@ presets, as does actual `qps-ploc` startup; the Release ConnectionText and
 JoinPaper painter leaves check the revised copy within the existing bounds.
 Evidence is under `out/validation/pr78/locale-hint/`.
 
+### Build-helper Visual Studio discovery (2026-11-11)
+
+**Done during release preparation.** A fresh pwsh 7.6 shell reported that Visual
+Studio was missing even though `vswhere` returned the installed C++ toolchain.
+Piping its one result through `Select-Object -First 1` stopped the native query
+before `LASTEXITCODE` was set; the helper treated the unset value as failure and
+discarded the valid path. An earlier native success in the shell could mask it.
+
+`build.ps1` now collects the locator's output without an early-stopping pipeline;
+`-latest` already selects one installation. The existing exit-code check still
+rejects failed discovery. No compiler, dependency or gameplay setting changes.
+`check-build.ps1` extracts the actual locator block into a fresh child shell and
+checks a native stub that prints an installation path before exiting 0 or 7.
+The successful path must survive, the failed one must be discarded, and both
+must retain the native exit code. The old block reproduced the missing-path,
+unset-exit failure in the same fixture.
+
+The build-helper suite passes 35 checks in both Windows PowerShell 5.1 and pwsh.
+The real installed locator also returns the toolchain path and exit code 0 in a
+fresh pwsh process. Evidence is under
+`out/validation/release-preparation-20261111/build-helper-ps51/` and
+`out/validation/release-preparation-20261111/build-helper-pwsh/`; the Release ZIP
+is rebuilt after committing this fix, following [the release guide](releasing.md).
+
 ### Promote stable nightly checks (`CI#7`)
 
 **Deferred until a week of scheduled nightlies, from 2026-11-11.**

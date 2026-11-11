@@ -58,9 +58,10 @@ try {
     $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
     $vs = $null
     if (Test-Path -LiteralPath $vswhere) {
+        # -latest returns one instance; let it finish so LASTEXITCODE is set.
         $vs = & $vswhere -latest -products * -version '[17.0,' `
             -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
-            -property installationPath | Select-Object -First 1
+            -property installationPath
         if ($LASTEXITCODE -ne 0) { $vs = $null }
     }
     if (-not $vs) {

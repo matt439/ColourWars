@@ -1,0 +1,68 @@
+name: Bug report
+description: Report a problem with playing or building ColourWars.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe one problem per report. Issues and attachments are public:
+        review them before posting and redact private paths or names from dialog
+        text and build logs. Do not attach your save, the whole local-data folder
+        or a memory dump. ColourWars does not upload diagnostics automatically.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include whether it happens every time and the last action before the problem.
+      placeholder: |
+        1. Start the game...
+        2. Choose...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: build
+    attributes:
+      label: Release or source build
+      description: |
+        Give the release/tag or source commit and Debug/Release configuration.
+        Paste or attach build-info.txt from beside ColourWars.exe when available.
+        If the game has not built, give the preset and failing build step instead.
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: PC, input and match setup
+      description: |
+        Include Windows version, graphics card and driver if relevant; keyboard/mouse
+        or controller model; player and bot count; stage, tools, mode and changed
+        settings. Say whether the stage or runtime content was modified. Include
+        display size/window mode or audio setup when relevant; no save attachment is needed.
+  - type: textarea
+    id: error
+    attributes:
+      label: Full error dialog or build error
+      description: |
+        If a dialog appeared, press Ctrl+C while it is focused and paste the full
+        text here, redacting personal information. The short last-error.log does
+        not contain the error message. For a build failure, paste or attach the
+        relevant build log instead. Leave this empty if no error was shown.
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Short error report and other evidence
+      description: |
+        If it exists, paste or attach %LOCALAPPDATA%\ColourWars\last-error.log
+        from this failure. It records build and failure categories, not the full
+        message. Say if the dialog reported that it could not save the report.
+        Screenshots or a short clip are useful for visual problems; review them
+        for personal information before attaching. No diagnostic files are required
+        when unavailable.

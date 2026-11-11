@@ -8,7 +8,7 @@ up itself. They run under Windows PowerShell 5.1 and pwsh, except the four
 `-OutputDirectory` paths follow the caller's PowerShell location in the check
 scripts, acceptance runner and Study B capture; `run-balance.ps1` resolves its
 paths against the repository root. [AGENTS.md](../AGENTS.md#tests) and
-[the README](../README.md#consumer-acceptance) describe the acceptance rules in
+[the development guide](../docs/development.md#consumer-acceptance) describe the acceptance rules in
 full.
 
 ## Building
@@ -16,7 +16,7 @@ full.
 | Script | What |
 |---|---|
 | [build.ps1](build.ps1), [../build.cmd](../build.cmd) | builds from a plain shell or double-click: VS/SDK/vcpkg checks, retained `out/build-<preset>.log`, guide and play-again paths (`-Preset`, `-Package`, `-Run`) |
-| [check-build.ps1](check-build.ps1) | first-run helper failures (invalid package preset, Download ZIP, missing Visual Studio); isolated subprocess fixtures, no compiler or download |
+| [check-build.ps1](check-build.ps1) | first-run helper failures, successful/failed Visual Studio discovery and streamed native output; isolated subprocess fixtures, no compiler or download |
 
 ## Acceptance
 
