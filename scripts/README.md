@@ -16,7 +16,7 @@ full.
 | Script | What |
 |---|---|
 | [build.ps1](build.ps1), [../build.cmd](../build.cmd) | builds from a plain shell or double-click: VS/SDK/vcpkg checks, retained `out/build-<preset>.log`, guide and play-again paths (`-Preset`, `-Package`, `-Run`) |
-| [check-build.ps1](check-build.ps1) | first-run helper failures (invalid package preset, Download ZIP, missing Visual Studio); isolated subprocess fixtures, no compiler or download |
+| [check-build.ps1](check-build.ps1) | first-run helper failures, successful/failed Visual Studio discovery and streamed native output; isolated subprocess fixtures, no compiler or download |
 
 ## Acceptance
 

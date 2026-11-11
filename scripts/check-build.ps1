@@ -60,6 +60,52 @@ exit $LASTEXITCODE
     Assert-True ($text.Contains($expected)) "$case omitted its remedy"
     Assert-True (-not $text.Contains('Configuring x64-debug')) "$case reached CMake"
 }
+# Run the actual locator block in a fresh child shell. Stopping its native
+# output with Select-Object -First 1 can leave LASTEXITCODE unset in pwsh,
+# discarding a valid installation path. Both success and failure must finish.
+$locator = Join-Path $fixtureRoot 'native-locator'
+$null = New-Item -ItemType Directory -Path $locator -Force
+$stub = Join-Path $locator 'vswhere.cmd'
+[IO.File]::WriteAllText($stub, @'
+@echo off
+echo C:\fixture\visual-studio
+exit /b %COLOURWARS_LOCATOR_EXIT%
+'@)
+$wrapper = Join-Path $locator 'invoke.ps1'
+[IO.File]::WriteAllText($wrapper, @'
+param([string]$BuildScript, [string]$Stub, [string]$Receipt, [int]$RequestedExit)
+$ErrorActionPreference = 'Stop'
+$tokens = $null; $errors = $null
+$ast = [Management.Automation.Language.Parser]::ParseFile($BuildScript, [ref]$tokens, [ref]$errors)
+$block = $ast.Find({ param($node)
+    $node -is [Management.Automation.Language.IfStatementAst] -and
+        $node.Clauses[0].Item1.Extent.Text -eq 'Test-Path -LiteralPath $vswhere'
+}, $true)
+if ($null -eq $block -or $errors.Count -ne 0) { throw 'Cannot read the Visual Studio locator block.' }
+$env:COLOURWARS_LOCATOR_EXIT = [string]$RequestedExit
+$vswhere = $Stub
+$vs = $null
+. ([scriptblock]::Create($block.Extent.Text))
+[pscustomobject]@{ installation = $vs; native_exit = $LASTEXITCODE } |
+    ConvertTo-Json | Set-Content -LiteralPath $Receipt -Encoding UTF8
+'@)
+foreach ($nativeExit in 0, 7) {
+    $receipt = Join-Path $locator "result-$nativeExit.json"
+    $output = & $shell -NoProfile -ExecutionPolicy Bypass -File $wrapper `
+        -BuildScript (Join-Path $PSScriptRoot 'build.ps1') -Stub $stub `
+        -Receipt $receipt -RequestedExit $nativeExit 2>&1 | Out-String
+    $code = $LASTEXITCODE
+    [IO.File]::WriteAllText((Join-Path $locator "child-output-$nativeExit.txt"), $output)
+    Assert-True ($code -eq 0) "locator exit $nativeExit failed its fixture"
+    $result = Get-Content -LiteralPath $receipt -Raw | ConvertFrom-Json
+    Assert-True ($result.native_exit -eq $nativeExit) "locator exit $nativeExit lost its native exit code"
+    if ($nativeExit -eq 0) {
+        Assert-True ($result.installation -eq 'C:\fixture\visual-studio') 'locator discarded a valid Visual Studio installation'
+    }
+    else {
+        Assert-True ($null -eq $result.installation) 'locator accepted a failed discovery command'
+    }
+}
 # Exercise the actual command function with a native stub while its caller
 # redirects output, which used to leave native output out of the transcript.
 # The stub waits for an acknowledgement written when stdout reaches this
