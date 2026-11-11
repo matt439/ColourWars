@@ -8,7 +8,7 @@ up itself. They run under Windows PowerShell 5.1 and pwsh, except the four
 `-OutputDirectory` paths follow the caller's PowerShell location in the check
 scripts, acceptance runner and Study B capture; `run-balance.ps1` resolves its
 paths against the repository root. [AGENTS.md](../AGENTS.md#tests) and
-[the README](../README.md#consumer-acceptance) describe the acceptance rules in
+[the development guide](../docs/development.md#consumer-acceptance) describe the acceptance rules in
 full.
 
 ## Building

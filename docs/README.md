@@ -2,7 +2,9 @@
 
 What is in `docs/`, grouped by what you would come for. Open work is indexed in
 [TODO.md](../TODO.md), and each row there points to the doc that owns it. The
-[README](../README.md) covers building, running and the release ZIP.
+[README](../README.md) covers playing and troubleshooting. The
+[development guide](development.md) covers building and checks, and the
+[release guide](releasing.md) covers preparing and publishing a Release ZIP.
 
 ## Players
 
@@ -20,6 +22,7 @@ records and reviews. The open-work index is [TODO.md](../TODO.md).
 
 | Doc | What |
 |---|---|
+| [CONTRIBUTING.md](../CONTRIBUTING.md) | contribution workflow, the game/engine boundary and reporting a bug |
 | [architecture.md](architecture.md) | the directory map, dependency direction, services, state stack, builders and startup data |
 | [oop-guide.md](oop-guide.md) | the class hierarchies as an OOP example, one shot from input to score, adding a weapon or a scored object |
 | [failure-reporting.md](failure-reporting.md) | how `wWinMain` reports an escaping exception |
@@ -29,6 +32,8 @@ records and reviews. The open-work index is [TODO.md](../TODO.md).
 
 | Doc | What |
 |---|---|
+| [development.md](development.md) | source builds, acceptance, packaging, engine pin, audio and repository history |
+| [releasing.md](releasing.md) | the current release-preparation scope, clean candidate checks and publication gates |
 | [debug-console.md](debug-console.md) | the Debug-only console, debug menu, launch arguments, live tuning, bots, record and play, scripts: the reference |
 | [debug-console-record.md](debug-console-record.md) | how each `DBG` row was done or why it waits, and `CI#1` |
 | [level-editor.md](level-editor.md) | `ColourWarsEditor.exe`, the desktop level editor |

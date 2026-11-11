@@ -73,6 +73,10 @@ tank, and there is a short wait between uses. The small square beside PAINT
 on your HUD is solid when it is ready. With Endless paint the cost goes and
 only the wait remains.
 
+Paint on the floor affects you too: your team's paint makes you move and
+refill faster. Enemy paint slows you and stops your paint refilling; step
+onto your own paint or unpainted ground to refill again.
+
 Menus: left stick or D-pad / arrow keys to move, A / Enter to choose,
 B / Escape to go back. Controls, volume, window size and full screen are
 under Options. To quit, choose Exit on the main menu.

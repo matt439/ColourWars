@@ -413,4 +413,4 @@ There are no CTest targets here. The game's probes are run by
 `scripts/run-acceptance.ps1` from the cases declared in
 [scripts/acceptance/cases.psd1](../scripts/acceptance/cases.psd1); the engine's
 tests live with the engine. [scripts/README.md](../scripts/README.md) lists every
-script, and [the README](../README.md#consumer-acceptance) covers running them.
+script, and [the development guide](development.md#consumer-acceptance) covers running them.

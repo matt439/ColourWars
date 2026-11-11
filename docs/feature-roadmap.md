@@ -1567,6 +1567,10 @@ accessibility qualification is claimed.
 
 ## Third increment: release package
 
+The author selected docs and packaging first for release preparation on
+2026-11-11. [Preparing a release](releasing.md) owns the current scope, the clean
+candidate procedure and the author calls still open before publication.
+
 Implemented:
 
 - The Release `package` target produces `ColourWars-<version>-windows-x64.zip` with an
