@@ -121,10 +121,13 @@ ordered tool pair, seeds 1000-1015. The game is `220d4809` / engine `e7fc50e`.
 | Bucket | 4,379 | 19 (0.4%) | 15 (0.3%) |
 | All | 128,871 | 2,152 (1.7%) | 492 (0.4%) |
 
-- **"Tiny" does not occur.** The camera's scale follows the window height, not
-  the pane, so a body is the same size in every pane of one layout. In the 1v1
-  pane it is 80 px of a 360 px pane at 720p, and 120 px at 1080p. In four-way
-  split screen it is 90 px at 1080p. Only "outside" is a real case.
+- **"Tiny" does not occur.** Camera scale is the window height over 1080,
+  capped by the pane width over 1280 (`PlayerCamera`, `reference_height` and
+  `minimum_world_width` in `presentation.json`). A body is never small
+  relative to its pane: 80 px of a 360 px pane in the 720p 1v1, 120 px of a
+  540 px pane at 1080p 1v1, and 90 px of a 540 px pane in 1080p four-way
+  split, where the 960 px pane width sets the scale. Only "outside" is a real
+  case.
 - **The gap is the Sniper's.** One Sniper hit in five lands on a victim the
   shooter cannot see in their own pane. For every other tool the figure is at
   most one in twenty-five. Stream tools count a hit on each tick, so these are
