@@ -34,6 +34,8 @@ int wmain(int argc, wchar_t* argv[])
         const std::vector<balance_runner::Result> results = balance_runner::run_sweep(options);
         outputs.stage(results);
         outputs.publish();
+        // REV#37's shooter-pane tally, one line per 1v1 seat; never in the CSVs.
+        for (const balance_runner::Result& result : results) { std::cout << balance_runner::hit_view_lines(result); }
         std::cout << "PASS balance runner: " << results.size() << " completed matches; "
             << labrador::path_to_utf8(options.csv) << '\n'
             << "Paint companion: " << labrador::path_to_utf8(options.paint_csv) << '\n'

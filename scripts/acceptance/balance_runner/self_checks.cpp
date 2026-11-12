@@ -405,6 +405,12 @@ namespace balance_runner
         for (const SeatResult& seat : shipped_row.seats)
         { require(seat.engaged_ticks <= seat.alive_ticks && seat.refilling_ticks <= seat.alive_ticks &&
             seat.ready_fire_intents <= seat.alive_ticks && seat.observed_sub_cooldown_resets <= seat.alive_ticks, "Diagnostics exceed alive active steps"); }
+        // REV#37: a 1v1 prints one hit-view line per seat from a real pane;
+        // a 2v2 cannot name the shooter of a non-lethal hit and prints none.
+        const std::string views = hit_view_lines(shipped_row);
+        require(std::count(views.begin(), views.end(), '\n') == 2 && views.starts_with("hit-view stage=crossfeed ") &&
+            shipped_row.pane_height_pixels > 0.0f && shipped_row.pane_body_pixels > 0.0f,
+            "A 1v1 row did not print its two shooter-pane hit-view lines");
 
         Options sweep = zero;
         sweep.duration = 0.25f; sweep.seeds = { 0, std::numeric_limits<std::uint32_t>::max() };
@@ -412,7 +418,7 @@ namespace balance_runner
         require(rows.size() == 2 && rows[0].seed == 0 &&
             rows[1].seed == std::numeric_limits<std::uint32_t>::max(),
             "Short Crossfeed sweep lost seed order or uint32 boundary seeds");
-        for (const Result& row : rows) { result_invariants(row); }
+        for (const Result& row : rows) { result_invariants(row); require(hit_view_lines(row).empty(), "A 2v2 row printed hit-view lines"); }
         paint_joins(rows);
         Options unknown = short_match;
         unknown.stages = { "crossfeed", "not_a_manifest_stage" };

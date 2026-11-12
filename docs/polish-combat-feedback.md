@@ -94,3 +94,52 @@ implemented.
 are implemented, as is the [reduce-effects option](polish-reduced-effects.md) (`POL#13`).
 Human readability in the reference match, movement feel, listening acceptance,
 physical controllers and frame pacing remain separate acceptance work.
+
+## Shooter-side confirmation tally (`REV#37`, 2026-11-12)
+
+Every hit cue above is keyed to the victim: ticks, burst, shake and rumble.
+They are drawn in the world, so the shooter sees them only when the victim is
+in the shooter's own pane. The 2026-11-10 review filed the gap as a hit that is
+outside or tiny in that pane. The Debug balance runner now counts it: in a 1v1
+it prints a `hit-view` line per seat. Each line counts the ticks on which that
+seat's projectile hurt its opponent and where the victim's body was in the
+shooter's own camera at the time. A tick where the body was in view counts as
+confirmed, and as `partial` when under half of it was in view. A kill by the
+arena is not a hit. [`hit_view.py`](../scripts/balance/hit_view.py) totals the
+lines from a matrix run.
+
+The `REV#19` [sight ladder](gameplay-tuning.md#sight-distance-ladder-rev19-2026-11-12)'s
+baseline gives 1,600 Hard 1v1 matches at shipped values: four arenas, every
+ordered tool pair, seeds 1000-1015. The game is `220d4809` / engine `e7fc50e`.
+
+| Shooter tool | Hit ticks | Victim outside pane | Under half in view |
+|---|---|---|---|
+| Sprayer | 45,633 | 111 (0.2%) | 165 (0.4%) |
+| Sniper | 3,585 | 764 (21.3%) | 39 (1.1%) |
+| Roller | 40,622 | 0 | 0 |
+| Mister | 34,652 | 1,258 (3.6%) | 273 (0.8%) |
+| Bucket | 4,379 | 19 (0.4%) | 15 (0.3%) |
+| All | 128,871 | 2,152 (1.7%) | 492 (0.4%) |
+
+- **"Tiny" does not occur.** Camera scale is the window height over 1080,
+  capped by the pane width over 1280 (`PlayerCamera`, `reference_height` and
+  `minimum_world_width` in `presentation.json`). A body is never small
+  relative to its pane: 80 px of a 360 px pane in the 720p 1v1, 120 px of a
+  540 px pane at 1080p 1v1, and 90 px of a 540 px pane in 1080p four-way
+  split, where the 960 px pane width sets the scale. Only "outside" is a real
+  case.
+- **The gap is the Sniper's.** One Sniper hit in five lands on a victim the
+  shooter cannot see in their own pane. For every other tool the figure is at
+  most one in twenty-five. Stream tools count a hit on each tick, so these are
+  tick counts, not shots. A Sniper hit is close to one shot.
+- **Its size tracks bot sight.** At `bots.sight_distance` 600 the Sniper's
+  outside share falls to 1.8%, because the bot no longer engages beyond 600
+  units. A human Sniper picks its own range, so this tally does
+  not stand for human play.
+
+Verdict: overall, 98% of hit ticks are confirmed in the shooter's own pane.
+The unconfirmed share is under 4% for every tool but the Sniper, so `REV#37`
+falls from MED to LOW. A shooter-side cue would be a Sniper-range feature. It
+remains undesigned, and `player.hit_confirm` stays declined (`POL#23`).
+Measured in bot-against-bot matches only. No physical pad, listening or human
+play was tested.
