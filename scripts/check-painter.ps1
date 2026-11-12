@@ -556,6 +556,21 @@ finally {
             $result.diagnostic += ' Trial source check: ' + $_.Exception.Message
         }
     }
+    # HYG#93: a passing run keeps its evidence, not the probe it compiled (about
+    # 97% of a leaf's folder). A failed or compile-only run keeps both.
+    if ($null -eq $failure -and $result.outcome -eq 'passed') {
+        $removedProbe = [ordered]@{ files = @(); bytes = 0L }
+        foreach ($file in @(Get-ChildItem -LiteralPath $run -File -Filter 'painter_visual*' |
+                Where-Object { @('.exe', '.obj', '.pdb', '.ilk') -contains $_.Extension.ToLowerInvariant() })) {
+            try {
+                Remove-Item -LiteralPath $file.FullName -Force
+                $removedProbe.files += $file.Name
+                $removedProbe.bytes += $file.Length
+            }
+            catch { Write-Warning "Could not remove $($file.FullName): $($_.Exception.Message)" }
+        }
+        $result.removed_after_pass = $removedProbe
+    }
     $result | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $run 'result.json') -Encoding utf8
     Write-Host "Painter evidence: $run"
     Pop-Location

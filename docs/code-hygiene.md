@@ -21,27 +21,55 @@ checked. Line numbers are from `68e3dc2e`.
 
 ### Evidence directories that fill the disk (`HYG#93`)
 
-**Open.** On 2026-11-12 the check output on MattPC had reached about 570 GB:
-`out\validation` alone was 236 GB, `out\acceptance` 30 GB and each `out\hyg*`
-run folder about 50 GB, with more in short scratch roots under `C:\`. Each run
-took a fresh `-OutputDirectory` and kept everything it built. The painter
-compiles `painter_visual.exe` and its `.obj` into every run folder
-(`scripts/check-painter.ps1:279` and `:299`), and the sweep gives each leaf its
-own (`check-painter-sweep.ps1`). CI artifacts expire after a set number of
-days; nothing local does, and neither [scripts/README.md](../scripts/README.md)
-nor [development.md](development.md) mentions cleanup.
+**Done** (2026-11-12). On 2026-11-12 the check output on MattPC had reached
+about 570 GB: `out\validation` alone was 236 GB, `out\acceptance` 30 GB and
+each `out\hyg*` run folder about 50 GB, with more in short scratch roots under
+`C:\`. Each run took a fresh `-OutputDirectory` and kept everything it built,
+the painter compiling `painter_visual.exe` and its `.obj` into every run folder
+and the sweep giving each leaf its own. CI artifacts expire; nothing local did,
+and neither [scripts/README.md](../scripts/README.md) nor
+[development.md](development.md) mentioned cleanup.
 
-First step: measure what fills one painter leaf folder after a passing run,
-then have the painter delete its compiled probe (and anything else that is
-not evidence) once the run passes; a failed run keeps it. Then add
-`scripts/clean-validation.ps1`: a dry run by default that lists `out/validation`,
-`out/acceptance` and the `out/hyg*` folders by size and age, and with `-Apply`
-keeps the newest N runs of each kind, and optionally only their JSON and log
-receipts. Index it in [scripts/README.md](../scripts/README.md) with a short
-"Disk use" note.
+Measured on one passing `DurationTextOnly` leaf at `220d4809`: the Release run
+folder was 32 MB, of which the probe was 31 MB (`painter_visual.obj` 25 MB,
+`.exe` 6 MB) and the evidence 1.4 MB (captures, contact sheets, `result.json`,
+logs); in Debug the probe was 41 MB and the evidence 1.5 MB. So about 97% of a
+passing leaf was the compiled probe.
 
-Done when a passing painter leaf leaves only its evidence, the cleanup script
-has a selection check that starts no build, and the README says how to use it.
+- `check-painter.ps1` now deletes `painter_visual*` `.exe`, `.obj`, `.pdb` and
+  `.ilk` from the run folder once a run has passed, after the probe process is
+  disposed, and records the names and bytes in `result.json` as
+  `removed_after_pass`. A failed run, and a `-CompileOnly` run, keep the probe.
+  The sweep runs `check-painter.ps1` once per leaf, so it inherits this.
+- [scripts/clean-validation.ps1](../scripts/clean-validation.ps1) is a dry run
+  by default: it lists `out/validation`, `out/acceptance` and every `out/hyg*`
+  folder (or `-Path`) with each kind of run (GUID folders sharing a parent) by
+  count, size and age, and what `-Apply` would remove. `-Apply` keeps the newest
+  `-Keep` runs of each kind (default 3, by creation time) and removes the rest;
+  `-ReceiptsOnly` also trims the kept runs to their JSON, log and CSV files. It
+  touches only GUID-named folders, so a reused folder such as
+  `out/acceptance/<preset>` is listed and left alone, and it refuses a drive
+  root, a checkout and `out/build`.
+- [scripts/check-clean-validation.ps1](../scripts/check-clean-validation.ps1)
+  builds a synthetic tree (three kinds, one nested like a sweep's, a reused
+  per-preset folder and a named folder among runs) and checks that the dry run
+  changes nothing and plans the right runs, that `-Apply` keeps and removes the
+  right ones and nothing outside them, the `-ReceiptsOnly` trim, `-Keep 0`, and
+  the three refusals. It starts no build, compiler or game.
+- [scripts/README.md](../scripts/README.md#disk-use) has a "Disk use" section,
+  and [development.md](development.md#consumer-acceptance) points to it.
+
+Checked on MattPC, 2026-11-12: `check-clean-validation.ps1` passed 27 checks
+under pwsh 7 and Windows PowerShell 5.1, and failed as it should with
+`clean-validation.ps1` mutated to keep one run too many and to trim receipts
+instead of everything else. A Release and a Debug `DurationTextOnly` leaf
+passed and left 1.4 and 1.5 MB with `removed_after_pass` naming the exe and obj
+(31.9 and 41.2 MB removed); a Release `TurbulenceMoverOnly` run given an
+invalid trial file failed and kept both. `check-painter-selection.ps1` passed
+under pwsh 7 and Windows PowerShell 5.1. A dry run over this worktree's own
+output listed its one remaining run. No `-Apply` was run on anyone's real
+output; that, and how often, is the user's to choose with the dry run in front
+of them.
 
 ### A build check for the layering rules (`HYG#94`)
 

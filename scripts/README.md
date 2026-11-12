@@ -88,7 +88,7 @@ to `cases.psd1`.
 | [check-finish-details.ps1](check-finish-details.ps1) | runs the `review_finish_details` console script and requires equal checksums across its variants |
 | [check-movement-feedback.ps1](check-movement-feedback.ps1) | renders and checks movement-feedback frames ([polish-feedback.md](../docs/polish-feedback.md)) |
 | [check-paint-fx.ps1](check-paint-fx.ps1) | renders and checks projectile and fresh-paint frames ([polish-paint-effects.md](../docs/polish-paint-effects.md)); `-CompileOnly` builds the probe without a window, as CI does |
-| [check-painter.ps1](check-painter.ps1), [check-painter/](check-painter/) | the painter visual probe and its focused leaves, evidence records and contact sheets |
+| [check-painter.ps1](check-painter.ps1), [check-painter/](check-painter/) | the painter visual probe and its focused leaves, evidence records and contact sheets; a passing run deletes the probe it compiled and records that in `result.json` (`removed_after_pass`), a failed one keeps it |
 | [check-painter-sweep.ps1](check-painter-sweep.ps1) | runs every focused painter leaf or one shard of them, one `check-painter.ps1` run each; [nightly.yml](../.github/workflows/nightly.yml) runs it with [check-painter/hosted-known-failures.txt](check-painter/hosted-known-failures.txt) |
 | [check-painter-selection.ps1](check-painter-selection.ps1) | checks the painter probe's selectors and routing without a compiler or GPU |
 | [check-painter-evidence.ps1](check-painter-evidence.ps1) | checks the shared painter PPM, finite-number, key-set, CSV, save and PNG evidence helpers without the game or a GPU |
@@ -121,6 +121,25 @@ to `cases.psd1`.
 | [art-png.ps1](art-png.ps1) | shared PNG encoder for those four art recipes; removes colour-profile chunks as the runtime texture pipeline requires |
 | [build_icon.py](build_icon.py) | rebuilds `game/colourwars.ico` and its preview from the editable drawing ([game/art/icon/](../game/art/icon/README.md)); `--check` fails if they are stale, which CI runs through [ci/test_build_icon.py](ci/test_build_icon.py) |
 | [audio/](audio/) | the audio pipeline and runtime-bank publication ([game/audio/paint_exe/](../game/audio/paint_exe/README.md)) |
+
+## Disk use
+
+Every check writes a fresh run folder, named by a GUID, under
+`out/validation`, `out/acceptance` or its `-OutputDirectory`, and nothing local
+expires: on 2026-11-12 MattPC held about 570 GB of them. A passing painter run
+keeps only its evidence; everything else stays until it is removed.
+
+| Script | What |
+|---|---|
+| [clean-validation.ps1](clean-validation.ps1) | lists the run folders under `out/validation`, `out/acceptance` and every `out/hyg*` folder (or `-Path`) by kind, size and age, and what it would remove; changes nothing without `-Apply`, which keeps the newest `-Keep` runs of each kind (default 3) and removes the rest; `-ReceiptsOnly` also trims the kept runs to their JSON, log and CSV files. It touches only GUID-named folders and refuses a drive root, a checkout and `out/build` |
+| [check-clean-validation.ps1](check-clean-validation.ps1) | checks that script against a synthetic run tree: dry run unchanged, keep and remove, receipts-only trim, unsafe roots; no build, compiler or game |
+
+Run the dry run first, read what it would remove, then repeat with `-Apply`:
+
+```
+scripts/clean-validation.ps1
+scripts/clean-validation.ps1 -Keep 2 -Apply
+```
 
 ## Other folders
 
