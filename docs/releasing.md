@@ -17,8 +17,11 @@ behaviour, tuning, audio or the accepted art direction.
 The documentation pass completes the README reshape (`FTR#15`) and contributor
 and issue guidance (`REV#15`). The README links to the source-build and
 maintainer material in [development.md](development.md). The packaged
-[HOW-TO-PLAY.txt](HOW-TO-PLAY.txt) now explains the existing paint-underfoot rule;
-the in-game refill lesson and any live cue remain `REV#10`.
+[HOW-TO-PLAY.txt](HOW-TO-PLAY.txt) now explains the existing paint-underfoot rule,
+and the Movement Course's refill lesson says it too (2026-11-12): own paint
+refills faster, enemy paint stops it. A live cue for standing on enemy paint, on
+the paint meter or the step sound, remains `REV#10` and is the author's
+presentation call.
 
 Author calls left for this release aim:
 

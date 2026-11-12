@@ -156,6 +156,14 @@ namespace
             }
             require(taught, "x=" + std::to_string(x) + " along the course has no lesson");
         }
+        // REV#10: the refill lesson teaches paint underfoot, not only stopping.
+        const auto refill_lesson = std::find_if(lessons.begin(), lessons.end(),
+            [](const LevelLesson& lesson) { return lesson.station == "refill"; });
+        require(refill_lesson != lessons.end(), "The course has a refill lesson");
+        const std::string& refill = refill_lesson->text;
+        require(refill.find("faster on your own paint") != std::string::npos &&
+            refill.find("enemy paint stops it") != std::string::npos,
+            "The refill lesson says own paint refills faster and enemy paint stops it");
     }
 
     void check_practice_level(World& world)

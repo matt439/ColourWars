@@ -556,7 +556,7 @@ and exposes no station or lesson controls.
 The editor applies the same station and lesson-geometry rules
 ([station_contract.h](../game/contracts/station_contract.h)), so a bounds resize or a
 loaded file the game would refuse is refused in the editor too
-([`ED#23`](level-editor.md#station-validation-in-the-editor-ed23)). Only the
+([`ED#23`](level-editor-record.md#station-validation-in-the-editor-ed23)). Only the
 lesson fonts stay a game-side check.
 
 The schema covers required keys, scalar/array types, positive rectangle sizes,

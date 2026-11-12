@@ -4762,7 +4762,8 @@ jobs, and Release keeps its no-hardware-adapter allowance. The failure
 checker finds its own process's `#32770` dialog, reads it with
 `WM_GETTEXT` and closes it with a posted `WM_CLOSE`, so it needs no
 keystroke or foreground window. Unlike the editor's Cancel check
-([level-editor.md](level-editor.md), runs 290 and 291), neither checker
+([level-editor-record.md](level-editor-record.md#invalid-pending-property-refusal-ed22),
+runs 290 and 291), neither checker
 asserts focus or activation. Receipts:
 `out/validation/ci3-timing/`. The CI step commands, run as written in both
 presets afterwards, also passed and put their evidence under
@@ -5182,7 +5183,7 @@ not establish hardware or attended visual acceptance.
 ### Editor build-profile isolation (`HYG#14`)
 
 **Done (2026-10-28).** The next ranked candidate from the
-[editor review](level-editor.md#raw-nul-json-admission-ed12) was an observed
+[editor review](level-editor-record.md#raw-nul-json-admission-ed12) was an observed
 tooling defect: `check-level-editor.ps1` redirected `LOCALAPPDATA` before
 configure, so vcpkg lost the caller's existing registry cache. During `ED#11`,
 this triggered a fresh registry fetch that failed at the unavailable GitHub
