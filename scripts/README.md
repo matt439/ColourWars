@@ -100,7 +100,7 @@ to `cases.psd1`.
 
 | Script | What |
 |---|---|
-| [check-level-editor.ps1](check-level-editor.ps1) | the level editor's hidden-window checks; dot-sources [check-level-editor-save-guidance.ps1](check-level-editor-save-guidance.ps1) |
+| [check-level-editor.ps1](check-level-editor.ps1) | the level editor's hidden-window checks (`-Preset` `x64-debug`, `x64-release` or `x64-asan`, which puts the sanitizer runtime's folder on `PATH`); dot-sources [check-level-editor-save-guidance.ps1](check-level-editor-save-guidance.ps1) |
 | [check-stage-registration.ps1](check-stage-registration.ps1) | `ColourWarsRegisterStage`, the opt-in source registration tool |
 
 ## Release

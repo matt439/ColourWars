@@ -294,40 +294,60 @@ Done when both presets build and the default acceptance cases pass.
 
 ### The game, editor and opt-in cases under AddressSanitizer (`HYG#99`)
 
-**Open.** The `REV#61` record lists as not checked: `ColourWars.exe` from
-`x64-asan` was built and never started, and the opt-in cases, the painter,
-startup and the editor checks were not run under the sanitizer. The nightly
-`asan` leg runs `run-acceptance.ps1` without `-OptIn` (`nightly.yml:107`), and
-`check-level-editor.ps1`, `check-stage-registration.ps1` and
-`check-failure-reporting.ps1` accept only `x64-debug` and `x64-release`
-(line 3 of each). All 80 default cases already passed under the sanitizer with
-no finding, so this is LOW.
-
-First step: start `x64-asan`'s game through `check-startup.ps1 -Executable`
-with the compiler's folder on `PATH`, as `run-acceptance.ps1` supplies the
-runtime DLL; run `run-acceptance.ps1 -Preset x64-asan -OptIn`; and add
-`x64-asan` to `check-level-editor.ps1` if the preset's editor build carries the
-flag. Record each result in the `REV#61` section.
-
-Done when each of the three has run once under the sanitizer and its result is
-recorded, with any that does not fit said so.
+**Done 2026-11-12; no finding.** The `REV#61` record listed as not checked:
+`ColourWars.exe` from `x64-asan` was built and never started, and the opt-in
+cases, the painter, startup and the editor checks were not run under the
+sanitizer. Each of the three this item named has now run once under
+`x64-asan`, on MattPC with MSVC 14.51 under heavy parallel build load (so no
+timing here is a measurement), and none produced a sanitizer report.
+`check-level-editor.ps1` gained `-Preset x64-asan` for it. The results are
+recorded in the `REV#61` section, under
+[the game, editor and opt-in cases](#the-game-editor-and-opt-in-cases-under-the-sanitizer-2026-11-12).
 
 ### A heap-leak check over repeated `Level` builds (`HYG#100`)
 
-**Open.** MSVC's AddressSanitizer has no leak detection (`REV#61`, not
-checked), and nothing else looks: no file under `game/`, `editor/` or
-`scripts/` calls `_CrtMemCheckpoint` or `_CrtSetDbgFlag`. The only CRT debug
-call is report-mode setup in `scripts/acceptance/reader_mutations.cpp:378`. A
-rematch or series builds a new `Level` each round, so a per-round leak would
-grow over a long couch session unseen.
+**Done 2026-11-12.** MSVC's AddressSanitizer has no leak detection (`REV#61`,
+not checked), and nothing else looked: no file under `game/`, `editor/` or
+`scripts/` called `_CrtMemCheckpoint` or `_CrtSetDbgFlag`. A rematch or series
+builds a new `Level` each round, so a per-round leak would grow over a long
+couch session unseen.
 
-First step: a Debug-only CPU acceptance case, or a section of an existing
-`Level` case, that builds and destroys one `Level` against the probe fakes to
-warm first-use caches, takes `_CrtMemCheckpoint`, builds and destroys N more on
-a real stage, and requires `_CrtMemDifference` to find no normal-block growth.
-Declare it in `scripts/acceptance/cases.psd1`.
+`level_heap` is a new `debug-only` case in
+[cases.psd1](../scripts/acceptance/cases.psd1)
+([level_heap.cpp](../scripts/acceptance/level_heap.cpp)); it refuses to compile
+without `_DEBUG`, since only the debug CRT keeps the counts. Against the probe
+fakes (CPU assets, silent banks, no thread pool, so every allocation is on the
+checked thread) it registers every stage the manifest lists, then builds a
+`Level` on each with one keyboard player holding fire and three bots, two to a
+team, plays 180 fixed steps and destroys it. One round over all 13 stages warms
+the first-use caches; two more rounds run between two `_CrtMemCheckpoint`
+calls, with tools, difficulties and the seed rotating per round.
+`_CrtMemDifference` must then find no growth in normal or client blocks, by
+count or by bytes, and the window must have allocated something. On growth the
+case prints the totals and, up to 200 blocks, `_CrtMemDumpAllObjectsSince`
+(allocation number, address, size, first bytes) on stderr. It first checks the
+detector itself: one `new int` between two checkpoints reads as one block of
+growth, and none once deleted.
 
-Done when the case passes, and fails on a planted leak of one block per build.
+[check-acceptance-selection.ps1](../scripts/check-acceptance-selection.ps1)
+assumed `balance_runner` was the only Debug-only case and the last in Debug's
+list; it now reads the Debug-only cases from the declarations and requires each
+once in Debug's list and never in Release's.
+
+Results (MattPC, `x64-debug`, under parallel build load):
+
+- The case passes: 26 measured builds over 13 stages, 0 blocks and 0 bytes of
+  growth, with about 1.0 GB allocated and freed in the window. No leak was
+  found. It compiles in 4 seconds and runs in 5, so it is not slow in Debug.
+- A planted leak of one block per build (`new int(0)` discarded at the top of
+  `LevelBuilder::build_level`, not committed) failed it with `26 blocks,
+  104 bytes` and the 26 four-byte blocks listed. The planted line was reverted
+  and the case passed again on the rebuilt library.
+- `check-acceptance-selection.ps1` passed under pwsh 7.
+
+Not checked: leaks of the shell around a match (the state stack, menus,
+`GameLevel`'s results and replay), which need a device; Release, whose heap
+has no debug counts; and memory the two vcpkg DLLs allocate.
 
 ### One clang-tidy defect pass (`HYG#101`)
 
@@ -4232,8 +4252,9 @@ compiler's folder on the probes' `PATH`, because the runtime DLL
 (`clang_rt.asan_dynamic-x86_64.dll`) ships beside `cl.exe` and must be that
 toolset's; the preflight refuses a build configured without the flag or a
 toolset without the DLL. The two existing presets are unchanged: a Release
-`ammo.rsp` is identical before and after. The other check scripts still take
-only the two original presets.
+`ammo.rsp` is identical before and after. `check-level-editor.ps1` takes
+`x64-asan` too since [`HYG#99`](#the-game-editor-and-opt-in-cases-under-addresssanitizer-hyg99);
+the other check scripts still take only the two original presets.
 
 From an x64 Developer shell:
 
@@ -4281,9 +4302,45 @@ Not checked:
   PowerShell 5.1 only.
 - The game itself. `ColourWars.exe` from `x64-asan` was built and not
   started, and the opt-in cases, the painter, startup and the editor checks
-  were not run under the sanitizer.
-- Leaks. MSVC's AddressSanitizer has no leak detection.
+  were not run under the sanitizer. Startup, the opt-in cases and the editor
+  checks have since run, with no finding
+  ([`HYG#99`](#the-game-editor-and-opt-in-cases-under-the-sanitizer-2026-11-12));
+  the painter has not.
+- Leaks. MSVC's AddressSanitizer has no leak detection. The Debug case
+  `level_heap` now checks repeated `Level` builds with the debug CRT heap
+  ([`HYG#100`](#a-heap-leak-check-over-repeated-level-builds-hyg100)).
 - clang-tidy was not attempted.
+
+#### The game, editor and opt-in cases under the sanitizer (2026-11-12)
+
+- **Startup.** `check-startup.ps1 -Executable` on the preset's game, from a
+  Developer shell (the compiler's folder, which holds
+  `clang_rt.asan_dynamic-x86_64.dll`, is on its `PATH`), passed twice: with
+  `-RequireAudio`, and with `-Locale qps-ploc -UserStageFixture`. Its stderr
+  held only the expected refusal of the broken user stage. A sanitizer report
+  goes to stderr and ends the process, which the script fails on.
+- **Opt-in cases.** `run-acceptance.ps1 -Preset x64-asan -OptIn -Parallel 4`
+  ran the 15 runnable opt-in cases (the two `NeedsTrial` cases are left out,
+  as in every preset). 14 passed with no sanitizer report; `bot_scan_cost` was
+  the longest at 859 seconds. `bot_team_trials` reached the runner's
+  3,600-second deadline four arenas into five, with no report. Rerun alone
+  with `-RunTimeoutSeconds 14400`, it passed in 7,070 seconds with no report,
+  so all 15 have passed under the sanitizer. Its one-hour default deadline
+  does not fit this case under the sanitizer on a loaded machine.
+- **Editor.** `check-level-editor.ps1` now takes `-Preset x64-asan`: the
+  preset's `CMAKE_CXX_FLAGS` reach the editor and its acceptance targets, so
+  the script checks for `/fsanitize=address` and the RelWithDebInfo build type
+  as `probe-build.ps1` does, and puts the compiler's folder on `PATH` for the
+  checks it starts. The whole check passed under the sanitizer, as did
+  `x64-debug` after the change.
+
+Not run under the sanitizer: the painter, which `HYG#99` did not take up,
+`check-stage-registration.ps1` and `check-failure-reporting.ps1`
+(still `x64-debug` and `x64-release` only), and the game past its title
+screen: `x64-asan` is not Debug, so it takes no launch arguments, and driving
+a match needs the foreground. The nightly `asan` leg still runs only the
+default cases; adding `-OptIn` would add over an hour for `bot_team_trials`
+alone.
 
 #### The `/analyze` verdicts (2026-11-10)
 

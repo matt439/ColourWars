@@ -182,6 +182,12 @@ Cases = @(
         Utf8Output = $true
     }
     @{
+        # Repeated Level builds on every stage between two _CrtMemCheckpoint
+        # calls; the debug heap exists only in Debug (HYG#100).
+        Name = 'level_heap'
+        Group = 'debug-only'
+    }
+    @{
         Name = 'bot_trials'
         Quick = $true
         Group = 'opt-in'
