@@ -309,6 +309,19 @@ add_custom_target(colourwars_check_contract_includes ALL
 )
 add_dependencies(colourwars_game colourwars_check_contract_includes)
 
+# The layering facts docs/architecture.md lists under "Dependency direction":
+# no states/ include or GameData under objects/, ai/ and carried/, carried/
+# alone, ai/ reaching objects/ only through value headers, and the three-header
+# Debug seam. Building the game library runs the check.
+add_custom_target(colourwars_check_layer_includes ALL
+    COMMAND "${CMAKE_COMMAND}"
+        "-DGAME_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+        -P "${PROJECT_SOURCE_DIR}/cmake/check_layer_includes.cmake"
+    COMMENT "Checking game/ layering includes"
+    VERBATIM
+)
+add_dependencies(colourwars_game colourwars_check_layer_includes)
+
 add_custom_target(colourwars_build_info
     COMMAND "${CMAKE_COMMAND}"
         "-DSOURCE_DIR=${PROJECT_SOURCE_DIR}"

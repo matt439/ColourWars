@@ -82,7 +82,36 @@ of them.
 
 ### A build check for the layering rules (`HYG#94`)
 
-**Open.** [architecture.md](architecture.md#dependency-direction) lists what
+**Done 2026-11-12; build only, nothing played differently.**
+[cmake/check_layer_includes.cmake](../cmake/check_layer_includes.cmake) runs as
+the `colourwars_check_layer_includes` target, wired like the contract check:
+`colourwars_game` depends on it, so every build of the game or a probe runs it.
+It fails, naming the file and the line, on a `game/states/` include under
+`objects/`, `ai/` or `carried/`; a `game/` include under `carried/` other than
+`game/pch.h` and `carried/`'s own headers (the facts' "nothing in the game but
+the precompiled header" never counted a carried type including another); an
+`objects/` include under `ai/` outside its allowlist (`aim_facing.h`,
+`paintable_object.h`, `player_input_data.h`, `player_team.h`, `sub_type.h`,
+`weapon_type.h`, the six it includes today); the identifier `GameData` under
+the three folders once block and line comments are stripped; and a
+`game/debug/` include outside `game/debug/` other than `debug_director.h`,
+`debug_targets.h`, `debug_overlay_draw.h` and `dev_tools.h`. Only `game/` is
+scanned; the probes under `scripts/acceptance/` may reach any debug header.
+
+Run with `cmake -P` against copies of `game/` with one planted violation each,
+it failed on all five rules (a states include in `objects/`, a `config/`
+include in `carried/`, `player.h` in `ai/`, `class GameData;` in `ai/`, and
+`debug_console.h` in `states/`) and passed on a copy that names `GameData` only
+in comments and inside a longer identifier. A planted `states/` include in
+`carried/moving_object.h` stopped the real Debug build at the check. Both
+presets build with it in place. [architecture.md](architecture.md#dependency-direction)
+now says the facts are checked by the build, and AGENTS.md names the script
+beside the rules; the file-level include-cycle fact is still checked by hand.
+The script has no regression test of its own, like the contract check.
+
+The row as filed:
+
+[architecture.md](architecture.md#dependency-direction) lists what
 holds "(checked 2026-11-05)": nothing in `objects/`, `ai/` or `carried/`
 includes a `states/` header; `carried/` depends on nothing in the game but the
 precompiled header; `ai/` reaches `objects/` only through value headers and
@@ -185,7 +214,25 @@ text.
 
 ### Editor undo without copying its history (`HYG#97`)
 
-**Open.** Every edit in the level editor copies the whole undo history.
+**Done 2026-11-12; nothing the user can do changed.** `Impl::mutate` now
+reserves room for one more snapshot (doubling the capacity when it grows, so
+appends stay amortised), erases the redo tail and moves the new snapshot in,
+then swaps the live document. Only the reserve can throw, and it runs before
+anything changes, so a failed edit still leaves history and document as they
+were. `LevelDocument::save` had the same copy (it duplicated the whole history
+to replace one entry); it now prepares only that entry and swaps it in after
+the file is replaced. No depth cap, as filed.
+
+`check_long_history` in `scripts/acceptance/level_editor/editing_checks.cpp`
+makes 600 edits after a save, undoes all of them (dirty until the last, clean
+at the saved state), redoes them all back to the last edit, undoes to the
+middle and branches there, checking the redo tail is gone and the branch
+undoes back to the middle. `check-level-editor.ps1` passed in both presets
+with it, the existing undo, redo and dirty checks included.
+
+The row as filed:
+
+Every edit in the level editor copies the whole undo history.
 `Impl::mutate` (`editor/level_document_impl.h:74-91`) builds `next` from every
 retained snapshot up to the current one (lines 84-85), appends the new one and
 swaps. Each snapshot is the whole document's JSON, and shipped stages are
@@ -205,7 +252,29 @@ of edits, and `check-level-editor.ps1` passes in both presets.
 
 ### Three members nothing calls (`HYG#98`)
 
-**Open.** After the [`HYG#73`](#dead-code-in-the-game-hyg73) sweep, a grep over
+**Done 2026-11-12; nothing played differently.** All three are deleted. The
+rerun sweep listed every lower-case identifier declared in a `game/` header,
+counted its tokens over `game/`, `editor/`, `scripts/` (the probes count as
+callers) and the engine, and kept those found only in their own header and
+source. Of the names with two tokens or fewer, every one but these three is
+used (`display_awake_` is a member held for its lifetime; the rest are a
+declaration and one use). A second pass for data members that are only ever
+written found none but `display_awake_`. So the audit's three were the whole
+list. `is_paused` went too: the gap audit's `LevelEffect` sketch that returned it
+is not the design that shipped, because the hurt accent, elimination burst and
+movement flecks landed as `combat_feedback`/`movement_feedback`
+([combat](polish-combat-feedback.md) and [movement](polish-movement-contact.md)
+feedback), not as an `AnimationObject` effect family.
+`TextDropShadow` keeps its shadow colour and its getter; only the setter nobody
+called is gone.
+
+Both presets build under `/W4 /WX`. The default acceptance list (`-Parallel 4`)
+passed in Release (81 cases) and in Debug with `-SkipSlowDebug` (78); the four
+slow Debug cases were not run locally.
+
+The row as filed:
+
+After the [`HYG#73`](#dead-code-in-the-game-hyg73) sweep, a grep over
 `game/`, `editor/`, `scripts/` and the engine finds three members only at their
 own declaration and definition: `AnimationObject::is_paused`
 (`game/carried/animation_object.h:58`, `.cpp:169`),

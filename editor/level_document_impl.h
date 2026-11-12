@@ -6,12 +6,14 @@
 #include "editor/level_document.h"
 #include "editor/level_json.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <exception>
 #include <filesystem>
 #include <optional>
 #include <string>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 namespace colourwars_editor
@@ -78,13 +80,21 @@ namespace colourwars_editor
             operation(candidate);
             validate_document(candidate, motion_tuning);
             if (candidate == document) { return; }
-            const std::string snapshot = json_text(candidate);
+            std::string snapshot = json_text(candidate);
             if (snapshot == history[history_index]) { return; }
-            // Allocate the new history before swapping the live document.
-            std::vector<std::string> next(history.begin(),
-                history.begin() + static_cast<std::ptrdiff_t>(history_index + 1));
-            next.push_back(snapshot);
-            history.swap(next);
+            // Allocate before changing anything (HYG#97): once the capacity is
+            // reserved, erasing the redo tail, moving the snapshot in and
+            // swapping the live document cannot throw, so a failed edit still
+            // leaves history and document as they were. Growth stays
+            // geometric, and no retained snapshot is copied.
+            const std::size_t needed = history_index + 2;
+            if (history.capacity() < needed)
+            {
+                history.reserve((std::max)(needed, history.capacity() * 2));
+            }
+            history.erase(history.begin() + static_cast<std::ptrdiff_t>(history_index + 1),
+                history.end());
+            history.push_back(std::move(snapshot));
             history_index = history.size() - 1;
             document.Swap(candidate);
         }
