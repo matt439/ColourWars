@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "about": "The nine /analyze warnings in this repository accepted on 2026-11-10 (docs/code-hygiene.md, REV#61 verdicts). report-analyze.ps1 -Baseline matches by code and file, then by line; function and line are for the reader and may drift.",
+  "warnings": [
+    { "code": "C6262", "file": "editor/editor_window.cpp", "line": 463, "function": "Editor::choose_file" },
+    { "code": "C6262", "file": "editor/editor_window.cpp", "line": 517, "function": "Editor::choose_user_stage" },
+    { "code": "C6262", "file": "editor/level_document.cpp", "line": 313, "function": "LevelDocument::load" },
+    { "code": "C6262", "file": "game/config/presentation/presentation_validation_results.cpp", "line": 52, "function": "Presentation::Validation::validate_results_contributions" },
+    { "code": "C6262", "file": "game/debug/capture/debug_perf.cpp", "line": 304, "function": "DebugPerf::reset" },
+    { "code": "C6011", "file": "game/debug/tune/tune_target.cpp", "line": 103, "function": "PresentationTarget::validate" },
+    { "code": "C6262", "file": "game/main.cpp", "line": 45, "function": "wWinMain" },
+    { "code": "C6262", "file": "game/objects/level_loaded_info.cpp", "line": 23, "function": "read_stage_snapshot" },
+    { "code": "C6262", "file": "game/objects/movement_feedback.cpp", "line": 215, "function": "MovementFeedback::draw_puff" }
+  ]
+}
