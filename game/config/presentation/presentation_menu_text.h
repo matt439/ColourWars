@@ -47,6 +47,12 @@ struct MenuTitleText
 	std::wstring subtitle;
 	std::wstring start;
 	std::wstring no_controller;
+	// The build line under the title: {version}, {revision} and
+	// {configuration}, each once (REL#5).
+	std::wstring build;
+
+	// build, formatted with this executable's build_info.
+	std::wstring build_label() const;
 };
 
 struct MenuHelpText

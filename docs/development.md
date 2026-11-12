@@ -224,9 +224,10 @@ GPU. The ZIP includes DirectXTK, XAudio2Redist and the release MSVC runtime DLLs
 beside the executable; Visual Studio and vcpkg are not needed to play. Windows
 provides Direct3D, XInput and the Universal CRT.
 
-The title screen displays the game revision and build configuration.
-`build-info.txt` also records the full game and engine revisions and selected
-backends. The identifier refreshes on every build, with `-dirty` for local
+The title screen displays the version, game revision and build configuration
+(`v0.1.0 / Build <revision> / Release`; the words are
+`menu_text.title.build` in `presentation.json`). `build-info.txt` also records
+the full game and engine revisions and selected backends. The identifier refreshes on every build, with `-dirty` for local
 changes and `source-archive` when Git metadata is unavailable. Rebuild after
 committing to produce a package labelled with that commit. The release version
 is `project(VERSION)` in the root `CMakeLists.txt`; it is CPack's package version,
@@ -237,6 +238,17 @@ merge to `master` normally has none: it skips the Windows jobs when its tree
 already passed on the pull request. A `v*` tag on `master` that matches
 `project(VERSION)` (`v0.1.0` for `0.1.0`) runs full CI, and its `publish` job
 attaches that run's checked ZIP to a new GitHub Release.
+
+Release keeps symbols (`REL#7`): every target compiles with `/Zi`, and
+`ColourWars.exe` links with `/DEBUG:FULL /OPT:REF /OPT:ICF /PDBALTPATH:%_PDB%`,
+so `out/build/x64-release/game/ColourWars.pdb` sits beside the executable and
+the executable names it as plain `ColourWars.pdb`, with no build path. The PDB
+is never in the ZIP; the package check refuses one and checks that name. CI's
+Release leg uploads it as the `ColourWars-symbols-<commit>` artifact (14 days)
+and `publish` attaches it to the GitHub Release beside the ZIP, so a crash in a
+published build can be read against the PDB of the same tag. A debugger
+matches the two by the signature in the executable, not by the file name alone:
+a PDB from any other build does not fit.
 
 Only the assets listed in [cmake/runtime_assets.cmake](../cmake/runtime_assets.cmake)
 are staged and packaged; configure checks that the list matches the runtime manifest.
@@ -249,9 +261,9 @@ Do not distribute the normal `game/` build directory in place of this ZIP.
 Debug packaging is rejected because its runtime is not redistributable.
 
 The current docs-and-packaging preparation scope and candidate checks are in
-[Releasing](releasing.md). Qualify the missing-bank fallback separately by
-removing the bank from a temporary extracted copy and using `-RequireNoAudio`
-for its isolated startup check.
+[Releasing](releasing.md): `scripts/release-candidate.ps1` builds the ZIP,
+inspects it, starts it, starts a separate extraction without the bank
+(`-RequireNoAudio`) and writes the receipt.
 
 An attended solo match and listening to music and effects are optional checks:
 the author waived the prior hardware, gameplay and listening checks on

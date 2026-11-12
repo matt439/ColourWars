@@ -107,10 +107,12 @@ to `cases.psd1`.
 
 | Script | What |
 |---|---|
+| [release-candidate.ps1](release-candidate.ps1) | builds and checks a release candidate in one command and writes `candidate.json`: refuses a dirty tree or an engine off the pin, then packages, inspects, checks the packaged `build-info.txt` and starts the game with and without the bank (`REL#3`; `-OutputDirectory`, `-SkipBuild`; [releasing.md](../docs/releasing.md#build-a-clean-candidate)) |
+| [check-release-candidate.ps1](check-release-candidate.ps1) | checks that script's refusals (dirty tree, missing ZIP, no evidence left) in a scratch repository, without a build |
 | [sandbox-release.ps1](sandbox-release.ps1), [sandbox/](sandbox/) | prepares, and optionally runs, a Windows Sandbox trial of the Release ZIP (`ROAD#37`) |
 | [check-sandbox-release.ps1](check-sandbox-release.ps1) | checks that generator's output on the host without starting a sandbox |
-| [release-package-path.ps1](release-package-path.ps1) | dot-sourced helper that reads `project(VERSION)` from `CMakeLists.txt` and returns the Release ZIP's path; used by `build.ps1`, `sandbox-release.ps1`, `check-release-package.ps1` and [releasing.md](../docs/releasing.md)'s fallback check |
-| [check-release-package.ps1](check-release-package.ps1) | extracts the Release ZIP and checks its packaging rules: no development files or unreviewed audio, every required file, the accepted bank's hash and no developer-console RTTI (`CI#6`; CI's inspection step) |
+| [release-package-path.ps1](release-package-path.ps1) | dot-sourced helper that reads `project(VERSION)` from `CMakeLists.txt` and returns the Release ZIP's path; used by `build.ps1`, `sandbox-release.ps1`, `check-release-package.ps1`, `release-candidate.ps1` and [releasing.md](../docs/releasing.md)'s fallback check |
+| [check-release-package.ps1](check-release-package.ps1) | extracts the Release ZIP and checks its packaging rules: no development files or unreviewed audio, every required file, the accepted bank's hash, no developer-console RTTI and the executable naming its symbols as plain `ColourWars.pdb` (`CI#6`, `REL#7`; CI's inspection step) |
 
 ## Content builds
 
@@ -127,7 +129,7 @@ to `cases.psd1`.
 | Folder | What |
 |---|---|
 | [debug/](debug/) | the shipped developer-console scripts (`exec <name>`), listed in [debug-console.md](../docs/debug-console.md#scripts) |
-| [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the engine pin's check against Labrador, the Markdown link check, and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
+| [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the engine pin's check against Labrador, the Markdown link check, the `publish` job's tag check and release notes (`release.py`, `REL#4`), and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
 | [balance/](balance/) | `TOOL#4`'s matrix driver/designs and analyser: tool and 2v2 team paint/eliminations, bot counters, profile checks and independent A/B intervals with design margins ([gameplay-tuning.md](../docs/gameplay-tuning.md#balance-matrix-tool-tool4)), and its test |
 | [perf/](perf/) | frame-pacing analysis and its test |
 | [studies/](studies/README.md) | the kits for the drawing-mistake human studies ([drawing-mistakes-research.md](../docs/drawing-mistakes-research.md#8-human-tests)): Study A's references, sheets and analysis, Study B's stimulus capture, test page and analysis |

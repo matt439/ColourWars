@@ -5,7 +5,6 @@
 // helpers Options and the settings pages share. The phase functions in
 // presentation_validation.cpp call these in diagnostic order.
 #include "game/config/presentation/presentation_validation.h"
-#include "game/build_info.h"
 #include "game/config/presentation/menu_geometry.h"
 #include "game/input/input_bindings.h"
 
@@ -139,8 +138,8 @@ void Presentation::Validation::validate_title_and_home_text() const
 	start.inflate(main.art.focus_padding);
 	const RectangleF no_controller = centered_title("menu_text.title.no_controller", title.no_controller,
 		this->presentation.menu_.item_font, main.title_no_pad_y, Vector2F::zero);
-	// Build identity remains generated, but it still shares the title's paper.
-	const RectangleF build = centered_title("main_menu.build_id_y", build_info::label,
+	// The build line's fields are generated, but it still shares the title's paper.
+	const RectangleF build = centered_title("menu_text.title.build", title.build_label(),
 		this->presentation.prompt_bar_.font, main.build_id_y, Vector2F::zero);
 	const auto precedes = [&](const std::string& key, const RectangleF& before, const RectangleF& after)
 	{

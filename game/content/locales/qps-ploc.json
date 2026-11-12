@@ -16,7 +16,8 @@
         "wordmark": "[COLOUR]\n[WARS]",
         "subtitle": "[MAKE A MESS. MAKE IT YOURS.]",
         "start": "[LET'S PLAY]",
-        "no_controller": "[Connect a controller]"
+        "no_controller": "[Connect a controller]",
+        "build": "[v{version} / Build {revision} / {configuration}]"
       },
       "home_subtitle": "[Paint the arena. Claim the win.]",
       "display_trial_countdown": "[Reverting in {seconds}s]",

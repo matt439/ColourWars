@@ -2,9 +2,11 @@
 #include "game/config/presentation/presentation_menu_text.h"
 #include "game/config/presentation/presentation_read.h"
 #include "game/config/content_value.h"
+#include "game/build_info.h"
 #include "game/input/controls_text.h"
 
 #include "engine/assets/json.h"
+#include "engine/render/text_encoding.h"
 #include "game/config/drawable_text.h"
 #include "game/input/input_slots.h"
 #include "game/match/match_rules.h"
@@ -161,6 +163,10 @@ namespace presentation_read
 		text.title.subtitle = read_menu_line(title, "subtitle");
 		text.title.start = read_menu_line(title, "start");
 		text.title.no_controller = read_menu_line(title, "no_controller");
+		text.title.build = read_menu_line(title, "build");
+		try { std::ignore = text.title.build_label(); }
+		catch (const std::invalid_argument& error)
+		{ throw std::runtime_error(title.where() + ": build: " + error.what()); }
 		text.home_subtitle = read_menu_line(json, "home_subtitle");
 		// The control-label words and the in-match reminder, before the help
 		// and the Keys status that format with them. Each template is
@@ -625,6 +631,14 @@ const std::wstring& MenuText::prompt(MenuPrompt prompt) const
 const std::wstring& MenuText::item(MenuItem item) const
 {
 	return this->items.at(static_cast<size_t>(item));
+}
+
+std::wstring MenuTitleText::build_label() const
+{
+	return format_label_template(this->build, {
+		{ L"{version}", labrador::widen(build_info::version) },
+		{ L"{revision}", labrador::widen(build_info::game_short_revision) },
+		{ L"{configuration}", labrador::widen(build_info::configuration) } });
 }
 
 std::wstring MenuText::display_countdown(int seconds) const

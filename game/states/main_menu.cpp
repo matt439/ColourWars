@@ -2,7 +2,6 @@
 #include "game/states/main_menu.h"
 #include "game/states/match_start.h"
 #include "game/states/end_menu.h"
-#include "game/build_info.h"
 #include "game/objects/crude_drawing.h"
 
 using namespace labrador;
@@ -225,7 +224,7 @@ void MainMenuTitle::init()
 		style.item_font, Vector2F(0.0f, look.title_start_y), this->render_resources(), look.art.focus_ink);
 	this->no_pad_ = std::make_unique<UiText>("no_pad", this->text().title.no_controller,
 		style.item_font, Vector2F(0.0f, look.title_no_pad_y), this->render_resources(), look.art.ink, true);
-	this->build_id_ = std::make_unique<UiText>("build_id", build_info::label,
+	this->build_id_ = std::make_unique<UiText>("build_id", this->text().title.build_label(),
 		this->presentation().prompt_bar().font, Vector2F(0.0f, look.build_id_y),
 		this->render_resources(), look.art.ink);
 

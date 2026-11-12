@@ -187,7 +187,8 @@ std::string FatalReport::record_text() const
 	text += utc;
 	text += "\nphase="; text += phase_name(this->phase_);
 	text += "\ncategory="; text += this->stderr_prefix();
-	text += "\ngame_revision="; text += build_info::game_revision;
+	text += "\nversion="; text += build_info::version;
+	text += "\ngame_revision=";text += build_info::game_revision;
 	text += "\nengine_revision="; text += build_info::engine_revision;
 	text += "\nconfiguration="; text += build_info::configuration;
 	text += "\nrender_backend="; text += build_info::render_backend;
