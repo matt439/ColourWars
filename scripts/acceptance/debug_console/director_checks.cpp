@@ -4,6 +4,8 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/input/debug_chord.h"
 #include "game/debug/capture/debug_screenshot.h"
+#include "game/debug/debug_overlay_draw.h"
+#include "game/objects/fixed_slab_geometry.h"
 #include "game/objects/level_loaded_info.h"
 #include <chrono>
 #include <fstream>
@@ -380,6 +382,61 @@ namespace debug_console_acceptance
 				"+overlay and +god apply at the first build");
 			test.director.detach_match(match);
 		}
+	}
+
+	// What F2 draws for a fixed slab: its own rotated edges, in a colour no
+	// other tag uses (DBG#19), where it used to be the projectile-yellow
+	// bounding box. The drawing itself needs a device; this is its input.
+	void check_collision_outline()
+	{
+		using labrador::Colour;
+		using labrador::Segment;
+		const CollisionObjectType tags[] = {
+			CollisionObjectType::structure, CollisionObjectType::structure_paintable,
+			CollisionObjectType::structure_jump_through, CollisionObjectType::structure_ramp_left,
+			CollisionObjectType::projectile_spray_team_a, CollisionObjectType::projectile_mist_team_b,
+		};
+		const Colour slab = debug_overlay::collision_colour(CollisionObjectType::structure_fixed_slab);
+		for (const CollisionObjectType tag : tags)
+		{
+			require(!(debug_overlay::collision_colour(tag) == slab),
+				"The fixed slab's collision colour is its own, not another tag's");
+		}
+		require(debug_overlay::collision_colour(CollisionObjectType::projectile_ball_team_a) ==
+			debug_overlay::collision_colour(CollisionObjectType::projectile_jet_team_b),
+			"Projectiles keep one shared collision colour");
+
+		// The slab trial's two slabs, rising each way: the outline is the
+		// rotated rectangle's own corners, none of which is a bounding-box
+		// corner, and every edge is sloped.
+		for (const FixedSlabRise rise : { FixedSlabRise::right, FixedSlabRise::left })
+		{
+			const FixedSlabGeometry geometry({ labrador::Vector2F(1240.0f, 880.0f), rise });
+			const std::array<Segment, 4> outline = debug_overlay::collision_outline(geometry.shape());
+			const auto& points = geometry.shape().points();
+			const labrador::RectangleF box = geometry.shape().bounding_box();
+			for (std::size_t index = 0; index < outline.size(); ++index)
+			{
+				const Segment& edge = outline[index];
+				require(edge.point_0 == points[index] && edge.point_1 == points[(index + 1) % points.size()],
+					"A slab's collision outline follows its rotated corners in order");
+				require(edge.point_0.x != edge.point_1.x && edge.point_0.y != edge.point_1.y,
+					"Every edge of a slab's collision outline is sloped, not axis-aligned");
+				require(edge.point_0 != box.top_left() &&
+					edge.point_0 != labrador::Vector2F(box.right(), box.bottom()),
+					"A slab's collision outline is not its bounding box");
+			}
+		}
+
+		// Every other shape keeps its bounding box, clockwise from top-left.
+		const labrador::RectangleF wall(100.0f, 200.0f, 30.0f, 40.0f);
+		const std::array<Segment, 4> boxed = debug_overlay::collision_outline(wall);
+		require(boxed[0] == Segment(100.0f, 200.0f, 130.0f, 200.0f) &&
+			boxed[1] == Segment(130.0f, 200.0f, 130.0f, 240.0f) &&
+			boxed[2] == Segment(130.0f, 240.0f, 100.0f, 240.0f) &&
+			boxed[3] == Segment(100.0f, 240.0f, 100.0f, 200.0f),
+			"A box's collision outline is its four sides");
+		std::cout << "PASS F2 outlines a fixed slab along its slope in a colour of its own; boxes keep their sides\n";
 	}
 
 	void check_goto(GameTuning& tuning, Presentation& presentation)

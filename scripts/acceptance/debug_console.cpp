@@ -159,6 +159,7 @@ int main(int argc, char** argv)
 		if (!background_only)
 		{
 			check_overlays_and_cheats(tuning, presentation);
+			check_collision_outline();
 			check_goto(tuning, presentation);
 			check_screenshot_file(tuning, presentation);
 			check_stations(game_directory, tuning);

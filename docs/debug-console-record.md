@@ -365,6 +365,34 @@ useful (`ROAD#10`) and whether Boost +1/+2 are fair (`ROAD#5`) were the
 author's calls; on 2026-11-05 both were accepted at their current values,
 without the attended session. No difficulty, Boost or team default changed.
 
+## Fixed slabs in the collision overlay (`DBG#19`)
+
+**Done (2026-11-12).** F2 drew every object's `shape()->bounding_box()`, and the
+overlay's colour switch had no case for `structure_fixed_slab`, so on the slab
+trial each sloping slab showed as a projectile-yellow axis-aligned box around
+it, where [Overlays](debug-console.md#overlays) promises the collision shape.
+Now any `RectangleRotated` shape - today only a fixed slab - is outlined by its
+own four edges, each a thin sprite turned along the edge through the overlay's
+`Pen::line`, and `structure_fixed_slab` has a colour of its own (lavender, not
+a projectile's yellow or the scroll border's magenta). Every other shape keeps
+its box. Debug-only code in `game/debug/debug_overlay_draw.cpp`; no engine
+change (the engine's own shape debug draw stays its `GAP#6`).
+
+What is drawn is split from the drawing: `debug_overlay::collision_colour` and
+`debug_overlay::collision_outline` are declared in `debug_overlay_draw.h`, and
+the `debug_console` case's `check_collision_outline` checks that the slab's
+colour is no other tag's, that each slab's outline (both rises, at the slab
+trial's coordinates) is its rotated corners in order with every edge sloped,
+and that a box keeps its four sides.
+
+Qualification on x64-debug: the `debug_console` case passes. A launch-argument
+run with `+script.background 1` and an isolated `LOCALAPPDATA`
+(`+stage turbulence_slab_trial +players 1 +wait match +god 1 +overlay collision
++pause on +goto upper_receiver_a +screenshot slab_a ...`) shows `fixed_slab_a`
+outlined in lavender along its slope beside the white, green and orange boxes
+of its neighbours. How the colour reads beside a lavender or purple team on a
+real GPU is a look, not a check.
+
 ## Arena review screenshot pack (`DBG#18`)
 
 **Done (2026-10-29).** `review_arena <stage>` and its helpers take seed-7

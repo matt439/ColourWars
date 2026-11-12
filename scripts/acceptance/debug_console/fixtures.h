@@ -548,6 +548,7 @@ namespace debug_console_acceptance
 	void check_director(GameTuning& tuning, Presentation& presentation);
 	void check_unwinding(GameTuning& tuning, Presentation& presentation);
 	void check_overlays_and_cheats(GameTuning& tuning, Presentation& presentation);
+	void check_collision_outline();
 	void check_goto(GameTuning& tuning, Presentation& presentation);
 	void check_screenshot_file(GameTuning& tuning, Presentation& presentation);
 	void check_stations(const std::filesystem::path& game_directory, const GameTuning& tuning);
