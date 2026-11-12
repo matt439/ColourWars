@@ -62,10 +62,6 @@ namespace colourwars
 	{
 		this->shadow_offset_ = offset;
 	}
-	void TextDropShadow::set_shadow_color(const Colour& color)
-	{
-		this->shadow_color_ = color;
-	}
 	void TextDropShadow::set_shadow_scale(float scale)
 	{
 		this->shadow_scale_ = scale;

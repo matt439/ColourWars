@@ -372,8 +372,9 @@ namespace colourwars_editor
         try { level_format::limit::check_file_bytes(saved_text.size()); }
         catch (const std::invalid_argument& error) { fail(std::string("The saved level ") + error.what() + "."); }
         std::string source_bytes = saved_text;
-        std::vector<std::string> saved_history = impl_->history;
-        saved_history[impl_->history_index] = saved_text;
+        // Only the current snapshot changes; the rest of the history is not
+        // copied (HYG#97).
+        std::string saved_snapshot = saved_text;
         // A sibling temporary guarantees a same-volume rename, and its unique
         // name keeps two editor processes saving at once apart.
         PreparedFile temporary(path, "editor", ".tmp", saved_text);
@@ -382,7 +383,7 @@ namespace colourwars_editor
         if (replacing_source) { check_saved_source(path, impl_->source_bytes); }
         temporary.replace(path);
         impl_->document.Swap(saved_document);
-        impl_->history.swap(saved_history);
+        impl_->history[impl_->history_index].swap(saved_snapshot);
         impl_->path.swap(saved_path);
         impl_->saved.swap(saved_text);
         impl_->source_path.swap(source_path);

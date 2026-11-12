@@ -55,7 +55,6 @@ namespace colourwars
 		void pause();
 		void set_frame_time(float frame_time);
 		void set_frame_time_to_default();
-		bool is_paused() const;
 
 		void set_frame_index(int frame_index);
 

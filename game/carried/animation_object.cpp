@@ -166,10 +166,6 @@ namespace colourwars
 		}
 		this->frame_index_ = frame_index;
 	}
-	bool AnimationObject::is_paused() const
-	{
-		return this->paused_;
-	}
 	const RectangleI& AnimationObject::source_rectangle() const
 	{
 		return this->animation_strip().frame_rect(this->frame_index_);

@@ -114,7 +114,14 @@ everything -> external/labrador (never the other way)
 debug/ -> everything above; the rest reaches debug/ through three headers
 ```
 
-What holds (checked 2026-11-05):
+What holds, checked by the build: the `colourwars_check_layer_includes` target
+([cmake/check_layer_includes.cmake](../cmake/check_layer_includes.cmake), since
+`HYG#94`) fails it on a `states/` include under `objects/`, `ai/` or `carried/`,
+a game include under `carried/` but `pch.h` and its own headers, an `objects/`
+include under `ai/` outside its allowlist of value headers and
+`paintable_object.h`, `GameData` in code under the three folders, and a
+`game/debug/` include outside `game/debug/` other than the three seam headers
+and `dev_tools.h`. The file-level cycle check is still by hand (2026-11-05).
 
 - **No file-level include cycles**, and nothing in `objects/`, `ai/` or
   `carried/` includes a `states/` header.
@@ -153,7 +160,7 @@ Where it does not hold yet:
 - The root is not a layer of its own: `game_data.h` includes `objects/` headers.
 - The role folders include each other: `save/` reads `config/`'s play
   settings and `match/`'s setup, and `config/` names `match/` and `input/`
-  types. Only `contracts/` has a checked boundary.
+  types. Only `contracts/` and the layering facts above have checked boundaries.
 
 ## The engine-free contract headers
 

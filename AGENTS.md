@@ -374,7 +374,9 @@ they describe. The rules that follow from that structure:
   against fakes.
 - **Nothing in `game/objects` or `game/ai` includes a `states/` header**, and
   code outside `game/debug/` reaches the developer tools only through
-  `debug_director.h`, `debug_targets.h` and `debug_overlay_draw.h`.
+  `debug_director.h`, `debug_targets.h` and `debug_overlay_draw.h` (and the
+  `dev_tools.h` gate). `cmake/check_layer_includes.cmake` fails the build on a
+  break of either rule or of the `GameData` one above.
 - **The engine-free contract headers** (`game/contracts/`: `level_format.h`,
   `simulation.h`, the `*_contract.h` and `*paint*_geometry.h` headers) include
   only the standard library and each other, because the editor compiles them
