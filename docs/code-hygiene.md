@@ -351,22 +351,120 @@ has no debug counts; and memory the two vcpkg DLLs allocate.
 
 ### One clang-tidy defect pass (`HYG#101`)
 
-**Open.** `REV#61` records that clang-tidy was not attempted, and the
+**Done 2026-11-12: 377 distinct findings, no defect, nothing changed.**
+`REV#61` recorded that clang-tidy was not attempted, and the
 [project review](review/2026-11-10-project-review.md) (line 1043) found nothing
-outside `external/` that references it. The `/analyze` pass found two real
-items; clang-tidy's defect checks cover other ground, such as use after move,
-needless copies and slicing, which matters in deep virtual hierarchies.
+outside `external/` that references it. clang-tidy's defect checks cover ground
+`/analyze` does not, such as use after move, needless copies and slicing, which
+matters in deep virtual hierarchies. It stays a one-off report, not a gate.
 
-First step: export `compile_commands.json` from an `x64-debug` configure and
-run the clang-tidy from Visual Studio's Clang component over `game/` and
-`editor/` with only `bugprone-*`, `performance-*`,
-`cppcoreguidelines-slicing` and `misc-redundant-expression`. No `modernize-*`
-and nothing that pushes value semantics: AGENTS.md's rule on the OOP design
-holds. Write each distinct finding's verdict here, as the `/analyze` verdicts
-were written.
+How it ran, on MattPC from `220d4809`: clang-tidy 22.1.3 from Visual Studio's
+Clang component (`VC/Tools/Llvm/x64/bin`), over a `compile_commands.json`
+exported by an `x64-debug` configure into a separate build folder with
+`-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` (built once, so generated headers exist).
+The 262 translation units under `game/` and `editor/` were kept and their
+`/Yu` and `/Fp` arguments removed, because clang cannot read MSVC's
+precompiled header; `/FI` still includes `game/pch.h` as source. The probes
+under `scripts/` and the engine were left out. The command for each file:
 
-Done when the verdicts are recorded and any defect they name is fixed with its
-build and acceptance cases run. It is a one-off report, not a new gate.
+```
+clang-tidy -p <filtered db> --extra-arg=/WX- --header-filter=hyg-tidy.(game|editor). --checks=-*,bugprone-*,performance-*,cppcoreguidelines-slicing,misc-redundant-expression <file>
+```
+
+No `modernize-*` and nothing that pushes value semantics, per AGENTS.md. Every
+translation unit parsed (only `game/resource.rc` was refused, as not C++).
+Deduplicated across the headers that each unit repeats, the pass reported 377
+distinct findings in 27 checks: 309 in `game/`, 68 in `editor/`. None from
+`cppcoreguidelines-slicing`, `misc-redundant-expression`,
+`bugprone-use-after-move`, `bugprone-dangling-handle` or
+`bugprone-undefined-memory-manipulation`. Each was read against its code, and
+none is a defect that can be reached, so no source changed and no build or
+acceptance case was rerun for it.
+
+The bulk checks, read as classes:
+
+| Check | Distinct | Verdict |
+|---|---|---|
+| `performance-enum-size` | 70 | Enums on `int` that would fit a byte. A layout preference; no hot array of them was found worth shrinking. Stands. |
+| `bugprone-easily-swappable-parameters` | 86 | Adjacent `int`/`float` parameters (rectangle edges, ranges, coordinates). An API style finding with no call site found passing them swapped. Stands. |
+| `bugprone-empty-catch` | 50 | The save, last-setup, profile and binding readers' field-by-field recovery (`HYG#59`), which keeps a default when one field fails; the `noexcept` paths in `atomic_file.cpp`, `fatal_report.cpp` and `rumble_gamepads.cpp`, where nothing may escape and failure is the return value; and three editor sites that keep the last good preview or leave a malformed record unmirrored, each commented. Stands. |
+| `bugprone-throwing-static-initialization` | 28 | Namespace-scope `const` `Colour`, `Vector2F`, `RectangleF` and short string constants. The engine's math constructors are not `constexpr`/`noexcept`, which is the whole finding; none can throw. Stands. |
+| `bugprone-derived-method-shadowing-base-method` | 27 | 26 are the two rapidjson SAX handlers in `editor/stage_registration.cpp`, which shadow `BaseReaderHandler` by design (CRTP). The other is `Player::velocity`, which exposes `MovingObject`'s protected accessor and returns it. Stands. |
+| `performance-inefficient-string-concatenation` | 16 | Error and console messages built once. Stands. |
+| `bugprone-narrowing-conversions` | 13 | `int` to `float` of small counts, indices and pixel sizes. Stands. |
+| `performance-no-int-to-ptr` | 12 | Win32 `LPARAM`/`DWORD_PTR` reference data cast back to its object, the API's only shape. Stands. |
+| `performance-inefficient-vector-operation` | 9 | `push_back` loops over short lists at load or console time. Stands. |
+| `bugprone-misplaced-widening-cast` | 9 | `size_t(strip.begin + index)` and `size_t(view * count + participant)` in `structure_paintable.cpp` and `teammate_markers.cpp`: small `int` sums that cannot overflow before the cast. Stands. |
+| `bugprone-float-loop-counter` | 8 | Drawing and bot loops stepping by a tile width, a cell, a period or half a body width, all positive and fixed, over world-sized ranges. Stands. |
+
+The remaining checks, one by one:
+
+- **`bugprone-parent-virtual-call` (6)**, the ball, grenade, jet, mist,
+  planted and spray projectiles calling `AnimationObject::update` past
+  `Projectile`/`DiffusingProjectile`: both of those declare `update` pure and
+  define no body, so the animation base is the only update to reach. Stands;
+  it is the hierarchy working as drawn.
+- **`bugprone-unchecked-optional-access` (4).** `player.cpp:775` and `:806`
+  read `fixed_slab_support_` and `ramp_support_` only after
+  `fixed_slab_support_at`/`ramp_support_at` returned a point, and both return
+  `nullopt` first when their optional is empty. `profiles_menu.cpp:218`
+  (`finish_name_edit`) is reached only from `update_name_edit`, which runs
+  only while `name_edit_` holds a value. False positives.
+- **`bugprone-suspicious-stringview-data-usage` (4)**, `debug_command.cpp:34`
+  and `:48`, `replay.cpp:46` and `:888`: each `data()` goes to
+  `std::from_chars` with an explicit end pointer, so no terminator is read.
+  False positives.
+- **`bugprone-exception-escape` (6)**, the implicit move constructors of
+  `ContentCatalog`, `DrawItem`, `LocaleFile`, `MenuText` and `DebugBinds` and
+  a console lambda's: the throw found is `bad_array_new_length` inside the
+  Debug STL's container move, which allocates an iterator-debugging proxy. Not
+  a path a valid size reaches. Stands.
+- **`performance-move-const-arg` (6).** Four `std::move(between_rounds)` of a
+  trivially copyable `std::optional<Session>` in the menu pages, one of
+  `LevelMatch` in `level_builder.cpp:133`, and `StageRegistrationError`
+  moving its message into `std::runtime_error`, which takes it by `const&`.
+  No effect, no harm, and the menu moves stay right if `Session` grows. Stands.
+- **`performance-no-automatic-move` (5)**, **`performance-unnecessary-value-param`
+  (4)**, **`performance-unnecessary-copy-initialization` (3).** `const` locals
+  returned, `std::string` parameters taken by value (`LevelLoadedInfo`'s
+  snapshot is passed an rvalue by its other constructor) and a
+  `DebugMenuRow` and two 16-byte rectangles copied as locals. Off any measured path. Stands.
+- **`bugprone-return-const-ref-from-parameter` (2)**, `resolved` in
+  `animation_object.cpp` and `within_nesting_limit` in
+  `level_loaded_info.cpp`: both are called only inside the full expression
+  that uses the result, so no temporary dies first. Stands.
+- **`bugprone-implicit-widening-of-multiplication-result` (2)**, `64 * 1024`
+  and `1024 * 1024` constants. Stands.
+- **`bugprone-branch-clone` (2).** `keyboard_keys_menu.cpp:160` gives the
+  cancelling phase and the fallback the same "wait for neutral" status, and
+  `main_menu_players.cpp:360` sends three different seats to `normal`. Both
+  intended. Stands.
+- **`bugprone-integer-division` (1)**, `game/contracts/simulation.h:20`: the
+  truncation to whole 100 ns ticks is the point, and the comment above says
+  so. Stands.
+- **`bugprone-inc-dec-in-conditions` (1)**, `editor_canvas.cpp:557`, an
+  `++current != end()` after a separate `!= end()` test. Well defined. Stands.
+- **`bugprone-random-generator-seed` (1)**, `std::srand(time)` in
+  `game/main.cpp` for the menus' Random picks; matches draw from
+  `MatchRandom` (`HYG#39`). Stands.
+- **`bugprone-bitwise-pointer-cast` (1)** and
+  **`bugprone-multi-level-implicit-pointer-conversion` (1)**: `bit_cast` of
+  `GetProcAddress`'s result to a function pointer in `window_dpi.cpp`, and
+  `LocalFree(arguments)` in `editor/main.cpp`. The Win32 idioms. Stands.
+
+Compiler warnings clang itself raised under the `/W4` flags, outside the
+chosen checks and not errors under MSVC: 24 `-Woverloaded-virtual` (a `draw`
+override hiding the other `draw` overloads of `AnimationObject` or the
+engine's `TextureObject`; they differ in arity, or for `Weapon::draw(DrawList&,
+bool)` take a `const RectangleF&` that does not convert to `bool`, so a call
+meant for a hidden overload fails to compile rather than picking the wrong one,
+and it is the hierarchy's shape), two `-Wswitch` on the `count` enumerator, three
+`-Wmissing-field-initializers` on value-initialised aggregates and one unused
+`this` capture in `game_commands.cpp:310`. None is a defect.
+
+Not checked: the probes under `scripts/acceptance/` and the engine, and
+`x64-release`'s preprocessing (the Debug database was used, so the developer
+console was analysed too).
 
 ### Controls help against the default bindings (`HYG#102`)
 
@@ -4309,7 +4407,8 @@ Not checked:
 - Leaks. MSVC's AddressSanitizer has no leak detection. The Debug case
   `level_heap` now checks repeated `Level` builds with the debug CRT heap
   ([`HYG#100`](#a-heap-leak-check-over-repeated-level-builds-hyg100)).
-- clang-tidy was not attempted.
+- clang-tidy was not attempted. It ran on 2026-11-12 under
+  [`HYG#101`](#one-clang-tidy-defect-pass-hyg101) and found no defect.
 
 #### The game, editor and opt-in cases under the sanitizer (2026-11-12)
 
