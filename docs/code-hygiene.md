@@ -43,26 +43,35 @@ passing leaf was the compiled probe.
   The sweep runs `check-painter.ps1` once per leaf, so it inherits this.
 - [scripts/clean-validation.ps1](../scripts/clean-validation.ps1) is a dry run
   by default: it lists `out/validation`, `out/acceptance` and every `out/hyg*`
-  folder (or `-Path`) with each kind of run (GUID folders sharing a parent) by
-  count, size and age, and what `-Apply` would remove. `-Apply` keeps the newest
-  `-Keep` runs of each kind (default 3, by creation time) and removes the rest;
-  `-ReceiptsOnly` also trims the kept runs to their JSON, log and CSV files. It
-  touches only GUID-named folders, so a reused folder such as
-  `out/acceptance/<preset>` is listed and left alone, and it refuses a drive
-  root, a checkout and `out/build`.
+  folder (or `-Path`) with each kind of run (runs sharing a parent) by count,
+  size and age, and what `-Apply` would remove. A run is a GUID folder or a
+  painter sweep shard (`<preset>-<n>-of-<m>`, or a folder holding
+  `sweep-summary.json`), which is kept or removed whole: the sweep writes every
+  leaf of a shard under one `evidence/<preset>`, so counting leaves would keep
+  the newest few and orphan the summary's references to the rest, failed
+  leaves included. `-Apply` keeps the newest `-Keep` runs of each kind
+  (default 3, by creation time, or a reused shard's summary time) and removes
+  the rest; `-ReceiptsOnly` also trims the kept runs to their JSON, log and
+  CSV files, except under a run whose `result.json` says `failed`, which keeps
+  its probe as `check-painter.ps1` left it. It touches only runs, so a reused
+  folder such as `out/acceptance/<preset>` is listed and left alone, and it
+  refuses a drive root, a checkout and `out/build`.
 - [scripts/check-clean-validation.ps1](../scripts/check-clean-validation.ps1)
-  builds a synthetic tree (three kinds, one nested like a sweep's, a reused
-  per-preset folder and a named folder among runs) and checks that the dry run
-  changes nothing and plans the right runs, that `-Apply` keeps and removes the
-  right ones and nothing outside them, the `-ReceiptsOnly` trim, `-Keep 0`, and
+  builds a synthetic tree (plain kinds, three sweep shards of five leaves with
+  one failed leaf each, one shard unfinished without its summary, a failed
+  standalone run, a reused per-preset folder and a named folder among runs) and
+  checks that the dry run changes nothing and plans the right runs, that
+  `-Apply` keeps and removes the right ones, shards whole, and nothing outside
+  them, the `-ReceiptsOnly` trim and that it spares failed runs, `-Keep 0`, and
   the three refusals. It starts no build, compiler or game.
 - [scripts/README.md](../scripts/README.md#disk-use) has a "Disk use" section,
   and [development.md](development.md#consumer-acceptance) points to it.
 
-Checked on MattPC, 2026-11-12: `check-clean-validation.ps1` passed 27 checks
+Checked on MattPC, 2026-11-12: `check-clean-validation.ps1` passed 47 checks
 under pwsh 7 and Windows PowerShell 5.1, and failed as it should with
-`clean-validation.ps1` mutated to keep one run too many and to trim receipts
-instead of everything else. A Release and a Debug `DurationTextOnly` leaf
+`clean-validation.ps1` mutated to keep one run too many, to trim receipts
+instead of everything else, to count a shard's leaves as runs (as the first
+version did, which review caught) and to trim a failed run. A Release and a Debug `DurationTextOnly` leaf
 passed and left 1.4 and 1.5 MB with `removed_after_pass` naming the exe and obj
 (31.9 and 41.2 MB removed); a Release `TurbulenceMoverOnly` run given an
 invalid trial file failed and kept both. `check-painter-selection.ps1` passed

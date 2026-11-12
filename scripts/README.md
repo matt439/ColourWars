@@ -131,8 +131,8 @@ keeps only its evidence; everything else stays until it is removed.
 
 | Script | What |
 |---|---|
-| [clean-validation.ps1](clean-validation.ps1) | lists the run folders under `out/validation`, `out/acceptance` and every `out/hyg*` folder (or `-Path`) by kind, size and age, and what it would remove; changes nothing without `-Apply`, which keeps the newest `-Keep` runs of each kind (default 3) and removes the rest; `-ReceiptsOnly` also trims the kept runs to their JSON, log and CSV files. It touches only GUID-named folders and refuses a drive root, a checkout and `out/build` |
-| [check-clean-validation.ps1](check-clean-validation.ps1) | checks that script against a synthetic run tree: dry run unchanged, keep and remove, receipts-only trim, unsafe roots; no build, compiler or game |
+| [clean-validation.ps1](clean-validation.ps1) | lists the run folders under `out/validation`, `out/acceptance` and every `out/hyg*` folder (or `-Path`) by kind, size and age, and what it would remove; changes nothing without `-Apply`, which keeps the newest `-Keep` runs of each kind (default 3) and removes the rest; `-ReceiptsOnly` also trims the kept runs to their JSON, log and CSV files, sparing a run whose `result.json` says it failed. A run is a GUID folder or a painter sweep shard (`<preset>-<n>-of-<m>`), kept or removed whole; nothing outside a run is touched, and it refuses a drive root, a checkout and `out/build` |
+| [check-clean-validation.ps1](check-clean-validation.ps1) | checks that script against a synthetic run tree: dry run unchanged, keep and remove, sweep shards whole, receipts-only trim sparing failed runs, unsafe roots; no build, compiler or game |
 
 Run the dry run first, read what it would remove, then repeat with `-Apply`:
 
