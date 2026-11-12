@@ -1,9 +1,13 @@
 #pragma once
 
 #include "game/debug/dev_tools.h"
+#include "game/objects/collision_object_type.h"
 #include "game/objects/level_overlays.h"
+#include "engine/math/segment.h"
+#include "engine/math/shape.h"
 #include "engine/render/sprite_sheet.h"
 #include "engine/scene/scene.h"
+#include <array>
 
 class Player;
 
@@ -14,6 +18,17 @@ class Player;
 namespace debug_overlay
 {
 #if COLOURWARS_DEV_TOOLS
+	// What overlay.collision draws for one object, split from the drawing so
+	// the debug_console probe can check it without a device.
+	//
+	// The colour for a tag; a player's is its team colour instead, which
+	// draw_pane reads from the object. Every structure tag has one of its own,
+	// and anything else (the projectiles) is yellow.
+	labrador::Colour collision_colour(CollisionObjectType type);
+	// The four edges outlined: a rotated rectangle's own (a fixed slab along
+	// its slope), any other shape's bounding box.
+	std::array<labrador::Segment, 4> collision_outline(const labrador::Shape& shape);
+
 	void draw_pane(labrador::DrawList& list, const LevelOverlays& overlays,
 		const labrador::Scene& scene, const labrador::Scene::View& view,
 		const Player& player, const labrador::RectangleF& camera_bounds,
