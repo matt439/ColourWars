@@ -200,17 +200,7 @@ namespace
 		reread.load_save_file();
 		require_flat_preferences(reread, "A rewritten current-version save lost a preference");
 
-		// A newer layout still loads what this build knows; unknown parts go.
-		directory.write_save("{\"save_version\":7," + flat_preferences +
-			",\"records\":[{\"stage\":\"arena\",\"versus_played\":3}],\"future\":{\"x\":1}}");
-		Save newer;
-		newer.load_save_file();
-		require_flat_preferences(newer, "A newer save lost a preference this build knows");
-		require(newer.records().find("arena") != nullptr && newer.records().find("arena")->versus_played == 3,
-			"A newer save lost records this build knows");
-		require(newer.save_to_file() && directory.save_bytes().find("future") == std::string::npos &&
-			directory.save_bytes().rfind("{\"save_version\":" + std::to_string(Save::version) + ",", 0) == 0,
-			"Saving over a newer layout did not write this build's version");
+		// A newer layout is check_newer_save's.
 
 		for (const char* version : { "\"one\"", "null", "-1", "1.5" })
 		{
@@ -326,6 +316,83 @@ namespace
 		std::filesystem::remove(path, ignored);
 		std::erase(text, '\r');
 		return text;
+	}
+
+	// A save from a newer build still loads what this build knows. Its first
+	// write keeps a byte-identical save_data.newer-<n>.json before dropping the
+	// unknown parts (REV#5), once per load, and never replaces an earlier copy.
+	// The same write makes the player's stages folder (FTR#14).
+	void check_newer_save(const IsolatedSaveDirectory& directory)
+	{
+		const std::filesystem::path folder = directory.save_path().parent_path();
+		const auto newer_copy = [&](int copy)
+		{
+			return folder / (L"save_data.newer-" + std::to_wstring(copy) + L".json");
+		};
+		const std::filesystem::path stages = folder / L"stages";
+		std::error_code ignored;
+		std::filesystem::remove_all(stages, ignored);
+		const std::string saved_version = std::to_string(Save::version + 1);
+		const std::string bytes = "{\"save_version\":" + saved_version + "," + flat_preferences +
+			",\"records\":[{\"stage\":\"arena\",\"versus_played\":3}],\"future\":{\"x\":1}}";
+		const std::string current = "{\"save_version\":" + std::to_string(Save::version) + ",";
+
+		for (int copy = 1; copy <= 2; ++copy)
+		{
+			directory.write_save(bytes);
+			Save newer;
+			std::string errors = captured_stderr(directory, [&] { newer.load_save_file(); });
+			require_flat_preferences(newer, "A newer save lost a preference this build knows");
+			require(newer.records().find("arena") != nullptr && newer.records().find("arena")->versus_played == 3,
+				"A newer save lost records this build knows");
+			require(std::count(errors.begin(), errors.end(), '\n') == 1 &&
+				errors.find("save_data.json is save_version " + saved_version) != std::string::npos &&
+				errors.find("copy it aside") != std::string::npos,
+				"Loading a newer save did not print one stderr line naming it, its version and the copy to come");
+			require(directory.save_bytes() == bytes && !std::filesystem::exists(newer_copy(copy)),
+				"Loading a newer save changed it or copied it before any write");
+
+			// The first write: the second pass writes through a recorded round,
+			// the other writer every match reaches.
+			bool written = false;
+			errors = captured_stderr(directory, [&]
+			{
+				written = copy == 1 ? newer.save_to_file() :
+					newer.record_result_and_save("arena", versus(150.0f, 50.0f)).recorded;
+			});
+			require(written, "Saving over a newer save did not write");
+			require(std::count(errors.begin(), errors.end(), '\n') == 1 &&
+				errors.find("save_version " + saved_version) != std::string::npos &&
+				errors.find("save_data.newer-" + std::to_string(copy) + ".json") != std::string::npos,
+				"Saving over a newer save did not print one stderr line naming the copy");
+			require(std::filesystem::exists(newer_copy(copy)) && acceptance::read_text(newer_copy(copy)) == bytes,
+				"A newer save was not copied aside byte for byte before the write");
+			require(acceptance::read_text(newer_copy(1)) == bytes, "A later downgrade write replaced an earlier copy");
+			require(!std::filesystem::exists(newer_copy(copy + 1)), "A newer save was copied twice");
+			require(directory.save_bytes().find("future") == std::string::npos &&
+				directory.save_bytes().rfind(current, 0) == 0,
+				"Saving over a newer layout did not write this build's version");
+			require(std::filesystem::is_directory(stages), "A save write did not create the stages folder");
+
+			// The file is this build's now: a later write copies nothing.
+			errors = captured_stderr(directory, [&] { written = newer.save_to_file(); });
+			require(written && errors.empty() && !std::filesystem::exists(newer_copy(copy + 1)),
+				"A second write after a newer load copied the save again");
+		}
+
+		// The folder is created, never refilled or replaced: a stage in it stays.
+		const std::filesystem::path kept = stages / L"mine.json";
+		{
+			std::ofstream output(kept, std::ios::binary);
+			output << "{}";
+			require(output.good(), "Could not write the stages fixture");
+		}
+		Save again;
+		again.load_save_file();
+		require(again.save_to_file() && acceptance::read_text(kept) == "{}",
+			"A save write disturbed the stages folder");
+		for (int copy = 1; copy <= 2; ++copy) { std::filesystem::remove(newer_copy(copy), ignored); }
+		std::filesystem::remove_all(stages, ignored);
 	}
 
 	// A malformed section still resets alone, but now says so: one stderr line
@@ -534,11 +601,13 @@ int main(int argc, char** argv)
 		check_section_isolation(directory);
 		check_round_trip(directory);
 		check_section_reset_report(directory);
+		check_newer_save(directory);
 		check_unreadable_save(directory);
 		check_unopenable_save(directory);
 		check_legacy_save();
 		std::cout << "PASS match records: display-precision bests, side/draw/practice tallies, "
-			"results line, version 0/1/newer saves, per-section and per-entry recovery, "
+			"results line, version 0/1/newer saves, newer saves copied aside before a downgrade "
+			"write, the stages folder made on a save write, per-section and per-entry recovery, "
 			"bounded values, retired-stage retention, exact round trip, unreadable and "
 			"unopenable saves kept aside, and unloadable legacy saves reported and left\n";
 		return 0;
