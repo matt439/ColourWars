@@ -91,6 +91,9 @@ struct ActionBindings
 	// Indexed by MenuInputAction; the default keyboard Pause entry is empty.
 	std::array<std::vector<labrador::Key>, menu_action_count> menu_keys;
 	std::array<std::vector<labrador::GamepadButton>, menu_action_count> menu_buttons;
+	// The keyboard seat's mouse (REV#33): left proceeds and right backs, with
+	// no hit-testing. Pause and shuffle stay empty.
+	std::array<std::vector<labrador::MouseButton>, menu_action_count> menu_mouse_buttons;
 	// Fixed order: up, down, left, right. Readers retain direction conflict rules.
 	std::array<MenuDirectionBinding, menu_direction_count> directions;
 };
@@ -125,6 +128,11 @@ ActionSample menu_action(const ActionBindings& bindings, MenuInputAction action,
 	const labrador::KeyboardState& keyboard, const labrador::KeyboardState& previous_keyboard);
 ActionSample menu_action(const ActionBindings& bindings, MenuInputAction action,
 	const labrador::GamepadState& pad, const labrador::GamepadState& previous_pad);
+// The keyboard seat's mouse buttons alone; the menu reader arms them apart
+// from the keys. was_held is the previous level within one capture epoch, so
+// a cancelled capture never arms or releases a menu action.
+ActionSample menu_action(const ActionBindings& bindings, MenuInputAction action,
+	const labrador::MouseState& mouse, const labrador::MouseState& previous_mouse);
 
 std::array<bool, menu_direction_count> keyboard_direction_held(
 	const ActionBindings& bindings, const labrador::KeyboardState& keyboard);

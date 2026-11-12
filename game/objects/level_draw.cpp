@@ -22,8 +22,8 @@ void Level::draw(Renderer& renderer) const
 			[this](DrawList& list) { this->draw_countdown_text(list); });
 		return;
 	}
-	if (this->state_ == LevelState::start_countdown ||
-		this->state_ == LevelState::active)
+	if (!this->arena_view_ && (this->state_ == LevelState::start_countdown ||
+		this->state_ == LevelState::active))
 	{
 		this->scene_->draw(renderer,
 			[this](int view_index, DrawList& list)
@@ -58,7 +58,8 @@ void Level::draw(Renderer& renderer) const
 	}
 	else
 	{
-		// The overview draws only the world, with no gameplay overlays.
+		// The overview, and the Debug time-lapse's arena view, draw only the
+		// world, with no gameplay overlays.
 		this->scene_->draw(renderer);
 	}
 }
@@ -238,6 +239,11 @@ void Level::emphasise_players()
 void Level::set_pad_devices(const std::array<int, input_slots::pad_count>& devices)
 {
 	this->identity_->set_pad_devices(devices, this->players_, this->roster_);
+}
+
+void Level::set_profile_names(const std::array<std::string_view, input_slots::pad_count>& names)
+{
+	this->identity_->set_profile_names(names, this->players_, this->roster_);
 }
 
 std::vector<TeammateMarkerPlacement> Level::teammate_markers(int view) const

@@ -202,6 +202,62 @@ the source-derived correction to eight retains the same comparison rules and
 budgets. Both attempts remain under `native-alpha/` and `native-alpha-v3/`.
 No GPU timing, human readability or visible performance acceptance is claimed.
 
+## Static paint draw cost (`REV#7`, 2026-11-13)
+
+`StructurePaintable::draw_paint` submits a surface and an edge sprite for
+every owned 4-unit tile, plus a highlight while it is wet and a splash while one
+plays, in every pane that sees the structure (structures cull whole, not tile
+by tile). The
+[project review](review/2026-11-10-project-review.md#static-paint-draws-one-tile-at-a-time-rev7)
+asked whether that shows before anyone merges runs. **It shows, and it fits.**
+
+Method: the `REV#38` four-bot Crossfeed match
+([paint strip weight](polish-match-accents.md#paint-strip-weight-in-the-reveal-rev38)),
+Debug build `12dd21a3`, D3D11, 1920x1080 windowed (shown; whether it was in
+front was not recorded), four panes, seed 7. The
+isolated profile's save set the size and, for the main runs, `vsync` off, so
+Present never waits for the display and the interval is the work. Nothing else
+ran on MattPC (Ryzen 9 9950X3D, RTX 5080, driver 32.0.16.1692, 59 Hz display):
+
+```
+ColourWars.exe +script.background 1 +overlay none +seed 7 +bot 1 paint +players 4 paint
+  +stage crossfeed +wait match +wait 1s +checksum +perf.capture 600 start +checksum
+  +timescale 4 +wait 214s +timescale 1 +wait 1s +checksum +perf.capture 600 late +checksum +quit
+```
+
+Crossfeed has 2,590 paint tiles (124,320 units at 48 a tile). The early
+capture began at 12.5% painted (325 tiles) and ended at 23% (vsync off) or 59%
+(vsync on, ten seconds); the late one held 95% (about 2,455 tiles). Each capture
+is 600 rendered intervals; milliseconds are CPU wall time, p50 / p95:
+
+| Run | Paint | frame | draw | submit | end_frame |
+|---|---|---:|---:|---:|---:|
+| vsync off, A | 12-23% | 4.51 / 6.29 | 4.04 / 5.39 | 0.06 / 0.11 | 0.06 / 0.10 |
+| vsync off, A | 95% | 6.85 / 9.08 | 6.40 / 8.38 | 0.06 / 0.08 | 0.06 / 0.09 |
+| vsync off, B | 12-23% | 2.99 / 4.07 | 2.71 / 3.68 | 0.03 / 0.04 | 0.03 / 0.05 |
+| vsync off, B | 95% | 5.59 / 7.64 | 5.23 / 7.19 | 0.04 / 0.06 | 0.04 / 0.07 |
+| vsync on | 12-59% | 16.65 / 16.96 | 3.38 / 5.02 | 0.05 / 0.07 | 12.63 / 13.80 |
+| vsync on | 95% | 16.66 / 16.93 | 4.87 / 7.03 | 0.05 / 0.07 | 11.11 / 12.14 |
+
+Painting the arena adds 2.4-2.5 ms to the median Debug draw, and the interval
+follows it: about 1.2 µs per owned tile per frame across four panes. In the
+vsync-off runs update time, collision objects and projectiles do not change
+between the captures, so the difference is the paint. Runs A and B differ by 1.2 ms at both moments
+(host variance between identical launches), but not in the delta. The GPU is
+not the limit: with vsync off, `end_frame` (which includes Present) stayed at
+0.03-0.06 ms while the game drew 146-334 frames a second, so the RTX 5080
+finished each frame inside the CPU's interval. Its own time is not measured.
+With vsync on, a fully painted four-pane frame leaves about 11 ms of the
+16.7 ms spare. The 10 and 13 intervals over 33.3 ms in those captures are the
+once-a-second pattern of `GAP#L9`, present before the paint too.
+
+This is Debug, with checked iterators and no optimisation; `perf.capture` and
+launch arguments do not exist in Release, so Release was not measured and
+would draw the same sprites for less CPU. Merging runs is therefore not worth
+moving the painter pins for: the review's objection holds and the draws stay
+per tile. Look again if a stage much larger than Crossfeed, or an eight-pane
+mode, arrives. The raw CSVs were not kept.
+
 ## Remaining acceptance
 
 A hidden/occluded window can make Present return rapidly. Those intervals do not

@@ -1,4 +1,4 @@
-// Editing and history checks: palette and ramps, and history across failed
+// Editing and history checks: palette and ramps, history across failed
 // operations.
 #include "scripts/acceptance/level_editor/fixtures.h"
 #include <Windows.h>
@@ -180,5 +180,46 @@ namespace level_editor_acceptance
         require(document.dirty() && document.path().empty() && !document.can_undo() &&
             !document.can_redo() && document.validate().empty(), "New failed to reset history/path");
         std::cout << "PASS saved-state history, branching and transactional failure recovery\n";
+    }
+
+    // HYG#97: an edit appends to the history in place instead of copying it.
+    // A long run of edits keeps every step undoable, redoable and branchable,
+    // and the saved state stays the one clean step.
+    void check_long_history(const fs::path& scratch)
+    {
+        constexpr int edits = 600;
+        LevelDocument document;
+        const Entry object = document.add_object("Structure", { 100, 100, 200, 100 });
+        document.save(scratch / "long-history.json");
+        const std::string saved = document.serialize();
+        std::string halfway;
+        for (int step = 1; step <= edits; ++step)
+        {
+            document.set_rectangle(object, { 100.0 + step, 100, 200, 100 });
+            if (step == edits / 2) { halfway = document.serialize(); }
+        }
+        require(equal(document.rectangle(object), { 100.0 + edits, 100, 200, 100 }),
+            "Long edit run did not reach its last rectangle");
+        const std::string last = document.serialize();
+        for (int step = 0; step < edits; ++step)
+        {
+            require(document.undo() && document.dirty() == (step + 1 < edits),
+                "Undo through a long history lost a step or its dirty state");
+        }
+        require(document.serialize() == saved && !document.dirty(),
+            "Undoing a long history did not return to the saved state");
+        for (int step = 0; step < edits; ++step)
+        {
+            require(document.redo() && document.dirty(), "Redo through a long history lost a step");
+        }
+        require(!document.can_redo() && document.serialize() == last,
+            "Redoing a long history did not return to its last edit");
+        for (int step = 0; step < edits / 2; ++step) { require(document.undo(), "Expected an undoable edit"); }
+        require(document.serialize() == halfway, "Undo to the middle of a long history missed its step");
+        document.set_rectangle(object, { 50, 100, 200, 100 });
+        require(!document.can_redo(), "An edit in the middle of a long history kept the redo tail");
+        require(document.undo() && document.serialize() == halfway && document.can_redo(),
+            "Undoing the branch did not return to the middle of the history");
+        std::cout << "PASS long undo history, round trip and branch (" << edits << " edits)\n";
     }
 }

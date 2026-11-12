@@ -16,6 +16,12 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     const acceptance::IsolatedSave isolated(output / "menu-label-profile"); Save preferences; SettingsSession preferences_session(preferences);
     PlaySettings play = preferences_session.play_settings(); play.music_volume = play.sfx_volume = 0; play.reduce_effects = true;
     require(preferences_session.set_play_settings_and_save(play), "Cannot seed the private menu-label profile");
+    // REV#35: two profiles, worn only by the last block below. Wearing is
+    // the run's and never written, so the save stays byte-identical.
+    bool profile_saved = false;
+    const int alex = preferences_session.add_profile_and_save("ALEX", -1, profile_saved);
+    const int widest = preferences_session.add_profile_and_save("WWWWWWWWWW", -1, profile_saved);
+    require(profile_saved, "Cannot seed the private menu-label profiles");
     const auto saved_bytes = [&]
     {
         return isolated.save_bytes();
@@ -272,7 +278,30 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     presentation = original; tick(); compare("stick-reverse-value-retained", 5, alternate, L"Port 2");
     compare("stick-reverse-connection-retained", 6, alternate, L"Port 2 - disconnected");
     open(5); compare("stick-reopened-original-value", 5, original, L"Pad 1"); compare("stick-reopened-original-connection", 6, original, L"Pad 1 - connected");
+    // REV#35: Pad 1 wears ALEX and Pad 4 the widest name. A label shows the
+    // name only where it still fits: ALEX's rows keep it, the widest name's
+    // fall back to the plain label on Team and Weapon; the widest still ends
+    // before Results' score bar, as that row wins no award; and Pause
+    // shows names only in a missing list that still fits its paper.
+    require(preferences_session.wear_profile(0, alex) && preferences_session.wear_profile(3, widest),
+        "The menu-label pads could not wear their profiles");
+    const std::array<std::wstring, 4> worn_rows{ L"P1 - Pad 4", L"P2 - Keyboard/mouse", L"P3 - Pad 1 (ALEX)", L"P4 - Pad 3" };
+    for (const int kind : { 1, 2, 4 })
+    {
+        constexpr std::array<const wchar_t*, 4> percentages{ L"12.3%", L"21.6%", L"32.0%", L"34.0%" };
+        presentation = original; open(kind);
+        for (int seat = 0; seat < 4; ++seat) { compare("worn-profile", kind, original,
+            (kind == 4 && seat == 0 ? std::wstring(L"P1 - Pad 4 (WWWWWWWWWW)") : worn_rows[static_cast<size_t>(seat)]) +
+            (kind == 4 ? (std::wstring(seat % 2 == 0 ? L" | Team A | " : L" | Team B | ") + percentages[static_cast<size_t>(seat)]) : L""), seat); }
+    }
+    app.resolution_manager()->set_resolution_exactly({ 1920, 1080 }); std::ignore = app.renderer()->window_size_changed(1920, 1080);
+    open(3); compare("worn-pause-four-missing-plain", 3, original, L"P1 - Pad 4   P2 - Pad 1\nP3 - Pad 3   P4 - Pad 2");
+    painter_scripted_pads::states[3].connected = true; tick();
+    compare("worn-pause-three-missing-named", 3, original, L"P2 - Pad 1 (ALEX)   P3 - Pad 3\nP4 - Pad 2");
+    app.resolution_manager()->set_resolution_exactly({ 1280, 720 }); std::ignore = app.renderer()->window_size_changed(1280, 720);
+    require(preferences_session.wear_profile(0, -1) && preferences_session.wear_profile(3, -1),
+        "The menu-label pads could not take their profiles off");
     require(captures == 8 && rows > 0 && records.good(), "Menu label evidence is incomplete or exceeded eight crops");
-    std::cout << "PASS menu labels actual Join/Team/Weapon/Pause/Results/Stick pages: independent literal devices/rows, sparse reordered claims and fresh Join action, preserved two-per-line missing-pad packing, contribution numbers, captured fonts/copy through assignment/refresh/reopen/reversal, OptionRow fit, exact save and frozen pixels/RNG; " <<
+    std::cout << "PASS menu labels actual Join/Team/Weapon/Pause/Results/Stick pages: independent literal devices/rows, sparse reordered claims and fresh Join action, preserved two-per-line missing-pad packing, contribution numbers, captured fonts/copy through assignment/refresh/reopen/reversal, worn profile names where they fit and plain labels where they do not, OptionRow fit, exact save and frozen pixels/RNG; " <<
         ticks << " bounded updates, " << rows << " CSV checks, eight compact crops; no broad matrix, full match or physical/foreground acceptance\n";
 }

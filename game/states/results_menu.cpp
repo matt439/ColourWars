@@ -61,6 +61,11 @@ bool ResultsMenuInitial::debug_dismiss(bool /*leaving_match*/)
 	return true;
 }
 
+bool ResultsMenuInitial::debug_watch_replay()
+{
+	return this->debug_dismiss(false);
+}
+
 void ResultsMenuInitial::update_page(float dt)
 {
 	const ResultsMenuPresentation& look = this->look();
@@ -323,45 +328,64 @@ void ResultsMenuInitial::init()
 	const std::vector<SeatSetup> players =
 		this->level_settings()->player_settings();
 	std::vector<int> owners;
-	std::vector<const colourwars::UiTextDropShadow*> rows;
 	for (size_t i = 0; i < players.size(); ++i)
 	{
-		const SeatSetup& player = players[i];
-		owners.push_back(paint_owners::index(player.num, static_cast<int>(i)));
-		add_detail(player_label(*this->level_settings(), static_cast<int>(i), this->text()) +
-			(player.team == PlayerTeam::a ? this->text().results.contribution_team_a :
-				this->text().results.contribution_team_b) +
-			end_info.player_percentage_string(owners[i]),
-			look.contribution_position + Vector2F(0.0f,
-				look.contribution_spacing * static_cast<float>(i + 1)), look.contribution_font);
-		rows.push_back(this->details_.back().get());
-		this->player_badges_.push_back(std::make_unique<UiPlayerBadge>(
-			"player_badge_" + std::to_string(i + 1),
-			UiPlayerBadge::before(this->details_.back()->bounds(), this->presentation().player_identity()),
-			static_cast<int>(i), &this->presentation().player_identity(), this->render_resources(), true));
-		this->texture_container_->add_child(this->player_badges_.back().get());
+		owners.push_back(paint_owners::index(players[i].num, static_cast<int>(i)));
 	}
 	// Each award sits at the right of its player's contribution row, aligned
 	// to the score bar like the record line, and is revealed with the details.
 	// A row long enough to reach it keeps its text and goes without.
 	const std::vector<std::optional<MatchAward>> awards = end_info.awards(owners);
-	for (size_t i = 0; i < awards.size(); ++i)
+	std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> award_lines(players.size());
+	std::vector<const colourwars::UiTextDropShadow*> rows;
+	for (size_t i = 0; i < awards.size() && i < award_lines.size(); ++i)
 	{
 		if (!awards[i].has_value())
 		{
 			continue;
 		}
-		auto line = std::make_unique<colourwars::UiTextDropShadow>("award_" + std::to_string(i + 1),
+		award_lines[i] = std::make_unique<colourwars::UiTextDropShadow>("award_" + std::to_string(i + 1),
 			this->text().results.award_line(*awards[i]), look.contribution_font, Vector2F::zero,
 			this->render_resources(), look.art.ink, Colour(), Vector2F::zero, true);
-		line->set_position(Vector2F(this->fill_box_->rectangle().right() -
-			line->bounds().width, look.contribution_position.y +
+		award_lines[i]->set_position(Vector2F(this->fill_box_->rectangle().right() -
+			award_lines[i]->bounds().width, look.contribution_position.y +
 				look.contribution_spacing * static_cast<float>(i + 1)));
-		if (line->bounds().left() <= rows[i]->bounds().right())
+	}
+	for (size_t i = 0; i < players.size(); ++i)
+	{
+		const SeatSetup& player = players[i];
+		const std::wstring numbers =
+			(player.team == PlayerTeam::a ? this->text().results.contribution_team_a :
+				this->text().results.contribution_team_b) +
+			end_info.player_percentage_string(owners[i]);
+		colourwars::UiTextDropShadow* row = add_detail(worn_player_label(*this->level_settings(),
+			static_cast<int>(i), this->text(), *this->settings_session()) + numbers,
+			look.contribution_position + Vector2F(0.0f,
+				look.contribution_spacing * static_cast<float>(i + 1)), look.contribution_font);
+		// A worn profile's name shows only while the row still ends before
+		// its award, or before the score bar's right edge when it has none;
+		// a longer row falls back to the plain label, which startup
+		// validation fits (REV#35).
+		const float limit = award_lines[i] != nullptr ? award_lines[i]->bounds().left() :
+			this->fill_box_->rectangle().right();
+		if (row->bounds().right() >= limit)
+		{
+			row->set_text(player_label(*this->level_settings(), static_cast<int>(i), this->text()) + numbers);
+		}
+		this->player_badges_.push_back(std::make_unique<UiPlayerBadge>(
+			"player_badge_" + std::to_string(i + 1),
+			UiPlayerBadge::before(row->bounds(), this->presentation().player_identity()),
+			static_cast<int>(i), &this->presentation().player_identity(), this->render_resources(), true));
+		this->texture_container_->add_child(this->player_badges_.back().get());
+		rows.push_back(row);
+	}
+	for (size_t i = 0; i < award_lines.size(); ++i)
+	{
+		if (award_lines[i] == nullptr || award_lines[i]->bounds().left() <= rows[i]->bounds().right())
 		{
 			continue;
 		}
-		this->details_.push_back(std::move(line));
+		this->details_.push_back(std::move(award_lines[i]));
 		this->text_container_->add_child(this->details_.back().get());
 	}
 	// The stage record sits on the contribution heading's row, right-aligned

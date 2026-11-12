@@ -42,7 +42,6 @@ namespace colourwars
 		float shadow_scale() const;
 
 		void set_shadow_offset(const labrador::Vector2F& offset);
-		void set_shadow_color(const labrador::Colour& color);
 		void set_shadow_scale(float scale);
 
 	private:

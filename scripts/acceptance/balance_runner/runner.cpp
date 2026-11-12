@@ -64,6 +64,9 @@ namespace balance_runner
             labrador::RectangleF arena(const std::string& stage) const
             { return this->levels_.get(stage)->out_of_bounds_rectangle(); }
             const GameTuning& tuning() const { return this->tuning_; }
+            // The whole-pixel pane the renderer and PlayerCamera use for `view`.
+            labrador::Viewport pane(int view) const
+            { return labrador::Viewport(this->viewports_.player_viewport(view).pixel_rect()); }
             std::unique_ptr<Level> build(const Options& options, const std::string& stage, std::uint32_t seed)
             {
                 MatchSetup settings;
@@ -214,6 +217,45 @@ namespace balance_runner
             std::array<SeatResult, 4> seats_{};
         };
 
+        std::uint64_t lethal_total(const PlayerLethalProjectiles& lethal)
+        {
+            std::uint64_t total = lethal.uncredited;
+            for (std::uint64_t count : lethal.enemy_by_owner) { total += count; }
+            return total;
+        }
+
+        // REV#37: classify one tick's hurt victims by where they stood in the
+        // shooter's own pane. 1v1 only, so the one opponent is the shooter.
+        // A drop to zero with no new projectile lethal is kill(), not a hit.
+        void tally_hit_views(const CpuWorld& world, const Level& level, std::array<SeatResult, 4>& seats,
+            const std::array<PlayerState, 4>& before, const std::array<float, 4>& health_before,
+            const std::array<std::uint64_t, 4>& lethal_before)
+        {
+            if (level.player_count() != 2) { return; }
+            for (int victim = 0; victim < 2; ++victim)
+            {
+                const auto index = static_cast<std::size_t>(victim);
+                const Player& hurt = level.player(victim);
+                if (before.at(index) != PlayerState::alive || !(health_before.at(index) > 0.0f) ||
+                    !(hurt.health() < health_before.at(index))) { continue; }
+                if (hurt.health() <= 0.0f && lethal_total(hurt.lethal_projectiles()) == lethal_before.at(index)) { continue; }
+                const int shooter = 1 - victim;
+                const Player& own = level.player(shooter);
+                if (own.team() == hurt.team()) { continue; }
+                SeatResult& seat = seats.at(static_cast<std::size_t>(shooter));
+                ++seat.dealt_hit_ticks;
+                if (own.state() != PlayerState::alive || own.health() <= 0.0f) { ++seat.dealt_hits_shooter_down; }
+                const int view = level.view_for_participant(shooter);
+                if (view < 0) { throw std::runtime_error("A 1v1 seat has no pane for the hit-view tally"); }
+                const RectangleF visible = own.camera().visible_rectangle(world.pane(view));
+                const RectangleF body = hurt.rectangle();
+                const float overlap_x = std::min(body.right(), visible.right()) - std::max(body.left(), visible.left());
+                const float overlap_y = std::min(body.bottom(), visible.bottom()) - std::max(body.top(), visible.top());
+                if (overlap_x <= 0.0f || overlap_y <= 0.0f) { ++seat.dealt_hits_outside_pane; }
+                else if (overlap_x * overlap_y < 0.5f * body.width * body.height) { ++seat.dealt_hits_partial_pane; }
+            }
+        }
+
         Result run_match(CpuWorld& world, const Options& options, const std::string& stage, std::uint32_t seed)
         {
             std::unique_ptr<Level> level = world.build(options, stage, seed);
@@ -227,15 +269,20 @@ namespace balance_runner
             const std::vector<PlayerInputData> neutral(static_cast<std::size_t>(input_slots::count));
             std::uint64_t updates = 0;
             bool time_up = false, activity_observed = false;
+            std::array<SeatResult, 4> hit_views{};
             for (; updates < max_steps; ++updates)
             {
                 std::array<PlayerState, 4> before{};
                 std::array<labrador::Vector2F, 4> before_centers{};
                 std::array<float, 4> before_ammo{};
+                std::array<float, 4> before_health{};
+                std::array<std::uint64_t, 4> before_lethal{};
                 for (int view = 0; view < level->player_count(); ++view)
                 {
                     const auto index = static_cast<std::size_t>(view);
                     before.at(index) = level->player(view).state();
+                    before_health.at(index) = level->player(view).health();
+                    before_lethal.at(index) = lethal_total(level->player(view).lethal_projectiles());
                     before_centers.at(index) = level->player(view).center();
                     before_ammo.at(index) = level->player(view).weapon_ammo();
                 }
@@ -244,6 +291,7 @@ namespace balance_runner
                 if (samples.active_ticks() != active_before)
                 {
                     samples.observe_after(*level, before);
+                    tally_hit_views(world, *level, hit_views, before, before_health, before_lethal);
                     for (int view = 0; view < level->player_count(); ++view)
                     {
                         const auto index = static_cast<std::size_t>(view);
@@ -269,6 +317,23 @@ namespace balance_runner
             result.paintable_area = end.total_area;
             result.final_fingerprint = MatchFingerprint::of(*level, static_cast<int>(updates)).hash;
             result.seats = samples.seats();
+            for (std::size_t seat = 0; seat < result.seats.size(); ++seat)
+            {
+                SeatResult& into = result.seats.at(seat);
+                const SeatResult& from = hit_views.at(seat);
+                into.dealt_hit_ticks = from.dealt_hit_ticks;
+                into.dealt_hits_outside_pane = from.dealt_hits_outside_pane;
+                into.dealt_hits_partial_pane = from.dealt_hits_partial_pane;
+                into.dealt_hits_shooter_down = from.dealt_hits_shooter_down;
+                if (from.dealt_hits_outside_pane + from.dealt_hits_partial_pane > from.dealt_hit_ticks ||
+                    from.dealt_hits_shooter_down > from.dealt_hit_ticks)
+                { throw std::runtime_error("Hit-view tally classified more hits than it counted"); }
+            }
+            if (level->player_count() == 2 && level->view_for_participant(0) >= 0)
+            {
+                result.pane_height_pixels = world.pane(level->view_for_participant(0)).height;
+                result.pane_body_pixels = level->player(0).rectangle().height * level->player(0).camera().scale;
+            }
             for (int view = 0; view < options.players; ++view)
             { result.seats[static_cast<std::size_t>(view)].sub = level->player(view).sub_weapon()->type(); }
             result.activity_observed = activity_observed;
@@ -344,6 +409,28 @@ namespace balance_runner
             baseline.commit(baseline.edited(*original, spans.token(*replacement)), key);
         }
         return baseline.current().text();
+    }
+
+    std::string hit_view_lines(const Result& result)
+    {
+        std::string lines;
+        if (result.players != 2) { return lines; }
+        for (int seat = 0; seat < 2; ++seat)
+        {
+            const SeatResult& shooter = result.seats.at(static_cast<std::size_t>(seat));
+            const SeatResult& victim = result.seats.at(static_cast<std::size_t>(1 - seat));
+            lines += "hit-view stage=" + result.stage + " seed=" + std::to_string(result.seed) +
+                " shooter=" + std::to_string(seat) + " tool=" + tool_name(shooter.tool) +
+                " victim_tool=" + tool_name(victim.tool) +
+                " hits=" + std::to_string(shooter.dealt_hit_ticks) +
+                " outside=" + std::to_string(shooter.dealt_hits_outside_pane) +
+                " partial=" + std::to_string(shooter.dealt_hits_partial_pane) +
+                " shooter_down=" + std::to_string(shooter.dealt_hits_shooter_down) +
+                " eliminations=" + std::to_string(shooter.credited_enemy_eliminations) +
+                " pane_px=" + std::to_string(static_cast<long>(std::lround(result.pane_height_pixels))) +
+                " body_px=" + std::to_string(static_cast<long>(std::lround(result.pane_body_pixels))) + "\n";
+        }
+        return lines;
     }
 
     void attribute_eliminations(Result& result, const std::vector<PlayerLethalProjectiles>& victims)

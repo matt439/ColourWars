@@ -1813,56 +1813,73 @@ page or dropping a row, with the validator taking the row rule.
 
 ### Muted-play cue audit (`POL#47`)
 
-**Open (2026-11-12).** Nobody has checked that a player with the sound off
-loses no game information. The finish review lists "crowded effects and muted
-audio" under combat readability ([§7](#7-acceptance-and-delivery)), but that
-review (`POL#24`) was waived on 2026-11-05 and not performed. Several cues in
-the [new cue list](audio-inventory.md#4-the-new-cue-list) carry state rather than
-mood: `weapon.recovered`, `sniper.ready`, `ui.pad_lost`/`ui.pad_back`,
-`match.last_ten` and `match.time_up`. The audio inventory has no column for a
-visual counterpart, and
-[Reduced effects](polish-reduced-effects.md#presentation-policy) claims that
-its kept visuals read "even with sound muted" only for the effects it lists.
-`REV#41` has already found one signal carried by sound and camera alone (time
-up). Low paint is covered: its HUD tag and tank change before exhaustion
-(`POL#38`, [design-process B4](design-process.md#b-in-the-match)).
+**Done (2026-11-12), as a desk audit.** The question was whether a player with
+the sound off loses game information. The finish review lists "crowded effects
+and muted audio" under combat readability ([§7](#7-acceptance-and-delivery)),
+but that review (`POL#24`) was waived on 2026-11-05 and not performed, and the
+audio inventory had no column for a visual counterpart.
 
-First step, from the code alone: add a table to the audio inventory's §4 that
-maps each cue the game plays today to its visual counterpart (file:line), or
-marks it "none". Cues not yet hooked (`paint.capture`, `player.hit_confirm`)
-are out of scope.
+The map is now [audio inventory §4.6](audio-inventory.md#46-muted-play-the-visual-counterpart-of-each-cue):
+every cue the game plays, with the line that plays it and what is drawn
+instead. The state cues all have one: dry fire has the white cross and the aim
+marker's cross, recovery the team bead, sniper readiness the aim marker's
+chevron, low paint the blinking tag and tank (`POL#38`), the closing seconds the
+closing-clock card, a lost pad the **Controller lost** pause, and the countdown
+and count-in their cards. Time up rests on the camera's pull back and the clock
+running out, which is `REV#41`; the shooter's side of a hit is `REV#37`. Both
+are cited there, not filed again, and the declined `player.hit_confirm`
+(`POL#23`) is not reopened.
 
-Done when every hooked cue has a row, and each "none" is either filed in its
-owner or recorded as accepted. `REV#41` and `REV#37` are cited, not filed again,
-and the declined `player.hit_confirm` (`POL#23`) is not reopened. This is a desk
-audit: it closes no human gate and claims no acceptance.
+Two cases have no counterpart, and the audit files neither: sniper readiness
+for a seat that has turned **Aim marker** Off, which removes the one readiness
+cue by that seat's choice, and a pad lost or back on the setup pages after
+Players, Results or the end page, where any pad drives the page and the next
+match opens on **Controller lost**. The inventory says what each would take if
+the author wants it treated as a gap.
+
+This closes no human gate and claims no acceptance: nobody has played muted.
 
 ### Photosensitive flash check (`POL#48`)
 
-**Open (2026-11-12).** No record measures the game against a photosensitivity
-threshold, and HOW-TO-PLAY carries no warning; the only WCAG work so far is
-contrast. Before the first public release, check the default presentation
-against WCAG 2.3.1 (no more than three flashes in any one second, or flashes
-below the general and red flash area thresholds). Reduce effects defaults Off
-([Reduced effects](polish-reduced-effects.md)), so the default is what to check.
+**Done (2026-11-12): the default presentation passes WCAG 2.3.1 on timing and
+area, from the code and data at `220d4809`.** No source exceeds the threshold,
+so no row was filed. HOW-TO-PLAY still carries no photosensitivity warning;
+whether it gains the standard one remains the author's call, and this result
+neither requires nor rules it out. The only earlier WCAG work was contrast.
 
-The likely result is a documented pass. The blinking sources are slow: the
-low-paint tag and tank use `blink_period` 0.5 s
-([presentation.json](../game/content/presentation.json) lines 806 and 960).
-The story opening's flicker is one colour preview per half at
-`preview_strength` 0.6 (line 1246; [backstory](backstory.md#building-it)), not a
-strobe. Reduced effects already notes that there are no full-screen flashes in
-its treatment.
+WCAG 2.3.1 passes content with no more than three flashes in any one second,
+or whose flashing stays below the general and red flash thresholds. A flash is
+a pair of opposing changes in brightness. The area threshold is 0.006
+steradians, a quarter of any 10-degree field of view: about 1.4% of a 24-inch
+1080p monitor at 60 cm (about 28,000 pixels) and about 4.5% of a 55-inch
+television at 2.5 m. Reduce effects defaults Off
+([Reduced effects](polish-reduced-effects.md)), so this is the presentation
+checked. Areas are given at 1P on a 1080p screen, where the world draws at one
+pixel per unit (camera `reference_height` 1080, `player_camera.cpp:55`); a 4P
+pane is half that scale, so every area below is smaller there. Timing settled
+every source, so no frame capture was needed.
 
-First step: from the timing values, list each sudden or repeating brightness
-change in the default presentation, with its rate and its share of the screen.
-Include the opening preview, the reveal, the countdown pulse, the low-paint
-blink, elimination bursts and muzzle bursts, at 1P and 4P. Where timing alone
-does not settle a source, use the painter's existing frame captures.
+| Source | Rate | Share of the screen | Result |
+|---|---|---|---|
+| Opening preview: a team colour at `preview_strength` 0.6 over its half of the picture | Colour A from 1.24 s to 1.90 s, colour B from 2.34 s to 3.00 s (`settle` 0.8, `preview` 1.1, shown from 0.4 of the hover, `match_opening.cpp:161-162`). At most two changes in any second, so one flash | Up to about 30% (half the picture inside the 0.8 x 0.76 glass) | Pass on rate |
+| Reveal hovers: the same tint over the whole picture | A from 1.6 s to 2.2 s, B from 2.6 s to 3.2 s (`walk_in` 1.2, `hover` 1.0, `match_opening.cpp:458-459`). Three changes at most in any second, under two flashes; the waver after it moves only the cursor (`match_opening.cpp:601`) | Up to about 60% | Pass on rate |
+| Reveal click, coverage cards, a draw's close | One change each; the cursor's click marks last 0.18 s and drop under Reduce effects | The cards, then the program area | Pass on rate |
+| Push through and pull back through the glass | One continuous 0.8 s camera move each way, not an alternation | Whole screen | Not a flash |
+| Countdown and resume count-in cards | One beat a second: a 0.08 scale pulse and ticks over 0.18 s (`countdown_art`) | A 360 x 310 card, about 5% | Pass on rate |
+| Closing clock | One tick pair a second for the last ten, 0.18 s each, in phase in every pane (one match timer) | A clock-sized card | Pass on rate |
+| Low-paint tag and tank (`POL#38`) | `blink_period` 0.5: two flashes a second per player. In 4P the players' blinks are not in phase, so up to eight on screen | The PAINT tag is about 92 x 34 pixels (24-pixel label, 6 x 2 padding); the tank 12 x 22 dims to 0.35 alpha | Pass on rate per player; the combined area is far below the threshold |
+| Muzzle phrases | Each 0.10 s, restarted as soon as one ends: up to ten a second on the sprayer (`shoot_interval` 0) and mister (0.1); off under Reduce effects | Marks within 26 x 10 units, about 150 pixels each | Over three a second; pass on area |
+| Hurt ticks | 0.12 s, at most every 0.3 s (`hurt_repeat_delay`): up to 3.3 a second under sustained fire | Four 6 x 16 ticks | Over three a second; pass on area |
+| Elimination burst | One 0.32 s burst per elimination | Fragments within about 100 x 100 | Pass on rate |
+| Dry-fire cross, recovery bead | 0.18 s and 0.24 s, at most one cross per 0.65 s held | 12-unit marks | Pass on rate |
+| Wet paint highlight | 0.32 s on each newly painted tile; it travels with the paint front rather than repeating in place | Paint strips | Not a repeating flash |
+| Eye blinks, menu focus motion | 0.14 s every 2.8-6 s; 0.12-0.14 s per player input | Small | Pass on rate |
 
-Done when the result is recorded here, source by source, and any source over the
-threshold has its own row. Whether HOW-TO-PLAY gains a standard photosensitivity
-warning is the author's call, whatever the result.
+View shake moves the picture rather than changing its brightness, so it is
+outside 2.3.1; it has its own option and Reduce effects
+([view shake](polish-view-shake.md)). The check is by arithmetic from the
+timing values and sizes above, not by measuring luminance in a capture, and no
+one has looked at the game with this question in mind.
 
 ### Reduce effects default from Windows (`POL#49`)
 
@@ -1908,7 +1925,9 @@ settle to a quiet marker. Test two teammates crossing and overlapping while usin
 the same weapon. Optional team symbols or sparse surface markings could supplement
 the palettes; inspect them on heavily painted terrain before committing to a
 pattern that might clutter the pixel art. Neither identity nor shot readiness
-should depend on colour alone.
+should depend on colour alone. The surface half was measured on heavily painted
+reveals on 2026-11-12 and no pattern was warranted
+([REV#34](polish-match-accents.md#paint-under-colour-vision-simulation-rev34)).
 
 **Try first:** one precision-tool readiness cue and one local-player marker in
 the reference match. Ask players to explain a failed shot and find their character

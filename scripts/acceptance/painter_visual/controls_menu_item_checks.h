@@ -8,13 +8,13 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         MenuItem::music_volume,
         MenuItem::sfx_volume, MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects,
         MenuItem::apply, MenuItem::back };
-    constexpr std::array<MenuItem, 9> stick_roles{ MenuItem::pad, MenuItem::move_deadzone,
+    constexpr std::array<MenuItem, 10> stick_roles{ MenuItem::pad, MenuItem::move_deadzone,
         MenuItem::aim_deadzone, MenuItem::rumble, MenuItem::view_shake, MenuItem::aim_marker,
-        MenuItem::reduce_effects, MenuItem::apply, MenuItem::back };
+        MenuItem::reduce_effects, MenuItem::toggle_fire, MenuItem::apply, MenuItem::back };
     const std::array<const wchar_t*, 11> controls_legacy{ L"Pad sticks", L"Keyboard Keys", L"Pad Buttons", L"Profiles", L"Music volume", L"SFX volume",
         L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
-    const std::array<const wchar_t*, 9> stick_legacy{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Rumble",
-        L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
+    const std::array<const wchar_t*, 10> stick_legacy{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Rumble",
+        L"View shake", L"Aim marker", L"Reduce effects", L"Toggle fire", L"Apply", L"Back" };
     const Presentation original = presentation;
     Labels defaults = original.menu_text().items;
     for (size_t row = 0; row < controls_roles.size(); ++row)
@@ -79,7 +79,8 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         const auto shared = [](bool value) { return value ? L"Shared (On)" : L"Shared (Off)"; };
         if (sticks) { return { L"Pad 1", percent(play.movement_deadzone(0, tuning.input().movement_deadzone)),
             percent(play.aim_deadzone(0)), play.rumble_enabled(0) ? L"On" : L"Off", shared(play.view_shake),
-            shared(play.aim_marker), shared(play.reduce_effects), L"", L"" }; }
+            shared(play.aim_marker), shared(play.reduce_effects), play.toggle_fire_enabled(0) ? L"On" : L"Off",
+            L"", L"" }; }
         return { L"", L"", L"", L"", std::to_wstring(play.music_volume) + L"%", std::to_wstring(play.sfx_volume) + L"%",
             play.view_shake ? L"On" : L"Off", play.aim_marker ? L"On" : L"Off",
             play.reduce_effects ? L"On" : L"Off", L"", L"" };
@@ -208,12 +209,13 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
     old_labels[static_cast<size_t>(MenuItem::apply)] = L"Apply~";
     old_labels[static_cast<size_t>(MenuItem::back)] = L"Back~";
     for (const MenuItem role : { MenuItem::music_volume, MenuItem::sfx_volume, MenuItem::view_shake,
-        MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::pad, MenuItem::move_deadzone, MenuItem::aim_deadzone, MenuItem::rumble })
+        MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::pad, MenuItem::move_deadzone, MenuItem::aim_deadzone, MenuItem::rumble,
+        MenuItem::toggle_fire })
         { old_labels[static_cast<size_t>(role)] = L"Detailed~ shared setting for this paint session and every connected controller"; }
     const std::array<const wchar_t*, 11> next_controls{ L"Sticks", L"Jump key", L"Jump button", L"Name tags", L"Music gain", L"Effects gain", L"Camera shake",
         L"Aim cue", L"Less motion", L"Commit", L"Return" };
-    const std::array<const wchar_t*, 9> next_sticks{ L"Slot", L"Movement cutoff", L"Aim cutoff", L"Haptics",
-        L"Camera shake", L"Aim cue", L"Less motion", L"Commit", L"Return" };
+    const std::array<const wchar_t*, 10> next_sticks{ L"Slot", L"Movement cutoff", L"Aim cutoff", L"Haptics",
+        L"Camera shake", L"Aim cue", L"Less motion", L"Fire latch", L"Commit", L"Return" };
     for (size_t row = 0; row < controls_roles.size(); ++row)
         { new_labels[static_cast<size_t>(controls_roles[row])] = next_controls[row]; }
     for (size_t row = 0; row < stick_roles.size(); ++row)
@@ -258,7 +260,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
         tap(Key::down); tap(Key::right);
         values[edited_row] = sticks ? percent(std::min(0.9f, play.movement_deadzone(0, tuning.input().movement_deadzone) + 0.05f)) : L"10%";
         compare("pending-old-font", sticks, edited_row, old, old_labels, values, true);
-        const size_t apply_row = sticks ? 7 : 9;
+        const size_t apply_row = sticks ? 8 : 9;
         for (size_t row = edited_row; row < apply_row; ++row) { tap(Key::down); }
         const Frame before_apply = compare("old-apply-before-focus-loss", sticks, apply_row, old, old_labels, values, true);
         app.keyboard()->on_key_down(Key::enter); tick();
@@ -308,7 +310,7 @@ void controls_menu_item_checks(Application& app, const Canvas& canvas, GameTunin
             "Controls/Sticks source reversal and reopen did not restore the exact default raster");
     }
     require(records.good(), "Controls/Sticks authored item evidence write failed");
-    std::cout << "PASS actual Controls/Sticks labels: 20 independent labels at six sizes/aspects; "
+    std::cout << "PASS actual Controls/Sticks labels: 21 independent labels at six sizes/aspects; "
         "long OptionRow fitting, complete label/value focus cards and linear sampling; separate controls item font, "
         "retained/reopened/reversed snapshots, repeated child return/Apply, interrupted Enter, save reload, "
         "Back/Escape discard and parent Apply preserving child profiles; frozen draw RNG\n";

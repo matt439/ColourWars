@@ -186,3 +186,69 @@ call, and the objection in
 [the record](review/2026-11-10-project-review.md#paint-strips-are-hairline-thin-in-the-reveal-rev38)
 stands: the reveal would then show a picture that differs from the one fought
 over.
+
+## Paint under colour-vision simulation (`REV#34`)
+
+Measured 2026-11-12, from the eight hesitation frames above; no new capture.
+The question was whether painted surface, which is told apart by colour, needs
+a second per-team channel (a pattern or sparse mark in `PaintTile`) for players
+with a colour-vision deficiency. **It does not, on this evidence; no pattern was
+built and the item is closed.**
+
+[`scripts/colour_vision/paint_colour_vision.py`](../scripts/colour_vision/paint_colour_vision.py)
+applies the `team_palette` case's bar ([`ROAD#8`](feature-roadmap.md#more-team-palette-pairs-road8):
+Machado, Oliveira and Fernandes full-severity protan, deutan and tritan matrices,
+CIEDE2000, pair at least 40, surround at least 15) to the frames rather than to
+flat colours. The picture is unfiltered, so the paint is exactly the team colour
+or its wet-band and shadow mixes with white or black; swatches and cards are
+left out. For each team it weighs every edge the paint shares with a pixel of
+something else (sky, stone, the black inward edge, props, the other team), and
+reports the share of those edges under 15. Because the paint pixels are exact,
+the captured paint can be recoloured to any shipped pair on the same terrain,
+so all six pairs were measured on all eight frames:
+
+```
+python scripts/colour_vision/paint_colour_vision.py docs/images/polish-match-accents/reveal-4p-close-quarters-purple-gold-720p.png docs/images/polish-match-accents/reveal-4p-close-quarters-purple-gold-1080p.png docs/images/polish-match-accents/reveal-4p-crossfeed-purple-gold-720p.png docs/images/polish-match-accents/reveal-4p-crossfeed-purple-gold-1080p.png --pair purple_gold --as-pair all
+python scripts/colour_vision/paint_colour_vision.py docs/images/polish-match-accents/reveal-4p-close-quarters-blue-yellow-720p.png docs/images/polish-match-accents/reveal-4p-close-quarters-blue-yellow-1080p.png docs/images/polish-match-accents/reveal-4p-crossfeed-blue-yellow-720p.png docs/images/polish-match-accents/reveal-4p-crossfeed-blue-yellow-1080p.png --pair blue_yellow --as-pair all
+```
+
+The frames are named one by one because a wildcard would also pick up the
+`-cards-` and `-hover-` frames. The script is meant for hesitation frames with
+no tint and no cards: its swatch filter does not remove card or hover-tint
+content, and on those two frames it reports numbers that do not describe paint.
+
+| Pair | Worst team difference | Paint edges under 15, worst frame | Nearest common neighbour there |
+|---|---|---|---|
+| `blue_orange` | 58.1 (tritan) | 0.0% | - |
+| `purple_gold` | 43.6 (tritan) | 2.4% (gold, tritan, Crossfeed 720p) | the centre plinth `B8958C`, 13.0, 2% of gold's edges |
+| `red_azure` | 50.9 (normal) | 0.0% | - |
+| `magenta_forest` | 55.6 (deutan) | 0.1% (magenta, tritan, Crossfeed) | grey stone `7E8382`, 15.1 |
+| `pink_green` (legacy) | 27.3 (deutan) | 48.7% (pink, deutan, Close Quarters 1080p) | warm stone `9A9186`, 4.6 |
+| `blue_yellow` (legacy) | 53.4 (tritan) | 16.0% (yellow, tritan, Crossfeed 720p) | pale stone `C3C8C0`, 14.4; white, 10.3 |
+
+The team difference is a property of the two colours and is the
+`team_palette` case's own number; the frames add the surround. Under all four
+visions, on both arenas and both sizes, each of the four pairs held to the bar
+keeps at least 97.6% of its paint edges at 15 or more (99.5% except gold against
+Crossfeed's centre plinth under tritan), so on screen each team's paint stays apart
+from the other team and from the terrain it sits on. The
+failures are the two legacy pairs, which the `team_palette` case already lists
+as exempt. The frames sharpen them: under deutan, pink paint on Close Quarters'
+warm stone is 4.6 from it and up to half its edges fall under the bar, and under
+tritan yellow sits under 15 from the pale stone as well as from white. Those
+stone colours come from terrain art, not from level JSON, so the flat check
+never compares against them.
+
+So a pattern would help only the two pairs that are already exempt, and the
+route around them already exists: choose one of the four other pairs in Options.
+A pattern would also cost what [the record](review/2026-11-10-project-review.md#non-colour-team-channel-on-paint-rev34)
+names: terrain already uses hatching as its own surface language, and every
+paint pixel probe would need new baselines. If a pairs-only answer is ever
+wanted, it is recolouring or retiring the legacy pairs, an author's palette
+call, not a `PaintTile` change.
+
+The limits: these are simulations at full severity, not people; CIEDE2000 is a
+large-field measure and the strips are 1-4 px, where small-field tritanopia
+makes blue and yellow harder still; Random (the default) can still draw a legacy
+pair; and the frames are bot-painted reveals on two arenas, not live play under
+the camera.

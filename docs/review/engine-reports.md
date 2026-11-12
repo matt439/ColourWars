@@ -284,7 +284,7 @@ shipped without the fix, so on 2026-11-05 the author closed it as declined
 
 | # | Report | Exhibit at `96c65373` |
 |---|---|---|
-| 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp`, `painter_visual.cpp` and, since report 25 was spent (2026-11-05), `rumble_adapter.cpp`; a test seam, separate from the pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which stays |
+| 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp`, `painter_visual.cpp` and, since report 25 was spent (2026-11-05), `rumble_adapter.cpp`, and since `REV#31` (2026-11-12) `toggle_fire.cpp`; a test seam, separate from the pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which stays |
 | 28 | Public types and members removed with an engine-only caller count, against the rule from report 7 as extended by `c369e8b`; the deprecation-release ask is declined by policy | `game/carried/` and the `HYG#25` removed-member list |
 | 29 | ~~`Scene` gives no typed access to short-lived objects and no retirement notice~~ withdrawn 2026-11-03, see [Closed](#closed) | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
 | 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:117` and the exact-text checks at `scripts/sandbox/logon.ps1:218` and `:248`; `scripts/check-startup.ps1:225` and `:248` held the same match until 2026-11-04 |
@@ -391,7 +391,8 @@ changing behaviour. The four blocks have drifted to
 2026-11-05 at master `11292fa`: unanswered; the only input-area commit,
 `afdc9f9`, adds an engine-internal browser-transport test
 (`tests/input/web_vibration_tests.cpp`) with a fake actuator, and no reader a
-consumer can set. **Reopen** and
+consumer can set. On 2026-11-12 `REV#31`'s probe added a sixth block,
+`toggle_fire.cpp:15`, which a seam would delete with the rest. **Reopen** and
 hold the filing if a trial build against master (`HYG#24`) shows the four
 blocks need only two trivial extra definitions and the engine says the next tag
 is imminent; then file after the bump with the real extension as evidence.
@@ -785,6 +786,10 @@ In the same commit range master's `JsonValue::number` throws for a number
 outside `float`'s range, which moves this case's printed counts; they are not
 pinned. Master's repeated-key refusal is in the manifest, sprite-sheet and
 sound-bank loaders, which this case does not feed. Then strike this entry.
+
+The [`PIN#1` rehearsal](#rehearse-against-engine-master-pin1) made that change
+on master `3fe88f64`, and the case passed: every deep save loaded or was
+refused, and none crashed.
 
 ---
 
@@ -3045,9 +3050,87 @@ the first release is the build the release work has already checked.
 
 ## Rehearse against engine master (`PIN#1`)
 
-**Open, 2026-11-12.** The `HYG#24` method again: build this game in a scratch
-worktree whose own submodule is checked out at master, then remove the
-worktree. `git submodule status` here stays as it is.
+**Done 2026-11-12.** This game was built against engine master `3fe88f64`
+(*Record the first-run review of 2026-11-10*, 95 commits past the pin
+`e7fc50e3`; its `build and test` push run passed, so `lint.py` would accept it).
+The `HYG#24` method, run in a working tree of this branch whose submodule was
+checked out at master and then put back: `git submodule status` reads
+`e7fc50e3` again and nothing of the trial is committed. Each pass below added
+one scratch fix so the next class could surface; the build ran with
+`ninja -k 0`, so a pass reports every failing translation unit, not the first.
+
+| Pass and scratch fix | Game, editor | Probes (82 default cases in Debug, 81 in Release, 17 opt-in) |
+|---|---|---|
+| 0. submodule at master, nothing else | configure stops: `find_package(lodepng)` finds no package | not reached |
+| 1. `"lodepng"` in `vcpkg.json` | 5 translation units fail, each on `C1083` for `engine/collision/partitioner.h` through `game/objects/level_builder.h:17`; the editor builds | not reached |
+| 2. the four includes moved to `engine/core/partitioner.h` | Debug and Release build and link, no warning | the first link fails: `LNK2019` for five `lodepng` symbols from `LabradorEngine.lib(png_file.cpp.obj)` |
+| 3. `lodepng.lib` added to `scripts/probe-build.ps1`'s library list | (unchanged) | every case compiles and links in both presets; `check-painter.ps1 -CompileOnly` (both pad readers) and `check-paint-fx.ps1 -CompileOnly` in both, and `check-frame-pacing.ps1 -CompileOnly` in Debug, pass |
+
+Breaks by class, measured:
+
+- **Configure (`lodepng`):** `vcpkg.json` names it. The vcpkg port is a
+  static library on `x64-windows`, so no DLL is staged or packaged; the Release
+  ZIP built and passed `check-release-package.ps1` (34 checks, 69 files), and
+  `Labrador-NOTICE.txt` in its `licenses/` folder already names lodepng (zlib).
+- **Probe link line:** `scripts/probe-build.ps1:71-73` lists the libraries
+  every probe links; it needs `lodepng.lib` from the same vcpkg folder as
+  `DirectXTK.lib`. Its self-test `scripts/check-probe-helpers.ps1` then needs
+  the fixture file (`:56`) and both library counts, 7 to 8 (`:63`) and 5 to 6
+  (`:84`); with those it passed its 56 checks.
+- **`Partitioner` move:** exactly the four includes listed below; the
+  engine's "five" is one too many. No file here calls
+  `Partitioner::partition`, so the caller-owned vector costs nothing.
+- **Removed and retyped API:** no site. Nothing here calls a removed render
+  or math member, and `UiContainer::children()`, `FocusGroup::refresh_style`
+  and `ResourceLoader`'s reload helpers compile as used.
+- **Runtime, `JsonValue::number`'s float range:** three probes fail, the same
+  in both presets, and nothing else does. Master throws for a number outside
+  `float`'s range before this game's own range checks run, with its own
+  message:
+  - `story_audio` (`main_menu_content_checks.h:225-229`) writes `footer_y` as
+    `1.0e100` and requires the client's refusal, which names `main_menu`. The
+    engine's message names `menu_style.chrome.footer_y` and the file, not
+    `main_menu`.
+  - `menu_text` (`fixtures.h:443-454`) requires the refusal of
+    `prompt_bar.position.x = 1e100` to name `menu_text` and its field label
+    (`prompts.title`); the engine's names the file and the JSON path only.
+  - `gameplay_tuning` (`gameplay_tuning.cpp:322-334`) requires
+    `wind_stop_factor` at exactly `FLT_MAX` to load. RapidJSON writes it as
+    `3.4028234663852886e38`, the exact double; master's parser, which uses
+    `kParseDefaultFlags` without `kParseFullPrecisionFlag`
+    (`engine/assets/json.cpp:61`), reads that back as
+    `3.402823466385289e38`, one step above `FLT_MAX`, and refuses it. A
+    standalone parse of the same text confirmed it; with full precision it
+    reads back exact. That boundary is an engine question, not this game's:
+    a number written as `FLT_MAX` should read as `FLT_MAX`. Check master again
+    at the bump before drafting it.
+- **Report 36:** with `save_max_nesting` dropped and a save given the level's
+  deep depths, `reader_mutations` passed in Debug and Release: 832 level
+  and 600 save mutants, the save's 96 nesting mutants all loaded (a deep value reads as
+  missing and takes its default), none crashed.
+- **Startup:** `check-startup.ps1 -RequireAudio` passed on the Debug and
+  Release executables and on the one extracted from the ZIP.
+
+Runs on the master build, MattPC under parallel build load (no timings
+recorded): Release default acceptance, 81 cases, 78 passed and the three above
+failed. Debug with `-SkipSlowDebug`, 78 cases: 75 passed, `story_audio` and
+`gameplay_tuning` failed as in Release, and `balance_runner`, left unrun by
+that pass, passed alone. The four slow Debug cases ran on their own: `crossfeed`,
+`press_tower` and `debug_console` passed and `menu_text` failed as in Release.
+Not run: the missing-bank startup check, the painter and paint-effects runs (`PIN#2` and `PIN#3` own
+what master changes there), and anything needing a pad or a foreground desktop.
+
+What this leaves for the bump, client work with one choice in it: add
+`lodepng` to `vcpkg.json`, `probe-build.ps1` and `check-probe-helpers.ps1`;
+move the four includes; teach `story_audio` and `menu_text` to accept the
+engine's out-of-range refusal (it still names the file and the key, which is
+what those checks guard); take the `FLT_MAX` boundary in `gameplay_tuning`
+down to a value the parser reads back exactly, or keep it and file the parse,
+whichever master says at the time; and drop `save_max_nesting` as report 36
+says. `PIN#2` can now start on this build: master builds and starts here, so
+its alt-tab, minimised and throw checks have something to run against.
+
+The scope as filed:
 
 Breaks master's `CHANGES.md` (Unreleased) names, checked against this tree:
 
@@ -3090,8 +3173,11 @@ Which of these reach this tree is not yet measured; the rehearsal measures it.
 
 ## Qualify master's behaviour changes (`PIN#2`)
 
-**Blocked on `PIN#1`.** Master changes behaviour this game has never met, and
-the rehearsal build is where to watch it:
+**Unblocked 2026-11-12:** [`PIN#1`](#rehearse-against-engine-master-pin1)
+built and started this game on master `3fe88f64`, and its record lists the
+scratch changes that rebuild that trial in a few minutes. Master changes
+behaviour this game has never met, and the rehearsal build is where to watch
+it:
 
 - "Make a suspended XInput reader answer every slot disconnected": `settle_presence`
   suspends the reader whenever the window is not in the foreground and shown,

@@ -3,6 +3,7 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/debug_overlay_draw.h"
+#include "engine/math/rectangle_rotated.h"
 #include "engine/math/shape.h"
 #include "game/carried/camera_tools.h"
 #include "game/objects/collision_object_type.h"
@@ -17,6 +18,9 @@ namespace
 	const Colour paintable_colour(0.35f, 1.0f, 0.45f, 0.85f);
 	const Colour jump_through_colour(0.3f, 0.95f, 1.0f, 0.85f);
 	const Colour ramp_colour(1.0f, 0.6f, 0.2f, 0.85f);
+	// Lavender: the one structure drawn along its slope, so it must not read
+	// as a projectile's yellow or the scroll border's magenta.
+	const Colour fixed_slab_colour(0.7f, 0.55f, 1.0f, 0.9f);
 	const Colour projectile_colour(1.0f, 0.95f, 0.3f, 0.7f);
 	const Colour out_of_bounds_colour(1.0f, 0.25f, 0.25f, 0.9f);
 	const Colour scroll_border_colour(1.0f, 0.3f, 1.0f, 0.9f);
@@ -44,6 +48,25 @@ namespace
 				RectangleF(r.x + r.width - t, r.y, t, r.height), colour);
 		}
 
+		// A line from `from` to `to`, centred on the segment and overrunning
+		// each end by half its thickness so the corners of a rotated outline
+		// close. The sprite turns about its destination's top-left.
+		void line(const Segment& segment, const Colour& colour) const
+		{
+			const Vector2F along = segment.point_1 - segment.point_0;
+			const float length = along.length();
+			if (!(length > 0.0f))
+			{
+				return;
+			}
+			const Vector2F direction = along / length;
+			const Vector2F across(-direction.y, direction.x);
+			const float t = this->thickness;
+			const Vector2F start = segment.point_0 - direction * (t / 2.0f) - across * (t / 2.0f);
+			this->sheet.draw(this->list, this->fill, RectangleF(start.x, start.y, length + t, t),
+				colour, direction.angle(), Vector2F::zero);
+		}
+
 		void dot(const Vector2F& centre, float size, const Colour& colour) const
 		{
 			this->sheet.draw(this->list, this->fill,
@@ -51,28 +74,48 @@ namespace
 		}
 	};
 
-	Colour colour_for(CollisionObjectType type, const CollisionObject& object, bool& ramp)
+	Colour colour_for(CollisionObjectType type, const CollisionObject& object)
 	{
-		ramp = false;
-		switch (type)
-		{
-		case CollisionObjectType::structure: return structure_colour;
-		case CollisionObjectType::structure_paintable: return paintable_colour;
-		case CollisionObjectType::structure_jump_through: return jump_through_colour;
-		case CollisionObjectType::structure_ramp_left:
-		case CollisionObjectType::structure_ramp_right:
-			ramp = true;
-			return ramp_colour;
-		case CollisionObjectType::player_team_a:
-		case CollisionObjectType::player_team_b:
+		if (type == CollisionObjectType::player_team_a || type == CollisionObjectType::player_team_b)
 		{
 			const Player* player = dynamic_cast<const Player*>(&object);
 			return player != nullptr ? player->team_colour() : structure_colour;
 		}
-		default:
-			return projectile_colour;
-		}
+		return debug_overlay::collision_colour(type);
 	}
+}
+
+Colour debug_overlay::collision_colour(CollisionObjectType type)
+{
+	switch (type)
+	{
+	case CollisionObjectType::structure: return structure_colour;
+	case CollisionObjectType::structure_paintable: return paintable_colour;
+	case CollisionObjectType::structure_jump_through: return jump_through_colour;
+	case CollisionObjectType::structure_ramp_left:
+	case CollisionObjectType::structure_ramp_right:
+		return ramp_colour;
+	case CollisionObjectType::structure_fixed_slab: return fixed_slab_colour;
+	case CollisionObjectType::player_team_a:
+	case CollisionObjectType::player_team_b:
+		return structure_colour;
+	default:
+		return projectile_colour;
+	}
+}
+
+std::array<Segment, 4> debug_overlay::collision_outline(const Shape& shape)
+{
+	if (shape.shape_type() == ShapeType::rectangle_rotated)
+	{
+		return static_cast<const RectangleRotated&>(shape).edges();
+	}
+	const RectangleF box = shape.bounding_box();
+	const Vector2F a(box.left(), box.top());
+	const Vector2F b(box.right(), box.top());
+	const Vector2F c(box.right(), box.bottom());
+	const Vector2F d(box.left(), box.bottom());
+	return { Segment(a, b), Segment(b, c), Segment(c, d), Segment(d, a) };
 }
 
 void debug_overlay::draw_pane(DrawList& list, const LevelOverlays& overlays,
@@ -101,10 +144,21 @@ void debug_overlay::draw_pane(DrawList& list, const LevelOverlays& overlays,
 			{
 				continue;
 			}
-			bool ramp = false;
 			const CollisionObjectType type = to_collision_type(object->tag());
-			const Colour colour = colour_for(type, *object, ramp);
+			const Colour colour = colour_for(type, *object);
+			if (object->shape()->shape_type() == ShapeType::rectangle_rotated)
+			{
+				// A fixed slab: its own four edges along the slope, not the
+				// axis-aligned box around it.
+				for (const Segment& edge : debug_overlay::collision_outline(*object->shape()))
+				{
+					pen.line(edge, colour);
+				}
+				continue;
+			}
 			pen.box(bounds, colour);
+			const bool ramp = type == CollisionObjectType::structure_ramp_left ||
+				type == CollisionObjectType::structure_ramp_right;
 			if (ramp)
 			{
 				// The slope as eight stepped squares: rising to the right for a

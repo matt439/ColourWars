@@ -15,10 +15,11 @@ namespace menu_text_acceptance
     void check_controls_text(Variants& variants, World& world)
     {
         constexpr const char* controls_keys[]{ "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
-            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_buttons", "rumble" };
+            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_buttons", "rumble", "toggle_fire" };
         constexpr MenuItem controls_roles[]{ MenuItem::pad_sticks, MenuItem::music_volume, MenuItem::sfx_volume,
             MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::pad,
-            MenuItem::move_deadzone, MenuItem::aim_deadzone, MenuItem::keyboard_jump, MenuItem::pad_buttons, MenuItem::rumble };
+            MenuItem::move_deadzone, MenuItem::aim_deadzone, MenuItem::keyboard_jump, MenuItem::pad_buttons, MenuItem::rumble,
+            MenuItem::toggle_fire };
         const auto normalized = variants.load([&](rapidjson::Document& d)
         {
             for (const char* key : controls_keys)
@@ -43,7 +44,7 @@ namespace menu_text_acceptance
             }
         }
         for (const char* key : { "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
-            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_buttons", "rumble", "apply", "back" })
+            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "keyboard_jump", "pad_buttons", "rumble", "toggle_fire", "apply", "back" })
         {
             // The main-menu font can draw this glyph. Controls' independently
             // selected item font must also support shared Apply and Back.

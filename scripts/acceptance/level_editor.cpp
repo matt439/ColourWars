@@ -40,6 +40,7 @@ int wmain(int argc, wchar_t* argv[])
         check_symmetry_report(repo, scratch);
         check_fixed_slabs(repo, scratch);
         check_history_and_failures(scratch);
+        check_long_history(scratch);
         check_external_save_changes(scratch);
         check_save_guidance(scratch);
         check_paint_mechanism_guides(repo, scratch);

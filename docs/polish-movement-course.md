@@ -47,13 +47,16 @@ lesson. The lessons follow the proposal's tasks:
 | `low_ceiling` | The ceiling stops a jump at once; run out from under it still holding jump |
 | `steps` | Tap for the low step, hold for the taller ones |
 | `high_step` | Paint the faces around you, then try the same face with another tool |
-| `refill` (right runway) | Shoot dry (the aim marker shows a cross), stop, and the tank refills |
+| `refill` (right runway) | Shoot dry (the aim marker shows a cross), stop, and the tank refills; faster on your own paint, and enemy paint stops it |
 | `recovery_lane` (lower floor) | No pits: walk to the nearest pale steps and jump back up |
 
 Lesson text is level content, read and checked at startup. A lesson's area must
 be finite, positive, inside the camera bounds and contain its station. Its
 title and text must be non-blank and drawable in the card's fonts. The
-author accepted the current wording on 2026-11-05 (`POL#19`).
+author accepted the wording on 2026-11-05 (`POL#19`). On 2026-11-12 the
+refill lesson gained the paint-underfoot rule (`REV#10`): own paint refills
+the tank faster and enemy paint stops it, as `tuning.json`'s
+`player.paint_underfoot` has it; `practice_workshop` pins those two phrases.
 
 **Tool and clean paint.** The practice pause menu adds a fifth row,
 **Tool: < Sprayer >**, under Resume. Left and right choose among the five
@@ -70,6 +73,7 @@ through `LevelBuilder` and checks the following:
 
 - Every station has a lesson that contains it, and the areas cover the route
   without overlapping.
+- The refill lesson names own paint refilling faster and enemy paint stopping it.
 - Solo practice outlasts a one-second duration.
 - `goto` at each station shows that station's lesson, and the card fits a
   1920x1080 window.

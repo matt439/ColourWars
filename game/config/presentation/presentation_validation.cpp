@@ -26,6 +26,7 @@ void Presentation::Validation::validate()
     this->validate_contributions(stage, controls);
     this->validate_generated_values(setup, stage, controls);
     this->validate_results_text(stage);
+    this->validate_hud_identity();
 }
 
 // Each phase below is a list of page steps, each in its page's file. A page

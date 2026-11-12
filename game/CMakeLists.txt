@@ -105,6 +105,7 @@ add_library(colourwars_game STATIC
     debug/commands/player_commands.cpp
     debug/replay/replay.cpp
     debug/replay/replay_commands.cpp
+    debug/replay/timelapse_commands.cpp
     debug/script/script_commands.cpp
     debug/tune/tune_commands.cpp
     debug/tune/tune_document.cpp
@@ -283,6 +284,13 @@ add_executable(ColourWars WIN32
     resource.rc
     settings.manifest
 )
+# REL#7: the Release PDB. /DEBUG turns /OPT:REF and /OPT:ICF off unless they
+# are named, and /PDBALTPATH:%_PDB% records the PDB's file name without the
+# build machine's path. CI uploads the PDB; the ZIP leaves it out.
+if(MSVC)
+    target_link_options(ColourWars PRIVATE
+        "$<$<CONFIG:Release>:/DEBUG:FULL;/OPT:REF;/OPT:ICF;/PDBALTPATH:%_PDB%>")
+endif()
 target_link_libraries(ColourWars PRIVATE
     colourwars_game
     colourwars_rumble_gamepads
@@ -301,6 +309,19 @@ add_custom_target(colourwars_check_contract_includes ALL
     VERBATIM
 )
 add_dependencies(colourwars_game colourwars_check_contract_includes)
+
+# The layering facts docs/architecture.md lists under "Dependency direction":
+# no states/ include or GameData under objects/, ai/ and carried/, carried/
+# alone, ai/ reaching objects/ only through value headers, and the three-header
+# Debug seam. Building the game library runs the check.
+add_custom_target(colourwars_check_layer_includes ALL
+    COMMAND "${CMAKE_COMMAND}"
+        "-DGAME_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+        -P "${PROJECT_SOURCE_DIR}/cmake/check_layer_includes.cmake"
+    COMMENT "Checking game/ layering includes"
+    VERBATIM
+)
+add_dependencies(colourwars_game colourwars_check_layer_includes)
 
 add_custom_target(colourwars_build_info
     COMMAND "${CMAKE_COMMAND}"

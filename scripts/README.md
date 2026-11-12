@@ -31,7 +31,7 @@ full.
 | [quiet-game.ps1](quiet-game.ps1) | dot-sourced helper that sets `COLOURWARS_MUTE` for the game and real-audio probes a check starts, and restores the caller's value; set `COLOURWARS_MUTE=0` first to hear a run |
 | [drawing-references.ps1](drawing-references.ps1) | dot-sourced helper giving `check-paint-fx.ps1` and the debug-console driver the `Add-Type` references System.Drawing code needs under pwsh as well as Windows PowerShell |
 | [probe-build.ps1](probe-build.ps1) | dot-sourced helper for the configured build's compiler arguments, game and adapter libraries, dependency includes and Windows libraries; for `x64-asan` also the sanitizer flags and the folder of its runtime DLL |
-| [report-analyze.ps1](report-analyze.ps1) | builds the `x64-analyze` preset from clean and writes `analyze-warnings.log` and `analyze-summary.json`, the `/analyze` warnings counted by code for this repository and for the engine; a report that fails only if the build does |
+| [report-analyze.ps1](report-analyze.ps1) | builds the `x64-analyze` preset from clean and writes `analyze-warnings.log` and `analyze-summary.json`, the `/analyze` warnings counted by code for this repository and for the engine; a report that fails only if the build does. `-Baseline` [report-analyze-baseline.json](report-analyze-baseline.json), as the nightly passes it, lists this repository's warnings that are new or gone against the nine accepted ones; `-WarningsLog` recounts an earlier `analyze-warnings.log` without building |
 | [check-diagnostics.ps1](check-diagnostics.ps1) | shared stderr checks; only the exact optional-bank fallback or a caller's explicit fixture diagnostic is allowed |
 | [check-windows.ps1](check-windows.ps1) | shared Win32 source for enumerating a child process's top-level windows, finding a class and closing those windows |
 | [check-probe-helpers.ps1](check-probe-helpers.ps1) | checks build preflights, diagnostics and owned-window enumeration with synthetic files and an invisible native window; no CMake, MSVC or GPU |
@@ -81,36 +81,38 @@ to `cases.psd1`.
 
 | Script | What |
 |---|---|
-| [check-startup.ps1](check-startup.ps1) | starts a hidden game process and checks DPI awareness, an isolated save, diagnostics and graceful shutdown; `-Locale` starts it in a locale |
+| [check-startup.ps1](check-startup.ps1) | starts a hidden game process and checks DPI awareness, an isolated save and its `stages` folder, diagnostics and graceful shutdown; `-Locale` starts it in a locale |
 | [check-failure-reporting.ps1](check-failure-reporting.ps1) | the caught-failure report ([failure-reporting.md](../docs/failure-reporting.md)) |
 | [check-display-awake.ps1](check-display-awake.ps1) | `GameLevel`'s display-idle request over a match's lifetime, with a recording adapter |
 | [check-debug-console.ps1](check-debug-console.ps1), [check-debug-console/](check-debug-console/) | drives the Debug console with real key events; phase 3 compiles a CPU menu-navigation probe against the game's model (`-CompileOnly` builds/queries it without a GUI); the full driver needs a foreground desktop, so it is local only (`CI#1`) |
 | [check-finish-details.ps1](check-finish-details.ps1) | runs the `review_finish_details` console script and requires equal checksums across its variants |
 | [check-movement-feedback.ps1](check-movement-feedback.ps1) | renders and checks movement-feedback frames ([polish-feedback.md](../docs/polish-feedback.md)) |
 | [check-paint-fx.ps1](check-paint-fx.ps1) | renders and checks projectile and fresh-paint frames ([polish-paint-effects.md](../docs/polish-paint-effects.md)); `-CompileOnly` builds the probe without a window, as CI does |
-| [check-painter.ps1](check-painter.ps1), [check-painter/](check-painter/) | the painter visual probe and its focused leaves, evidence records and contact sheets |
+| [check-painter.ps1](check-painter.ps1), [check-painter/](check-painter/) | the painter visual probe and its focused leaves, evidence records and contact sheets; a passing run deletes the probe it compiled and records that in `result.json` (`removed_after_pass`), a failed one keeps it |
 | [check-painter-sweep.ps1](check-painter-sweep.ps1) | runs every focused painter leaf or one shard of them, one `check-painter.ps1` run each; [nightly.yml](../.github/workflows/nightly.yml) runs it with [check-painter/hosted-known-failures.txt](check-painter/hosted-known-failures.txt) |
 | [check-painter-selection.ps1](check-painter-selection.ps1) | checks the painter probe's selectors and routing without a compiler or GPU |
 | [check-painter-evidence.ps1](check-painter-evidence.ps1) | checks the shared painter PPM, finite-number, key-set, CSV, save and PNG evidence helpers without the game or a GPU |
 | [check-frame-pacing.ps1](check-frame-pacing.ps1) | frame-pacing capture ([polish-frame-pacing.md](../docs/polish-frame-pacing.md)); analysed by [perf/](perf/) |
 | [run-balance.ps1](run-balance.ps1) | headless seeded bot matches, per-seat subs and an in-memory numeric/boolean tuning patch, with bot counters ([gameplay-tuning.md](../docs/gameplay-tuning.md)) |
-| [run-balance-matrix.ps1](run-balance-matrix.ps1) | one compile, bounded parallel jobs, hashed resume and byte-identity repeat; `balance/shipped.psd1` and `balance/bot-ladder.psd1` designs (`-PlanOnly` previews the count) |
+| [run-balance-matrix.ps1](run-balance-matrix.ps1) | one compile, bounded parallel jobs, hashed resume and byte-identity repeat; `balance/shipped.psd1`, `balance/bot-ladder.psd1` and `balance/sight-ladder.psd1` designs (`-PlanOnly` previews the count) |
 
 ## Editor checks
 
 | Script | What |
 |---|---|
-| [check-level-editor.ps1](check-level-editor.ps1) | the level editor's hidden-window checks; dot-sources [check-level-editor-save-guidance.ps1](check-level-editor-save-guidance.ps1) |
+| [check-level-editor.ps1](check-level-editor.ps1) | the level editor's hidden-window checks (`-Preset` `x64-debug`, `x64-release` or `x64-asan`, which puts the sanitizer runtime's folder on `PATH`); dot-sources [check-level-editor-save-guidance.ps1](check-level-editor-save-guidance.ps1) |
 | [check-stage-registration.ps1](check-stage-registration.ps1) | `ColourWarsRegisterStage`, the opt-in source registration tool |
 
 ## Release
 
 | Script | What |
 |---|---|
+| [release-candidate.ps1](release-candidate.ps1) | builds and checks a release candidate in one command and writes `candidate.json`: refuses a dirty tree or an engine off the pin, then packages, inspects, checks the packaged `build-info.txt` and starts the game with and without the bank (`REL#3`; `-OutputDirectory`, `-SkipBuild`; [releasing.md](../docs/releasing.md#build-a-clean-candidate)) |
+| [check-release-candidate.ps1](check-release-candidate.ps1) | checks that script's refusals (dirty tree, missing ZIP, no evidence left) in a scratch repository, without a build |
 | [sandbox-release.ps1](sandbox-release.ps1), [sandbox/](sandbox/) | prepares, and optionally runs, a Windows Sandbox trial of the Release ZIP (`ROAD#37`) |
 | [check-sandbox-release.ps1](check-sandbox-release.ps1) | checks that generator's output on the host without starting a sandbox |
-| [release-package-path.ps1](release-package-path.ps1) | dot-sourced helper that reads `project(VERSION)` from `CMakeLists.txt` and returns the Release ZIP's path; used by `build.ps1`, `sandbox-release.ps1`, `check-release-package.ps1` and [releasing.md](../docs/releasing.md)'s fallback check |
-| [check-release-package.ps1](check-release-package.ps1) | extracts the Release ZIP and checks its packaging rules: no development files or unreviewed audio, every required file, the accepted bank's hash and no developer-console RTTI (`CI#6`; CI's inspection step) |
+| [release-package-path.ps1](release-package-path.ps1) | dot-sourced helper that reads `project(VERSION)` from `CMakeLists.txt` and returns the Release ZIP's path; used by `build.ps1`, `sandbox-release.ps1`, `check-release-package.ps1`, `release-candidate.ps1` and [releasing.md](../docs/releasing.md)'s fallback check |
+| [check-release-package.ps1](check-release-package.ps1) | extracts the Release ZIP and checks its packaging rules: no development files or unreviewed audio, every required file, the accepted bank's hash, no developer-console RTTI and the executable naming its symbols as plain `ColourWars.pdb` (`CI#6`, `REL#7`; CI's inspection step) |
 
 ## Content builds
 
@@ -122,12 +124,32 @@ to `cases.psd1`.
 | [build_icon.py](build_icon.py) | rebuilds `game/colourwars.ico` and its preview from the editable drawing ([game/art/icon/](../game/art/icon/README.md)); `--check` fails if they are stale, which CI runs through [ci/test_build_icon.py](ci/test_build_icon.py) |
 | [audio/](audio/) | the audio pipeline and runtime-bank publication ([game/audio/paint_exe/](../game/audio/paint_exe/README.md)) |
 
+## Disk use
+
+Every check writes a fresh run folder, named by a GUID, under
+`out/validation`, `out/acceptance` or its `-OutputDirectory`, and nothing local
+expires: on 2026-11-12 MattPC held about 570 GB of them. A passing painter run
+keeps only its evidence; everything else stays until it is removed.
+
+| Script | What |
+|---|---|
+| [clean-validation.ps1](clean-validation.ps1) | lists the run folders under `out/validation`, `out/acceptance` and every `out/hyg*` folder (or `-Path`) by kind, size and age, and what it would remove; changes nothing without `-Apply`, which keeps the newest `-Keep` runs of each kind (default 3) and removes the rest; `-ReceiptsOnly` also trims the kept runs to their JSON, log and CSV files, sparing a run whose `result.json` says it failed. A run is a GUID folder or a painter sweep shard (`<preset>-<n>-of-<m>`), kept or removed whole; nothing outside a run is touched, and it refuses a drive root, a checkout and `out/build` |
+| [check-clean-validation.ps1](check-clean-validation.ps1) | checks that script against a synthetic run tree: dry run unchanged, keep and remove, sweep shards whole, receipts-only trim sparing failed runs, unsafe roots; no build, compiler or game |
+
+Run the dry run first, read what it would remove, then repeat with `-Apply`:
+
+```
+scripts/clean-validation.ps1
+scripts/clean-validation.ps1 -Keep 2 -Apply
+```
+
 ## Other folders
 
 | Folder | What |
 |---|---|
 | [debug/](debug/) | the shipped developer-console scripts (`exec <name>`), listed in [debug-console.md](../docs/debug-console.md#scripts) |
-| [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the engine pin's check against Labrador, the Markdown link check, and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
-| [balance/](balance/) | `TOOL#4`'s matrix driver/designs and analyser: tool and 2v2 team paint/eliminations, bot counters, profile checks and independent A/B intervals with design margins ([gameplay-tuning.md](../docs/gameplay-tuning.md#balance-matrix-tool-tool4)), and its test |
+| [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the engine pin's check against Labrador, the Markdown link check, the test that this index links every tracked entry under `scripts/`, the `publish` job's tag check and release notes (`release.py`, `REL#4`), and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
+| [balance/](balance/) | `TOOL#4`'s matrix driver/designs and analyser: tool and 2v2 team paint/eliminations, bot counters, profile checks and independent A/B intervals with design margins ([gameplay-tuning.md](../docs/gameplay-tuning.md#balance-matrix-tool-tool4)); `hit_view.py` tallies a matrix's 1v1 shooter-pane hit views (`REV#37`); and their tests |
 | [perf/](perf/) | frame-pacing analysis and its test |
+| [colour_vision/](colour_vision/paint_colour_vision.py) | measures the paint in unfiltered captures under the `team_palette` case's colour-vision simulation (Machado protan/deutan/tritan, CIEDE2000): the team pair and every edge the paint shares with the picture, optionally recoloured to each shipped pair ([polish-match-accents.md](../docs/polish-match-accents.md#paint-under-colour-vision-simulation-rev34)), and its test |
 | [studies/](studies/README.md) | the kits for the drawing-mistake human studies ([drawing-mistakes-research.md](../docs/drawing-mistakes-research.md#8-human-tests)): Study A's references, sheets and analysis, Study B's stimulus capture, test page and analysis |

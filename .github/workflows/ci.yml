@@ -37,12 +37,13 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Check CI selection, links, frame and balance matrix analysis and study paths
+      - name: Check CI selection, links, frame and balance matrix analysis, study paths and paint colour vision
         run: |
           python3 -m unittest discover -s scripts/ci -p test_*.py
           python3 -m unittest discover -s scripts/balance -p test_*.py
           python3 -m unittest discover -s scripts/perf -p test_*.py
           python3 -m unittest discover -s scripts/studies -p test_*.py
+          python3 -m unittest discover -s scripts/colour_vision -p test_*.py
 
       # A pull request runs the whole suite once, and the record job names the
       # tree it passed. A push of that same tree, such as the merge commit of a
@@ -276,6 +277,16 @@ jobs:
         run: |
           pwsh -NoProfile -File scripts/check-sandbox-release.ps1 -OutputDirectory out/validation/sandbox-check
 
+      # REL#3: the candidate script's refusals, in a scratch repository with
+      # no build. The candidate itself runs by hand (docs/releasing.md).
+      - name: Release candidate refusals
+        if: ${{ !cancelled() && matrix.leg == 'release-checks' }}
+        timeout-minutes: 5
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-release-candidate.ps1 -OutputDirectory out/validation/release-candidate-check
+          if errorlevel 1 exit /b 1
+          pwsh -NoProfile -File scripts/check-release-candidate.ps1 -OutputDirectory out/validation/release-candidate-check
+
       # Receipts and logs only: each registration run also holds a scratch
       # repository, a junction to it and a staged game, none of them uploaded.
       - name: Upload registration and failure-reporting evidence
@@ -389,6 +400,18 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      # REL#7: that executable's symbols, never in the ZIP. Named for the
+      # revision so a crash report's build finds its PDB; publish attaches it
+      # to the GitHub Release.
+      - name: Upload Release symbols
+        if: matrix.leg == 'release-checks'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ColourWars-symbols-${{ github.sha }}
+          path: out/build/x64-release/game/ColourWars.pdb
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload startup evidence
         if: always() && matrix.checks
         uses: actions/upload-artifact@v7
@@ -399,8 +422,10 @@ jobs:
           retention-days: 7
 
   # A v* tag on master publishes the ZIP its own run built, inspected and
-  # started. The tag must name the packaged version, so v0.1.0 needs
-  # project(VERSION 0.1.0); bump CMakeLists.txt before tagging.
+  # started, and that executable's PDB. The tag must name the packaged
+  # version, so v0.1.0 needs project(VERSION 0.1.0); bump CMakeLists.txt
+  # before tagging. scripts/ci/release.py holds the checks and the notes,
+  # tested by the lint job; docs/releasing.md says what to do if this fails.
   publish:
     needs: windows
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -413,31 +438,26 @@ jobs:
           fetch-depth: 0
 
       - name: The tag is on master and names the packaged version
-        run: |
-          git merge-base --is-ancestor "$GITHUB_SHA" origin/master ||
-            { echo "::error::$GITHUB_REF_NAME is not on master"; exit 1; }
-          version=$(sed -n 's/^project(ColourWars VERSION \([0-9.]*\) .*/\1/p' CMakeLists.txt)
-          [ "v$version" = "$GITHUB_REF_NAME" ] ||
-            { echo "::error::Tag $GITHUB_REF_NAME does not match project(VERSION $version)"; exit 1; }
+        id: release
+        run: python3 scripts/ci/release.py check --tag "$GITHUB_REF_NAME" --commit "$GITHUB_SHA" --master origin/master
 
       - uses: actions/download-artifact@v8
         with:
           name: ColourWars-windows-x64
 
+      - uses: actions/download-artifact@v8
+        with:
+          name: ColourWars-symbols-${{ github.sha }}
+
       - name: Publish the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release.outputs.version }}
+          PACKAGE: ${{ steps.release.outputs.package }}
+          SYMBOLS: ${{ steps.release.outputs.symbols_asset }}
         run: |
-          cat > notes.md <<'EOF'
-          **To play:** download the `ColourWars-<version>-windows-x64.zip` below, right-click it and choose
-          **Extract All**, then run `ColourWars.exe` from the extracted folder. Windows 10/11
-          x64 with a Direct3D 11 graphics card; nothing else needs installing. Windows may
-          say "Windows protected your PC" because the game is unsigned: choose **More info**,
-          then **Run anyway**. `HOW-TO-PLAY.txt` in the ZIP has the rest.
-          EOF
-          zip="ColourWars-${GITHUB_REF_NAME#v}-windows-x64.zip"
-          sed -i "s/<version>/${GITHUB_REF_NAME#v}/g" notes.md
-          gh release create "$GITHUB_REF_NAME" "$zip" \
+          python3 scripts/ci/release.py notes --version "$VERSION" --output notes.md
+          gh release create "$GITHUB_REF_NAME" "$PACKAGE" "$SYMBOLS" \
             --verify-tag --title "ColourWars $GITHUB_REF_NAME" \
             --notes-file notes.md
 

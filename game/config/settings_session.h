@@ -5,6 +5,7 @@
 #include "game/config/play_settings.h"
 #include <array>
 #include <string>
+#include <string_view>
 
 class Save;
 
@@ -46,6 +47,9 @@ public:
 	// Player profiles (ROAD#21). The profile `slot` wears, or -1. Non-pad
 	// slots wear none.
 	int worn_profile(int slot) const;
+	// The name of the profile `slot` wears, or empty when it wears none.
+	// Valid until the profile list next changes.
+	std::string_view worn_profile_name(int slot) const;
 	// The pad slot wearing `profile`, or -1.
 	int profile_wearer(int profile) const;
 	// -1 takes the profile off. One profile is worn by one pad at a time, so

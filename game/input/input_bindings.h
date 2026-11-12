@@ -53,7 +53,9 @@ struct PadActionChoice
 
 // One physical XInput slot's choices. The defaults are the controls the game
 // has always had: A / LT jump, RT shoots, Start pauses, and RB throws the sub.
-// They are stated only here; default_action_bindings converts them.
+// They are stated only here; default_action_bindings converts them. The
+// controls_help acceptance case requires the README and HOW-TO-PLAY tables to
+// name them (HYG#102).
 struct PadProfile
 {
 	std::array<PadActionChoice, pad_action_count> actions{ {

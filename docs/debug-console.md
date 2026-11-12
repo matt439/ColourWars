@@ -168,7 +168,7 @@ running.
 | `screenshot [name]` | save the window as a PNG (see [Screenshots](#screenshots)) |
 | `screenshot.dir [folder\|off]`, `screenshot.strip <on\|off>` | a folder under `screens\` for the next shots (`{time}` is the local time), and whether the status strip is in them |
 | `exec <name> [args]`, `exec.stop`, `exec.list` | run a [script](#scripts), stop every running script, list the scripts |
-| `wait <n>\|<x>s\|match\|frames <n>\|replay\|record`, `echo <text>` | in a script: wait for updates, match seconds, the match, hook frames, a replay or a recording; print a line |
+| `wait <n>\|<x>s\|match\|frames <n>\|replay\|timelapse\|record`, `echo <text>` | in a script: wait for updates, match seconds, the match, hook frames, a replay, a time-lapse or a recording; print a line |
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
@@ -177,6 +177,7 @@ running.
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|skirmish\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the round seed of every build, the menus' `rand()` and the planner (see [Seed, record and play](#seed-record-and-play)) |
 | `record [name\|stop] [updates]`, `play <name\|stop> [force]`, `replays`, `checksum` | record every seat's input from a fresh build, replay it and compare, list recordings, print the running match's state hash |
+| `replay.timelapse [speed] [stills]`, `replay.timelapse off` | play the round's whole tape again from one arena camera when its End menu opens, `speed` taped steps a frame, saving `stills` evenly spaced PNGs; disarm (see [Time-lapse](#time-lapse)) |
 | `status` | stack depth, stage, seats (device, team, weapon, position, move state), clock, feedback, overlays, cheats, the stage's stations, anything queued |
 | `set <var> <value>`, `get <var>`, `list [prefix]`, `help [name]` | the registry; `feedback off` and `set feedback off` are the same |
 | `logfile <path\|off>` | mirror every console line to a UTF-8 file |
@@ -241,7 +242,7 @@ registry as a menu page: the same entries as the console, grouped.
 | view | feedback, overlay, overlay.camera, overlay.collision, overlay.paint, overlay.perf, overlay.player, overlay.stations |
 | time | pause, step, timescale |
 | tuning | the `tuning` and `presentation` trees, then tune.diff, tune.reset, tune.save |
-| replay | checksum, play (picker over the recordings), record, replays |
+| replay | checksum, play (picker over the recordings), record, replay.timelapse, replays |
 | content | reload, screenshot |
 | console | binds, binds.reset, console.live, exec.list, exec.stop, quit, status |
 
@@ -281,7 +282,7 @@ label.
 | Overlay | Shows |
 |---|---|
 | `overlay.player` | every player's per-player debug text, as F1 shows one. Setting it turns every player's text on or off; F1 and pad Back still toggle single players afterwards, and the other overlays leave those toggles alone. It does not track them, so it can read `off` while a player's own text shows |
-| `overlay.collision` | per pane: the collision shape of every object in view (structures white, paintables green, jump-throughs cyan, ramps orange with their slope, players in their team colour, projectiles yellow) and the out-of-bounds edge in red |
+| `overlay.collision` | per pane: the collision shape of every object in view (structures white, paintables green, jump-throughs cyan, ramps orange with their slope, fixed slabs lavender along their own rotated edges, players in their team colour, projectiles yellow) and the out-of-bounds edge in red |
 | `overlay.camera` | per pane: the camera's scroll border (magenta; the player moves inside it before the camera follows), the camera bounds (blue) and a cross at the followed centre |
 | `overlay.paint` | bottom left: paint coverage per team and per seat, as a share of the paintable area, live. When a narrow window cannot hold it and the bottom-right status strip on one row, the strip moves above it |
 | `overlay.stations` | in the world: every [station](#stations-and-goto)'s name, the spawns included, above the place `goto` puts a player. The names are `labrador::UiText` objects in the level's scene, made the first time the overlay is turned on and hidden after that by `set_hidden`, which keeps their words, box and colour, so they draw wherever the world is drawn (the intro picture and the overview too) and under structures and players. Font, scale, offset and colour are `presentation.debug_overlay.station_label`; scale, offset and colour tune live. No default key |
@@ -1186,6 +1187,59 @@ neither the mouse nor the camera is read on replay. The limits:
   round's level is destroyed and the next is built from its own round seed,
   so nothing but the setup crosses it, and the file records each round's.
 
+## Time-lapse
+
+`replay.timelapse [speed] [stills]` (`REV#48`) watches a whole round again
+from one camera: the round's own tape (the one Watch Replay plays, `ROAD#19`),
+from its first step to time up, through the stage's authored overview, the
+camera the results overview ends on.
+
+```
+# Unattended: a four-player bot round, then its time-lapse with eight stills
+ColourWars.exe +script.background 1 +stage crossfeed +players 4 +bot all paint +timescale 4 +wait match +replay.timelapse 16 8 +wait timelapse +quit
+```
+
+- **When.** Type it during a timed round or over its Results or End page. It
+  arms the round and waits: when the round's Results page is on top it closes
+  it, and the End menu then chooses Watch Replay for it, one page a frame, so
+  a script needs no presses. Untimed practice keeps no tape, and a Debug
+  `goto`, `respawn`, `kill` or a cheat change after the first step spoils one
+  (`game/match/round_tape.h`): the command is refused for such a round, and
+  one that ends spoiled drops it with `replay.timelapse: disarmed (the round's
+  tape cannot be replayed)`. A rebuild (`restart`, Next Round, any queued
+  rebuild), leaving the match, raw keyboard capture and
+  `replay.timelapse off` disarm it too. A second one waits for `off`.
+- **Pacing.** `speed` is taped steps a frame, 1-64, default 16: a 240-second
+  round (14,400 steps) plays in 900 frames, 15 seconds. It does not follow
+  `timescale`, which paces only live updates. It is silent throughout, the
+  arena view draws no HUD, clock, divider, aim marker or REPLAY card, and the
+  terrain uses the small-picture edges the overview uses. The console and
+  binds wait, as under any instant replay; confirm, back or pause ends it
+  early. Either way the End menu opens again over the round's last frame,
+  and the next Watch Replay is the ordinary one.
+- **Stills.** `stills` (0-32, default 0) saves that many frames as
+  `timelapse-<stamp>-NN.png` beside [screenshots](#screenshots), honouring
+  `screenshot.dir` and `screenshot.strip`, at evenly spaced taped steps with
+  the last on time up. Each is the whole window, as `screenshot` takes it.
+  This is where `REV#12`'s README image candidates can come from.
+- **Log.** `replay.timelapse: playing <n> taped steps at x<speed>` on its first
+  frame, one `screenshot:` line per still, then `replay.timelapse: done, <n>
+  taped steps at x<speed>, <k> of <stills> still(s) saved` or `ended early`.
+- **How.** The command arms `GameLevel`'s instant replay with a speed
+  (`DebugMatchControl::debug_arm_timelapse`); `GameLevel::start_replay` then
+  starts from step 0 instead of `match.replay` seconds before the end and
+  turns on `Level::set_arena_view`, which replaces the panes with one
+  fullscreen view through `zoom_out_finish_bounds` and leaves the simulation
+  alone. After each frame `GameLevel` calls `DebugDirector::timelapse_frame`,
+  which takes any still that is due. Release has the same members and never
+  arms one. The `debug_console` case checks the command, its refusals, the
+  page walk, the stills schedule, every drop, and a real CPU `Level` whose
+  whole tape, played 16 steps a frame through the arena view, ends on the
+  round's own paint.
+
+There is no player-facing time-lapse; an End row for one is open in the
+[feature roadmap](feature-roadmap.md#whole-round-time-lapse-rev48).
+
 ## Screenshots
 
 `screenshot [name]` saves the window as a PNG in
@@ -1247,6 +1301,7 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
   | `wait match` | the queued match is built, nothing is queued to rebuild it, and its countdown is over (exactly the update GO appears, even at x4) |
   | `wait frames <n>` | `n` director hooks on which the script could run (a match update or a menu page's, not while the debug menu or the frozen console holds it); the only wait that counts in the menus |
   | `wait replay` | the armed or running replay has finished. It then holds its last frame **paused**, so a `wait <n>` after it needs `pause off` first |
+  | `wait timelapse` | the armed or playing [time-lapse](#time-lapse) has played to its end or been ended by a press (the End menu is back), or was dropped |
   | `wait record` | the armed or running recording has been saved (a recording with no limit is saved when its round ends). Armed with no match queued to start it - `record` in the menus without `stage`, or its restart dropped - is an error |
 
   `wait <n>`, `<x>s` and `match` with no match running or queued are errors
@@ -1576,8 +1631,15 @@ as the game. In Release:
   `DebugPageTarget` interface and `DebugMatchTarget` with its three bases,
   `DebugMatchView`, `DebugMatchControl` and `DebugMatchEdits` (their RTTI names
   and vtables), `GameLevel`'s small `debug_*` adapters and the pages'
-  `debug_start_match`/`debug_dismiss`/`debug_reset_input`, all unreachable
+  `debug_start_match`/`debug_dismiss`/`debug_reset_input`/`debug_watch_replay`
+  (the last on `ResultsMenuInitial` and `EndMenuInitial`), all unreachable
   (the match step is not among them);
+  the time-lapse's `debug_round_taped`, `debug_timelapse_running` and
+  `debug_arm_timelapse` with their `GameLevel` adapters and
+  `GameLevel::timelapse_speed_`, always 0;
+  `Level`'s arena view (`set_arena_view`, `arena_view_`, false in Release) and
+  its `arena_view`, `scene_view_count`, `scene_view` and `overview_camera`
+  accessors, never called;
   `Level`'s overlay member and its developer setters, `Player`'s two cheat flags
   and `place_at`/`force_respawn`, never called; `LevelLoadedInfo::stations()`
   and its validation, which are level data and correct in both;
@@ -1588,7 +1650,8 @@ as the game. In Release:
   `collision_object_count`, `InterfaceGameplay`'s label overload (the slot
   overload forwards to it), `debug_countdown_over`, `debug_set_seat_labels` and
   `debug_screen_obstacles` with their `GameLevel` adapters, and
-  `DebugDirector::begin_match_draw`, an inline no-op; the
+  `DebugDirector::begin_match_draw` and `DebugDirector::timelapse_frame`,
+  inline no-ops; the
   `SeatInputFilter` interface, also used by the shipping round tape, and
   the `seats` parameter of `Level::update`, which in Release only ever
   carries that tape (shipping bots are owned by Level); `DebugMatchView::debug_level`;
@@ -1601,8 +1664,9 @@ as the game. In Release:
   `.?AVLambdaCommand@@`, `.?AVDebugMenuPage@@`, `.?AVNumberVariable@@`,
   `.?AVBot@@`, `.?AVPaintBot@@`, `.?AVBotDriver@@`, `.?AVReplayRecorder@@`,
   `.?AVReplayPlayer@@`, `.?AVTuneTarget@@`, `.?AVTuningTarget@@`,
-  `.?AVDebugBackgroundInput@@`, `.?AVDebugWait@@`, `.?AVUpdatesWait@@` and
-  `.?AVMatchWait@@` (sixteen in all), and the Release executable must contain
+  `.?AVDebugBackgroundInput@@`, `.?AVDebugWait@@`, `.?AVUpdatesWait@@`,
+  `.?AVMatchWait@@` and `.?AVTimelapseWait@@` (seventeen in all), and the
+  Release executable must contain
   none of them;
   in Release it also checks that the director supplies no developer filter or
   driven physical slot. `SeatInputFilter` remains present for the round tape.
@@ -1634,9 +1698,10 @@ as the game. In Release:
   record and play (`replay.*`: the file, the input codec, `ReplayRecorder` and
   `ReplayPlayer`; `match_fingerprint.*`; `replay_commands.cpp`, which also holds
   the update hooks that count updates, repeat recorded suspends and resumes and
-  compare).
+  compare); the time-lapse (`timelapse.h`, its stills arithmetic;
+  `timelapse_commands.cpp`, the command, its page step and its frame hook).
   Phase 4: scripts (`debug_script.*`, the pure parser; `debug_wait.*`, the
-  `DebugWait -> UpdatesWait / FramesWait / MatchWait / ReplayWait / RecordWait`
+  `DebugWait -> UpdatesWait / FramesWait / MatchWait / ReplayWait / TimelapseWait / RecordWait`
   hierarchy; `debug_script_runner.*`, the frame stack the director ticks from
   its hooks; `script_commands.cpp`, which also holds history, the live
   console, the `screenshot.dir` and perf commands and `draw_status`;
@@ -1768,20 +1833,6 @@ none.
   and inserting keys in `tune.save`: the fifty-eight listed colour fields above are
   implemented; see [the remaining scope](debug-console-record.md#remaining-live-tuning-work-dbg1) (`DBG#1`).
 - **Replays across builds or machines**, and across step sizes (`DBG#2`).
-- **The true shape of a fixed slab in the collision overlay** (`DBG#19`,
-  noticed 2026-11-12). F2 draws every object's `shape()->bounding_box()`
-  (`game/debug/debug_overlay_draw.cpp:99`), and `colour_for` (`:54-75`) has no
-  case for `structure_fixed_slab`, so it falls to `default` and the projectile
-  yellow. A slab's shape is a `RectangleRotated`
-  (`game/objects/fixed_slab_paintable.cpp:47`), so on the slab trial, which
-  is in Random, F2 shows a yellow axis-aligned box around each sloping slab,
-  where [Overlays](#overlays) promises the collision shape. First step: give
-  the slab its own colour and draw the rotated rectangle's four edges as thin
-  rotated sprites through `Pen`, then extend the `debug_console` case, or the
-  station-tour evidence on `turbulence_slab_trial`, to cover it. Acceptance:
-  F2 on the slab trial outlines each slab along its slope in a colour that is
-  not a projectile's. Debug-only code, no engine change; the engine's own
-  shape debug draw is its `GAP#6`.
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
   this machine has no pad; both are covered on the CPU side only (`DBG#7`).
   The physical-pad check was waived by the author on 2026-11-05 and was not

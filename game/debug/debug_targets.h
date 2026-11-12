@@ -58,6 +58,12 @@ public:
 	// Window-pixel rectangles the debug panels must not cover: the opening
 	// cards during the countdown.
 	virtual std::vector<labrador::RectangleF> debug_screen_obstacles() const = 0;
+	// `replay.timelapse`: the round is being taped, or its tape is playable,
+	// and no replay is showing it. Untimed practice keeps no tape; a Debug
+	// place, respawn, kill or late cheat change spoils one (round_tape.h).
+	virtual bool debug_round_taped() const { return false; }
+	// A time-lapse is playing the round's tape.
+	virtual bool debug_timelapse_running() const { return false; }
 
 protected:
 	DebugMatchView() = default;
@@ -95,6 +101,9 @@ public:
 	// A session policy/native hard gate changed while focus may already be
 	// absent. Real GameLevel reconciles immediately; other targets need none.
 	virtual void debug_background_changed() {}
+	// The next Watch Replay of this round is a time-lapse of the whole tape,
+	// `speed` taped steps a frame; zero disarms it. A build disarms it too.
+	virtual void debug_arm_timelapse(int /*speed*/) {}
 
 protected:
 	DebugMatchControl() = default;
@@ -158,6 +167,11 @@ public:
 	// Forget the armed menu presses of one pad slot: a chord is in progress
 	// on it. The keyboard and other pads keep theirs.
 	virtual void debug_reset_input(int pad_slot) = 0;
+
+	// One step toward the round's Watch Replay, for an armed time-lapse: the
+	// End menu chooses it when it offers it, the Results page closes to the
+	// End menu, and every other page says no (false).
+	virtual bool debug_watch_replay() { return false; }
 
 protected:
 	DebugPageTarget() = default;

@@ -19,7 +19,7 @@ GameData* GameMenu::data() const
 void GameMenu::init()
 {
 	this->menu_input_ = std::make_unique<MenuInput>(this->data()->gamepads(),
-		this->data()->keyboard(), this->data()->tuning());
+		this->data()->keyboard(), this->data()->tuning(), this->data()->mouse());
 	this->match_setup_ = std::make_unique<MatchSetup>();
 	if (const auto& remembered = this->data()->save()->last_match_setup(); remembered)
 	{
@@ -178,7 +178,7 @@ void GameLevel::init()
 
 	this->menu_input_ = std::make_unique<MenuInput>(
 		this->data()->gamepads(),
-		this->data()->keyboard(), this->data()->tuning());
+		this->data()->keyboard(), this->data()->tuning(), this->data()->mouse());
 
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
 		this->menu_input_.get(), &this->settings_, static_cast<MenuOwner*>(this));
@@ -272,9 +272,10 @@ void GameLevel::build_and_enter_level()
 	this->round_palette_ = this->data()->save()->team_palette();
 	this->level_ = this->level_builder_->build_level(this->settings_,
 		this->round_palette_, opening, random, this->start_ == MatchStart::menu);
+	this->player_input_->release_toggles();
 	if (!this->level_->practice()) { this->tape_.start(random.seed(), this->settings_); }
 	this->data()->debug().after_level_build(*this);
-	this->level_->set_pad_devices(this->settings_.pad_devices());
+	this->sync_level_pads();
 	this->menu_context_->reset_connection_audio();
 	this->resume_audio_ = std::make_unique<ResumeAudio>(this->data()->audio_resources(),
 		*this->data()->presentation());
@@ -285,6 +286,22 @@ void GameLevel::build_and_enter_level()
 	// Discard loading time so fixed-step updates do not advance the new match
 	// to catch up with the time spent building it.
 	this->data()->application()->reset_elapsed_time();
+}
+
+void GameLevel::sync_level_pads()
+{
+	this->level_->set_pad_devices(this->settings_.pad_devices());
+	this->level_->set_profile_names(this->worn_profile_names());
+}
+
+std::array<std::string_view, input_slots::pad_count> GameLevel::worn_profile_names() const
+{
+	std::array<std::string_view, input_slots::pad_count> names;
+	for (int slot = 0; slot < input_slots::pad_count; ++slot)
+	{
+		names[static_cast<size_t>(slot)] = this->data()->settings_session()->worn_profile_name(slot);
+	}
+	return names;
 }
 
 // Activation reaches covered states too. Returning to a paused window must
@@ -326,6 +343,8 @@ void GameLevel::on_activated()
 void GameLevel::on_deactivated()
 {
 	const SuspensionGate gate = this->gate();
+	// A toggle-fire pad stops on focus loss and needs a fresh press on return.
+	this->player_input_->release_toggles();
 	if (this->replay_phase_ != ReplayPhase::none)
 	{
 		// A replay has no pause to come back to; it waits, silent, for focus.
@@ -397,6 +416,8 @@ void GameLevel::update(float dt)
 	}
 	else
 	{
+		// A toggle-fire pad stops firing too, and does not resume on return.
+		this->player_input_->release_toggles();
 		// Neutral physical baseline, then the normal seat filter supplies bots
 		// or replay input. Actual pad presence is checked separately below.
 		player_inputs.resize(input_slots::count);
@@ -422,7 +443,7 @@ void GameLevel::update(float dt)
 	const int missing_slot = disconnected_player_slot(this->settings_,
 		*this->data()->gamepads(), this->data()->debug());
 	// The pause page may have handed a seat to a returning pad (ROAD#4).
-	this->level_->set_pad_devices(this->settings_.pad_devices());
+	this->sync_level_pads();
 	if (dt > 0.0f && gate.focused)
 	{
 		this->menu_context_->update_connection_audio();
@@ -442,6 +463,9 @@ void GameLevel::update(float dt)
 
 	if (this->suspension_.counting_in())
 	{
+		// A Shoot press during the count is dropped like a Sub press: a latch
+		// it started would stay held behind the count's release gate.
+		this->player_input_->release_toggles();
 		// Enabling background work never consumes a manual/focus resume gate.
 		if (!gate.focused) { return; }
 		// Do not enter the debug clock, seat filters or Level at all: every
@@ -522,7 +546,10 @@ void GameLevel::draw(Renderer& renderer) const
 	{
 		this->level_->draw_resume_countdown(renderer, this->suspension_.countdown().remaining());
 	}
-	if (this->replay_phase_ != ReplayPhase::none) { this->level_->draw_replay_banner(renderer); }
+	if (this->replay_phase_ != ReplayPhase::none && this->timelapse_speed_ == 0)
+	{
+		this->level_->draw_replay_banner(renderer);
+	}
 	this->data()->debug().draw_status(renderer);
 }
 
@@ -608,6 +635,7 @@ void GameLevel::open_pause_menu(int player_num)
 {
 	this->suspension_.open_pause_menu();
 	this->stop_rumble();
+	this->player_input_->release_toggles();
 	this->menu_input_->reset_actions();
 	this->context()->push<PauseMenuAction>(
 		std::make_unique<PauseMenuInitial>(this->menu_context_.get(),
@@ -684,6 +712,7 @@ void GameLevel::open_results_menu()
 	this->results_audio_ = std::make_unique<ResultsAudio>(this->data()->audio_resources(),
 		&this->data()->settings_session()->play_settings(), *this->data()->presentation());
 	if (this->gate().clock_paused) { this->results_audio_->suspend(); }
+	this->player_input_->release_toggles();
 	this->menu_input_->reset_actions();
 	this->context()->push(
 		std::make_unique<ResultsMenuInitial>(this->menu_context_.get(),

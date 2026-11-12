@@ -62,6 +62,8 @@ namespace debug_console_acceptance
 		".?AVDebugBackgroundInput@@",
 		// Phase 4: script waits.
 		".?AVDebugWait@@", ".?AVUpdatesWait@@", ".?AVMatchWait@@",
+		// replay.timelapse's script wait.
+		".?AVTimelapseWait@@",
 	};
 
 	void check_executable(const std::filesystem::path& game_directory)
@@ -159,6 +161,7 @@ int main(int argc, char** argv)
 		if (!background_only)
 		{
 			check_overlays_and_cheats(tuning, presentation);
+			check_collision_outline();
 			check_goto(tuning, presentation);
 			check_screenshot_file(tuning, presentation);
 			check_stations(game_directory, tuning);
@@ -208,6 +211,8 @@ int main(int argc, char** argv)
 			{
 				check_opening(game_directory);
 				check_station_labels(game_directory);
+				check_timelapse_command(tuning, presentation);
+				check_timelapse_level(game_directory);
 			}
 		}
 		require(read_text(source / L"tuning.json") == source_tuning &&

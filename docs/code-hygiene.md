@@ -21,31 +21,97 @@ checked. Line numbers are from `68e3dc2e`.
 
 ### Evidence directories that fill the disk (`HYG#93`)
 
-**Open.** On 2026-11-12 the check output on MattPC had reached about 570 GB:
-`out\validation` alone was 236 GB, `out\acceptance` 30 GB and each `out\hyg*`
-run folder about 50 GB, with more in short scratch roots under `C:\`. Each run
-took a fresh `-OutputDirectory` and kept everything it built. The painter
-compiles `painter_visual.exe` and its `.obj` into every run folder
-(`scripts/check-painter.ps1:279` and `:299`), and the sweep gives each leaf its
-own (`check-painter-sweep.ps1`). CI artifacts expire after a set number of
-days; nothing local does, and neither [scripts/README.md](../scripts/README.md)
-nor [development.md](development.md) mentions cleanup.
+**Done** (2026-11-12). On 2026-11-12 the check output on MattPC had reached
+about 570 GB: `out\validation` alone was 236 GB, `out\acceptance` 30 GB and
+each `out\hyg*` run folder about 50 GB, with more in short scratch roots under
+`C:\`. Each run took a fresh `-OutputDirectory` and kept everything it built,
+the painter compiling `painter_visual.exe` and its `.obj` into every run folder
+and the sweep giving each leaf its own. CI artifacts expire; nothing local did,
+and neither [scripts/README.md](../scripts/README.md) nor
+[development.md](development.md) mentioned cleanup.
 
-First step: measure what fills one painter leaf folder after a passing run,
-then have the painter delete its compiled probe (and anything else that is
-not evidence) once the run passes; a failed run keeps it. Then add
-`scripts/clean-validation.ps1`: a dry run by default that lists `out/validation`,
-`out/acceptance` and the `out/hyg*` folders by size and age, and with `-Apply`
-keeps the newest N runs of each kind, and optionally only their JSON and log
-receipts. Index it in [scripts/README.md](../scripts/README.md) with a short
-"Disk use" note.
+Measured on one passing `DurationTextOnly` leaf at `220d4809`: the Release run
+folder was 32 MB, of which the probe was 31 MB (`painter_visual.obj` 25 MB,
+`.exe` 6 MB) and the evidence 1.4 MB (captures, contact sheets, `result.json`,
+logs); in Debug the probe was 41 MB and the evidence 1.5 MB. So about 97% of a
+passing leaf was the compiled probe.
 
-Done when a passing painter leaf leaves only its evidence, the cleanup script
-has a selection check that starts no build, and the README says how to use it.
+- `check-painter.ps1` now deletes `painter_visual*` `.exe`, `.obj`, `.pdb` and
+  `.ilk` from the run folder once a run has passed, after the probe process is
+  disposed, and records the names and bytes in `result.json` as
+  `removed_after_pass`. A failed run, and a `-CompileOnly` run, keep the probe.
+  The sweep runs `check-painter.ps1` once per leaf, so it inherits this.
+- [scripts/clean-validation.ps1](../scripts/clean-validation.ps1) is a dry run
+  by default: it lists `out/validation`, `out/acceptance` and every `out/hyg*`
+  folder (or `-Path`) with each kind of run (runs sharing a parent) by count,
+  size and age, and what `-Apply` would remove. A run is a GUID folder or a
+  painter sweep shard (`<preset>-<n>-of-<m>`, or a folder holding
+  `sweep-summary.json`), which is kept or removed whole: the sweep writes every
+  leaf of a shard under one `evidence/<preset>`, so counting leaves would keep
+  the newest few and orphan the summary's references to the rest, failed
+  leaves included. `-Apply` keeps the newest `-Keep` runs of each kind
+  (default 3, by creation time, or a reused shard's summary time) and removes
+  the rest; `-ReceiptsOnly` also trims the kept runs to their JSON, log and
+  CSV files, except under a run whose `result.json` says `failed`, which keeps
+  its probe as `check-painter.ps1` left it. It touches only runs, so a reused
+  folder such as `out/acceptance/<preset>` is listed and left alone, and it
+  refuses a drive root, a checkout and `out/build`.
+- [scripts/check-clean-validation.ps1](../scripts/check-clean-validation.ps1)
+  builds a synthetic tree (plain kinds, three sweep shards of five leaves with
+  one failed leaf each, one shard unfinished without its summary, a failed
+  standalone run, a reused per-preset folder and a named folder among runs) and
+  checks that the dry run changes nothing and plans the right runs, that
+  `-Apply` keeps and removes the right ones, shards whole, and nothing outside
+  them, the `-ReceiptsOnly` trim and that it spares failed runs, `-Keep 0`, and
+  the three refusals. It starts no build, compiler or game.
+- [scripts/README.md](../scripts/README.md#disk-use) has a "Disk use" section,
+  and [development.md](development.md#consumer-acceptance) points to it.
+
+Checked on MattPC, 2026-11-12: `check-clean-validation.ps1` passed 47 checks
+under pwsh 7 and Windows PowerShell 5.1, and failed as it should with
+`clean-validation.ps1` mutated to keep one run too many, to trim receipts
+instead of everything else, to count a shard's leaves as runs (as the first
+version did, which review caught) and to trim a failed run. A Release and a Debug `DurationTextOnly` leaf
+passed and left 1.4 and 1.5 MB with `removed_after_pass` naming the exe and obj
+(31.9 and 41.2 MB removed); a Release `TurbulenceMoverOnly` run given an
+invalid trial file failed and kept both. `check-painter-selection.ps1` passed
+under pwsh 7 and Windows PowerShell 5.1. A dry run over this worktree's own
+output listed its one remaining run. No `-Apply` was run on anyone's real
+output; that, and how often, is the user's to choose with the dry run in front
+of them.
 
 ### A build check for the layering rules (`HYG#94`)
 
-**Open.** [architecture.md](architecture.md#dependency-direction) lists what
+**Done 2026-11-12; build only, nothing played differently.**
+[cmake/check_layer_includes.cmake](../cmake/check_layer_includes.cmake) runs as
+the `colourwars_check_layer_includes` target, wired like the contract check:
+`colourwars_game` depends on it, so every build of the game or a probe runs it.
+It fails, naming the file and the line, on a `game/states/` include under
+`objects/`, `ai/` or `carried/`; a `game/` include under `carried/` other than
+`game/pch.h` and `carried/`'s own headers (the facts' "nothing in the game but
+the precompiled header" never counted a carried type including another); an
+`objects/` include under `ai/` outside its allowlist (`aim_facing.h`,
+`paintable_object.h`, `player_input_data.h`, `player_team.h`, `sub_type.h`,
+`weapon_type.h`, the six it includes today); the identifier `GameData` under
+the three folders once block and line comments are stripped; and a
+`game/debug/` include outside `game/debug/` other than `debug_director.h`,
+`debug_targets.h`, `debug_overlay_draw.h` and `dev_tools.h`. Only `game/` is
+scanned; the probes under `scripts/acceptance/` may reach any debug header.
+
+Run with `cmake -P` against copies of `game/` with one planted violation each,
+it failed on all five rules (a states include in `objects/`, a `config/`
+include in `carried/`, `player.h` in `ai/`, `class GameData;` in `ai/`, and
+`debug_console.h` in `states/`) and passed on a copy that names `GameData` only
+in comments and inside a longer identifier. A planted `states/` include in
+`carried/moving_object.h` stopped the real Debug build at the check. Both
+presets build with it in place. [architecture.md](architecture.md#dependency-direction)
+now says the facts are checked by the build, and AGENTS.md names the script
+beside the rules; the file-level include-cycle fact is still checked by hand.
+The script has no regression test of its own, like the contract check.
+
+The row as filed:
+
+[architecture.md](architecture.md#dependency-direction) lists what
 holds "(checked 2026-11-05)": nothing in `objects/`, `ai/` or `carried/`
 includes a `states/` header; `carried/` depends on nothing in the game but the
 precompiled header; `ai/` reaches `objects/` only through value headers and
@@ -71,44 +137,102 @@ date.
 
 ### Read the nightly `/analyze` count against a baseline (`HYG#95`)
 
-**Open.** The `REV#61` verdicts end: "a number other than nine on a later run
-is the thing to read." Nothing reads it. The nightly `analyze` leg runs with
-`continue-on-error` (`.github/workflows/nightly.yml:110-114`),
+**Landed 2026-11-12; the hosted job summary is still to be seen.** The
+`REV#61` verdicts end: "a number other than nine on a later run is the thing to
+read." Nothing read it. The nightly `analyze` leg runs with `continue-on-error`,
 `report-analyze.ps1` fails only when the build does, and the `report` job opens
-the issue only when a leg fails (`nightly.yml:133`). A tenth warning would sit
-in a 14-day artifact nobody opens.
+the issue only when a leg fails, so a tenth warning would have sat in a 14-day
+artifact nobody opens.
 
-First step: commit the nine accepted warnings (code, file, function) as a
-baseline beside `scripts/report-analyze.ps1`. Give the script a `-Baseline`
-switch that writes new and vanished entries to `analyze-summary.json` and to the
-job summary as an annotation. The leg keeps `continue-on-error`: whether a new
+[scripts/report-analyze-baseline.json](../scripts/report-analyze-baseline.json)
+holds the nine accepted warnings (code, repository-relative file, line and
+function), and `report-analyze.ps1 -Baseline <file>` compares this
+repository's warnings with it; the engine's are Labrador's and are not
+compared. Entries match by code and file, then by exact line; what is left in
+a group pairs in line order as a moved warning, so an edit above a warning does
+not report it, and the rest are new or vanished. The result goes to
+`analyze-summary.json` (`baseline.new`, `baseline.vanished`), to the console,
+as a `::warning` annotation on each new warning's file and line and a
+`::notice` for each vanished one when `GITHUB_ACTIONS` is set, and as a table
+in `GITHUB_STEP_SUMMARY` when that is set. `-WarningsLog <file>` recounts an
+earlier run's `analyze-warnings.log` from the same checkout without building.
+The nightly leg passes `-Baseline` and keeps `continue-on-error`: whether a new
 warning should fail the night changes what the nightly signals, so it is a
-separate call.
+separate call. A warning that is fixed or accepted is a baseline edit in the
+same commit.
 
-Done when a run against a baseline with one entry removed reports that entry as
-new, a run against the true baseline reports nothing, and the nightly job
-summary shows the comparison.
+Checked on MattPC, 2026-11-12: a full `report-analyze.ps1` run at `220d4809`
+found the same 11 distinct warnings as on 2026-11-10 (nine here, two in the
+engine; `wWinMain`'s frame is now 34,988 bytes). Recounting its log, under
+pwsh 7 and Windows PowerShell 5.1:
+
+- against the committed baseline: "all 9 match the 9 accepted", nothing new or
+  vanished;
+- against a copy without `DebugPerf::reset`: one new C6262 at
+  `game/debug/capture/debug_perf.cpp(304)`, with its annotation and summary row;
+- against a copy with `Editor::choose_user_stage` moved seven lines and an
+  extra entry in a file with no warning: the moved entry matched and the extra
+  one was reported vanished.
+
+The step summary was written to a local file in the GitHub format. Not seen
+yet: the hosted nightly's job summary, which the pull request's own nightly
+trial (the workflow's `pull_request` paths include the script and the
+baseline) or the first night after merge will show.
 
 ### Close the nightly issue on a green night (`HYG#96`)
 
-**Open.** The `report` job opens or comments on `Nightly sweep failed` when a
-scheduled night fails, and its body says "Close this once a night passes"
-(`nightly.yml:131-150`). Nothing acts on a green night, so the issue stays open
-until someone notices. Issue #72, opened by the failure on 2026-11-09, was
-still open on 2026-11-12 after green nights on 2026-11-10 and 2026-11-11. That
-contradicts AGENTS.md's "the rest of the time, nothing is owed".
+**Landed 2026-11-12; the dispatched trial is owed.** The `report` job opens or
+comments on `Nightly sweep failed` when a scheduled night fails, and its body
+said "Close this once a night passes". Nothing acted on a green night, so the
+issue stayed open until someone noticed: issue #72, opened by the failure on
+2026-11-09, was still open on 2026-11-12 after green nights on 2026-11-10 and
+2026-11-11, against AGENTS.md's "the rest of the time, nothing is owed".
 
-First step: add a job that runs only on `schedule` when every leg succeeded,
-finds the open issue by title, and closes it with a comment linking the green
-run. The job is schedule-only, so a pull request cannot exercise it; trial the
-close path through `workflow_dispatch` with an input that permits it.
+`nightly.yml` now has a `close` job. On `schedule`, when every leg succeeded,
+it lists open issues whose title is exactly `Nightly sweep failed` and closes
+each with a comment linking the green run; the issue body now says the next
+green scheduled night closes it. A failed, cancelled or timed-out night still
+goes to `report` and opens or updates the issue as before. The job is
+schedule-only, so a pull request cannot exercise it: `workflow_dispatch` takes
+a `close_trial` input that skips every leg and runs only the close path, with a
+comment that says it was a manual trial. A manual run without the input runs
+the legs and does not close anything.
 
-Done when a dispatched trial closes a test issue of the same title and a
-scheduled failure still opens one.
+Checked on MattPC, 2026-11-12: the workflow parses as YAML with the input,
+the `windows` job's `!inputs.close_trial` guard and the `close` job's
+condition as written; the job's script, run under bash with a stand-in `gh`,
+reported "No open" for none and closed one and two listed issues with the
+trial or green-night comment; and the same read-only `gh issue list` query and
+`--jq` filter against the repository returned `72 OPEN`.
+
+Owed, and needing a push: a `workflow_dispatch` run with `close_trial` set
+that closes a test issue titled `Nightly sweep failed`. Issue #72 is still
+open and has the same title, so a trial while it is open closes it too, which
+two green nights already earned. Then a scheduled failure still opening one is
+seen on the next red night; the `report` job did not change but for its body
+text.
 
 ### Editor undo without copying its history (`HYG#97`)
 
-**Open.** Every edit in the level editor copies the whole undo history.
+**Done 2026-11-12; nothing the user can do changed.** `Impl::mutate` now
+reserves room for one more snapshot (doubling the capacity when it grows, so
+appends stay amortised), erases the redo tail and moves the new snapshot in,
+then swaps the live document. Only the reserve can throw, and it runs before
+anything changes, so a failed edit still leaves history and document as they
+were. `LevelDocument::save` had the same copy (it duplicated the whole history
+to replace one entry); it now prepares only that entry and swaps it in after
+the file is replaced. No depth cap, as filed.
+
+`check_long_history` in `scripts/acceptance/level_editor/editing_checks.cpp`
+makes 600 edits after a save, undoes all of them (dirty until the last, clean
+at the saved state), redoes them all back to the last edit, undoes to the
+middle and branches there, checking the redo tail is gone and the branch
+undoes back to the middle. `check-level-editor.ps1` passed in both presets
+with it, the existing undo, redo and dirty checks included.
+
+The row as filed:
+
+Every edit in the level editor copies the whole undo history.
 `Impl::mutate` (`editor/level_document_impl.h:74-91`) builds `next` from every
 retained snapshot up to the current one (lines 84-85), appends the new one and
 swaps. Each snapshot is the whole document's JSON, and shipped stages are
@@ -128,7 +252,29 @@ of edits, and `check-level-editor.ps1` passes in both presets.
 
 ### Three members nothing calls (`HYG#98`)
 
-**Open.** After the [`HYG#73`](#dead-code-in-the-game-hyg73) sweep, a grep over
+**Done 2026-11-12; nothing played differently.** All three are deleted. The
+rerun sweep listed every lower-case identifier declared in a `game/` header,
+counted its tokens over `game/`, `editor/`, `scripts/` (the probes count as
+callers) and the engine, and kept those found only in their own header and
+source. Of the names with two tokens or fewer, every one but these three is
+used (`display_awake_` is a member held for its lifetime; the rest are a
+declaration and one use). A second pass for data members that are only ever
+written found none but `display_awake_`. So the audit's three were the whole
+list. `is_paused` went too: the gap audit's `LevelEffect` sketch that returned it
+is not the design that shipped, because the hurt accent, elimination burst and
+movement flecks landed as `combat_feedback`/`movement_feedback`
+([combat](polish-combat-feedback.md) and [movement](polish-movement-contact.md)
+feedback), not as an `AnimationObject` effect family.
+`TextDropShadow` keeps its shadow colour and its getter; only the setter nobody
+called is gone.
+
+Both presets build under `/W4 /WX`. The default acceptance list (`-Parallel 4`)
+passed in Release (81 cases) and in Debug with `-SkipSlowDebug` (78); the four
+slow Debug cases were not run locally.
+
+The row as filed:
+
+After the [`HYG#73`](#dead-code-in-the-game-hyg73) sweep, a grep over
 `game/`, `editor/`, `scripts/` and the engine finds three members only at their
 own declaration and definition: `AnimationObject::is_paused`
 (`game/carried/animation_object.h:58`, `.cpp:169`),
@@ -148,95 +294,230 @@ Done when both presets build and the default acceptance cases pass.
 
 ### The game, editor and opt-in cases under AddressSanitizer (`HYG#99`)
 
-**Open.** The `REV#61` record lists as not checked: `ColourWars.exe` from
-`x64-asan` was built and never started, and the opt-in cases, the painter,
-startup and the editor checks were not run under the sanitizer. The nightly
-`asan` leg runs `run-acceptance.ps1` without `-OptIn` (`nightly.yml:107`), and
-`check-level-editor.ps1`, `check-stage-registration.ps1` and
-`check-failure-reporting.ps1` accept only `x64-debug` and `x64-release`
-(line 3 of each). All 80 default cases already passed under the sanitizer with
-no finding, so this is LOW.
-
-First step: start `x64-asan`'s game through `check-startup.ps1 -Executable`
-with the compiler's folder on `PATH`, as `run-acceptance.ps1` supplies the
-runtime DLL; run `run-acceptance.ps1 -Preset x64-asan -OptIn`; and add
-`x64-asan` to `check-level-editor.ps1` if the preset's editor build carries the
-flag. Record each result in the `REV#61` section.
-
-Done when each of the three has run once under the sanitizer and its result is
-recorded, with any that does not fit said so.
+**Done 2026-11-12; no finding.** The `REV#61` record listed as not checked:
+`ColourWars.exe` from `x64-asan` was built and never started, and the opt-in
+cases, the painter, startup and the editor checks were not run under the
+sanitizer. Each of the three this item named has now run once under
+`x64-asan`, on MattPC with MSVC 14.51 under heavy parallel build load (so no
+timing here is a measurement), and none produced a sanitizer report.
+`check-level-editor.ps1` gained `-Preset x64-asan` for it. The results are
+recorded in the `REV#61` section, under
+[the game, editor and opt-in cases](#the-game-editor-and-opt-in-cases-under-the-sanitizer-2026-11-12).
 
 ### A heap-leak check over repeated `Level` builds (`HYG#100`)
 
-**Open.** MSVC's AddressSanitizer has no leak detection (`REV#61`, not
-checked), and nothing else looks: no file under `game/`, `editor/` or
-`scripts/` calls `_CrtMemCheckpoint` or `_CrtSetDbgFlag`. The only CRT debug
-call is report-mode setup in `scripts/acceptance/reader_mutations.cpp:378`. A
-rematch or series builds a new `Level` each round, so a per-round leak would
-grow over a long couch session unseen.
+**Done 2026-11-12.** MSVC's AddressSanitizer has no leak detection (`REV#61`,
+not checked), and nothing else looked: no file under `game/`, `editor/` or
+`scripts/` called `_CrtMemCheckpoint` or `_CrtSetDbgFlag`. A rematch or series
+builds a new `Level` each round, so a per-round leak would grow over a long
+couch session unseen.
 
-First step: a Debug-only CPU acceptance case, or a section of an existing
-`Level` case, that builds and destroys one `Level` against the probe fakes to
-warm first-use caches, takes `_CrtMemCheckpoint`, builds and destroys N more on
-a real stage, and requires `_CrtMemDifference` to find no normal-block growth.
-Declare it in `scripts/acceptance/cases.psd1`.
+`level_heap` is a new `debug-only` case in
+[cases.psd1](../scripts/acceptance/cases.psd1)
+([level_heap.cpp](../scripts/acceptance/level_heap.cpp)); it refuses to compile
+without `_DEBUG`, since only the debug CRT keeps the counts. Against the probe
+fakes (CPU assets, silent banks, no thread pool, so every allocation is on the
+checked thread) it registers every stage the manifest lists, then builds a
+`Level` on each with one keyboard player holding fire and three bots, two to a
+team, plays 180 fixed steps and destroys it. One round over all 13 stages warms
+the first-use caches; two more rounds run between two `_CrtMemCheckpoint`
+calls, with tools, difficulties and the seed rotating per round.
+`_CrtMemDifference` must then find no growth in normal or client blocks, by
+count or by bytes, and the window must have allocated something. On growth the
+case prints the totals and, up to 200 blocks, `_CrtMemDumpAllObjectsSince`
+(allocation number, address, size, first bytes) on stderr. It first checks the
+detector itself: one `new int` between two checkpoints reads as one block of
+growth, and none once deleted.
 
-Done when the case passes, and fails on a planted leak of one block per build.
+[check-acceptance-selection.ps1](../scripts/check-acceptance-selection.ps1)
+assumed `balance_runner` was the only Debug-only case and the last in Debug's
+list; it now reads the Debug-only cases from the declarations and requires each
+once in Debug's list and never in Release's.
+
+Results (MattPC, `x64-debug`, under parallel build load):
+
+- The case passes: 26 measured builds over 13 stages, 0 blocks and 0 bytes of
+  growth, with about 1.0 GB allocated and freed in the window. No leak was
+  found. It compiles in 4 seconds and runs in 5, so it is not slow in Debug.
+- A planted leak of one block per build (`new int(0)` discarded at the top of
+  `LevelBuilder::build_level`, not committed) failed it with `26 blocks,
+  104 bytes` and the 26 four-byte blocks listed. The planted line was reverted
+  and the case passed again on the rebuilt library.
+- `check-acceptance-selection.ps1` passed under pwsh 7.
+
+Not checked: leaks of the shell around a match (the state stack, menus,
+`GameLevel`'s results and replay), which need a device; Release, whose heap
+has no debug counts; and memory the two vcpkg DLLs allocate.
 
 ### One clang-tidy defect pass (`HYG#101`)
 
-**Open.** `REV#61` records that clang-tidy was not attempted, and the
+**Done 2026-11-12: 377 distinct findings, no defect, nothing changed.**
+`REV#61` recorded that clang-tidy was not attempted, and the
 [project review](review/2026-11-10-project-review.md) (line 1043) found nothing
-outside `external/` that references it. The `/analyze` pass found two real
-items; clang-tidy's defect checks cover other ground, such as use after move,
-needless copies and slicing, which matters in deep virtual hierarchies.
+outside `external/` that references it. clang-tidy's defect checks cover ground
+`/analyze` does not, such as use after move, needless copies and slicing, which
+matters in deep virtual hierarchies. It stays a one-off report, not a gate.
 
-First step: export `compile_commands.json` from an `x64-debug` configure and
-run the clang-tidy from Visual Studio's Clang component over `game/` and
-`editor/` with only `bugprone-*`, `performance-*`,
-`cppcoreguidelines-slicing` and `misc-redundant-expression`. No `modernize-*`
-and nothing that pushes value semantics: AGENTS.md's rule on the OOP design
-holds. Write each distinct finding's verdict here, as the `/analyze` verdicts
-were written.
+How it ran, on MattPC from `220d4809`: clang-tidy 22.1.3 from Visual Studio's
+Clang component (`VC/Tools/Llvm/x64/bin`), over a `compile_commands.json`
+exported by an `x64-debug` configure into a separate build folder with
+`-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` (built once, so generated headers exist).
+The 262 translation units under `game/` and `editor/` were kept and their
+`/Yu` and `/Fp` arguments removed, because clang cannot read MSVC's
+precompiled header; `/FI` still includes `game/pch.h` as source. The probes
+under `scripts/` and the engine were left out. The command for each file:
 
-Done when the verdicts are recorded and any defect they name is fixed with its
-build and acceptance cases run. It is a one-off report, not a new gate.
+```
+clang-tidy -p <filtered db> --extra-arg=/WX- --header-filter=hyg-tidy.(game|editor). --checks=-*,bugprone-*,performance-*,cppcoreguidelines-slicing,misc-redundant-expression <file>
+```
+
+No `modernize-*` and nothing that pushes value semantics, per AGENTS.md. Every
+translation unit parsed (only `game/resource.rc` was refused, as not C++).
+Deduplicated across the headers that each unit repeats, the pass reported 377
+distinct findings in 27 checks: 309 in `game/`, 68 in `editor/`. None from
+`cppcoreguidelines-slicing`, `misc-redundant-expression`,
+`bugprone-use-after-move`, `bugprone-dangling-handle` or
+`bugprone-undefined-memory-manipulation`. Each was read against its code, and
+none is a defect that can be reached, so no source changed and no build or
+acceptance case was rerun for it.
+
+The bulk checks, read as classes:
+
+| Check | Distinct | Verdict |
+|---|---|---|
+| `performance-enum-size` | 70 | Enums on `int` that would fit a byte. A layout preference; no hot array of them was found worth shrinking. Stands. |
+| `bugprone-easily-swappable-parameters` | 86 | Adjacent `int`/`float` parameters (rectangle edges, ranges, coordinates). An API style finding with no call site found passing them swapped. Stands. |
+| `bugprone-empty-catch` | 50 | The save, last-setup, profile and binding readers' field-by-field recovery (`HYG#59`), which keeps a default when one field fails; the `noexcept` paths in `atomic_file.cpp`, `fatal_report.cpp` and `rumble_gamepads.cpp`, where nothing may escape and failure is the return value; and three editor sites that keep the last good preview or leave a malformed record unmirrored, each commented. Stands. |
+| `bugprone-throwing-static-initialization` | 28 | Namespace-scope `const` `Colour`, `Vector2F`, `RectangleF` and short string constants. The engine's math constructors are not `constexpr`/`noexcept`, which is the whole finding; none can throw. Stands. |
+| `bugprone-derived-method-shadowing-base-method` | 27 | 26 are the two rapidjson SAX handlers in `editor/stage_registration.cpp`, which shadow `BaseReaderHandler` by design (CRTP). The other is `Player::velocity`, which exposes `MovingObject`'s protected accessor and returns it. Stands. |
+| `performance-inefficient-string-concatenation` | 16 | Error and console messages built once. Stands. |
+| `bugprone-narrowing-conversions` | 13 | `int` to `float` of small counts, indices and pixel sizes. Stands. |
+| `performance-no-int-to-ptr` | 12 | Win32 `LPARAM`/`DWORD_PTR` reference data cast back to its object, the API's only shape. Stands. |
+| `performance-inefficient-vector-operation` | 9 | `push_back` loops over short lists at load or console time. Stands. |
+| `bugprone-misplaced-widening-cast` | 9 | `size_t(strip.begin + index)` and `size_t(view * count + participant)` in `structure_paintable.cpp` and `teammate_markers.cpp`: small `int` sums that cannot overflow before the cast. Stands. |
+| `bugprone-float-loop-counter` | 8 | Drawing and bot loops stepping by a tile width, a cell, a period or half a body width, all positive and fixed, over world-sized ranges. Stands. |
+
+The remaining checks, one by one:
+
+- **`bugprone-parent-virtual-call` (6)**, the ball, grenade, jet, mist,
+  planted and spray projectiles calling `AnimationObject::update` past
+  `Projectile`/`DiffusingProjectile`: both of those declare `update` pure and
+  define no body, so the animation base is the only update to reach. Stands;
+  it is the hierarchy working as drawn.
+- **`bugprone-unchecked-optional-access` (4).** `player.cpp:775` and `:806`
+  read `fixed_slab_support_` and `ramp_support_` only after
+  `fixed_slab_support_at`/`ramp_support_at` returned a point, and both return
+  `nullopt` first when their optional is empty. `profiles_menu.cpp:218`
+  (`finish_name_edit`) is reached only from `update_name_edit`, which runs
+  only while `name_edit_` holds a value. False positives.
+- **`bugprone-suspicious-stringview-data-usage` (4)**, `debug_command.cpp:34`
+  and `:48`, `replay.cpp:46` and `:888`: each `data()` goes to
+  `std::from_chars` with an explicit end pointer, so no terminator is read.
+  False positives.
+- **`bugprone-exception-escape` (6)**, the implicit move constructors of
+  `ContentCatalog`, `DrawItem`, `LocaleFile`, `MenuText` and `DebugBinds` and
+  a console lambda's: the throw found is `bad_array_new_length` inside the
+  Debug STL's container move, which allocates an iterator-debugging proxy. Not
+  a path a valid size reaches. Stands.
+- **`performance-move-const-arg` (6).** Four `std::move(between_rounds)` of a
+  trivially copyable `std::optional<Session>` in the menu pages, one of
+  `LevelMatch` in `level_builder.cpp:133`, and `StageRegistrationError`
+  moving its message into `std::runtime_error`, which takes it by `const&`.
+  No effect, no harm, and the menu moves stay right if `Session` grows. Stands.
+- **`performance-no-automatic-move` (5)**, **`performance-unnecessary-value-param`
+  (4)**, **`performance-unnecessary-copy-initialization` (3).** `const` locals
+  returned, `std::string` parameters taken by value (`LevelLoadedInfo`'s
+  snapshot is passed an rvalue by its other constructor) and a
+  `DebugMenuRow` and two 16-byte rectangles copied as locals. Off any measured path. Stands.
+- **`bugprone-return-const-ref-from-parameter` (2)**, `resolved` in
+  `animation_object.cpp` and `within_nesting_limit` in
+  `level_loaded_info.cpp`: both are called only inside the full expression
+  that uses the result, so no temporary dies first. Stands.
+- **`bugprone-implicit-widening-of-multiplication-result` (2)**, `64 * 1024`
+  and `1024 * 1024` constants. Stands.
+- **`bugprone-branch-clone` (2).** `keyboard_keys_menu.cpp:160` gives the
+  cancelling phase and the fallback the same "wait for neutral" status, and
+  `main_menu_players.cpp:360` sends three different seats to `normal`. Both
+  intended. Stands.
+- **`bugprone-integer-division` (1)**, `game/contracts/simulation.h:20`: the
+  truncation to whole 100 ns ticks is the point, and the comment above says
+  so. Stands.
+- **`bugprone-inc-dec-in-conditions` (1)**, `editor_canvas.cpp:557`, an
+  `++current != end()` after a separate `!= end()` test. Well defined. Stands.
+- **`bugprone-random-generator-seed` (1)**, `std::srand(time)` in
+  `game/main.cpp` for the menus' Random picks; matches draw from
+  `MatchRandom` (`HYG#39`). Stands.
+- **`bugprone-bitwise-pointer-cast` (1)** and
+  **`bugprone-multi-level-implicit-pointer-conversion` (1)**: `bit_cast` of
+  `GetProcAddress`'s result to a function pointer in `window_dpi.cpp`, and
+  `LocalFree(arguments)` in `editor/main.cpp`. The Win32 idioms. Stands.
+
+Compiler warnings clang itself raised under the `/W4` flags, outside the
+chosen checks and not errors under MSVC: 24 `-Woverloaded-virtual` (a `draw`
+override hiding the other `draw` overloads of `AnimationObject` or the
+engine's `TextureObject`; they differ in arity, or for `Weapon::draw(DrawList&,
+bool)` take a `const RectangleF&` that does not convert to `bool`, so a call
+meant for a hidden overload fails to compile rather than picking the wrong one,
+and it is the hierarchy's shape), two `-Wswitch` on the `count` enumerator, three
+`-Wmissing-field-initializers` on value-initialised aggregates and one unused
+`this` capture in `game_commands.cpp:310`. None is a defect.
+
+Not checked: the probes under `scripts/acceptance/` and the engine, and
+`x64-release`'s preprocessing (the Debug database was used, so the developer
+console was analysed too).
 
 ### Controls help against the default bindings (`HYG#102`)
 
-**Open.** The default controls are written three times: the code
-(`game/input/input_bindings.h:56`, read by `default_action_bindings` at
-`game/input/input_bindings.cpp:430`), the README's
-[Controls](../README.md#controls) table and the table in
-[HOW-TO-PLAY.txt](HOW-TO-PLAY.txt) (lines 50-56), which ships in the ZIP.
-Packaging checks only that HOW-TO-PLAY is present and matches its source's hash
-(`cmake/check_runtime_staging.cmake:95-96`,
-`scripts/check-release-package.ps1:62`). A changed default would ship stale
-help.
+**Done 2026-11-12.** The default controls were written three times: the code
+(`PadProfile` and `InputBindings` in `game/input/input_bindings.h`, read by
+`default_action_bindings`), the README's [Controls](../README.md#controls)
+table and the table in [HOW-TO-PLAY.txt](HOW-TO-PLAY.txt), which ships in the
+ZIP. Packaging checks only that HOW-TO-PLAY is present and matches its source's
+hash (`cmake/check_runtime_staging.cmake`, `scripts/check-release-package.ps1`),
+so a changed default would have shipped stale help.
 
-First step: a default-group acceptance case that reads the default bindings,
-names each action's default pad and keyboard input through the game's own name
-table, and requires each name on that action's row of both tables. Match names
-on rows, not the tables' layout, so rewording the prose does not break it.
+The default-group acceptance case `controls_help`
+(`scripts/acceptance/controls_help.cpp`, declared in
+`scripts/acceptance/cases.psd1` with the repository as its argument) now ties
+them together. It reads `default_action_bindings()` for the keyboard and mouse
+(which includes the fixed Escape pause and Down drop) and the default
+`PadProfile` for the pad, names each control with the game's own tokens
+(`labrador::key_name`, `desktop_control_name`, `pad_control_name`), and
+requires one of that token's help spellings ("left trigger" or "LT", "Escape"
+or "Esc", "Left mouse button" or "Left click") as a whole word in the right
+column of the action's row in both tables. Move and Drop on the pad are stick
+readings, not bindings: the case requires "left stick" there and fails if
+either ever gains a pad binding. Rows are found by their label's first word
+(Move, Jump, Shoot, Sub, Drop, Pause) and cells by the Gamepad and Keyboard
+headers, so rewording a cell's prose or the rows' order does not break it. A
+default control with no help spelling in the case, or a new pad or keyboard
+action, fails until the case and the tables are given it.
 
-Done when the case passes, fails when one table names a different key, and is
-declared in `scripts/acceptance/cases.psd1`.
+The case also proves it can fail: for every expected control it swaps that
+control's spellings in its cell for another key and requires the matching
+failure, and it requires a copy of HOW-TO-PLAY whose Jump row says Enter for
+Space to fail. On 2026-11-12 it passed in x64-debug and x64-release, and a
+README naming the right mouse button for Shoot failed it with the stale cell
+named.
 
 ### Every script in the scripts index (`HYG#103`)
 
-**Open.** AGENTS.md says [scripts/README.md](../scripts/README.md) indexes the
-scripts and must be kept true, and nothing checks it. On 2026-11-12
-`release-package-path.ps1`, dot-sourced by `build.ps1`,
+**Done** (2026-11-12). AGENTS.md says [scripts/README.md](../scripts/README.md)
+indexes the scripts and must be kept true; until this row nothing checked it.
+On 2026-11-12 `release-package-path.ps1`, dot-sourced by `build.ps1`,
 `sandbox-release.ps1`, `check-release-package.ps1` and
 [releasing.md](releasing.md), was the one tracked top-level entry under
 `scripts/` the index did not name; its row was added the same day.
 
-First step: a test in `scripts/ci/`, run by the lint job's existing
-`unittest discover`, that every tracked top-level file and folder under
-`scripts/` is named in `scripts/README.md`.
-
-Done when the test passes, and fails with the name of a planted unindexed
-script.
+[scripts/ci/test_scripts_index.py](../scripts/ci/test_scripts_index.py), run by
+the lint job's existing `unittest discover -s scripts/ci`, lists the tracked
+top-level files and folders under `scripts/` with `git ls-files` and requires
+each to be the first path component of a relative link in the index
+(`[ci/](ci/)` and `[studies/](studies/README.md)` both name their folder). A
+name in prose or a link that leaves `scripts/` does not count; the index names
+itself. It reads whatever is tracked, so a new script fails it until it has a
+row. Planting an untracked-then-intent-added `scripts/planted.ps1` failed the
+test with `scripts/README.md does not link: planted.ps1`; removing it passed.
 
 ## Hygiene review (2026-11-05)
 
@@ -4083,8 +4364,9 @@ compiler's folder on the probes' `PATH`, because the runtime DLL
 (`clang_rt.asan_dynamic-x86_64.dll`) ships beside `cl.exe` and must be that
 toolset's; the preflight refuses a build configured without the flag or a
 toolset without the DLL. The two existing presets are unchanged: a Release
-`ammo.rsp` is identical before and after. The other check scripts still take
-only the two original presets.
+`ammo.rsp` is identical before and after. `check-level-editor.ps1` takes
+`x64-asan` too since [`HYG#99`](#the-game-editor-and-opt-in-cases-under-addresssanitizer-hyg99);
+the other check scripts still take only the two original presets.
 
 From an x64 Developer shell:
 
@@ -4132,9 +4414,46 @@ Not checked:
   PowerShell 5.1 only.
 - The game itself. `ColourWars.exe` from `x64-asan` was built and not
   started, and the opt-in cases, the painter, startup and the editor checks
-  were not run under the sanitizer.
-- Leaks. MSVC's AddressSanitizer has no leak detection.
-- clang-tidy was not attempted.
+  were not run under the sanitizer. Startup, the opt-in cases and the editor
+  checks have since run, with no finding
+  ([`HYG#99`](#the-game-editor-and-opt-in-cases-under-the-sanitizer-2026-11-12));
+  the painter has not.
+- Leaks. MSVC's AddressSanitizer has no leak detection. The Debug case
+  `level_heap` now checks repeated `Level` builds with the debug CRT heap
+  ([`HYG#100`](#a-heap-leak-check-over-repeated-level-builds-hyg100)).
+- clang-tidy was not attempted. It ran on 2026-11-12 under
+  [`HYG#101`](#one-clang-tidy-defect-pass-hyg101) and found no defect.
+
+#### The game, editor and opt-in cases under the sanitizer (2026-11-12)
+
+- **Startup.** `check-startup.ps1 -Executable` on the preset's game, from a
+  Developer shell (the compiler's folder, which holds
+  `clang_rt.asan_dynamic-x86_64.dll`, is on its `PATH`), passed twice: with
+  `-RequireAudio`, and with `-Locale qps-ploc -UserStageFixture`. Its stderr
+  held only the expected refusal of the broken user stage. A sanitizer report
+  goes to stderr and ends the process, which the script fails on.
+- **Opt-in cases.** `run-acceptance.ps1 -Preset x64-asan -OptIn -Parallel 4`
+  ran the 15 runnable opt-in cases (the two `NeedsTrial` cases are left out,
+  as in every preset). 14 passed with no sanitizer report; `bot_scan_cost` was
+  the longest at 859 seconds. `bot_team_trials` reached the runner's
+  3,600-second deadline four arenas into five, with no report. Rerun alone
+  with `-RunTimeoutSeconds 14400`, it passed in 7,070 seconds with no report,
+  so all 15 have passed under the sanitizer. Its one-hour default deadline
+  does not fit this case under the sanitizer on a loaded machine.
+- **Editor.** `check-level-editor.ps1` now takes `-Preset x64-asan`: the
+  preset's `CMAKE_CXX_FLAGS` reach the editor and its acceptance targets, so
+  the script checks for `/fsanitize=address` and the RelWithDebInfo build type
+  as `probe-build.ps1` does, and puts the compiler's folder on `PATH` for the
+  checks it starts. The whole check passed under the sanitizer, as did
+  `x64-debug` after the change.
+
+Not run under the sanitizer: the painter, which `HYG#99` did not take up,
+`check-stage-registration.ps1` and `check-failure-reporting.ps1`
+(still `x64-debug` and `x64-release` only), and the game past its title
+screen: `x64-asan` is not Debug, so it takes no launch arguments, and driving
+a match needs the foreground. The nightly `asan` leg still runs only the
+default cases; adding `-OptIn` would add over an hour for `bot_team_trials`
+alone.
 
 #### The `/analyze` verdicts (2026-11-10)
 
@@ -4443,7 +4762,8 @@ jobs, and Release keeps its no-hardware-adapter allowance. The failure
 checker finds its own process's `#32770` dialog, reads it with
 `WM_GETTEXT` and closes it with a posted `WM_CLOSE`, so it needs no
 keystroke or foreground window. Unlike the editor's Cancel check
-([level-editor.md](level-editor.md), runs 290 and 291), neither checker
+([level-editor-record.md](level-editor-record.md#invalid-pending-property-refusal-ed22),
+runs 290 and 291), neither checker
 asserts focus or activation. Receipts:
 `out/validation/ci3-timing/`. The CI step commands, run as written in both
 presets afterwards, also passed and put their evidence under
@@ -4863,7 +5183,7 @@ not establish hardware or attended visual acceptance.
 ### Editor build-profile isolation (`HYG#14`)
 
 **Done (2026-10-28).** The next ranked candidate from the
-[editor review](level-editor.md#raw-nul-json-admission-ed12) was an observed
+[editor review](level-editor-record.md#raw-nul-json-admission-ed12) was an observed
 tooling defect: `check-level-editor.ps1` redirected `LOCALAPPDATA` before
 configure, so vcpkg lost the caller's existing registry cache. During `ED#11`,
 this triggered a fresh registry fetch that failed at the unavailable GitHub

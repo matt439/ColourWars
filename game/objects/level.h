@@ -253,6 +253,10 @@ public:
 	// The pad each pad input slot reads (MatchSetup::pad_devices), so
 	// a HUD names the pad a reclaimed seat now uses. Rebuilds only on change.
 	void set_pad_devices(const std::array<int, input_slots::pad_count>& devices);
+	// By pad identity slot: the name of the player profile that pad wears,
+	// empty for a bare pad (REV#35). A human pad seat's HUD identity box
+	// shows it as its last line. Rebuilds only on change.
+	void set_profile_names(const std::array<std::string_view, input_slots::pad_count>& names);
 	// The countdown's opening cards in window pixels while they are drawn,
 	// else none: what a developer panel must not cover.
 	std::vector<labrador::RectangleF> opening_cards() const;
@@ -279,6 +283,19 @@ public:
 	// the scene directly is one this Level never walks. Throws
 	// std::invalid_argument for null.
 	Projectile* admit_projectile(std::unique_ptr<Projectile> projectile);
+
+	// The Debug time-lapse (`replay.timelapse`, docs/debug-console.md): while
+	// on, every state past the opening draws one fullscreen view through the
+	// stage's authored overview camera, the one the results overview ends
+	// on, with no pane HUD, divider or card. Off restores the panes. Changes
+	// only what is drawn, never the simulation.
+	void set_arena_view(bool on);
+	bool arena_view() const;
+	// The views Scene draws, as the last refresh_layout or update left them.
+	int scene_view_count() const;
+	const labrador::Scene::View& scene_view(int index) const;
+	// The overview camera framed for the current window.
+	const labrador::Camera& overview_camera() const;
 
 	// Counts for the perf overlay, as of the last update.
 	int projectile_count() const;
@@ -396,6 +413,8 @@ private:
 	labrador::Vector2F layout_size_ = labrador::Vector2F::zero;
 	labrador::Camera zoom_out_start_camera_ = labrador::Camera::default_camera;
 	labrador::Camera zoom_out_finish_camera_ = labrador::Camera::default_camera;
+	// set_arena_view; false in every shipping path.
+	bool arena_view_ = false;
 
 	LevelState state_ = LevelState::start_countdown;
 

@@ -138,8 +138,8 @@ void MenuInput::reset_directions()
 }
 
 MenuInput::MenuInput(const Gamepads* gamepads, const Keyboard* keyboard,
-	const GameTuning* tuning) :
-	gamepads_(gamepads), keyboard_(keyboard), tuning_(tuning)
+	const GameTuning* tuning, const Mouse* mouse) :
+	gamepads_(gamepads), keyboard_(keyboard), tuning_(tuning), mouse_(mouse)
 {
 }
 
@@ -150,17 +150,22 @@ namespace
 	// same action; `disarm` clears every action instead. A release is accepted
 	// only when exactly one action was down last frame, so releasing conflicting
 	// actions together does not choose between them.
-	template <typename State>
+	// Arms each action on an observed press, keeps it armed through the release
+	// frame and clears it on the next, so repeated reads of one frame produce the
+	// same action; `disarm` clears every action instead. A release is accepted
+	// only when exactly one action was down last frame, so releasing conflicting
+	// actions together does not choose between them. `sample_of(action)` returns
+	// that action's ActionSample for this frame.
+	template <typename Sample>
 	MenuInputAction released_action(bool (&armed)[menu_action_count],
-		const State& now, const State& before, bool disarm)
+		const Sample& sample_of, bool disarm)
 	{
-		const ActionBindings& bindings = default_action_bindings();
 		std::array<ActionSample, menu_action_count> actions{};
 		bool anything_down = false;
 		int was_down_count = 0;
 		for (int i = 0; i < menu_action_count; ++i)
 		{
-			const ActionSample sample = menu_action(bindings, static_cast<MenuInputAction>(i), now, before);
+			const ActionSample sample = sample_of(static_cast<MenuInputAction>(i));
 			actions[i] = sample;
 			armed[i] = !disarm && (sample.pressed || (armed[i] && sample.was_held));
 			anything_down = anything_down || sample.held;
@@ -185,22 +190,43 @@ ProcessedMenuInput MenuInput::menu_input(const Gamepads& gamepads, int slot)
 	// Do not arm on reconnect: a held button has a zeroed previous state.
 	ProcessedMenuInput result;
 	result.connected = true;
-	result.action = released_action(this->armed_[slot], gamepads.state(slot),
-		gamepads.previous_state(slot), gamepads.just_connected(slot));
+	const GamepadState& now = gamepads.state(slot);
+	const GamepadState& before = gamepads.previous_state(slot);
+	result.action = released_action(this->armed_[slot], [&](MenuInputAction action)
+	{
+		return menu_action(default_action_bindings(), action, now, before);
+	}, gamepads.just_connected(slot));
 	result.direction = this->directions_[slot];
 	return result;
 }
 
-ProcessedMenuInput MenuInput::keyboard_menu_input(const Keyboard& keyboard)
+ProcessedMenuInput MenuInput::keyboard_menu_input(const Keyboard& keyboard,
+	const Mouse* mouse)
 {
 	// Disarm on focus return: suppressed press edges would otherwise preserve
-	// ownership of a key held while the window was unfocused. The evaluator
-	// reconstructs previous-held per physical key before combining aliases:
-	// (held && !pressed) || released.
+	// ownership of a key or button held while the window was unfocused. The
+	// evaluator reconstructs previous-held per physical key before combining
+	// aliases: (held && !pressed) || released. The mouse buttons are a second
+	// source with their own arming, so a click held from play is never armed
+	// here and never blocks a key; the keys win a frame where both release.
 	ProcessedMenuInput result;
 	result.connected = true;
-	result.action = released_action(this->key_armed_, keyboard.state(),
-		keyboard.previous_state(), keyboard.just_focused());
+	const KeyboardState& now = keyboard.state();
+	const KeyboardState& before = keyboard.previous_state();
+	result.action = released_action(this->key_armed_, [&](MenuInputAction action)
+	{
+		return menu_action(default_action_bindings(), action, now, before);
+	}, keyboard.just_focused());
+	if (mouse != nullptr)
+	{
+		const MouseState& clicked = mouse->state();
+		const MouseState& previous = mouse->previous_state();
+		const MenuInputAction click = released_action(this->mouse_armed_, [&](MenuInputAction action)
+		{
+			return menu_action(default_action_bindings(), action, clicked, previous);
+		}, mouse->just_focused());
+		if (result.action == MenuInputAction::none) { result.action = click; }
+	}
 	result.direction = this->directions_[input_slots::keyboard_and_mouse];
 	return result;
 }
@@ -217,7 +243,7 @@ std::vector<ProcessedMenuInput> MenuInput::menu_inputs()
 	}
 
 	result[input_slots::keyboard_and_mouse] =
-		this->keyboard_menu_input(*this->keyboard_);
+		this->keyboard_menu_input(*this->keyboard_, this->mouse_);
 
 	return result;
 }
@@ -268,6 +294,10 @@ void MenuInput::reset_actions()
 		}
 	}
 	for (bool& armed : this->key_armed_)
+	{
+		armed = false;
+	}
+	for (bool& armed : this->mouse_armed_)
 	{
 		armed = false;
 	}

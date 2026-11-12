@@ -2,7 +2,11 @@
 
 namespace build_info
 {
+    // label identifies the build to the console and replays; the title
+    // screen formats its own line from menu_text.title.build and the fields.
     inline constexpr wchar_t label[] = L"@BUILD_LABEL@";
+    inline constexpr char version[] = "@VERSION@";
+    inline constexpr char game_short_revision[] = "@game_short@";
     inline constexpr char game_revision[] = "@game_full@";
     inline constexpr char engine_revision[] = "@engine_full@";
     inline constexpr char configuration[] = "@CONFIG@";

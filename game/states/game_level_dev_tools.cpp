@@ -47,6 +47,23 @@ bool GameLevel::debug_level_finished() const
 	return this->level_->state() == LevelState::finished;
 }
 
+bool GameLevel::debug_round_taped() const
+{
+	// Recording or recorded, and not spoiled; practice keeps no tape.
+	return this->replay_phase_ == ReplayPhase::none && !this->level_->practice() &&
+		(this->tape_.started() || this->tape_.playable());
+}
+
+bool GameLevel::debug_timelapse_running() const
+{
+	return this->replay_phase_ != ReplayPhase::none && this->timelapse_speed_ > 0;
+}
+
+void GameLevel::debug_arm_timelapse(int speed)
+{
+	this->timelapse_speed_ = std::max(0, speed);
+}
+
 void GameLevel::debug_apply_gap(const RoundTape::Gap& gap)
 {
 	RoundTape::apply_gap(*this->level_, gap);

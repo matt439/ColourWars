@@ -102,6 +102,13 @@ int SettingsSession::worn_profile(int slot) const
     return input_slots::is_pad(slot) ? this->worn_[static_cast<size_t>(slot)] : -1;
 }
 
+std::string_view SettingsSession::worn_profile_name(int slot) const
+{
+    const int profile = this->worn_profile(slot);
+    return profile < 0 ? std::string_view() :
+        std::string_view(this->save_->profiles().list[static_cast<size_t>(profile)].name);
+}
+
 int SettingsSession::profile_wearer(int profile) const
 {
     if (profile < 0) { return -1; }

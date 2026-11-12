@@ -24,6 +24,9 @@
 #include "game/input/rumble_sink.h"
 #include "game/match/round_tape.h"
 
+#include <array>
+#include <string_view>
+
 // Stack shapes during a session (docs/architecture.md lists every overlay):
 //
 //     [GameMenu, MainMenu*Page]
@@ -136,6 +139,11 @@ private:
 	ReplayPhase replay_phase_ = ReplayPhase::none;
 	std::unique_ptr<RoundTapePlayer> replay_player_;
 	int replay_first_ = 0;
+	// The Debug time-lapse (`replay.timelapse`): taped steps a frame, armed by
+	// debug_arm_timelapse before Watch Replay is chosen for it. Zero is the
+	// shipping replay; a time-lapse plays the whole tape that many steps a
+	// frame, silent, in Level's arena view, with no banner. Never set in Release.
+	int timelapse_speed_ = 0;
 	void start_replay();
 	// True while a replay owns this update.
 	bool update_replay(float dt, const SuspensionGate& gate);
@@ -188,6 +196,12 @@ private:
 	// plan, and once the level exists, re-apply its overlays and cheats
 	// (no-ops in Release).
 	void build_and_enter_level();
+	// The level's pad devices and the profile each pad wears (REV#35): after
+	// a build, and every update, since the pause page may hand a seat to a
+	// returning pad and Paused Options may change what a pad wears.
+	void sync_level_pads();
+	// By pad slot, the name of the profile it wears now; empty for none.
+	std::array<std::string_view, input_slots::pad_count> worn_profile_names() const;
 
 	void update_music(float dt, const SuspensionGate& gate);
 	// MenuOwner: a page above the match ticks the match's music. GameLevel
@@ -210,6 +224,8 @@ private:
 	bool debug_countdown_over() const override;
 	bool debug_perf_ready() const override;
 	std::vector<labrador::RectangleF> debug_screen_obstacles() const override;
+	bool debug_round_taped() const override;
+	bool debug_timelapse_running() const override;
 
 	void debug_rebuild(const MatchSetup& plan, bool reset_session) override;
 	void debug_adopt(const MatchSetup& plan, bool reset_session) override;
@@ -217,6 +233,7 @@ private:
 	void debug_sync_audio() override;
 	void debug_apply_gap(const RoundTape::Gap& gap) override;
 	void debug_background_changed() override;
+	void debug_arm_timelapse(int speed) override;
 
 	void debug_set_overlays(const LevelOverlays& overlays) override;
 	void debug_set_player_text(bool showing) override;

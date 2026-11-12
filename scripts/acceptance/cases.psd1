@@ -29,7 +29,13 @@ Cases = @(
     @{ Name = 'rumble' }
     @{ Name = 'rumble_adapter' }
     @{ Name = 'action_bindings' }
+    @{ Name = 'toggle_fire' }
     @{ Name = 'input_bindings' }
+    @{
+        # HYG#102: the README and HOW-TO-PLAY controls tables name the defaults.
+        Name = 'controls_help'
+        Arguments = @('repo')
+    }
     @{ Name = 'keyboard_jump_capture' }
     @{ Name = 'ammo' }
     @{ Name = 'match_variants' }
@@ -180,6 +186,12 @@ Cases = @(
         Group = 'debug-only'
         Sources = @('scripts/acceptance/balance_regions/metrics.cpp', 'scripts/acceptance/balance_regions/csv.cpp')
         Utf8Output = $true
+    }
+    @{
+        # Repeated Level builds on every stage between two _CrtMemCheckpoint
+        # calls; the debug heap exists only in Debug (HYG#100).
+        Name = 'level_heap'
+        Group = 'debug-only'
     }
     @{
         Name = 'bot_trials'

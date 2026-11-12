@@ -1,6 +1,9 @@
 #include "game/pch.h"
 #include "game/save/save.h"
 #include "game/config/settings_session.h"
+#include "game/config/presentation/presentation_menu_text.h"
+#include "game/match/match_setup.h"
+#include "game/states/player_label.h"
 #include "engine/assets/json.h"
 #include "scripts/acceptance/support/isolated_save.h"
 #include "scripts/acceptance/support/probe.h"
@@ -80,6 +83,7 @@ namespace
 		pad_two.sticks[1] = { 25, 40 };
 		pad_two.pad_rumble[1] = false;
 		pad_two.pad_comfort[1].view_shake = SeatSwitch::off;
+		pad_two.pad_comfort[1].toggle_fire = true;
 		require(session.set_play_settings_and_save(pad_two), "Could not seed pad 2's own settings");
 		InputBindings buttons = session.input_bindings();
 		buttons.pads[1][PadAction::jump] = { PadControl::b, PadControl::none };
@@ -91,7 +95,8 @@ namespace
 		require(saved && alex == 0 && save.profiles().list[0].name == "ALEX", "Could not add a profile");
 		const PlayerProfile& copied = save.profiles().list[0];
 		require(copied.sticks.movement_deadzone == 25 && copied.sticks.aim_deadzone == 40 && !copied.rumble &&
-			copied.comfort.view_shake == SeatSwitch::off && copied.buttons[PadAction::jump].primary == PadControl::b,
+			copied.comfort.view_shake == SeatSwitch::off && copied.comfort.toggle_fire &&
+			copied.buttons[PadAction::jump].primary == PadControl::b,
 			"A new profile did not carry its pad's settings");
 		const int sam = session.add_profile_and_save("SAM", input_slots::keyboard_and_mouse, saved);
 		require(sam == 1 && save.profiles().list[1].buttons == PadProfile{} && save.profiles().list[1].rumble,
@@ -101,10 +106,14 @@ namespace
 		// Pad 4 wears ALEX: it reads pad 2's old settings, pad 2 is unchanged.
 		require(session.wear_profile(3, alex) && session.worn_profile(3) == alex && session.profile_wearer(alex) == 3,
 			"Pad 4 could not wear ALEX");
+		require(session.worn_profile_name(3) == "ALEX" && session.worn_profile_name(0).empty() &&
+			session.worn_profile_name(input_slots::keyboard_and_mouse).empty() && session.worn_profile_name(-1).empty(),
+			"A worn profile's name did not follow the pad wearing it");
 		require(&session.play_settings() == borrowed && &session.input_bindings() == borrowed_bindings,
 			"Wearing a profile moved the preferences borrowers hold");
 		require(borrowed->stick_settings(3).movement_deadzone == 25 && !borrowed->rumble_enabled(3) &&
-			!borrowed->view_shake_enabled(3) && borrowed_bindings->pads[3][PadAction::jump].primary == PadControl::b,
+			!borrowed->view_shake_enabled(3) && borrowed->toggle_fire_enabled(3) &&
+			borrowed_bindings->pads[3][PadAction::jump].primary == PadControl::b,
 			"Pad 4 does not read the profile it wears");
 		require(borrowed->stick_settings(1).movement_deadzone == 25, "Wearing changed another pad");
 		require(!session.wear_profile(0, alex), "Two pads wore one profile");
@@ -128,7 +137,9 @@ namespace
 
 		// Taking it off restores the pad's own; the profile keeps the edits.
 		require(session.wear_profile(3, -1) && session.worn_profile(3) == -1, "Pad 4 could not take ALEX off");
-		require(borrowed->stick_settings(3).aim_deadzone == -1 && borrowed_bindings->pads[3] == PadProfile{},
+		require(session.worn_profile_name(3).empty(), "A pad kept a profile's name after taking it off");
+		require(borrowed->stick_settings(3).aim_deadzone == -1 && !borrowed->toggle_fire_enabled(3) &&
+			borrowed_bindings->pads[3] == PadProfile{},
 			"Taking a profile off did not restore the pad's own settings");
 
 		// Profiles persist; who wears them does not.
@@ -187,11 +198,61 @@ namespace
 		rejects([&] { session.add_profile_and_save("ONE MORE", -1, saved); }, "A ninth profile was added");
 	}
 
+	// REV#35: the roster label a page shows names the profile the seat's
+	// pad wears, and only a human pad seat's: never a bot's, the keyboard's
+	// or a bare pad's. The copy is set here, so the case needs no content.
+	void check_roster_labels(const acceptance::IsolatedSave& directory)
+	{
+		std::filesystem::remove(directory.save_path());
+		Save save = load();
+		SettingsSession session(save);
+		bool saved = false;
+		const int alex = session.add_profile_and_save("ALEX", -1, saved);
+		const int widest = session.add_profile_and_save("WWWWWWWWWW", -1, saved);
+		MenuText text;
+		text.labels.pad = L"Pad {pad}";
+		text.labels.keyboard_mouse = L"Keyboard/mouse";
+		text.labels.roster_row = L"{player} - {device}";
+		text.labels.bot = L"Bot ({difficulty})";
+		text.labels.bot_easy = L"Easy";
+		text.labels.bot_normal = L"Normal";
+		text.labels.bot_hard = L"Hard";
+		text.labels.worn_profile = L"{device} ({name})";
+		// P1 on pad 3, P2 on the keyboard, P3 on pad 1, P4 a bot.
+		MatchSetup setup;
+		setup.set_player_count(4);
+		setup.set_player_bot(3, BotDifficulty::normal);
+		setup.begin_input_claims(2);
+		require(setup.claim_input_slot(input_slots::keyboard_and_mouse) && setup.claim_input_slot(0),
+			"The roster label fixture could not claim its seats");
+		const auto labels = [&]
+		{
+			std::array<std::wstring, 4> words;
+			for (int seat = 0; seat < 4; ++seat)
+			{
+				words[static_cast<size_t>(seat)] = worn_player_label(setup, seat, text, session);
+			}
+			return words;
+		};
+		const std::array<std::wstring, 4> bare{ L"P1 - Pad 3", L"P2 - Keyboard/mouse", L"P3 - Pad 1", L"P4 - Bot (Normal)" };
+		require(labels() == bare, "A roster label named a profile no pad wears");
+		for (int seat = 0; seat < 4; ++seat)
+		{
+			require(player_label(setup, seat, text) == bare[static_cast<size_t>(seat)],
+				"The plain roster label changed");
+		}
+		require(session.wear_profile(2, widest) && session.wear_profile(0, alex), "The fixture pads could not wear");
+		require(labels() == std::array<std::wstring, 4>{ L"P1 - Pad 3 (WWWWWWWWWW)", L"P2 - Keyboard/mouse",
+			L"P3 - Pad 1 (ALEX)", L"P4 - Bot (Normal)" }, "A roster label did not name the profile its own pad wears");
+		require(player_label(setup, 0, text) == bare[0], "The plain roster label took a profile's name");
+		require(session.wear_profile(2, -1) && labels()[0] == bare[0], "A roster label kept a profile taken off");
+	}
+
 	void check_recovery(const acceptance::IsolatedSave& directory)
 	{
 		directory.write_save("{\"save_version\":4,\"profiles\":["
 			"{\"name\":\" ALEX \",\"movement_deadzone\":30,\"aim_deadzone\":95,\"rumble\":\"no\","
-			"\"view_shake\":\"on\",\"aim_marker\":\"maybe\",\"reduce_effects\":\"off\","
+			"\"view_shake\":\"on\",\"aim_marker\":\"maybe\",\"reduce_effects\":\"off\",\"toggle_fire\":true,"
 			"\"buttons\":{\"jump\":[\"x\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]},\"boost\":2},"
 			"{\"name\":\"ALEX\"},"
 			"{\"name\":\"lower\"},"
@@ -210,7 +271,7 @@ namespace
 		// 95 clamps to the 90 cap; "no" is not a boolean, so rumble stays on.
 		require(alex.sticks.movement_deadzone == 30 && alex.sticks.aim_deadzone == 90 && alex.rumble &&
 			alex.comfort.view_shake == SeatSwitch::on && alex.comfort.aim_marker == SeatSwitch::shared &&
-			alex.comfort.reduce_effects == SeatSwitch::off && alex.buttons[PadAction::jump].primary == PadControl::x &&
+			alex.comfort.reduce_effects == SeatSwitch::off && alex.comfort.toggle_fire && alex.buttons[PadAction::jump].primary == PadControl::x &&
 			alex.boost == 2, "A profile's fields did not recover independently");
 		require(profiles.list[1].buttons == PadProfile{} && profiles.list[1].boost == 0,
 			"An invalid button set or Boost was kept");
@@ -232,10 +293,12 @@ int main()
 		check_names();
 		check_overlay(directory);
 		check_cycling_and_delete(directory);
+		check_roster_labels(directory);
 		check_recovery(directory);
 		std::cout << "PASS player_profiles: name rules, profiles carrying sticks, rumble, comfort, "
 			"buttons and Boost, the worn-profile overlay and its write-through, session-only wearing, "
-			"cycling, delete and rename, Boost carry-back, and per-field recovery\n";
+			"cycling, delete and rename, Boost carry-back, roster labels naming the worn profile, "
+			"and per-field recovery\n";
 		return 0;
 	});
 }

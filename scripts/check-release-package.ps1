@@ -2,9 +2,10 @@
 # Extracts the ZIP into -OutputDirectory (replacing only the
 # ColourWars-windows-x64 folder this script extracts there) and refuses it
 # when development files or unreviewed audio leaked in, a required file is
-# missing, the bank differs from the accepted publication, or the
-# Debug-only developer console was linked. It starts nothing; startup checks
-# of the extracted game are check-startup.ps1's.
+# missing, the bank differs from the accepted publication, the Debug-only
+# developer console was linked, or the executable does not name its symbols
+# as plain ColourWars.pdb (REL#7: the PDB is a CI artifact, never in the ZIP).
+# It starts nothing; startup checks of the extracted game are check-startup.ps1's.
 #
 #   pwsh -File scripts/check-release-package.ps1            # after `--target package`
 #   pwsh -File scripts/check-release-package.ps1 -Zip <zip> -OutputDirectory <dir>
@@ -88,5 +89,44 @@ foreach ($name in '.?AVDebugConsoleState@@', '.?AVDebugRegistry@@', '.?AVLambdaC
     if ($exe.Contains($name)) { throw "Developer console code leaked into the package: $name" }
     $checks++
 }
+
+# REL#7: the executable's CodeView record names ColourWars.pdb and no build
+# path, so a debugger matches the CI artifact by name and signature alone.
+function Get-PdbNames([byte[]]$Image) {
+    $pe = [BitConverter]::ToInt32($Image, 0x3C)
+    if ([BitConverter]::ToUInt32($Image, $pe) -ne 0x4550) { throw 'ColourWars.exe is not a PE image.' }
+    $sections = [BitConverter]::ToUInt16($Image, $pe + 6)
+    $optional = $pe + 24
+    $optionalSize = [BitConverter]::ToUInt16($Image, $pe + 20)
+    if ([BitConverter]::ToUInt16($Image, $optional) -ne 0x20B) { throw 'ColourWars.exe is not a PE32+ image.' }
+    if ([BitConverter]::ToUInt32($Image, $optional + 108) -le 6) { return @() }
+    $debugRva = [BitConverter]::ToUInt32($Image, $optional + 112 + 6 * 8)
+    $debugSize = [BitConverter]::ToUInt32($Image, $optional + 112 + 6 * 8 + 4)
+    if ($debugRva -eq 0) { return @() }
+    $debugOffset = $null
+    for ($index = 0; $index -lt $sections; $index++) {
+        $section = $optional + $optionalSize + 40 * $index
+        $address = [BitConverter]::ToUInt32($Image, $section + 12)
+        $size = [Math]::Max([BitConverter]::ToUInt32($Image, $section + 8), [BitConverter]::ToUInt32($Image, $section + 16))
+        if ($debugRva -ge $address -and $debugRva -lt $address + $size) {
+            $debugOffset = [BitConverter]::ToUInt32($Image, $section + 20) + ($debugRva - $address)
+        }
+    }
+    if ($null -eq $debugOffset) { throw 'ColourWars.exe has a debug directory outside its sections.' }
+    $names = @()
+    for ($entry = $debugOffset; $entry -lt $debugOffset + $debugSize; $entry += 28) {
+        if ([BitConverter]::ToUInt32($Image, $entry + 12) -ne 2) { continue }
+        $record = [BitConverter]::ToUInt32($Image, $entry + 24)
+        if ([Text.Encoding]::ASCII.GetString($Image, $record, 4) -ne 'RSDS') { throw 'ColourWars.exe has a CodeView record that is not RSDS.' }
+        $end = [Array]::IndexOf($Image, [byte]0, [int]($record + 24))
+        $names += [Text.Encoding]::UTF8.GetString($Image, $record + 24, $end - $record - 24)
+    }
+    return $names
+}
+$pdbNames = @(Get-PdbNames ([IO.File]::ReadAllBytes((Join-Path $package 'ColourWars.exe'))))
+if ($pdbNames.Count -ne 1 -or $pdbNames[0] -cne 'ColourWars.pdb') {
+    throw "ColourWars.exe must name its symbols as ColourWars.pdb with no path; it names: $($pdbNames -join ', ')"
+}
+$checks++
 
 Write-Host "check-release-package: $checks checks passed on $($files.Count) files; extracted to $package"

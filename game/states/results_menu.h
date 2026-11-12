@@ -45,6 +45,8 @@ public:
 	void update_page(float dt) override;
 	// Proceeds as a confirm would; the match then opens the end menu.
 	bool debug_dismiss(bool leaving_match) override;
+	// Toward an armed time-lapse: closes as debug_dismiss does.
+	bool debug_watch_replay() override;
 private:
 	Session session_;
 	bool revealed_ = false;

@@ -356,7 +356,8 @@ namespace
 				if (slot != 0) { canonical += ','; }
 				canonical += std::string("{\"view_shake\":\"") + key(expected[slot].view_shake) +
 					"\",\"aim_marker\":\"" + key(expected[slot].aim_marker) +
-					"\",\"reduce_effects\":\"" + key(expected[slot].reduce_effects) + "\"}";
+					"\",\"reduce_effects\":\"" + key(expected[slot].reduce_effects) +
+					"\",\"toggle_fire\":" + (expected[slot].toggle_fire ? "true" : "false") + "}";
 			}
 			canonical += ']';
 			require(directory.save_bytes().find(canonical) != std::string::npos,
@@ -381,6 +382,17 @@ namespace
 			"null,{\"view_shake\":\"off\",\"aim_marker\":\"off\",\"reduce_effects\":\"off\"},"
 			"{\"view_shake\":\"on\",\"aim_marker\":\"On\",\"reduce_effects\":1},"
 			"{\"view_shake\":\"off\"}]", mixed);
+		// Toggle fire (REV#31) is a boolean in the same record and recovers
+		// to Off alone; an older entry without it reads as Off.
+		Comfort toggles{};
+		toggles[0].toggle_fire = true;
+		toggles[1].aim_marker = SeatSwitch::on;
+		toggles[3].toggle_fire = true;
+		toggles[3].view_shake = SeatSwitch::off;
+		check(",\"pad_comfort\":[{\"toggle_fire\":true},"
+			"{\"aim_marker\":\"on\",\"toggle_fire\":\"true\"},"
+			"{\"toggle_fire\":1},"
+			"{\"view_shake\":\"off\",\"toggle_fire\":true}]", toggles);
 		for (const char* malformed : { "null", "false", "0", "\"\"", "\"OFF\"", "\"yes\"", "[]", "{}" })
 		{
 			for (int slot = 0; slot < input_slots::pad_count; ++slot)

@@ -32,6 +32,8 @@ public:
 		bool replay = false);
 	void init() override;
 	void update_page(float dt) override;
+	// Toward an armed time-lapse: chooses Watch Replay when it is offered.
+	bool debug_watch_replay() override;
 private:
 	Session session_;
 	bool replay_ = false;

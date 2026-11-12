@@ -81,7 +81,7 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             // complete absence raster at the independently measured hint bounds;
             // it does not simulate a visible controller-loss or physical device.
             add(words[3], style.item_font, Vector2F(0.0f, look.title_no_pad_y), art.ink, true, true);
-            add(build_info::label, snapshot.prompt_bar().font, Vector2F(0.0f, look.build_id_y), art.ink, true);
+            add(snapshot.menu_text().title.build_label(), snapshot.prompt_bar().font, Vector2F(0.0f, look.build_id_y), art.ink, true);
         }
         FocusGroup focus; focus.set_style({ art.focus_ink, art.ink, art.disabled_ink });
         if (home)

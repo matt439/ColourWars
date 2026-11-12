@@ -1235,3 +1235,51 @@ the game. Audit SHA256:
 aggregate audit:
 `AC14B4FDA651C1B9760B91BCFEBD6343F332FD6509C090BB7D837A3ECE6BBFD9`.
 The exact paid-event observer remains an author decision.
+
+### Sight-distance ladder (`REV#19`, 2026-11-12)
+
+`REV#19` asked whether the bots' habit of chasing any enemy they can see, out
+to `bots.sight_distance` 1600, costs them paint.
+[`sight-ladder.psd1`](../scripts/balance/sight-ladder.psd1) changes only that
+value (1600, 1000, 600) and keeps the aim ladder's design: the same four
+arenas, Hard 1v1, every ordered tool pair with grenades, seeds 1000-1015,
+60 seconds. That makes **4,800 Debug matches**, 1,600 per variant. The game is
+`220d4809` / engine `e7fc50e`, and the patch lives only in the runner's memory.
+The baseline reproduces the aim ladder's baseline Sniper figures (0.154 paint,
+1.457 eliminations a minute). All 300 jobs passed, and the identity repeat was
+byte-identical.
+
+| Variant | Arena painted, mean | Sniper engaged / alive | Sniper paint | Sniper eliminations / min |
+|---|---|---|---|---|
+| 1600 (shipped) | 0.466 ± 0.007 | 0.179 | 0.154 ± 0.004 | 1.457 ± 0.097 |
+| 1000 | 0.470 ± 0.007 | 0.113 | 0.147 ± 0.004 | 1.084 ± 0.085 |
+| 600 | 0.461 ± 0.008 | 0.085 | 0.150 ± 0.005 | 0.955 ± 0.077 |
+
+Against the shipped value (A/B, margins 0.03 paint and 0.20 a minute):
+
+- **Fighting falls; paint does not rise.** At 600, every tool's eliminations
+  fall, by 0.22 to 0.50 a minute, and every other tool's deaths fall by 0.37 to
+  0.51; the Sniper's deaths rise, inconclusively (+0.16 ± 0.07). Sniper
+  eliminations, Mister eliminations and deaths, and Roller, Sprayer and Bucket
+  deaths fall beyond the margin. Every tool's paint share stays within the margin except Bucket's,
+  which is inconclusive (+0.022 ± 0.011). The arena's total painted fraction
+  does not move at either step. At 1000 the same pattern is smaller.
+- **Sniper's low paint is not its held aim.** At 600 the Sniper bot is engaged
+  half as often as at 1600, yet its paint share is unchanged (-0.005 ± 0.006).
+  For `REV#20`, the bot's sight-held aim does not explain the Sniper's paint;
+  what is left is the tool and the one paint policy.
+- **The paint cost behind `REV#19` was not found.** In bot-against-bot 1v1 at
+  Hard, a shorter sight trades fights for nothing: neither side's share nor
+  the total coverage improves. Whether a human beats bots by painting elsewhere
+  is not tested here, because both seats are bots.
+
+`bots.sight_distance` stays 1600, and no value was applied. Tuning is
+provisional, and this reading covers 1v1 Hard only. The four behaviour slices
+(paint-versus-fight weighting, a final-seconds paint rule, a health retreat and
+movement while engaging) remain unscoped; this measurement gives none of them
+a paint case. Main CSV SHA256: baseline
+`AA10B49CA1C189F21C8B4BF88E884982B18B3AE4F391B1E9B327FE0052248D39`, 1000
+`5D40A6C971184D45941656422102D0811F1F5F30D06B2BA499C4B196216837C7`, 600
+`A10B3E27E63796421917B3A6E6C366373219015FC945808260C744340538A4D8`. The run
+directory was deleted after recording; the design reproduces it with
+`scripts/run-balance-matrix.ps1 -Design scripts/balance/sight-ladder.psd1`.

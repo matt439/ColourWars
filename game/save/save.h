@@ -50,7 +50,9 @@ public:
 	// profile's "sub" (also in "profiles"). Absent reads as the right mouse
 	// button (the left when Shoot has the right) and RB (else LB, else the
 	// first free pad control), which is where older builds put it.
-	static constexpr int version = 9;
+	// 10 adds "toggle_fire" to each "pad_comfort" entry and each "profiles"
+	// entry; absent reads as false, hold to fire, as older builds played.
+	static constexpr int version = 10;
 
 	Save() = default;
 	// Only a missing save without a legacy file uses these first-run display
@@ -62,6 +64,8 @@ public:
 	bool first_run() const;
 	// A failed write leaves the active preferences intact and returns false.
 	// Interactive callers report that outcome in their own settings screen.
+	// Every successful write also makes sure the player's stages folder
+	// (directory_consts::user_stage_directory) exists, so the first creates it.
 	bool save_to_file() const;
 	// What the file holds: each pad slot's own settings, whatever it wears.
 	SaveData save_data() const;
@@ -123,8 +127,12 @@ public:
 private:
 	SaveData save_data_ = SaveData();
 	bool first_run_ = false;
+	// The file's save_version, when it is newer than this build's: the first
+	// write copies the file aside before dropping what it does not know, then
+	// clears this. Mutable because every write is const.
+	mutable int newer_save_version_ = 0;
 	PlayerProfile& profile_at(int profile);
-	SaveData load_from_json(const char* json_path) const;
+	SaveData load_from_json(const char* json_path, int& saved_version) const;
 	bool write_save_file(const SaveData& data) const;
 
 	static bool file_exists(const std::string& path);

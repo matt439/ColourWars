@@ -55,6 +55,10 @@ Windows, such as Steam Input.
   Drop through        Left stick down      S or Down
   Pause               Start                Escape
 
+Rather not hold the trigger? Options > Controls / audio > Pad sticks has a
+Toggle fire setting for each controller: turn it On and one press of Shoot
+keeps firing until the next press.
+
 Sub is your sub weapon, carried beside your tool all match. Choose it on
 Weapon Select: confirm your tool with A / Enter, pick the sub with Left/Right,
 then press A / Enter again.
@@ -77,17 +81,18 @@ Paint on the floor affects you too: your team's paint makes you move and
 refill faster. Enemy paint slows you and stops your paint refilling; step
 onto your own paint or unpainted ground to refill again.
 
-Menus: left stick or D-pad / arrow keys to move, A / Enter to choose,
-B / Escape to go back. Controls, volume, window size and full screen are
-under Options. To quit, choose Exit on the main menu.
+Menus: left stick or D-pad / arrow keys to move, A / Enter (or a left
+click) to choose, B / Escape (or a right click) to go back. A click acts on
+the highlighted row, wherever the pointer is. Controls, volume, window size
+and full screen are under Options. To quit, choose Exit on the main menu.
 
 
 Settings, your own stages and removing the game
 -----------------------------------------------
 
 Settings are saved in %LOCALAPPDATA%\ColourWars (paste that into Explorer's
-address bar). Stages you build go in a "stages" folder there; create it
-if it is not there yet.
+address bar). Stages you build go in the "stages" folder there, which the
+game makes the first time it saves your settings.
 
 To update, extract the new ZIP and delete the old folder; your settings stay.
 To remove the game, delete its folder, and %LOCALAPPDATA%\ColourWars if you

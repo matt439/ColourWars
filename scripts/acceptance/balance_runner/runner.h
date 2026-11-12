@@ -60,6 +60,14 @@ namespace balance_runner
         std::uint64_t credited_enemy_eliminations = 0;
         std::uint64_t credited_enemy_projectile_deaths = 0;
         std::uint64_t uncredited_projectile_lethals = 0;
+        // REV#37, 1v1 only: ticks on which this seat's projectile hurt its one
+        // opponent (a victim-keyed hit cue fired), and where that victim's body
+        // was in this seat's own pane camera at the time. Never CSV fields:
+        // main prints them as hit-view lines for scripts/balance/hit_view.py.
+        std::uint64_t dealt_hit_ticks = 0;
+        std::uint64_t dealt_hits_outside_pane = 0; // No part of the body in view.
+        std::uint64_t dealt_hits_partial_pane = 0; // In view, but under half of it.
+        std::uint64_t dealt_hits_shooter_down = 0; // Shooter dead or respawning.
         // Read back from the shipping driver after the match; empty for a
         // Debug behaviour. Never a CSV field: the policy label carries it.
         std::optional<BotDifficulty> difficulty;
@@ -78,6 +86,10 @@ namespace balance_runner
         float paintable_area = 0.0f;
         std::uint64_t final_fingerprint = 0;
         bool activity_observed = false; // Actual motion/ammo change, for nontrivial self-checks.
+        // Seat 0's pane: its whole-pixel height and the body's height in it.
+        // Zero when the roster is not 1v1 or the seat has no pane.
+        float pane_height_pixels = 0.0f;
+        float pane_body_pixels = 0.0f;
         std::array<SeatResult, 4> seats{};
         std::uint64_t credited_enemy_eliminations = 0;
         std::uint64_t uncredited_projectile_lethals = 0;
@@ -98,6 +110,8 @@ namespace balance_runner
     std::string csv_row(const Result& result);
     std::string csv_text(const std::vector<Result>& results);
     std::string paint_csv_text(const std::vector<Result>& results);
+    // REV#37: one line per seat of a 1v1 result, empty otherwise.
+    std::string hit_view_lines(const Result& result);
     // Reserves two exclusive sibling stage files before simulation. Both are
     // complete/closed before publication. Companion moves first; main moves
     // last as a completion-marker convention, not a two-file atomic transaction.

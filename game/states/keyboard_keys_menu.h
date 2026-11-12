@@ -24,7 +24,6 @@ public:
 
 	bool capture_active() const { return this->capture_active_; }
 	labrador::Key pending_key() const { return this->selection_.keyboard_jump; }
-	const InputBindings& pending_bindings() const { return this->selection_; }
 	KeyboardAction capture_action() const { return this->capture_.action(); }
 protected:
 	bool owns_raw_keyboard_input() const override { return this->capture_active_; }

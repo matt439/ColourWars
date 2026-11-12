@@ -115,6 +115,16 @@ std::string ReplayWait::describe(const DebugWaitContext& context) const
 	return with_hint("wait replay", context);
 }
 
+bool TimelapseWait::satisfied(const DebugWaitContext& context) const
+{
+	return !context.timelapse_active;
+}
+
+std::string TimelapseWait::describe(const DebugWaitContext& context) const
+{
+	return with_hint("wait timelapse", context);
+}
+
 bool RecordWait::satisfied(const DebugWaitContext& context) const
 {
 	return !context.recording;

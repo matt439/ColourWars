@@ -114,7 +114,14 @@ everything -> external/labrador (never the other way)
 debug/ -> everything above; the rest reaches debug/ through three headers
 ```
 
-What holds (checked 2026-11-05):
+What holds, checked by the build: the `colourwars_check_layer_includes` target
+([cmake/check_layer_includes.cmake](../cmake/check_layer_includes.cmake), since
+`HYG#94`) fails it on a `states/` include under `objects/`, `ai/` or `carried/`,
+a game include under `carried/` but `pch.h` and its own headers, an `objects/`
+include under `ai/` outside its allowlist of value headers and
+`paintable_object.h`, `GameData` in code under the three folders, and a
+`game/debug/` include outside `game/debug/` other than the three seam headers
+and `dev_tools.h`. The file-level cycle check is still by hand (2026-11-05).
 
 - **No file-level include cycles**, and nothing in `objects/`, `ai/` or
   `carried/` includes a `states/` header.
@@ -153,7 +160,7 @@ Where it does not hold yet:
 - The root is not a layer of its own: `game_data.h` includes `objects/` headers.
 - The role folders include each other: `save/` reads `config/`'s play
   settings and `match/`'s setup, and `config/` names `match/` and `input/`
-  types. Only `contracts/` has a checked boundary.
+  types. Only `contracts/` and the layering facts above have checked boundaries.
 
 ## The engine-free contract headers
 
@@ -372,7 +379,9 @@ it is not the grenade; absent or unknown is the grenade, which every older
 match carried. Save version 9 adds the Sub action to `input_bindings`
 (`keyboard.sub` and each pad profile's `sub`, also in `profiles`); absent reads
 as the right mouse button (the left when Shoot has the right) and RB (else LB,
-else the first free control), where older builds put it.
+else the first free control), where older builds put it. Save version 10 adds
+`"toggle_fire"` to each `pad_comfort` and `profiles` entry; absent is false,
+hold to fire, as older builds played.
 
 Content resolves beside the executable, not the working directory: the engine's
 rule (`engine/app/content_root.h`), which `Application::load_manifest` applies

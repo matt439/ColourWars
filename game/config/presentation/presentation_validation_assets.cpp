@@ -2,7 +2,11 @@
 #include "game/config/presentation/presentation_validation.h"
 #include "game/config/drawable_text.h"
 #include "game/objects/primitive_frame.h"
+#include "game/objects/interface_gameplay.h"
+#include "game/input/input_slots.h"
+#include "game/save/player_profiles.h"
 
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <string>
@@ -185,4 +189,54 @@ FontHandle Presentation::Validation::validate_artwork_resources()
 	}
 
 	return name_font;
+}
+
+// Last phase: the HUD identity box with a worn profile's name (REV#35). After
+// every other check, so a label's own diagnostics keep their precedence.
+void Presentation::Validation::validate_hud_identity() const
+{
+	const HudPresentation& hud = this->presentation.hud_;
+	// The identity box grows with its text: the badge line, the device and,
+	// for a pad wearing a profile, its name, checked with the widest name.
+	// The box must end before the clock's paper, measured on the widest
+	// clock "00:00" with the closing clock's padding and ticks. The box's x
+	// is a fraction of the pane and its size is at most pane width /
+	// reference_width, so a full-width pane at that scale is the closest.
+	const FontHandle identity_font = render.resolve_sprite_font(hud.player_identity_font);
+	const std::wstring widest_name(player_profiles::max_name_length, L'W');
+	float text_width = 0.0f;
+	for (int player = 0; player < max_players; ++player)
+	{
+		for (const std::wstring* team : { &hud.labels.team_a, &hud.labels.team_b })
+		{
+			for (int slot = 0; slot < input_slots::count; ++slot)
+			{
+				const std::string key = std::string("menu_text.labels.") +
+					(input_slots::is_pad(slot) ? "pad" : "keyboard_mouse") +
+					" with menu_text.hud at the HUD identity box";
+				const std::wstring identity = InterfaceGameplay::identity_text(player, *team,
+					this->presentation.menu_text_.device_label(slot),
+					input_slots::is_pad(slot) ? widest_name : std::wstring());
+				drawable_text::check_font_can_draw(&render, hud.player_identity_font, identity,
+					this->presentation.source_path_ + ": " + key);
+				text_width = std::max(text_width, render.measure_text(identity_font, identity).x);
+			}
+		}
+	}
+	const PlayerIdentityPresentation& badge = this->presentation.player_identity_;
+	const float width = hud.player_identity_reference_width;
+	const float box_right = width * hud.player_identity_offset.x + hud.player_identity_padding.x + text_width +
+		(badge.enabled ? badge.ui_size.x + badge.ui_gap : 0.0f);
+	const float clock_width = render.measure_text(render.resolve_sprite_font(hud.timer_font), L"00:00").x *
+		width / hud.timer_reference_width;
+	const float clock_left = (width - clock_width) / 2.0f - width * hud.timer_offset.x -
+		std::max(hud.player_identity_padding.x, hud.closing_clock.keyline_width * 3.0f) -
+		hud.closing_clock.tick_reach;
+	if (!std::isfinite(box_right) || !std::isfinite(clock_left) || box_right > clock_left)
+	{
+		throw std::runtime_error(this->presentation.source_path_ +
+			": menu_text.labels with menu_text.hud at the HUD identity box must end before the clock's paper with a " +
+			std::to_string(player_profiles::max_name_length) +
+			"-character profile name (hud.player_identity.offset, padding and font).");
+	}
 }

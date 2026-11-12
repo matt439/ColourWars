@@ -42,6 +42,7 @@ DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentat
 	this->register_player_commands();
 	this->register_bot_commands();
 	this->register_replay_commands();
+	this->register_timelapse_commands();
 	this->register_tune_commands();
 	this->register_script_commands();
 	this->tune_targets_[tuning_file] = std::make_unique<TuningTarget>(tuning, presentation);
@@ -207,6 +208,7 @@ DebugWaitContext DebugDirectorImpl::wait_context() const
 		!this->leave_requested_ && this->match_->debug_countdown_over();
 	context.replay_active = this->play_armed_ != nullptr ||
 		(this->player_ != nullptr && !this->player_->finished);
+	context.timelapse_active = this->timelapse_active();
 	context.recording = this->recorder_ != nullptr || this->record_armed_.has_value();
 	context.record_armed = this->recorder_ == nullptr && this->record_armed_.has_value();
 	context.paused = this->clock_.paused();
@@ -278,7 +280,7 @@ MenuContext* DebugDirectorImpl::menu_context()
 	if (this->menu_context_ == nullptr && this->data_ != nullptr)
 	{
 		this->menu_input_ = std::make_unique<MenuInput>(this->data_->gamepads(),
-			this->data_->keyboard(), this->data_->tuning());
+			this->data_->keyboard(), this->data_->tuning(), this->data_->mouse());
 		this->menu_settings_ = std::make_unique<MatchSetup>();
 		this->menu_context_ = std::make_unique<MenuContext>(this->data_,
 			this->menu_input_.get(), this->menu_settings_.get());

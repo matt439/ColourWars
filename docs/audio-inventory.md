@@ -13,6 +13,8 @@ existing game bindings and closes STORY#1, STORY#2 and POL#26. On 2026-11-05
 the author accepted the integrated hooks and gameplay mix as they stand, closing
 POL#23, and waived ROAD#3's listening and release acceptance, which was **not
 performed** ([section 9](#9-runtime-migration-and-remaining-integration)).
+Section 4.6 maps each cue to what a muted player sees instead (`POL#47`,
+2026-11-12).
 
 This page lists every legacy wave, bank entry, loop instance and cue reference,
 and gives each one a replace-or-retire entry. It then lists every cue the
@@ -403,6 +405,70 @@ in place of `stop_effect(..., true)`, and music ducking under pause instead of
 the hard pause. The arena-mix increment below implements these for the match;
 menu/results music handoff still needs client ownership work (`GAP#5.1`).
 `set_effect_volume` (`sound_bank.h:136`) is enough to build one.
+
+### 4.6 Muted play: the visual counterpart of each cue
+
+A desk audit for [`POL#47`](polish-plan.md#muted-play-cue-audit-pol47),
+2026-11-12, from the code at `220d4809`. It maps every cue the game plays
+today to what a player with the sound off sees instead. It closes no human
+gate: nobody has played muted, and the `POL#24` review that would have was
+waived. Cues not hooked (`player.hit_confirm`, declined under `POL#23`) are
+out of scope. Lines are in `game/`.
+
+**State cues**, where the sound carries information:
+
+| Cue | Played at | Visual counterpart |
+|---|---|---|
+| `weapon.empty` (all tools) | `objects/weapon.cpp:390` | The dry white cross over the figure (`objects/weapon_feedback.cpp:133`), and the aim marker's cross while the tool cannot afford a shot (`weapon_feedback.cpp:223`) |
+| `weapon.empty` (sub) | `objects/sub_weapon.cpp:48` | The sub mark after PAINT is paper, not ink, whenever a press would not release the sub (`objects/interface_gameplay.cpp:201`); the cost tick on the meter shows how far off it is |
+| `weapon.recovered` | `objects/weapon.cpp:402` | The team-colour bead over the figure (`weapon_feedback.cpp:144`; its rays drop under Reduce effects, the bead stays), and the aim marker leaving its cross |
+| `sniper.ready` | `objects/weapon.cpp:431` | The aim marker's chevron replacing its two bars (`weapon_feedback.cpp:206`; [aim marker](polish-aim-marker.md)). With **Aim marker** Off for that seat, none: see below |
+| `tool.drip` (low paint) | `objects/weapon.cpp:417` | The PAINT label's ink tag (`interface_gameplay.cpp:163`) and the tank over the figure (`weapon_feedback.cpp:116`), both blinking, steady under Reduce effects (`POL#38`) |
+| `match.count_beat`, `match.go` | `objects/level.cpp:231, 249` | The 3-2-1 and GO cards (`objects/countdown_cards.cpp:371`) |
+| `ui.count_in` | the resume count-in (`states/resume_audio.h`) | The resume cards (`objects/level_opening.cpp:106`) |
+| `match.last_ten` | `objects/level.cpp:280` | The closing-clock card from ten seconds, with a tick pair on each second (`interface_gameplay.cpp:293, 315`); Reduce effects keeps the card and drops the ticks |
+| `match.time_up`, `match.glass_out` | `objects/level.cpp:306-309` | The camera's pull back through the glass and the closing clock running out; no time-up text. Already `REV#41` ([record](review/2026-11-10-project-review.md#no-on-screen-time-up-signal-rev41)), not filed again |
+| `ui.pad_lost`, `ui.pad_back` | `states/connection_audio.cpp`, from a match (`states/game_states.cpp:428`) or a menu page (`states/menu_page.cpp:69`) | In a match the loss opens Pause headed **Controller lost** over the missing seats, and **All players connected.** when they return (`states/pause_menu.cpp:236-240`). The Players page marks a reserved, absent pad with **- Reconnect** (`states/main_menu_players.cpp:293`). Other menu pages show nothing: see below |
+| `player.hurt` | `objects/player.cpp:1027` | The victim's hurt pose and keylined ticks, drawn in every view, and its pane's shake ([combat feedback](polish-combat-feedback.md)). The shooter's side is `REV#37`, not filed again |
+| `player.pop` | `objects/player.cpp:1081` | The elimination burst (`objects/combat_feedback.cpp:73`) and the figure leaving play |
+| `ui.error` | `states/main_menu_team_select.cpp:73` | **Both teams need a player** shown on the same frame (`main_menu_team_select.cpp:74`) |
+| `paint.dud` | the paint limiter (§9) | The white stop tick and beads at bare cover ([blocked shots](polish-blocked-shots.md)) |
+| `paint.capture` | the paint limiter (§9) | The tiles taking the shooter's colour |
+
+**Action and mood cues**, which accompany something already on screen:
+`player.jump`, `player.land`, `player.step`, `player.step_painted` and
+`player.skid` (the figure's own motion and the contact puffs and flecks of
+[movement contact](polish-movement-contact.md)); `player.redraw` and
+`player.respawn` (the pen redrawing the figure); the tool starts, loops and
+stops, `sniper.shot`, `bucket.throw` and the sub throws (the muzzle phrase of
+[weapon feedback](polish-weapon-feedback.md) and the projectile itself);
+`roller.lift` and `roller.settle` (the roller's contact swash); `paint.splash`
+and `paint.impact.*` (the paint landing); every opening and reveal cue
+(`room.*`, `match.reveal_hover`, `match.reveal_click`, `match.reveal_close`,
+`match.glass_in`, `match.colour_in`, `match.skip`, `match.undo`,
+`match.celebrate`, `match.slump`), each of which marks a beat drawn on the
+monitor; the menu cues (`ui.move`, `ui.confirm`, `ui.cancel`, `ui.ready`,
+`ui.unready`, `ui.pause_open`), each of which marks a focus, page or tile
+change; `results.fill`, `results.winner`, `results.draw` and `end.series`
+(the bars and lines of Results and the end page); and `ui.volume_preview`,
+whose subject is the sound level itself, shown as the row's number. Music
+carries no game state.
+
+**The two cases with no counterpart**, neither filed:
+
+- `sniper.ready` with Aim marker Off. The marker is the readiness cue the game
+  offers, and Off is a per-seat choice that removes it. The sniper's paid shot
+  still shows its muzzle phrase and its one-second cadence is fixed, so a muted
+  player without the marker learns readiness by pressing. Turning the marker
+  back on restores it.
+- `ui.pad_lost` and `ui.pad_back` on the setup pages after Players, Results
+  and the end page. Any pad drives those pages, and a match started with a
+  seat's pad missing opens Pause on **Controller lost** on its first update
+  (`states/game_states.cpp:432`), so no match time or choice turns on it.
+
+If either should be a gap after all, the first is a note beside the Aim marker
+option and the second a status line on those pages; both are the author's
+call, not a correctness fault.
 
 ## 5. Sound direction: accepted
 

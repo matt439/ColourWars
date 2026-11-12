@@ -197,6 +197,15 @@ public:
 	// The running match's fingerprint, or nullopt with no match.
 	std::optional<MatchFingerprint> fingerprint() const;
 
+	// replay.timelapse (replay/timelapse_commands.cpp) -----------------------
+
+	// DebugDirector::timelapse_frame.
+	void timelapse_frame(DebugMatchTarget& match, int step, int steps);
+	// A time-lapse is armed and has not started playing.
+	bool timelapse_pending() const { return this->timelapse_ && !this->timelapse_->started; }
+	// Armed, or playing with this director watching it.
+	bool timelapse_active() const;
+
 	// Phase 4 ---------------------------------------------------------------
 
 	// Where autoexec.cfg, binds.cfg, history.txt and the player's scripts
@@ -337,6 +346,9 @@ private:
 	// Takes a pending screenshot when nothing queued would change the picture
 	// before the next frame.
 	void capture_screenshot_if_ready();
+	// Captures the stack now into `name` under screens\ (and screenshot.dir),
+	// logging the file or the failure. False: nothing was written.
+	bool write_screenshot(const std::string& name);
 
 	DebugStatus reload_content();
 	std::vector<std::string> status_lines() const;
@@ -526,5 +538,26 @@ private:
 
 	bool staging_ = false;
 	void push_seat_labels(DebugMatchTarget& match);
+
+	// The armed or playing time-lapse: its speed, the stills asked for, the
+	// next one due and how many were written, the run's file-name stamp, and
+	// whether its first frame has played.
+	struct Timelapse
+	{
+		int speed = 0;
+		int stills = 0;
+		int next = 0;
+		int saved = 0;
+		std::string stamp;
+		bool started = false;
+	};
+	std::optional<Timelapse> timelapse_;
+	bool timelapse_notice_shown_ = false;
+	void register_timelapse_commands();
+	// The page hook's share: one step toward Watch Replay for an armed
+	// time-lapse. True: the page should not run its own logic this frame.
+	bool advance_timelapse(DebugPageTarget& page);
+	// Disarms the time-lapse, logging why, unless it is playing.
+	void drop_timelapse(const std::string& reason);
 };
 

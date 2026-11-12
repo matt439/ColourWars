@@ -82,8 +82,8 @@ rebinding pages.
 | Pause/resume | Start | Escape |
 | Debug overlay | Back/View | F1 |
 | Menu navigation | Left stick or D-pad | Arrow keys or WASD |
-| Menu confirm | A | Enter or Space |
-| Menu back | B | Escape or Backspace |
+| Menu confirm | A | Enter, Space or left click |
+| Menu back | B | Escape, Backspace or right click |
 
 Each player carries a **sub weapon** beside their tool for the whole match.
 On Weapon Select, **A/Enter** confirms the tool, **Left/Right** chooses the
@@ -100,7 +100,8 @@ the right stick or mouse.
 ### Settings and controllers
 
 Options and Pause both offer **Controls / audio**: music and SFX volume,
-per-pad stick deadzones, rumble, View shake and Aim marker. **Pad sticks**
+per-pad stick deadzones, rumble, View shake, Aim marker and Toggle fire (press
+Shoot once to keep firing, again to stop). **Pad sticks**
 shows live stick input; use D-pad/arrows there so the sticks stay free to
 test. **Pad Buttons** changes Jump, Shoot, Pause and Sub. **Keyboard Keys**
 changes the keyboard seat's actions; Escape always pauses and Down always
@@ -108,6 +109,9 @@ drops. Rebinding leaves menu and opening controls unchanged.
 
 **Profiles** stores up to eight people's pad settings and Boost. Assign one
 to a pad there, or press **X/R** on Join to cycle a joined pad through them.
+The name then follows that pad: on its own line in the match HUD, and after
+the pad's label on Join, Team, Weapon, Pause and Results wherever the longer
+label fits.
 Profile edits save immediately. Other settings pages use **Apply** to save
 and **Back** to discard unapplied changes.
 
@@ -171,13 +175,13 @@ licences and silent fallback.
 
 ## Your own stages
 
-Put level JSON files in `%LOCALAPPDATA%\ColourWars\stages\` (create that
-folder if needed), or use the editor's **File > Save to My Stages**. They
-appear after the built-in stages, marked "Built by you." The game rereads
-the folder when Stage Select opens from the main menu. A refused file does
-not stop the others loading: press **Down** while browsing arenas to read
-scan issues. Enclose a stage with solid walls, floor and ceiling: a player who
-leaves the arena currently closes the game
+Put level JSON files in `%LOCALAPPDATA%\ColourWars\stages\`, which the game
+creates beside its save the first time it saves, or use the editor's
+**File > Save to My Stages**. They appear after the built-in stages, marked
+"Built by you." The game rereads the folder when Stage Select opens from the
+main menu. A refused file does not stop the others loading: press **Down**
+while browsing arenas to read scan issues. Enclose a stage with solid walls,
+floor and ceiling: a player who leaves the arena currently closes the game
 ([Seal the arena](docs/level-format.md#coordinates-bounds-and-spawns)).
 
 The editor needs a source build and is not included in the game ZIP.

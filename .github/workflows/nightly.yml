@@ -1,7 +1,8 @@
 # What is too long or too exact for every pull request: the painter, paint
 # effects, the long opt-in cases, the default cases under AddressSanitizer and
 # a static analysis report, on master's tip each night. Not a required check.
-# A failure opens or updates one issue, so nobody has to look for it.
+# A failure opens or updates one issue, so nobody has to look for it, and the
+# next green night closes it.
 #
 # This also keeps the vcpkg cache warm: caches are scoped per ref, master's
 # pushes no longer build, and a pull request can only inherit from master.
@@ -12,6 +13,11 @@ on:
   schedule:
     - cron: '17 16 * * *'
   workflow_dispatch:
+    inputs:
+      close_trial:
+        description: Skip every leg and run only the close-the-issue path (HYG#96 trial)
+        type: boolean
+        default: false
   # Changing the sweep tries it on the pull request that changes it.
   pull_request:
     paths:
@@ -20,6 +26,7 @@ on:
       - scripts/check-painter-sweep.ps1
       - scripts/check-painter/hosted-known-failures.txt
       - scripts/report-analyze.ps1
+      - scripts/report-analyze-baseline.json
 
 permissions:
   contents: read
@@ -31,6 +38,7 @@ concurrency:
 jobs:
   windows:
     name: nightly (${{ matrix.leg }})
+    if: ${{ !inputs.close_trial }}
     runs-on: windows-latest
     timeout-minutes: 180
     # The runner has no audio endpoint; the painter skips only its music flow.
@@ -107,11 +115,13 @@ jobs:
           pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4 -OutputDirectory out/validation/asan
 
       # A report: its log and counts are uploaded, and it never fails the leg.
+      # A warning outside the accepted baseline is annotated and listed in the
+      # job summary (HYG#95); whether it should fail the night is a separate call.
       - name: Static analysis report
         if: matrix.analyze
         continue-on-error: true
         run: |
-          pwsh -NoProfile -File scripts/report-analyze.ps1 -OutputDirectory out/validation/analyze
+          pwsh -NoProfile -File scripts/report-analyze.ps1 -OutputDirectory out/validation/analyze -Baseline scripts/report-analyze-baseline.json
 
       # Results and logs; the captures stay on the runner.
       - name: Upload evidence
@@ -146,5 +156,35 @@ jobs:
           if [ -n "$issue" ]; then
             gh issue comment "$issue" --body "Failed again: $RUN"
           else
-            gh issue create --title "$title" --body "Failed on master's tip: $RUN. Close this once a night passes."
+            gh issue create --title "$title" --body "Failed on master's tip: $RUN. The next green scheduled night closes this."
           fi
+
+  # A green scheduled night closes the issue a failed one opened (HYG#96).
+  # A manual run with close_trial skips the legs and runs only this path, so
+  # it can be tried against a test issue of the same title.
+  close:
+    needs: windows
+    if: >-
+      always() && (
+        (github.event_name == 'schedule' && needs.windows.result == 'success') ||
+        (github.event_name == 'workflow_dispatch' && inputs.close_trial))
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Close the nightly issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TRIAL: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          title='Nightly sweep failed'
+          if [ "$TRIAL" = true ]; then note="Closed by a manual trial of the close path: $RUN"
+          else note="A night passed: $RUN"; fi
+          issues=$(gh issue list --state open --search "in:title \"$title\"" --json number,title --jq ".[] | select(.title == \"$title\") | .number")
+          if [ -z "$issues" ]; then echo "No open '$title' issue."; fi
+          for issue in $issues; do
+            gh issue close "$issue" --comment "$note"
+            echo "Closed #$issue."
+          done
