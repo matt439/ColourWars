@@ -328,45 +328,90 @@ namespace
         Writer<StringBuffer>& writer_;
     };
 
+    // Copies the save beside itself as save_data.<tag>-<n>.json, taking the
+    // first free n. copy_file never replaces an existing file, so an earlier
+    // copy is never lost. Returns the copy, or nothing with `ec` saying why.
+    std::optional<std::filesystem::path> copy_save_aside(const std::filesystem::path& save,
+        const wchar_t* tag, std::error_code& ec)
+    {
+        ec.clear();
+        for (int copy = 1; copy <= 999; ++copy)
+        {
+            const std::filesystem::path aside = save.parent_path() / (save.stem().wstring() +
+                L"." + tag + L"-" + std::to_wstring(copy) + save.extension().wstring());
+            if (std::filesystem::copy_file(save, aside, std::filesystem::copy_options::none, ec))
+            {
+                return aside;
+            }
+            if (ec != std::errc::file_exists) { return std::nullopt; }
+        }
+        return std::nullopt;
+    }
+
     // Copies a save that will not load to save_data.unreadable-<n>.json beside
-    // it, taking the first free n. copy_file never replaces an existing file,
-    // so an earlier copy is never lost. Best effort: a failure is reported and
-    // the caller keeps its defaults either way.
+    // it. Best effort: a failure is reported and the caller keeps its defaults
+    // either way.
     void keep_unreadable_save(const std::filesystem::path& save, const char* cause)
     {
         const std::string from = path_to_utf8(save);
         std::error_code ec;
-        for (int copy = 1; copy <= 999; ++copy)
+        if (const auto aside = copy_save_aside(save, L"unreadable", ec))
         {
-            const std::filesystem::path aside = save.parent_path() / (save.stem().wstring() +
-                L".unreadable-" + std::to_wstring(copy) + save.extension().wstring());
-            if (std::filesystem::copy_file(save, aside, std::filesystem::copy_options::none, ec))
-            {
-                fprintf(stderr, "save: %s could not be read (%s); kept a copy at %s and started from defaults.\n",
-                    from.c_str(), cause, path_to_utf8(aside).c_str());
-                return;
-            }
-            if (ec != std::errc::file_exists) { break; }
+            fprintf(stderr, "save: %s could not be read (%s); kept a copy at %s and started from defaults.\n",
+                from.c_str(), cause, path_to_utf8(*aside).c_str());
+            return;
         }
         fprintf(stderr, "save: %s could not be read (%s) and could not be copied aside (%s); started from defaults.\n",
             from.c_str(), cause, ec ? ec.message().c_str() : "no free copy name");
     }
+
+    // Copies a save from a newer build to save_data.newer-<n>.json beside it
+    // before this build's first write drops what it does not know (REV#5).
+    // Best effort, like keep_unreadable_save: a failed copy is reported and
+    // the write goes ahead, since refusing it would leave every later setting
+    // unsaved.
+    void keep_newer_save(const std::filesystem::path& save, int saved_version)
+    {
+        const std::string from = path_to_utf8(save);
+        std::error_code ec;
+        if (const auto aside = copy_save_aside(save, L"newer", ec))
+        {
+            fprintf(stderr, "save: %s is save_version %d; kept a copy at %s before writing version %d.\n",
+                from.c_str(), saved_version, path_to_utf8(*aside).c_str(), Save::version);
+            return;
+        }
+        fprintf(stderr, "save: %s is save_version %d and could not be copied aside (%s); "
+            "writing version %d drops what this build does not know.\n",
+            from.c_str(), saved_version, ec ? ec.message().c_str() : "no free copy name", Save::version);
+    }
+
+    // The player's own stages folder, made on a save write so the player never
+    // has to create it (FTR#14). Best effort and silent: the stage scan already
+    // treats a missing folder as no stages, and the editor creates it on save.
+    void ensure_user_stage_directory()
+    {
+        std::error_code ignored;
+        std::filesystem::create_directories(path_from_utf8(user_stage_directory()), ignored);
+    }
 }
 
-SaveData Save::load_from_json(const char* json_path) const
+SaveData Save::load_from_json(const char* json_path, int& saved_version) const
 {
     const JsonDocument document = read_json_file(json_path);
     const JsonValue root = document.root();
 
     // A file this build cannot have written still loads what it knows. The
-    // next save writes this version and drops the newer sections.
+    // next save copies it aside, then writes this version without the newer
+    // sections.
+    saved_version = 0;
     try
     {
         const int saved = root.has("save_version") ? root.integer("save_version") : 0;
         if (saved > Save::version)
         {
+            saved_version = saved;
             fprintf(stderr, "save: %s is save_version %d; this build writes %d and "
-                "will drop what it does not know on the next save.\n",
+                "will copy it aside before its next save drops what it does not know.\n",
                 json_path, saved, Save::version);
         }
     }
@@ -414,6 +459,7 @@ bool Save::file_exists(const std::string& path)
 void Save::load_save_file()
 {
     this->first_run_ = false;
+    this->newer_save_version_ = 0;
     const std::string path = save_file_path();
 
     if (!file_exists(path))
@@ -427,7 +473,10 @@ void Save::load_save_file()
         {
             try
             {
-                this->save_data_ = this->load_from_json(legacy.c_str());
+                // Nothing writes to the legacy path, so a newer one needs no
+                // copy either.
+                int ignored_version = 0;
+                this->save_data_ = this->load_from_json(legacy.c_str(), ignored_version);
             }
             catch (const std::exception& error)
             {
@@ -455,7 +504,9 @@ void Save::load_save_file()
 
     try
     {
-        this->save_data_ = this->load_from_json(path.c_str());
+        int saved_version = 0;
+        this->save_data_ = this->load_from_json(path.c_str(), saved_version);
+        this->newer_save_version_ = saved_version;
     }
     catch (const std::exception& error)
     {
@@ -485,9 +536,20 @@ bool Save::write_save_file(const SaveData& data) const
         return false;
     }
 
+    const std::filesystem::path path = path_from_utf8(save_file_path());
+    if (this->newer_save_version_ > Save::version)
+    {
+        // Once per load: after this write the file is this build's version.
+        keep_newer_save(path, this->newer_save_version_);
+        this->newer_save_version_ = 0;
+    }
     // A failed write leaves the existing settings as they were.
-    return replace_file_atomically(path_from_utf8(save_file_path()),
-        std::string_view(buffer.GetString(), buffer.GetSize()));
+    if (!replace_file_atomically(path, std::string_view(buffer.GetString(), buffer.GetSize())))
+    {
+        return false;
+    }
+    ensure_user_stage_directory();
+    return true;
 }
 
 bool Save::save_to_file() const

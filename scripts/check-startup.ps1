@@ -176,6 +176,7 @@ $result = [ordered]@{
     profile = $profileDirectory
     version = ''
     dpi_awareness = $null
+    stages_folder_created = $false
     first_window_fits_monitor = $false
     locale = $(if ($Locale) { $Locale } else { 'base' })
     audio_expectation = $(if ($RequireAudio) { 'published-bank' } elseif ($RequireNoAudio) { 'missing-bank' } else { 'optional' })
@@ -252,6 +253,11 @@ try {
     if (-not (Test-Path -LiteralPath (Join-Path $profileDirectory 'ColourWars/save_data.json'))) {
         throw 'The game did not create its save in the isolated profile.'
     }
+    # FTR#14: the first save write makes the player's stages folder.
+    if (-not (Test-Path -LiteralPath (Join-Path $profileDirectory 'ColourWars/stages') -PathType Container)) {
+        throw 'The first save write did not create the stages folder in the isolated profile.'
+    }
+    $result.stages_folder_created = $true
     $initialSave = Get-Content -Raw -LiteralPath (Join-Path $profileDirectory 'ColourWars/save_data.json') | ConvertFrom-Json
     if (-not [ColourWars.StartupWindow]::FitsMonitor($window, [bool]$initialSave.fullscreen)) {
         throw 'The fresh-save window extends beyond its monitor work area (or fullscreen monitor).'
@@ -274,7 +280,7 @@ try {
     [string]$stderr = Read-StartupError
     Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context shutdown -RequireAudio:$RequireAudio -AllowedPattern $userStageRefusal
     $result.outcome = 'passed'
-    $result.diagnostic = 'Game window, per-monitor v2 DPI awareness, content startup, isolated save and graceful shutdown passed.'
+    $result.diagnostic = 'Game window, per-monitor v2 DPI awareness, content startup, isolated save with its stages folder and graceful shutdown passed.'
     Write-Output $result.diagnostic
 }
 catch {

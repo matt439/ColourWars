@@ -4006,7 +4006,9 @@ startup.
 **Done 2026-10-28.** The folder is `%LOCALAPPDATA%\ColourWars\stages\`,
 beside the save (`directory_consts::user_stage_directory`; the
 executable-relative `save/stages` when there is no `LOCALAPPDATA`, as for the
-screenshots and replays). The game does not create it. After the manifest
+screenshots and replays). Looking it up never creates it; since 2026-11-12
+every successful save write does, so a first run leaves it ready (`FTR#14`,
+[Save layout](#stage-records-and-the-sectioned-save-gap62)). After the manifest
 loads, `load_user_stages` (`game/config/stage_loading.h`) reads every `*.json` directly
 in it, in file-name order, and checks each on its own. Since 2026-11-10 it
 reads at most the first 256 by file name, and a file over 1 MiB is refused
@@ -4562,14 +4564,27 @@ stderr line with its key and the error, and leaves the others intact. There is
 no migration pass: each section reads every older layout in place, as
 [save_section.h](../game/save/save_section.h) sets out. The display and play preferences stay flat root keys exactly as
 before, so every existing save loads unchanged and needs no migration.
-`"save_version": 7` is written first (version 1 introduced records, version 2
+`"save_version": 9` is written first (version 1 introduced records, version 2
 remembered setup, version 3 independent input bindings, version 4
 `"profiles"`, version 5 `"last_match.stage_rule"`, version 6 the flat
-`"vsync"` display key and version 7 `"last_match.variant"`; [save.h](../game/save/save.h)
+`"vsync"` display key, version 7 `"last_match.variant"`, version 8 each
+player's `"sub"` and version 9 the Sub binding; [save.h](../game/save/save.h)
 keeps the list). A missing key is version 0, the same flat layout.
 A higher version still loads every key this build knows and prints one
 stderr line; the next write drops what it does not know. That is accepted for a
-local save. New sections use nested keys: `"records"`, the last-match
+local save, and since 2026-11-12 (`REV#5`) nothing is lost by it: the first
+write after such a load copies the file beside itself as
+`save_data.newer-<n>.json`, through the same never-overwriting copy that keeps
+an unreadable save as `save_data.unreadable-<n>.json` (`HYG#22`), and prints
+one stderr line naming the copy. It copies once per load, and a failed copy is
+reported and the write goes ahead. The legacy path is never written, so it is
+never copied. Every successful write also creates the player's `stages`
+folder if it is missing (`FTR#14`), silently and best effort; looking the
+folder up still creates nothing. `match_records`' `check_newer_save` covers
+both writers (`save_to_file` and `remember_match_setup_and_save`), the byte-identical copy,
+the second load's second copy, no copy on a later write and the folder, and
+`check-startup.ps1` requires the folder in its isolated profile. The in-game
+notice for these stderr lines stays the author's call (`REV#5`). New sections use nested keys: `"records"`, the last-match
 setup's `"last_match"` (`GAP#6.1`), `"input_bindings"` (`GAP#4.2`) and
 the player profiles' `"profiles"` (`ROAD#21`).
 

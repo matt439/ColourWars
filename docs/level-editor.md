@@ -815,9 +815,10 @@ be a shipped stage's name in any case; the names come from the source
 manifest. The file must go directly in that folder: use Save As for any other
 folder. If one of your stages already has that name (in any case), the editor
 asks whether to replace it; No is the default. The replacement keeps the
-existing file's spelling. The folder is created only by this command. If you
-cancel, or the name is refused, a folder the command created is removed again
-while it is still empty. After the save, the open document edits the saved
+existing file's spelling. The game creates the folder on its first save
+write; if it is not there yet, this command creates it. If you cancel, or the
+name is refused, a folder the command created is removed again while it is
+still empty. After the save, the open document edits the saved
 file, so Ctrl+S saves there too. Without `LOCALAPPDATA` the command refuses:
 the game would then read `save/stages` beside its own executable, which the
 editor cannot know. Like the other saves, it never touches the player's save.

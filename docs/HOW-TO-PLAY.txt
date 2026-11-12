@@ -86,8 +86,8 @@ Settings, your own stages and removing the game
 -----------------------------------------------
 
 Settings are saved in %LOCALAPPDATA%\ColourWars (paste that into Explorer's
-address bar). Stages you build go in a "stages" folder there; create it
-if it is not there yet.
+address bar). Stages you build go in the "stages" folder there, which the
+game makes the first time it saves your settings.
 
 To update, extract the new ZIP and delete the old folder; your settings stay.
 To remove the game, delete its folder, and %LOCALAPPDATA%\ColourWars if you
