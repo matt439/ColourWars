@@ -94,7 +94,7 @@ to `cases.psd1`.
 | [check-painter-evidence.ps1](check-painter-evidence.ps1) | checks the shared painter PPM, finite-number, key-set, CSV, save and PNG evidence helpers without the game or a GPU |
 | [check-frame-pacing.ps1](check-frame-pacing.ps1) | frame-pacing capture ([polish-frame-pacing.md](../docs/polish-frame-pacing.md)); analysed by [perf/](perf/) |
 | [run-balance.ps1](run-balance.ps1) | headless seeded bot matches, per-seat subs and an in-memory numeric/boolean tuning patch, with bot counters ([gameplay-tuning.md](../docs/gameplay-tuning.md)) |
-| [run-balance-matrix.ps1](run-balance-matrix.ps1) | one compile, bounded parallel jobs, hashed resume and byte-identity repeat; `balance/shipped.psd1` and `balance/bot-ladder.psd1` designs (`-PlanOnly` previews the count) |
+| [run-balance-matrix.ps1](run-balance-matrix.ps1) | one compile, bounded parallel jobs, hashed resume and byte-identity repeat; `balance/shipped.psd1`, `balance/bot-ladder.psd1` and `balance/sight-ladder.psd1` designs (`-PlanOnly` previews the count) |
 
 ## Editor checks
 
@@ -128,6 +128,6 @@ to `cases.psd1`.
 |---|---|
 | [debug/](debug/) | the shipped developer-console scripts (`exec <name>`), listed in [debug-console.md](../docs/debug-console.md#scripts) |
 | [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the engine pin's check against Labrador, the Markdown link check, and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
-| [balance/](balance/) | `TOOL#4`'s matrix driver/designs and analyser: tool and 2v2 team paint/eliminations, bot counters, profile checks and independent A/B intervals with design margins ([gameplay-tuning.md](../docs/gameplay-tuning.md#balance-matrix-tool-tool4)), and its test |
+| [balance/](balance/) | `TOOL#4`'s matrix driver/designs and analyser: tool and 2v2 team paint/eliminations, bot counters, profile checks and independent A/B intervals with design margins ([gameplay-tuning.md](../docs/gameplay-tuning.md#balance-matrix-tool-tool4)); `hit_view.py` tallies a matrix's 1v1 shooter-pane hit views (`REV#37`); and their tests |
 | [perf/](perf/) | frame-pacing analysis and its test |
 | [studies/](studies/README.md) | the kits for the drawing-mistake human studies ([drawing-mistakes-research.md](../docs/drawing-mistakes-research.md#8-human-tests)): Study A's references, sheets and analysis, Study B's stimulus capture, test page and analysis |
