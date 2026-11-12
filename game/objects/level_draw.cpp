@@ -240,6 +240,11 @@ void Level::set_pad_devices(const std::array<int, input_slots::pad_count>& devic
 	this->identity_->set_pad_devices(devices, this->players_, this->roster_);
 }
 
+void Level::set_profile_names(const std::array<std::string_view, input_slots::pad_count>& names)
+{
+	this->identity_->set_profile_names(names, this->players_, this->roster_);
+}
+
 std::vector<TeammateMarkerPlacement> Level::teammate_markers(int view) const
 {
 	return this->teammate_markers_->markers(view, this->players_, this->view_participants_,

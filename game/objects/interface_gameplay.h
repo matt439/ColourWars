@@ -76,10 +76,12 @@ public:
         const SubHudCue& sub = {}) const;
 
     // "P1  /  TEAM A\n" followed by the device label: the identity box's text.
-    // The team label is menu_text.hud's (HudPresentation::labels); the
-    // separator and the line break are the code's.
+    // A nonempty `profile_name`, the player profile the pad wears (REV#35),
+    // is a third line. The team label is menu_text.hud's
+    // (HudPresentation::labels); the separator and the line breaks are the
+    // code's.
     static std::wstring identity_text(int player_index, const std::wstring& team_label,
-        const std::wstring& device_label);
+        const std::wstring& device_label, const std::wstring& profile_name = std::wstring());
 
     // hud.labels.team_a or team_b.
     const std::wstring& team_label(PlayerTeam team) const;

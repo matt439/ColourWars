@@ -54,6 +54,10 @@ public:
 		const std::vector<Player*>& players, const std::vector<SeatSetup>& roster);
 	void set_pad_devices(const std::array<int, input_slots::pad_count>& devices,
 		const std::vector<Player*>& players, const std::vector<SeatSetup>& roster);
+	// See Level::set_profile_names; refreshes the texts only on a change,
+	// so a caller may pass the same names every update.
+	void set_profile_names(const std::array<std::string_view, input_slots::pad_count>& names,
+		const std::vector<Player*>& players, const std::vector<SeatSetup>& roster);
 
 	// Every participant's badge, or one's, back to full emphasis.
 	void emphasise();
@@ -99,9 +103,11 @@ private:
 	std::vector<std::wstring> seat_labels_;
 	// See set_pad_devices; -1 until set, which is the slot's own pad.
 	std::array<int, input_slots::pad_count> pad_devices_ = input_slots::per_pad(-1);
+	// See set_profile_names; by pad identity slot, empty for a bare pad.
+	std::array<std::wstring, input_slots::pad_count> profile_names_;
 	// By participant: each HUD identity box's whole text. Built from the seat, the
-	// player's team, pad (fixed unless a seat is reclaimed) and seat_labels_,
-	// so only construction, set_seat_labels and set_pad_devices rebuild it;
-	// draws only read it.
+	// player's team, pad (fixed unless a seat is reclaimed), the profile it
+	// wears and seat_labels_, so only construction, set_seat_labels,
+	// set_pad_devices and set_profile_names rebuild it; draws only read it.
 	std::vector<std::wstring> identity_texts_;
 };

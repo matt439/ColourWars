@@ -163,8 +163,31 @@ namespace
                     close_to(bounds.bottom(), body.top() + look.world_offset.y),
                     "Local badge bounds lost authored size or followed another view's figure");
             }
+            if (count != 4) { continue; }
+            // REV#35: a worn profile's name is the box's third line, found by
+            // the seat's pad identity slot, and leaves the other seats alone.
+            std::vector<std::wstring> plain;
+            for (int view = 0; view < count; ++view) { plain.emplace_back(level->player_identity_text(view)); }
+            std::array<std::string_view, input_slots::pad_count> names{};
+            names[1] = "ALEX";
+            names[3] = "WWWWWWWWWW";
+            level->set_profile_names(names);
+            for (int view = 0; view < count; ++view)
+            {
+                const auto index = static_cast<size_t>(view);
+                const int slot = slots[index];
+                const std::wstring expected = plain[index] + (slot == 1 ? L"\nALEX" : slot == 3 ? L"\nWWWWWWWWWW" : L"");
+                require(level->player_identity_text(view) == expected,
+                    "The HUD identity box did not end with the name of the profile its own pad wears");
+            }
+            level->set_profile_names({});
+            for (int view = 0; view < count; ++view)
+            {
+                require(level->player_identity_text(view) == plain[static_cast<size_t>(view)],
+                    "Taking a profile off did not restore the HUD identity box");
+            }
         }
-        std::cout << "PASS player identity: shared P1-P4 roster labels and own-figure authored bounds at 1/2/4 players with reordered device slots\n";
+        std::cout << "PASS player identity: shared P1-P4 roster labels and own-figure authored bounds at 1/2/4 players with reordered device slots; a worn profile's name follows its pad\n";
     }
 
     void check_lifecycle(World& world)

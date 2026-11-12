@@ -108,6 +108,9 @@ drops. Rebinding leaves menu and opening controls unchanged.
 
 **Profiles** stores up to eight people's pad settings and Boost. Assign one
 to a pad there, or press **X/R** on Join to cycle a joined pad through them.
+The name then follows that pad: on its own line in the match HUD, and after
+the pad's label on Join, Team, Weapon, Pause and Results wherever the longer
+label fits.
 Profile edits save immediately. Other settings pages use **Apply** to save
 and **Back** to discard unapplied changes.
 

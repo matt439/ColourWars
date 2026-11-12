@@ -388,7 +388,8 @@ void MainMenuTeamSelect::init()
 		auto widgets = std::make_unique<PlayerWidgets>(this->menu_style().motion);
 
 		std::string name = "player_" + std::to_string(i + 1);
-		std::wstring label_text = player_label(*this->level_settings(), i, this->text());
+		std::wstring label_text = worn_player_label(*this->level_settings(), i, this->text(),
+			*this->settings_session());
 
 		widgets->player = std::make_unique<colourwars::UiTextDropShadow>(
 			name,
@@ -399,6 +400,13 @@ void MainMenuTeamSelect::init()
 			this->setup_art_.ink,
 			clear_shadow,
 			this->menu_style().item_shadow_offset);
+		// A worn profile's name shows only while the label still ends before
+		// the team icons' canvas, where startup validation holds the plain
+		// label; a longer one falls back to it (REV#35).
+		if (widgets->player->bounds().right() > this->calculate_widget_position(2, i + 2).x)
+		{
+			widgets->player->set_text(player_label(*this->level_settings(), i, this->text()));
+		}
 		widgets->badge = std::make_unique<UiPlayerBadge>(name + "_badge",
 			UiPlayerBadge::before(widgets->player->bounds(), this->presentation().player_identity()),
 			i, &this->presentation().player_identity(), this->render_resources());

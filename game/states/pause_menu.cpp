@@ -219,23 +219,42 @@ void PauseMenuInitial::refresh_connections()
 	const bool was_waiting = this->waiting_for_players_;
 	if (this->shown_missing_seats_ != missing_seats)
 	{
-		std::wstring missing;
-		int count = 0;
-		for (int player = 0; player < static_cast<int>(players.size()); ++player)
+		// Two seats to a line. With `worn`, each label names the profile its
+		// pad wears (REV#35).
+		const auto missing_list = [&](bool worn)
 		{
-			if ((missing_seats & (1u << player)) != 0)
+			std::wstring missing;
+			int count = 0;
+			for (int player = 0; player < static_cast<int>(players.size()); ++player)
 			{
-				if (count > 0)
+				if ((missing_seats & (1u << player)) != 0)
 				{
-					missing += count % 2 == 0 ? L"\n" : L"   ";
+					if (count > 0)
+					{
+						missing += count % 2 == 0 ? L"\n" : L"   ";
+					}
+					missing += worn ? worn_player_label(*this->level_settings(), player, this->text(),
+						*this->settings_session()) : player_label(*this->level_settings(), player, this->text());
+					++count;
 				}
-				missing += player_label(*this->level_settings(), player, this->text());
-				++count;
 			}
-		}
+			return missing;
+		};
+		const std::wstring missing = missing_list(true);
 		this->waiting_for_players_ = !missing.empty();
 		this->connection_status_->set_text(this->waiting_for_players_ ? missing :
 			this->text().connection.all_connected);
+		// The names show only while the list still fits the paper and ends
+		// before the first action's focus card, where startup validation
+		// holds every plain list; otherwise the list falls back to it.
+		const PauseMenuPresentation& look = this->look();
+		const RectangleF status(Vector2F(menu_geometry::centred_x(this->connection_status_->bounds().width),
+			look.status_y), this->connection_status_->bounds().size());
+		if (this->waiting_for_players_ && (!menu_geometry::screen_paper(look.box_size).contains(status) ||
+			status.bottom() > look.layout.position.y - look.art.focus_padding.y))
+		{
+			this->connection_status_->set_text(missing_list(false));
+		}
 		this->player_num_->set_text(this->waiting_for_players_ ?
 			this->text().connection.controller_lost : this->player_number_text());
 		this->shown_missing_seats_ = missing_seats;

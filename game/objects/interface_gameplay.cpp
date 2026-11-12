@@ -78,9 +78,10 @@ const std::wstring& InterfaceGameplay::team_label(PlayerTeam team) const
 }
 
 std::wstring InterfaceGameplay::identity_text(int player_index, const std::wstring& team_label,
-	const std::wstring& device_label)
+	const std::wstring& device_label, const std::wstring& profile_name)
 {
-	return PlayerBadge::label(player_index) + L"  /  " + team_label + L"\n" + device_label;
+	return PlayerBadge::label(player_index) + L"  /  " + team_label + L"\n" + device_label +
+		(profile_name.empty() ? std::wstring() : L"\n" + profile_name);
 }
 
 void InterfaceGameplay::draw_gameplay_interface_prepared(DrawList& draw_list,
