@@ -274,9 +274,10 @@ for a pull request on `master`'s tip: the painter (plain matrix and leaves, thro
 `scripts/check-painter-sweep.ps1`), paint effects and every runnable opt-in case.
 Two more legs came with `REV#61`: `asan` builds `x64-asan` and runs the default cases
 under AddressSanitizer, and `analyze` uploads `scripts/report-analyze.ps1`'s
-`/analyze` counts and cannot fail.
+`/analyze` counts, annotates any warning outside the committed baseline and
+cannot fail.
 It is not a required check. A scheduled failure opens or updates one issue,
-`Nightly sweep failed`, and its Configure keeps `master`'s vcpkg cache current for
+`Nightly sweep failed`, which the next green scheduled night closes, and its Configure keeps `master`'s vcpkg cache current for
 pull requests. `scripts/check-painter/hosted-known-failures.txt` names any leaf
 whose exact pins hold only on a real GPU. The runner has no audio endpoint, so
 the job sets `COLOURWARS_NO_AUDIO_ENDPOINT` and the painter skips its music flow,

@@ -189,6 +189,11 @@ fails CI. These automated
 checks do not establish controller feel, audible balance or multiplayer quality;
 the hardware acceptance checklist is in [the roadmap](feature-roadmap.md).
 
+Run folders are never removed for you, and they add up to hundreds of
+gigabytes. `scripts/clean-validation.ps1` lists them by kind, size and age and,
+with `-Apply`, keeps the newest few of each kind; see
+[Disk use](../scripts/README.md#disk-use).
+
 ### Level editor
 
 The normal build also creates a separate desktop level editor:

@@ -31,7 +31,7 @@ full.
 | [quiet-game.ps1](quiet-game.ps1) | dot-sourced helper that sets `COLOURWARS_MUTE` for the game and real-audio probes a check starts, and restores the caller's value; set `COLOURWARS_MUTE=0` first to hear a run |
 | [drawing-references.ps1](drawing-references.ps1) | dot-sourced helper giving `check-paint-fx.ps1` and the debug-console driver the `Add-Type` references System.Drawing code needs under pwsh as well as Windows PowerShell |
 | [probe-build.ps1](probe-build.ps1) | dot-sourced helper for the configured build's compiler arguments, game and adapter libraries, dependency includes and Windows libraries; for `x64-asan` also the sanitizer flags and the folder of its runtime DLL |
-| [report-analyze.ps1](report-analyze.ps1) | builds the `x64-analyze` preset from clean and writes `analyze-warnings.log` and `analyze-summary.json`, the `/analyze` warnings counted by code for this repository and for the engine; a report that fails only if the build does |
+| [report-analyze.ps1](report-analyze.ps1) | builds the `x64-analyze` preset from clean and writes `analyze-warnings.log` and `analyze-summary.json`, the `/analyze` warnings counted by code for this repository and for the engine; a report that fails only if the build does. `-Baseline` [report-analyze-baseline.json](report-analyze-baseline.json), as the nightly passes it, lists this repository's warnings that are new or gone against the nine accepted ones; `-WarningsLog` recounts an earlier `analyze-warnings.log` without building |
 | [check-diagnostics.ps1](check-diagnostics.ps1) | shared stderr checks; only the exact optional-bank fallback or a caller's explicit fixture diagnostic is allowed |
 | [check-windows.ps1](check-windows.ps1) | shared Win32 source for enumerating a child process's top-level windows, finding a class and closing those windows |
 | [check-probe-helpers.ps1](check-probe-helpers.ps1) | checks build preflights, diagnostics and owned-window enumeration with synthetic files and an invisible native window; no CMake, MSVC or GPU |
@@ -88,7 +88,7 @@ to `cases.psd1`.
 | [check-finish-details.ps1](check-finish-details.ps1) | runs the `review_finish_details` console script and requires equal checksums across its variants |
 | [check-movement-feedback.ps1](check-movement-feedback.ps1) | renders and checks movement-feedback frames ([polish-feedback.md](../docs/polish-feedback.md)) |
 | [check-paint-fx.ps1](check-paint-fx.ps1) | renders and checks projectile and fresh-paint frames ([polish-paint-effects.md](../docs/polish-paint-effects.md)); `-CompileOnly` builds the probe without a window, as CI does |
-| [check-painter.ps1](check-painter.ps1), [check-painter/](check-painter/) | the painter visual probe and its focused leaves, evidence records and contact sheets |
+| [check-painter.ps1](check-painter.ps1), [check-painter/](check-painter/) | the painter visual probe and its focused leaves, evidence records and contact sheets; a passing run deletes the probe it compiled and records that in `result.json` (`removed_after_pass`), a failed one keeps it |
 | [check-painter-sweep.ps1](check-painter-sweep.ps1) | runs every focused painter leaf or one shard of them, one `check-painter.ps1` run each; [nightly.yml](../.github/workflows/nightly.yml) runs it with [check-painter/hosted-known-failures.txt](check-painter/hosted-known-failures.txt) |
 | [check-painter-selection.ps1](check-painter-selection.ps1) | checks the painter probe's selectors and routing without a compiler or GPU |
 | [check-painter-evidence.ps1](check-painter-evidence.ps1) | checks the shared painter PPM, finite-number, key-set, CSV, save and PNG evidence helpers without the game or a GPU |
@@ -124,12 +124,31 @@ to `cases.psd1`.
 | [build_icon.py](build_icon.py) | rebuilds `game/colourwars.ico` and its preview from the editable drawing ([game/art/icon/](../game/art/icon/README.md)); `--check` fails if they are stale, which CI runs through [ci/test_build_icon.py](ci/test_build_icon.py) |
 | [audio/](audio/) | the audio pipeline and runtime-bank publication ([game/audio/paint_exe/](../game/audio/paint_exe/README.md)) |
 
+## Disk use
+
+Every check writes a fresh run folder, named by a GUID, under
+`out/validation`, `out/acceptance` or its `-OutputDirectory`, and nothing local
+expires: on 2026-11-12 MattPC held about 570 GB of them. A passing painter run
+keeps only its evidence; everything else stays until it is removed.
+
+| Script | What |
+|---|---|
+| [clean-validation.ps1](clean-validation.ps1) | lists the run folders under `out/validation`, `out/acceptance` and every `out/hyg*` folder (or `-Path`) by kind, size and age, and what it would remove; changes nothing without `-Apply`, which keeps the newest `-Keep` runs of each kind (default 3) and removes the rest; `-ReceiptsOnly` also trims the kept runs to their JSON, log and CSV files, sparing a run whose `result.json` says it failed. A run is a GUID folder or a painter sweep shard (`<preset>-<n>-of-<m>`), kept or removed whole; nothing outside a run is touched, and it refuses a drive root, a checkout and `out/build` |
+| [check-clean-validation.ps1](check-clean-validation.ps1) | checks that script against a synthetic run tree: dry run unchanged, keep and remove, sweep shards whole, receipts-only trim sparing failed runs, unsafe roots; no build, compiler or game |
+
+Run the dry run first, read what it would remove, then repeat with `-Apply`:
+
+```
+scripts/clean-validation.ps1
+scripts/clean-validation.ps1 -Keep 2 -Apply
+```
+
 ## Other folders
 
 | Folder | What |
 |---|---|
 | [debug/](debug/) | the shipped developer-console scripts (`exec <name>`), listed in [debug-console.md](../docs/debug-console.md#scripts) |
-| [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the engine pin's check against Labrador, the Markdown link check, the `publish` job's tag check and release notes (`release.py`, `REL#4`), and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
+| [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the engine pin's check against Labrador, the Markdown link check, the test that this index links every tracked entry under `scripts/`, the `publish` job's tag check and release notes (`release.py`, `REL#4`), and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
 | [balance/](balance/) | `TOOL#4`'s matrix driver/designs and analyser: tool and 2v2 team paint/eliminations, bot counters, profile checks and independent A/B intervals with design margins ([gameplay-tuning.md](../docs/gameplay-tuning.md#balance-matrix-tool-tool4)), and its test |
 | [perf/](perf/) | frame-pacing analysis and its test |
 | [studies/](studies/README.md) | the kits for the drawing-mistake human studies ([drawing-mistakes-research.md](../docs/drawing-mistakes-research.md#8-human-tests)): Study A's references, sheets and analysis, Study B's stimulus capture, test page and analysis |

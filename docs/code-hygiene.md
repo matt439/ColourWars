@@ -21,27 +21,64 @@ checked. Line numbers are from `68e3dc2e`.
 
 ### Evidence directories that fill the disk (`HYG#93`)
 
-**Open.** On 2026-11-12 the check output on MattPC had reached about 570 GB:
-`out\validation` alone was 236 GB, `out\acceptance` 30 GB and each `out\hyg*`
-run folder about 50 GB, with more in short scratch roots under `C:\`. Each run
-took a fresh `-OutputDirectory` and kept everything it built. The painter
-compiles `painter_visual.exe` and its `.obj` into every run folder
-(`scripts/check-painter.ps1:279` and `:299`), and the sweep gives each leaf its
-own (`check-painter-sweep.ps1`). CI artifacts expire after a set number of
-days; nothing local does, and neither [scripts/README.md](../scripts/README.md)
-nor [development.md](development.md) mentions cleanup.
+**Done** (2026-11-12). On 2026-11-12 the check output on MattPC had reached
+about 570 GB: `out\validation` alone was 236 GB, `out\acceptance` 30 GB and
+each `out\hyg*` run folder about 50 GB, with more in short scratch roots under
+`C:\`. Each run took a fresh `-OutputDirectory` and kept everything it built,
+the painter compiling `painter_visual.exe` and its `.obj` into every run folder
+and the sweep giving each leaf its own. CI artifacts expire; nothing local did,
+and neither [scripts/README.md](../scripts/README.md) nor
+[development.md](development.md) mentioned cleanup.
 
-First step: measure what fills one painter leaf folder after a passing run,
-then have the painter delete its compiled probe (and anything else that is
-not evidence) once the run passes; a failed run keeps it. Then add
-`scripts/clean-validation.ps1`: a dry run by default that lists `out/validation`,
-`out/acceptance` and the `out/hyg*` folders by size and age, and with `-Apply`
-keeps the newest N runs of each kind, and optionally only their JSON and log
-receipts. Index it in [scripts/README.md](../scripts/README.md) with a short
-"Disk use" note.
+Measured on one passing `DurationTextOnly` leaf at `220d4809`: the Release run
+folder was 32 MB, of which the probe was 31 MB (`painter_visual.obj` 25 MB,
+`.exe` 6 MB) and the evidence 1.4 MB (captures, contact sheets, `result.json`,
+logs); in Debug the probe was 41 MB and the evidence 1.5 MB. So about 97% of a
+passing leaf was the compiled probe.
 
-Done when a passing painter leaf leaves only its evidence, the cleanup script
-has a selection check that starts no build, and the README says how to use it.
+- `check-painter.ps1` now deletes `painter_visual*` `.exe`, `.obj`, `.pdb` and
+  `.ilk` from the run folder once a run has passed, after the probe process is
+  disposed, and records the names and bytes in `result.json` as
+  `removed_after_pass`. A failed run, and a `-CompileOnly` run, keep the probe.
+  The sweep runs `check-painter.ps1` once per leaf, so it inherits this.
+- [scripts/clean-validation.ps1](../scripts/clean-validation.ps1) is a dry run
+  by default: it lists `out/validation`, `out/acceptance` and every `out/hyg*`
+  folder (or `-Path`) with each kind of run (runs sharing a parent) by count,
+  size and age, and what `-Apply` would remove. A run is a GUID folder or a
+  painter sweep shard (`<preset>-<n>-of-<m>`, or a folder holding
+  `sweep-summary.json`), which is kept or removed whole: the sweep writes every
+  leaf of a shard under one `evidence/<preset>`, so counting leaves would keep
+  the newest few and orphan the summary's references to the rest, failed
+  leaves included. `-Apply` keeps the newest `-Keep` runs of each kind
+  (default 3, by creation time, or a reused shard's summary time) and removes
+  the rest; `-ReceiptsOnly` also trims the kept runs to their JSON, log and
+  CSV files, except under a run whose `result.json` says `failed`, which keeps
+  its probe as `check-painter.ps1` left it. It touches only runs, so a reused
+  folder such as `out/acceptance/<preset>` is listed and left alone, and it
+  refuses a drive root, a checkout and `out/build`.
+- [scripts/check-clean-validation.ps1](../scripts/check-clean-validation.ps1)
+  builds a synthetic tree (plain kinds, three sweep shards of five leaves with
+  one failed leaf each, one shard unfinished without its summary, a failed
+  standalone run, a reused per-preset folder and a named folder among runs) and
+  checks that the dry run changes nothing and plans the right runs, that
+  `-Apply` keeps and removes the right ones, shards whole, and nothing outside
+  them, the `-ReceiptsOnly` trim and that it spares failed runs, `-Keep 0`, and
+  the three refusals. It starts no build, compiler or game.
+- [scripts/README.md](../scripts/README.md#disk-use) has a "Disk use" section,
+  and [development.md](development.md#consumer-acceptance) points to it.
+
+Checked on MattPC, 2026-11-12: `check-clean-validation.ps1` passed 47 checks
+under pwsh 7 and Windows PowerShell 5.1, and failed as it should with
+`clean-validation.ps1` mutated to keep one run too many, to trim receipts
+instead of everything else, to count a shard's leaves as runs (as the first
+version did, which review caught) and to trim a failed run. A Release and a Debug `DurationTextOnly` leaf
+passed and left 1.4 and 1.5 MB with `removed_after_pass` naming the exe and obj
+(31.9 and 41.2 MB removed); a Release `TurbulenceMoverOnly` run given an
+invalid trial file failed and kept both. `check-painter-selection.ps1` passed
+under pwsh 7 and Windows PowerShell 5.1. A dry run over this worktree's own
+output listed its one remaining run. No `-Apply` was run on anyone's real
+output; that, and how often, is the user's to choose with the dry run in front
+of them.
 
 ### A build check for the layering rules (`HYG#94`)
 
@@ -71,40 +108,80 @@ date.
 
 ### Read the nightly `/analyze` count against a baseline (`HYG#95`)
 
-**Open.** The `REV#61` verdicts end: "a number other than nine on a later run
-is the thing to read." Nothing reads it. The nightly `analyze` leg runs with
-`continue-on-error` (`.github/workflows/nightly.yml:110-114`),
+**Landed 2026-11-12; the hosted job summary is still to be seen.** The
+`REV#61` verdicts end: "a number other than nine on a later run is the thing to
+read." Nothing read it. The nightly `analyze` leg runs with `continue-on-error`,
 `report-analyze.ps1` fails only when the build does, and the `report` job opens
-the issue only when a leg fails (`nightly.yml:133`). A tenth warning would sit
-in a 14-day artifact nobody opens.
+the issue only when a leg fails, so a tenth warning would have sat in a 14-day
+artifact nobody opens.
 
-First step: commit the nine accepted warnings (code, file, function) as a
-baseline beside `scripts/report-analyze.ps1`. Give the script a `-Baseline`
-switch that writes new and vanished entries to `analyze-summary.json` and to the
-job summary as an annotation. The leg keeps `continue-on-error`: whether a new
+[scripts/report-analyze-baseline.json](../scripts/report-analyze-baseline.json)
+holds the nine accepted warnings (code, repository-relative file, line and
+function), and `report-analyze.ps1 -Baseline <file>` compares this
+repository's warnings with it; the engine's are Labrador's and are not
+compared. Entries match by code and file, then by exact line; what is left in
+a group pairs in line order as a moved warning, so an edit above a warning does
+not report it, and the rest are new or vanished. The result goes to
+`analyze-summary.json` (`baseline.new`, `baseline.vanished`), to the console,
+as a `::warning` annotation on each new warning's file and line and a
+`::notice` for each vanished one when `GITHUB_ACTIONS` is set, and as a table
+in `GITHUB_STEP_SUMMARY` when that is set. `-WarningsLog <file>` recounts an
+earlier run's `analyze-warnings.log` from the same checkout without building.
+The nightly leg passes `-Baseline` and keeps `continue-on-error`: whether a new
 warning should fail the night changes what the nightly signals, so it is a
-separate call.
+separate call. A warning that is fixed or accepted is a baseline edit in the
+same commit.
 
-Done when a run against a baseline with one entry removed reports that entry as
-new, a run against the true baseline reports nothing, and the nightly job
-summary shows the comparison.
+Checked on MattPC, 2026-11-12: a full `report-analyze.ps1` run at `220d4809`
+found the same 11 distinct warnings as on 2026-11-10 (nine here, two in the
+engine; `wWinMain`'s frame is now 34,988 bytes). Recounting its log, under
+pwsh 7 and Windows PowerShell 5.1:
+
+- against the committed baseline: "all 9 match the 9 accepted", nothing new or
+  vanished;
+- against a copy without `DebugPerf::reset`: one new C6262 at
+  `game/debug/capture/debug_perf.cpp(304)`, with its annotation and summary row;
+- against a copy with `Editor::choose_user_stage` moved seven lines and an
+  extra entry in a file with no warning: the moved entry matched and the extra
+  one was reported vanished.
+
+The step summary was written to a local file in the GitHub format. Not seen
+yet: the hosted nightly's job summary, which the pull request's own nightly
+trial (the workflow's `pull_request` paths include the script and the
+baseline) or the first night after merge will show.
 
 ### Close the nightly issue on a green night (`HYG#96`)
 
-**Open.** The `report` job opens or comments on `Nightly sweep failed` when a
-scheduled night fails, and its body says "Close this once a night passes"
-(`nightly.yml:131-150`). Nothing acts on a green night, so the issue stays open
-until someone notices. Issue #72, opened by the failure on 2026-11-09, was
-still open on 2026-11-12 after green nights on 2026-11-10 and 2026-11-11. That
-contradicts AGENTS.md's "the rest of the time, nothing is owed".
+**Landed 2026-11-12; the dispatched trial is owed.** The `report` job opens or
+comments on `Nightly sweep failed` when a scheduled night fails, and its body
+said "Close this once a night passes". Nothing acted on a green night, so the
+issue stayed open until someone noticed: issue #72, opened by the failure on
+2026-11-09, was still open on 2026-11-12 after green nights on 2026-11-10 and
+2026-11-11, against AGENTS.md's "the rest of the time, nothing is owed".
 
-First step: add a job that runs only on `schedule` when every leg succeeded,
-finds the open issue by title, and closes it with a comment linking the green
-run. The job is schedule-only, so a pull request cannot exercise it; trial the
-close path through `workflow_dispatch` with an input that permits it.
+`nightly.yml` now has a `close` job. On `schedule`, when every leg succeeded,
+it lists open issues whose title is exactly `Nightly sweep failed` and closes
+each with a comment linking the green run; the issue body now says the next
+green scheduled night closes it. A failed, cancelled or timed-out night still
+goes to `report` and opens or updates the issue as before. The job is
+schedule-only, so a pull request cannot exercise it: `workflow_dispatch` takes
+a `close_trial` input that skips every leg and runs only the close path, with a
+comment that says it was a manual trial. A manual run without the input runs
+the legs and does not close anything.
 
-Done when a dispatched trial closes a test issue of the same title and a
-scheduled failure still opens one.
+Checked on MattPC, 2026-11-12: the workflow parses as YAML with the input,
+the `windows` job's `!inputs.close_trial` guard and the `close` job's
+condition as written; the job's script, run under bash with a stand-in `gh`,
+reported "No open" for none and closed one and two listed issues with the
+trial or green-night comment; and the same read-only `gh issue list` query and
+`--jq` filter against the repository returned `72 OPEN`.
+
+Owed, and needing a push: a `workflow_dispatch` run with `close_trial` set
+that closes a test issue titled `Nightly sweep failed`. Issue #72 is still
+open and has the same title, so a trial while it is open closes it too, which
+two green nights already earned. Then a scheduled failure still opening one is
+seen on the next red night; the `report` job did not change but for its body
+text.
 
 ### Editor undo without copying its history (`HYG#97`)
 
@@ -224,19 +301,22 @@ declared in `scripts/acceptance/cases.psd1`.
 
 ### Every script in the scripts index (`HYG#103`)
 
-**Open.** AGENTS.md says [scripts/README.md](../scripts/README.md) indexes the
-scripts and must be kept true, and nothing checks it. On 2026-11-12
-`release-package-path.ps1`, dot-sourced by `build.ps1`,
+**Done** (2026-11-12). AGENTS.md says [scripts/README.md](../scripts/README.md)
+indexes the scripts and must be kept true; until this row nothing checked it.
+On 2026-11-12 `release-package-path.ps1`, dot-sourced by `build.ps1`,
 `sandbox-release.ps1`, `check-release-package.ps1` and
 [releasing.md](releasing.md), was the one tracked top-level entry under
 `scripts/` the index did not name; its row was added the same day.
 
-First step: a test in `scripts/ci/`, run by the lint job's existing
-`unittest discover`, that every tracked top-level file and folder under
-`scripts/` is named in `scripts/README.md`.
-
-Done when the test passes, and fails with the name of a planted unindexed
-script.
+[scripts/ci/test_scripts_index.py](../scripts/ci/test_scripts_index.py), run by
+the lint job's existing `unittest discover -s scripts/ci`, lists the tracked
+top-level files and folders under `scripts/` with `git ls-files` and requires
+each to be the first path component of a relative link in the index
+(`[ci/](ci/)` and `[studies/](studies/README.md)` both name their folder). A
+name in prose or a link that leaves `scripts/` does not count; the index names
+itself. It reads whatever is tracked, so a new script fails it until it has a
+row. Planting an untracked-then-intent-added `scripts/planted.ps1` failed the
+test with `scripts/README.md does not link: planted.ps1`; removing it passed.
 
 ## Hygiene review (2026-11-05)
 
