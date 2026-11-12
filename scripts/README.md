@@ -109,6 +109,7 @@ to `cases.psd1`.
 |---|---|
 | [sandbox-release.ps1](sandbox-release.ps1), [sandbox/](sandbox/) | prepares, and optionally runs, a Windows Sandbox trial of the Release ZIP (`ROAD#37`) |
 | [check-sandbox-release.ps1](check-sandbox-release.ps1) | checks that generator's output on the host without starting a sandbox |
+| [release-package-path.ps1](release-package-path.ps1) | dot-sourced helper that reads `project(VERSION)` from `CMakeLists.txt` and returns the Release ZIP's path; used by `build.ps1`, `sandbox-release.ps1`, `check-release-package.ps1` and [releasing.md](../docs/releasing.md)'s fallback check |
 | [check-release-package.ps1](check-release-package.ps1) | extracts the Release ZIP and checks its packaging rules: no development files or unreviewed audio, every required file, the accepted bank's hash and no developer-console RTTI (`CI#6`; CI's inspection step) |
 
 ## Content builds

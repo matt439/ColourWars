@@ -17,7 +17,9 @@
 > before it was drafted (2026-11-10) and was never filed; it stays live only
 > until a pin bump brings the answer here.
 > An eighth, **37**, is the unfiled long-checkout-path draft from the first-run
-> review, reproduced against upstream master `3fe88f64` on 2026-11-10.
+> review, reproduced against upstream master `3fe88f64` on 2026-11-10. A ninth,
+> **38**, is the unfiled window-presence draft from the 2026-11-12 TODO audit,
+> checked against the same master.
 > **Twenty-nine are closed** (1–25, 28, 29, 31 and 32) and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
@@ -141,6 +143,14 @@ rewritten to the publication gate below with synthetic code and engine paths
 only. Labrador had no earlier issue, so none duplicates another. 28 was closed
 as declined, with `game/carried/` as the migration.
 
+**Re-checked 2026-11-12 against upstream master `3fe88f64`** (confirmed with
+`ls-remote`; 95 commits past the pin `e7fc50e`, no tag since `v0.3.0`, and a
+green `build and test` push run on 2026-11-10). Labrador issues #122 to #125
+are open with no answer, and nothing in the 95 commits answers 26, 27, 30, 33
+or 34. Report 38 is drafted against it, the parked list below is amended, and
+the next bump's preparation is under
+[Preparing the next pin bump (2026-11-12)](#preparing-the-next-pin-bump-2026-11-12).
+
 ## The rule that governs this file
 
 **Check the engine's master before filing, not the pin.** `external/labrador`
@@ -240,9 +250,11 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 | 27, 30, 33 | Three still live from the 2026-10-30 architecture review (28 declined, 29 withdrawn; 31 and 32 answered in `v0.3.0`) | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | filed 2026-11-05 as [#122](https://github.com/matt439/Labrador/issues/122), [#123](https://github.com/matt439/Labrador/issues/123) and [#124](https://github.com/matt439/Labrador/issues/124); awaiting answers |
 | 34 | `RenderDeviceKind::hardware` describes a software rasteriser | [the hosted runner's Basic Render Driver](#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit) logged as `kind=hardware`, which the strict painter, paint-fx and frame-pacing gates rely on | filed 2026-11-05 as the Bug [#125](https://github.com/matt439/Labrador/issues/125), saying this client will adapt its gates to the engine's answer; what those gates accept is settled when it lands |
 | 35 | `AudioResources` has no non-throwing sound-group lookup | [`sound_groups.cpp`](../../game/config/sound_groups.cpp)'s find-or-add catches `std::out_of_range` as control flow | drafted 2026-11-05 from the [hygiene review](2026-11-05-code-hygiene-review.md#engine-report-owed), checked against master `5cbc6b3`; not filed, the author decides |
-| 36 | JSON parsing recurses once per nesting level | the [`save_max_nesting`](../../scripts/acceptance/reader_mutations.cpp) bound in the `reader_mutations` case | found 2026-11-10; already answered on master by `8362e2d` (iterative parse), which the pin `e7fc50e` predates; never filed; spent at the pin bump that includes it |
+| 36 | JSON parsing recurses once per nesting level | the [`save_max_nesting`](../../scripts/acceptance/reader_mutations.cpp) bound in the `reader_mutations` case | found 2026-11-10; already answered on master by `8362e2d` (iterative parse), which the pin `e7fc50e` predates; never filed; spent at the pin bump that includes it, which [`PIN#1`](#rehearse-against-engine-master-pin1) rehearses |
+| 37 | Long render golden filenames break ordinary Windows clones | the short-checkout warning in the README and `build.ps1` | drafted 2026-11-10 against master `3fe88f64`; not filed, the author decides |
+| 38 | Presence reaches the game as one bool | [`debug_background.cpp`](../../game/debug/input/debug_background.cpp) subclasses the engine's window to tell minimised, hidden and power-suspended apart | drafted 2026-11-12 against master `3fe88f64`; not filed, the author decides |
 
-Nothing else is outstanding, on either side, beyond reports 26, 34, 35 and 36 below, the three still live
+Nothing else is outstanding, on either side, beyond reports 26 and 34 to 38 below, the three still live
 [from the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
@@ -806,6 +818,78 @@ the test-to-image mapping are engine decisions.
 for the short-clone warning. vcpkg/compiler paths also grow under a deep root,
 so shortening images alone does not remove all build-path guidance.
 Publication stays with the author; no issue has been sent.
+
+---
+
+## 38. Presence reaches the game as one bool - **draft with window-subclass exhibit**
+
+**Drafted 2026-11-12 from the TODO audit, not filed.** Checked the same day
+against upstream master `3fe88f64` (confirmed with `ls-remote`). The pin
+`e7fc50e` has the same shape. A read-only `gh` search of Labrador's issues for
+minimised, minimized and presence returned nothing. The exhibit is Debug-only
+tooling, which makes it weaker than a shipped workaround; the author decides
+whether to file it, attach it to another report or leave it here.
+
+### Exhibit
+
+[`game/debug/input/debug_background.cpp`](../../game/debug/input/debug_background.cpp)
+at `:27-109`. `DebugBackgroundWindow::attach` takes `Application::window()`,
+the native handle, and installs `SetWindowSubclass` on it (`:93`). The
+subclass procedure records `WM_SIZE` with `SIZE_MINIMIZED` (`:54-58`),
+`WM_SHOWWINDOW` (`:59-62`) and `WM_POWERBROADCAST` with `PBT_APMSUSPEND` and the
+two resume codes (`:63-75`), and seeds the minimised flag from `IsIconic`
+(`:91`). `state()` adds `IsWindowVisible` (`:107`). `background_window_allows`
+(`:9-12`) then admits a script only in a window that is shown, not minimised
+and not power-suspended. `DebugDirectorImpl::attach`
+(`game/debug/debug_director_impl.cpp:65`) is the one caller.
+
+It exists for `DBG#6`'s `script.background`, which
+[the record](../debug-console-record.md#background-script-work-dbg6) defines
+as automation "in an ordinarily inactive, shown window", while "hidden,
+minimized and power-suspended windows remain held". The game needs to tell
+"in the background but still on screen" from "not on screen at all", and the
+engine gives it only the first question.
+
+### What happens
+
+On master, `Window::Impl` (`engine/app/win32/window.cpp`) tracks every one of
+these facts: `active` from `WM_ACTIVATEAPP`, `minimized` from `WM_SIZE`, and
+`power_suspended` from `WM_POWERBROADCAST`. `update_suspension` folds the last
+two into `on_suspending`/`on_resuming`. `Application` keeps them as
+`foreground_` and `shown_` (`engine/app/application.h:537-538`, both private),
+and `settle_presence` folds those into one `present` (`application.cpp:548-568`).
+A state hears that as the `on_activated`/`on_deactivated` edge, which
+`engine/core/state.h:74-75` says covers "alt-tab, minimise, a power suspend",
+or as `StateContext::active()`. `Application` has no query for foreground,
+shown or minimised, and `Window` has none either. So a game that wants to treat
+an alt-tab differently from a minimise has to watch the window's messages
+itself, beside the engine's own procedure.
+
+The engine has only made this sharper since the pin. `b1a4559a` (2026-11-10)
+stops drawing while minimised, so being minimised now changes what the engine
+does, and still cannot be asked about.
+
+**Reproduction.** In a state, pause a match on `on_deactivated` only when the
+window is minimised or hidden, and keep it running when the player has merely
+alt-tabbed to a second monitor. The edge arrives the same way for both, and
+`StateContext::active()` answers false for both. No public call says which it
+was.
+
+### The ask
+
+A read-only answer to the facts the engine already holds: whether the window
+is in the foreground and whether it is shown (not minimised, hidden or
+suspended), for example as queries on `Application` or as a reason passed with
+the activation edge. The spelling, and whether a browser canvas answers the
+same questions, are engine decisions. The engine may decline under T1, as
+game policy; a decline closes this report and the subclass stays.
+
+### What an answer lets this repository delete
+
+The `Impl` class in `debug_background.cpp`, with its `SetWindowSubclass`,
+`RemoveWindowSubclass` and the `WM_NCDESTROY` guard, and the `CommCtrl.h`
+include. `DebugBackgroundWindow::state` becomes calls to the engine's query.
+`background_window_allows` stays, because the policy is the game's.
 
 ---
 
@@ -2067,11 +2151,21 @@ still only reads.
   `mouse_x1`, `mouse_x2`) in `game/input/input_bindings.cpp` beside the keys, which
   use `labrador::key_name`. The exhibit is that five-row table. It is too small
   to file alone: the ask is `mouse_button_name`/`mouse_button_from_name` next to
-  `MouseButton`, with the same file-format promise, and it rides with the next
-  input report. The game's tokens are prefixed so that a bare engine spelling
+  `MouseButton`, with the same file-format promise. The game's tokens are
+  prefixed so that a bare engine spelling
   (`left`, `x1`) cannot collide with a key name in the same field; an answer
   would replace the table's name column and keep the prefix as the client's.
   Parked as `ENG#PARKED`.
+
+  **The ride was missed (noted 2026-11-12).** This entry said it would ride
+  with the next input report. That report was report 27, filed on 2026-11-05 as
+  [labrador#122](https://github.com/matt439/Labrador/issues/122), and it went
+  without this ask. The new vehicle is a comment on #122, which is still open
+  and is the engine's one input thread; posting it is the author's call, under
+  the [publication gate](#publication-gate-engpublish). Until then it waits
+  here. It is separate from the "XInput is the only pad reader" entry below
+  and from `ROAD#23`, which are about which pads are read, not how a binding is
+  spelled.
 
 - **Runtime install facts: the engine's runtime DLLs, the redistributable CRT
   and refusing a debug CRT.** Report 15 kept this half separate from its
@@ -2129,7 +2223,45 @@ still only reads.
   Windows one, so a GameInput backend (DualSense, DualShock, Switch Pro without
   Steam Input) would be an engine addition behind an existing seam. No exhibit:
   nothing here works around it. `ROAD#2` brings one such pad to observe the
-  limit.
+  limit, and `ROAD#23` owns the client's side of non-XInput pads.
+
+- **`DrawList` colour transforms beyond multiply** (folded in 2026-11-12 from
+  `GAP#F10`). The [gap audit](gap-audit.md)'s F10 found that a per-draw
+  multiply cannot desaturate or hue-rotate a texture's own pixels, so a
+  greyscale pause, a daltonize filter or a hue remap is out of a client's
+  reach. Its ask is `DrawList::set_colour_transform(ColourMatrix)`. No exhibit:
+  the grey figures use the multiply tint
+  (`grey_.value_or(...)` in `game/objects/player_figure.cpp:147-249`), and a
+  grep of `game/` finds no greyscale or daltonize workaround. It is filed only
+  if a feature here needs a non-multiplicative treatment and writes the code
+  that shows it.
+
+- **Engine rows that say no client asks** (added 2026-11-12). Three `DECISION`
+  rows in Labrador's own `TODO.md` at master `3fe88f64` ask for a client, and
+  this one has something to say to each. None is filed; whether to add this
+  evidence to an engine row, file it alone or let it wait for a carrier report
+  is the author's call.
+  - **`REV#83`** (`TODO.md:226`): no option for a window's size, position,
+    monitor or maximised start, "and no monitor query is exposed; no client
+    asks for any". This client does, by hand:
+    `fit_initial_window` (`game/config/initial_display.cpp:48-86`) calls
+    `GetMonitorInfoW(MonitorFromWindow(...))` and `AdjustWindowRectExForDpi`
+    on the native handle to fit the first-run window. That is the
+    "nothing reports the desktop size" half of the `window_size_changed` entry
+    above, so this is its exhibit and the engine row is its natural vehicle.
+  - **`GAP#6`** (`TODO.md:131`): circles, polygons and debug drawing of
+    collision shapes. The F2 collision overlay draws each object's
+    `shape()->bounding_box()` with a `Pen` that draws only axis-aligned boxes
+    and dots from a fill sprite (`game/debug/debug_overlay_draw.cpp:29-51`,
+    `:99`), so a rotated fixed slab is
+    drawn as its box. That is a client defect first, not yet an exhibit: the
+    exhibit is whatever code drawing the rotated shape turns out to need.
+  - **`REV#60`** (`TODO.md:203`): a read-only reduced-motion fact from the
+    browser or Windows' client-area animation setting. The game has a Reduce
+    effects switch whose default is a constant
+    (`game/config/play_settings.h:95`), and nothing here reads the system
+    setting. It becomes an exhibit only if the author decides a fresh save
+    should take its default from Windows.
 
 - **The write side of `json.h`.** Still absent, still correct (the engine's
   OCA-53 plans a guide, not an API, and declines a save facility under T1):
@@ -2889,3 +3021,111 @@ Run on MattPC (no pad), 2026-11-03, with the pin at `v0.3.0`:
 - `scripts/ci/check_doc_links.py` passes.
 - Not run: the missing-bank startup check, the Release ZIP inspection, and
   anything needing a pad or a listener.
+
+# Preparing the next pin bump (2026-11-12)
+
+Fetched 2026-11-12: upstream master is `3fe88f64` (2026-11-10), 95 commits past
+the pin `e7fc50e`, and its `build and test` push run passed, so `lint.py` would
+accept it as a pin. No tag has been cut since `v0.3.0`, so the week AGENTS.md
+gives from a minor tag has not started. The pin is itself an untagged master
+revision (moved 2026-11-04 for the vsync setting), so moving to master between
+tags has precedent; a patch release "may wait for the next reason to move", and
+report 36 is such a reason. The work below follows the
+[2026-10-29 preparation](#preparing-the-next-bump-2026-10-29): rehearse first,
+so the bump is spent on validation rather than discovery. None of it moves the
+real pin.
+
+**Report 36 rides with this bump** (`ENG#36`): master's `8362e2d` parses JSON
+iteratively, and the bump drops `save_max_nesting` from `reader_mutations.cpp`
+as [report 36](#36-json-parsing-recurses-once-per-nesting-level---answered-on-master-before-it-was-drafted)
+says. **Whether the bump lands before or after this game's first tag,
+`v0.1.0` (`FTR#1`), is the author's call.** Before means the first release
+ships on an engine that refuses deep JSON instead of overflowing; after means
+the first release is the build the release work has already checked.
+
+## Rehearse against engine master (`PIN#1`)
+
+**Open, 2026-11-12.** The `HYG#24` method again: build this game in a scratch
+worktree whose own submodule is checked out at master, then remove the
+worktree. `git submodule status` here stays as it is.
+
+Breaks master's `CHANGES.md` (Unreleased) names, checked against this tree:
+
+- **Configure:** "Load textures from PNG files" (2026-11-04) links `lodepng` on
+  every platform, and "a game's own `vcpkg.json` must name it: configure fails
+  at `find_package(lodepng)` without it". This repository's `vcpkg.json` lists
+  only `directxtk`.
+- **`Partitioner` moved** from `engine/collision/partitioner.h` to
+  `engine/core/partitioner.h`. Four files here include the old path:
+  `game/objects/level_builder.h:17`,
+  `scripts/acceptance/debug_console/cpu_level.h:18`,
+  `scripts/acceptance/paint/jump_through_checks.h:7` and
+  `scripts/acceptance/story_audio.cpp:21`. The engine's entry says five.
+  `Partitioner::partition` also now fills a caller-owned vector:
+  `partition(n, k)` becomes `partition(n, k, ranges)`.
+- **Removed and retyped API:** "Remove unused render API" and "Remove unused
+  math API" delete members such as `Colour::brighten`, `Vector2F::clamp`,
+  `Vector2F::unit_vector` and both `RectangleF::set_position_from_top_right`
+  overloads. `UiContainer::children()` now returns a const reference, used at
+  `scripts/acceptance/menu_text/fixtures.cpp:13` and
+  `setting_template_checks.cpp:94`. `ResourceLoader`'s reload helpers and
+  `FocusGroup::refresh_style` lose `const`.
+
+Which of these reach this tree is not yet measured; the rehearsal measures it.
+
+- **Scope:** add `lodepng` to a scratch `vcpkg.json`, then build both presets,
+  the editor and every acceptance case (`-CompileOnly`) against master, in
+  passes as `HYG#24` did. Record each break class with its distinct sites, not
+  the raw error count. Then run default acceptance and
+  `check-startup.ps1 -RequireAudio` on the master build, and drop
+  `save_max_nesting` there to see whether `reader_mutations` passes.
+- **First step:** a scratch worktree of the current branch, its submodule at
+  `3fe88f64` (or a later green master), `lodepng` added, and `x64-debug`
+  configured.
+- **Acceptance:** a table here of every break class with its sites, what each
+  needs at the bump, and any runtime failure from the run. The real pin is
+  unchanged.
+- **Does not decide:** when to bump. That is the pin policy and, for
+  `v0.1.0`, the author.
+
+## Qualify master's behaviour changes (`PIN#2`)
+
+**Blocked on `PIN#1`.** Master changes behaviour this game has never met, and
+the rehearsal build is where to watch it:
+
+- "Make a suspended XInput reader answer every slot disconnected": `settle_presence`
+  suspends the reader whenever the window is not in the foreground and shown,
+  so pads read disconnected after an alt-tab. The Join page colours rows and
+  adds the reconnect suffix from `inputs[player].connected`
+  (`game/states/main_menu_players.cpp:285-303`), and `DBG#6`'s
+  `script.background` promises truthful connection checks in an inactive
+  window.
+- "Sleep between steps and draw nothing while minimised": while minimised no
+  `draw` runs and `frame_timings().frame` stands still. The Debug perf capture
+  reads frame timings (`game/debug/capture/debug_perf.cpp`).
+- Also listed there: `play_wave` refuses an out-of-bank index, one-shots are
+  dropped while suspended, `ViewportManager::player_viewport` throws outside the
+  layout, and `JsonValue::number` throws outside `float`'s range.
+
+- **First step:** on the `PIN#1` build, run `debug_console`, `menu_text` and
+  the painter's Debug `script.background` checks, and script an alt-tab on the
+  Join page and in a match.
+- **Acceptance:** each change above is marked harmless, or has a scoped client
+  change owed before the bump.
+
+## PNG atlases and texconv (`PIN#3`)
+
+**Deferred until the pin has the PNG loader.** All six runtime textures under
+`game/content/textures/` are `.dds`. Four build scripts shell out to the
+vendored `texconv.exe` only to premultiply a PNG they have already written
+(`scripts/build-weapon-art.ps1:340`, `build-painter-art.ps1:584`,
+`build-terrain-art.ps1:328`, `build-paint-fx-art.ps1:224`; the reason is in
+[game/art/README.md](../../game/art/README.md)). Master reads `name.png` when
+there is no `name.dds` and premultiplies it itself, and refuses a name with
+both.
+
+- **First step, after the bump:** decode each shipped PNG through the engine's
+  `decode_png` and compare it byte for byte with the texconv DDS.
+- **Acceptance:** an atlas moves to PNG only if it matches or the painter pins
+  still pass; any that differs keeps its DDS. The painter and paint-fx scripts,
+  which stage the `.dds` by name, follow.

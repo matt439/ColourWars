@@ -2124,6 +2124,15 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
   painter or a shield tool would differ most. Each new tool needs art, audio
   and bot ballistics. It waited for `POL#27`, which the author settled on
   2026-11-05, so it is no longer blocked. A new subclass suits the OOP rule.
+  **First step (2026-11-12):** write a scope proposal for one archetype, in
+  the shape [Sub weapons](#sub-weapons-road11) used: which archetype and why
+  it differs most from the five tools, what else was considered, its rule as
+  a `Weapon` subclass beside the numbers it reads from tuning, its art, audio
+  and bot ballistics, slices each with its own acceptance case, and the
+  questions it puts to the author. Acceptance: the proposal is recorded here
+  and no code, tuning or content changes. The row then becomes `DECISION`;
+  nothing is built before the author answers. `REV#57`'s sniper charge, if
+  taken, rides with it.
 - **Map pickups (`ROAD#14`).** TowerFall chests, Paint Rumble power-ups and
   Smash items. Needs a match toggle and bot awareness. It waited for
   `POL#27`, which the author settled on 2026-11-05, so it is no longer blocked.
@@ -2576,6 +2585,12 @@ plants the sprinkler and wall as often as before. Endless paint is untouched.
   accept PlayStation and Switch Pro pads. The reader is Labrador's (see
   [Input devices and seats](#input-devices-and-seats)), so the engine part is a
   report with an exhibit; Steam Input covers it if the game ships on Steam.
+  **Deferred (2026-11-12).** It was examined, so it is not unscoped: the
+  engine ask is parked in `ENG#PARKED` as the non-XInput reader, and this
+  client has no exhibit, because no such pad has been tried here and the
+  `ROAD#2` session that would have observed the limit was waived. It resumes
+  when a non-XInput pad is in hand to show the failure, or when a store
+  release is chosen (`REV#68`), which decides whether Steam Input answers it.
 - **Pad aim assist (`ROAD#24`).** One mouse player can join pad players, and
   mouse aim is much more precise. Relates to `POL#3`, `POL#18` and the
   `ROAD#5` handicaps. Story B8 holds it: raise and scope it if a couch session
@@ -2583,6 +2598,10 @@ plants the sprinkler and wall as often as before. Endless paint is untouched.
   `POL#24` sessions that were to look for this were waived by the author on
   2026-11-05 and not performed
   ([decision](design-process.md#open-points-for-the-author)).
+  **Deferred (2026-11-12)** until attended evidence: story B8 already makes it
+  conditional, so it waits for a couch session that shows pad seats
+  consistently losing to the mouse seat. Without that, there is nothing to
+  tune an assist against.
 
 ### Not tracked, by choice
 
@@ -2914,7 +2933,9 @@ are controlled inspection states; attended clarity/preference remains
 ### Unscoped paint-object contracts (`ROAD#28`, `ROAD#29`)
 
 **UNSCOPED (2026-10-28); `ROAD#28`'s first slice was promoted on 2026-11-03,
-below, and its paint-driven second slice built the same day.** These are the remaining capabilities from
+below, and its paint-driven second slice built the same day. Regraded
+2026-11-12: `ROAD#28`'s remainder is deferred and `ROAD#29` has a first step,
+both below.** These are the remaining capabilities from
 `ROAD#15`, not ready implementations or prerequisites of the three slices
 above:
 
@@ -2927,11 +2948,26 @@ above:
   [cycling](#vertical-lift-first-slice-road28) and
   [paint-driven](#paint-driven-lift-second-slice-road28) slices are built;
   deliberate bot lift routing, including a stuck check that discounts carried
-  y, is left and unscoped.
+  y, is left. **Deferred, LOW, behind `REV#27` (2026-11-12).** Lifts stand
+  only on the Lift and Paint Lift Trials, and both have
+  `"include_in_random": false` (`game/content/levels/turbulence_lift_trial.json`,
+  `turbulence_paint_lift_trial.json`), so no match a bot plays from Random
+  meets a lift and routing has no consumer. It resumes if `REV#27` sets an
+  arena with lifts as an aim.
 - **Growing sponges (`ROAD#29`, XL):** define occupied growth/shrink behavior,
   paint-tile identity, changing scored area and retained paint/contribution
   credit before choosing an implementation. `PaintSurfaceSample` explicitly
   requires a scoring rule for scale; resizing a rendered rectangle is not one.
+  **First step (2026-11-12):** draft the sponge's contract on the
+  [vertical-lift precedent](#vertical-lift-contract-draft-road28): an
+  inventory of the sites that assume a scored object's area never changes
+  (`PaintableObject` totals and `PaintCredit`, `PaintTile` identity,
+  `PaintSurfaceSample` and the bots' paint surfaces, awards, the replay
+  fingerprint, the editor), an engineering answer for each that names its
+  precedent, and the gameplay option sets the author chooses from. Acceptance
+  as for the lift draft: every inventory row resolved against the tree at the
+  commit that records it, no code, tuning or content changed, and no trial
+  chosen. The row then becomes `DECISION`.
 
 Promote a bounded slice only once its owner records those choices and its
 acceptance. Neither adds a new physics/scoring requirement to an accepted
@@ -4049,6 +4085,109 @@ readability look at 1, 2 and 4 panes with a pad (chip size at 4P, overlap with
 the HUD panels at the top corners, pointer legibility, whether the fade helps)
 was part of the pad sessions the author waived on 2026-11-05 (`ROAD#2`); it was
 not performed.
+
+## Backlog audit additions (2026-11-12)
+
+A 2026-11-12 audit of the open-work index looked for work no row carried and
+checked each candidate against the existing rows, the declines under
+[Not tracked, by choice](#not-tracked-by-choice) and the 2026-11-10 review.
+These five survived. None is engineer-ready: the first needs the author's
+call, and the rest need a written scope or the next engine pin first.
+
+### Series side swap (`ROAD#40`)
+
+**DECISION, LOW, M.** A team keeps the same half in every round of a series.
+Team A spawns must sit strictly left of the arena's midpoint and Team B's at or
+right of it ([level format](level-format.md#coordinates-bounds-and-spawns)),
+because the opening previews each team's colour over its own half
+(`on_own_half` in `game/contracts/level_format.h`). The
+[Series stage rule](#series-stage-rule-road20) chooses the next stage, not the
+sides, so under Same stage a Best of 5 can play one side five times. The polish
+plan's fairness and level-play checks name side swaps, and the balance harness
+swaps sides to cancel any side advantage
+([gameplay tuning](gameplay-tuning.md)). No side advantage is shown: the slab
+trial's lopsided paint is recorded as "not yet a geometry finding"
+([Turbulence](polish-turbulence.md)). Splatoon, which this game follows, does
+not swap, because its maps are mirrored.
+
+**Question for the author:** no swap (today), swap every round, or swap only
+when the stage repeats? If one is taken it is a value on the existing Mode row,
+a match option inside the 2026-11-03 options ruling, and its design note
+covers the opening preview, what the A/B labels then mean, the remembered-setup
+key and the replay format.
+
+### Practice targets in the workshop (`ROAD#41`)
+
+**UNSCOPED, LOW, M.** The Movement Course workshop teaches that eliminations
+clear room ([stations](polish-movement-course.md)), but a solo practice has
+nobody to eliminate and no station gives the player something to shoot. The
+workshop proposal asks for "cover around which the different shot shapes can
+be tried" ([polish plan](polish-plan.md)). The 2026-11-10 review left a
+practice target out because a damageable figure with a damage readout would put
+numbers into a game that shows none
+([`REV#56`](review/2026-11-10-project-review.md#sub-lesson-station-in-movement-course-rev56)).
+A grey, non-scoring figure that pops and redraws through the existing wordless
+respawn, with no HUD element or number, avoids that objection.
+
+First step: a scope section for a new station kind that places such a figure,
+which takes hits through the existing `Collider` path, in untimed solo practice
+only, with the `practice_workshop` checks it adds. It is a new subclass beside
+the existing ones and flattens nothing. Related: `REV#55` (solo practice on any
+stage) and `REV#56` (the Sub lesson).
+
+### Shot shapes on Weapon Select (`ROAD#42`)
+
+**UNSCOPED, LOW, M.** Story A6 ([design process](design-process.md)) is a
+player who wants to know what each tool does before picking it. Weapon Select
+answers with an icon and wrapped text
+([Weapon-selection names and artwork](menu-presentation.md#weapon-selection-names-and-artwork)),
+and whether that text is enough was `POL#24`, waived on 2026-11-05 and not
+performed. The five tools differ most in shape: the bucket arcs, the mister
+spreads, the roller holds its aim and the sniper reaches furthest. No
+readability problem has been observed, and the practice workshop already lets
+a player try each tool.
+
+First step, if selected: a small looping diagram on the focused card, drawn
+from the tool's own tuning (speed, gravity, spread) so it cannot drift from the
+shipped tool, behind a presentation switch that defaults off, compared with the
+current card in the `-WeaponPaperOnly` painter fixture. It is new menu art, so
+it may wait for `POL#16`'s UI pass.
+
+### Flood-fill paint object (`ROAD#43`)
+
+**UNSCOPED, LOW, L.** The paint objects so far are the ferry, the gate and the
+lifts, with sponges (`ROAD#29`), a bounce pad (`REV#52`) and an eraser
+(`REV#53`) proposed. None borrows the paint program's defining tool, the fill
+([classic paint research](classic-paint-research.md)). A swatch that fills one
+authored region for the team that holds its trigger would keep the drawings in
+charge ([Rules for anything new](backstory.md#rules-for-anything-new)), only
+lays paint, so it keeps the invariant `REV#53` breaks, and fills a fixed area,
+so it needs none of the sponge's changing-area contracts.
+
+First step: a contract draft in the manner of the
+[vertical-lift draft](#vertical-lift-contract-draft-road28): the trigger rule
+(the gate's held-paint rule is the precedent), the region as authored
+paintable structures, a cooldown, `PaintCredit` for the triggering team, bot
+awareness and a Yard trial stage. It ends with the author's question whether a
+bulk territory swing fits the balance accepted on 2026-11-05.
+
+### Circle shapes for round projectiles (`ROAD#44`)
+
+**UNSCOPED, LOW, M; after the next pin bump.** Every projectile collides as a
+`RectangleF`, the round ones included (`ProjectileBall::shape` and
+`ProjectileGrenade::shape` return their rectangle), and `game/` names no
+`Circle`. The pinned engine threw from `Scene::resolve` for a circle; engine
+master now collides circles in the narrow phase (Labrador `f6752ca7`,
+"Collide circles in the narrow phase", 2026-11-04, after the pin). `GAP#D5`
+added rotated slabs and horizontal movers only. As the engine's real client,
+this game would be the first to drive the circle-against-polygon paths. It adds
+a shape and keeps the hierarchy.
+
+First step, after a bump that includes the change: measure how a ball's and a
+grenade's contacts change under a `Circle` in a seeded replay and the
+projectile acceptance cases. `Projectile::resolve_sweep` takes rectangles, so
+the sweep is part of the measurement. The change in hit feel is then the
+author's call.
 
 ## Menu navigation follow-up (GAP#4.4)
 

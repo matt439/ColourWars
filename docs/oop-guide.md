@@ -25,6 +25,7 @@ direction, the services and the state stack these classes sit in.
 | Double dispatch and role queries | [Collider](../game/objects/collider.h), [Structure](../game/objects/structure.h), [Player::on_structure_contact](../game/objects/player.cpp) | The engine names the other party of a contact only as a `CollisionObject`. `Collider::on_contact` asks that party to `touch` this one, and its `touch` calls the handler for its own class: `on_structure_contact`, `on_player_contact` or `on_projectile_contact`. A structure then answers queries (`jump_through`, `ramp`, `slab_geometry`, `top_paint_team`, `cover_point`, `passable_for`) instead of being cast to its leaf. `Collider::of` is the one conversion from the engine's type, and no class reads another's tag to decide how to respond. |
 | Factory over a closed family | [LevelObjectBuilder](../game/objects/level_object_builder.cpp), [TerrainMaterial](../game/objects/terrain_material.h), [implementation](../game/objects/terrain_material.cpp) | The level object builder reads a record's `type`, `gate` and `motion` fields and returns a `StructurePaintable`, `TeamGateStructurePaintable`, `TranslatingStructurePaintable` or `FixedSlabPaintable` as an owning collision object. `TerrainMaterial::make` maps a level's `material` name and collision type to `GroundMaterial`, `PencilMaterial` and their siblings, refusing a mismatch. Each leaf works out its drawing in its constructor ([terrain_material_drawings.cpp](../game/objects/terrain_material_drawings.cpp)); `OrientedTerrainMaterial` shares the long-axis layout between pencil, ruler, eraser and tin. A `Structure` owns its material and never asks which one it has. |
 | Overriding and shared algorithms | [WeaponRoller](../game/objects/weapon_roller.cpp), [WeaponBucket](../game/objects/weapon_bucket.cpp), [ProjectileRolling](../game/objects/projectile_rolling.h) | Roller changes aim, tint, its sleeve's motion and pose, and answers `has_aim_marker` with false; bucket changes firing sound. The rolling projectile overrides its contact handlers, `resolve_travel`, `launch_hits_players` and `duds_on_bare_cover`. Shared ammunition, firing and sweep work remains in the base workflow, which never asks which tool or kind it is running. |
+| Template method over a second family | [SubWeapon](../game/objects/sub_weapon.h), [implementation](../game/objects/sub_weapon.cpp), [ProjectilePlanted](../game/objects/projectile_planted.h) | `SubWeapon::update` is the whole use: the press, the cooldown, paying from the tool's tank and the throw and empty cues. Its three `final` leaves, `SubGrenade`, `SubSprinkler` and `SubWall`, supply only the pure virtual `release`. `ProjectilePlanted` is an abstract `Projectile` that plants on its first cover and then overrides `takes_hits`, `take_hit` and `take_burst`, leaving its leaves, `ProjectileSprinkler` and `ProjectileWall`, one pure virtual hook, `spray`; the wall also overrides `launch_origin`. Level spends enemy shots on, and admits drops from, any projectile through those virtuals, never by its class. |
 | Composition | [PaintTile](../game/objects/paint_tile.h), [OptionRow](../game/states/option_row.h) | A tile owns its splash animation. A settings row owns its label and value, and accepts an adjustment callback. |
 | Ownership and borrowing | [Level](../game/objects/level.h), [LevelBuilder](../game/objects/level_builder.cpp) | Scene owns its objects; Level owns Scene and the parts it is composed of ([MatchOpening](../game/objects/match_opening.h), [MatchAudio](../game/objects/match_audio.h), [CountdownCards](../game/objects/countdown_cards.h) and the rest) and borrows Player pointers. Moving a `unique_ptr` transfers ownership. |
 | Dependency injection | [Player constructor](../game/objects/player.h), [GameData](../game/game_data.h), [main](../game/main.cpp) | Constructors receive their services and tuning. The application entry point owns and connects their lifetimes. |
@@ -33,7 +34,8 @@ direction, the services and the state stack these classes sit in.
 
 `Weapon` and `RelativeVelocityWeapon` are concrete classes. Sprayer and mister
 are constructed directly as `RelativeVelocityWeapon` with different tuning.
-`Collider`, `Projectile`, `DiffusingProjectile`, `PaintableObject`, `MenuPage`
+`Collider`, `Projectile`, `DiffusingProjectile`, `ProjectilePlanted`,
+`SubWeapon`, `PaintableObject`, `MenuPage`
 and its page bases (`MainMenuPage`, `RosterSetupPage`, `SettingsPanelPage` and
 `PauseMenuPage`) are abstract. `CrudeDrawing` is not abstract, but only its
 leaves can construct it. `override` checks that a declaration actually
@@ -65,7 +67,7 @@ Application owns the state stack
     Level owns PaintAudio, BlockedShotFeedback, MatchAudio (which owns
       MatchVoices) and Scene
       Scene owns Players, Structures and Projectiles
-        Player owns Weapon and FigureAttachments
+        Player owns Weapon, SubWeapon and FigureAttachments
         StructurePaintable (and its gate/translating leaves) owns PaintTiles
         FixedSlabPaintable owns its own PaintTiles
           PaintTile owns PaintTileSplash
@@ -408,6 +410,80 @@ separate construction steps and interchangeable representations.
 Keep the guide and contracts in sync when changing an extension point. This
 example needs clear, working interfaces and observable specialization; it does
 not need artificial inheritance or every design pattern to fill a checklist.
+
+## Add a sub weapon
+
+A sub is not a tool. It has no tank of its own, and `SubType` is a separate
+list from `WeaponType`, so a sub never takes a tool's place. `SubWeapon::update`
+is the use, and a leaf supplies only what one paid use releases. The steps
+below are what the sprinkler and the wall needed after the grenade.
+
+1. Add its enumerator to `SubType` in [sub_type.h](../game/objects/sub_type.h),
+   before `count`, and its spelling in `sub_names` at the same position. That
+   one name is its key under `subs` in tuning.json and under
+   `menu_text.subs.choices` in presentation.json, in the Debug match plan, and
+   in the save's `last_match` and the Debug replay seats, which both write it
+   only when it is not the grenade. `sub_count`, Weapon Select's sub row
+   ([LoadoutChoice](../game/states/loadout_choice.h), Random included) and
+   Random's draw follow from `count`, so no list is edited by hand.
+2. Add its record under `subs` in [tuning.json](../game/content/tuning.json).
+   `read_sub` in [tuning.cpp](../game/config/tuning.cpp) is called through
+   `for_each_sub`, so the name makes the record required, and it refuses a
+   member it does not know. Every sub has `cost`, `cooldown`, `throw_speed`,
+   `burst_count`, `burst_speed`, the `body` and `burst` projectile records
+   (both read as paint balls), `sound_bank`, `throw_sound` and `empty_sound`.
+   `read_sub` decides by type which subs also read `interval`, `lifetime` and
+   `hits` (the planted ones) and which reads `reach` (the wall), so a sub that
+   plants is added to that test. `validate_resources` and `sound_references`
+   in [tuning_validation.cpp](../game/config/tuning_validation.cpp) walk
+   `for_each_sub` too, and check its two strips and its two waves at startup.
+3. Write the leaf in [sub_weapon.h](../game/objects/sub_weapon.h): a `final`
+   `SubWeapon` whose constructor passes its `SubType` to the base and resolves
+   its strips once, and whose one override is `release(origin, direction,
+   velocity)`, returning owned `Projectile`s. Leave the use rules to the base:
+   the press edge, the cooldown, `Weapon::spend_paint` on the tool's tank (so
+   Endless paint and the tool's low-paint state apply to the sub too), both
+   cues, and a velocity of the aim times `throw_speed` plus the player's run,
+   never their fall. `release` spends nothing and plays nothing. Add a case to
+   `build_sub_weapon`; a type it does not name throws `std::invalid_argument`
+   when [PlayerBuilder](../game/objects/player_builder.cpp) builds the seat.
+   `Player` owns the result, calls `update` after its tool so both draw on one
+   tank, and resets it on respawn.
+4. Choose what it releases. A thrown burst is a
+   [ProjectileGrenade](../game/objects/projectile_grenade.h). Something that
+   sticks and sprays derives from
+   [ProjectilePlanted](../game/objects/projectile_planted.h) and overrides
+   `spray(release)`, making each drop with `drop`; planting, the emptied mask,
+   zero damage, the interval, the lifetime and the `hits` count are the
+   base's. `Level::strike_breakables` spends enemy shots on any projectile
+   whose `takes_hits` is true, and `Level::burst_projectiles` admits whatever
+   `take_burst` returns like a fresh launch, so neither gains a case. Override
+   `launch_origin` only for a sub set down beside the player rather than
+   thrown from their centre, as [ProjectileWall](../game/objects/projectile_wall.h)
+   does. Add the new `.cpp` to [game/CMakeLists.txt](../game/CMakeLists.txt).
+5. Give it copy: a `name` and a `description` under its key in
+   `menu_text.subs.choices` in
+   [presentation.json](../game/content/presentation.json).
+   [presentation_menu_text.cpp](../game/config/presentation/presentation_menu_text.cpp)
+   reads one for every `sub_names` entry and `random`, and refuses a missing
+   or unknown key; startup checks that the labels fit. Add the bracketed copy
+   to the test locale, `game/content/locales/qps-ploc.json`.
+6. Give it a body strip in the `paint_fx` sheet (built by
+   [build-paint-fx-art.ps1](../scripts/build-paint-fx-art.ps1)) and a throw
+   cue in the bank through the [audio workflow](../game/audio/paint_exe/README.md),
+   as for a tool.
+7. Teach the bots. `MatchBot::sub_use` in
+   [match_bot.cpp](../game/ai/match_bot.cpp) switches on the bot's own
+   `SubType` to decide when and where to use it; a sub with no case there is
+   thrown at a visible enemy like the grenade. `BotWorld` tells a bot its own
+   sub and whether it is ready, but has no query for an enemy's planted sub,
+   so bots neither shoot an enemy sprinkler nor see a wall (`REV#21`). A new
+   planted sub inherits that gap.
+8. Extend the `sub_weapons` acceptance case
+   ([sub_weapons.cpp](../scripts/acceptance/sub_weapons.cpp)), which names each
+   sub and checks its tuning, its use and a seat that carries it, then build
+   Debug and Release and run the default acceptance list. Cycle Weapon
+   Select's sub row and Random, and play a match with it.
 
 ## Add a scored paint object
 

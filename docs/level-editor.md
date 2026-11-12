@@ -889,6 +889,11 @@ bounds control camera limits and the match's zoom-out presentation. Resizing
 `out_of_bounds` must keep every spawn inside it. Objects outside those bounds
 can be intentional boundary geometry and are allowed.
 
+Neither the editor nor the game checks that the arena is sealed, and a player
+who leaves `out_of_bounds` currently closes the game
+([Seal the arena](level-format.md#coordinates-bounds-and-spawns), `REV#1`).
+Play every reachable edge before sharing a stage.
+
 ## Local implementation backlog (2026-10-28)
 
 These independent source slices need neither pads nor an author decision.
