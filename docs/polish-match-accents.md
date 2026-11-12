@@ -208,9 +208,14 @@ the captured paint can be recoloured to any shipped pair on the same terrain,
 so all six pairs were measured on all eight frames:
 
 ```
-python scripts/colour_vision/paint_colour_vision.py docs/images/polish-match-accents/reveal-4p-*-purple-gold-*.png --pair purple_gold --as-pair all
-python scripts/colour_vision/paint_colour_vision.py docs/images/polish-match-accents/reveal-4p-*-blue-yellow-*.png --pair blue_yellow --as-pair all
+python scripts/colour_vision/paint_colour_vision.py docs/images/polish-match-accents/reveal-4p-close-quarters-purple-gold-720p.png docs/images/polish-match-accents/reveal-4p-close-quarters-purple-gold-1080p.png docs/images/polish-match-accents/reveal-4p-crossfeed-purple-gold-720p.png docs/images/polish-match-accents/reveal-4p-crossfeed-purple-gold-1080p.png --pair purple_gold --as-pair all
+python scripts/colour_vision/paint_colour_vision.py docs/images/polish-match-accents/reveal-4p-close-quarters-blue-yellow-720p.png docs/images/polish-match-accents/reveal-4p-close-quarters-blue-yellow-1080p.png docs/images/polish-match-accents/reveal-4p-crossfeed-blue-yellow-720p.png docs/images/polish-match-accents/reveal-4p-crossfeed-blue-yellow-1080p.png --pair blue_yellow --as-pair all
 ```
+
+The frames are named one by one because a wildcard would also pick up the
+`-cards-` and `-hover-` frames. The script is meant for hesitation frames with
+no tint and no cards: its swatch filter does not remove card or hover-tint
+content, and on those two frames it reports numbers that do not describe paint.
 
 | Pair | Worst team difference | Paint edges under 15, worst frame | Nearest common neighbour there |
 |---|---|---|---|
