@@ -37,12 +37,13 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Check CI selection, links, frame and balance matrix analysis and study paths
+      - name: Check CI selection, links, frame and balance matrix analysis, study paths and paint colour vision
         run: |
           python3 -m unittest discover -s scripts/ci -p test_*.py
           python3 -m unittest discover -s scripts/balance -p test_*.py
           python3 -m unittest discover -s scripts/perf -p test_*.py
           python3 -m unittest discover -s scripts/studies -p test_*.py
+          python3 -m unittest discover -s scripts/colour_vision -p test_*.py
 
       # A pull request runs the whole suite once, and the record job names the
       # tree it passed. A push of that same tree, such as the merge commit of a
