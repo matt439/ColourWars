@@ -16,7 +16,7 @@ class SaveWriter;
 void read_stick_settings(const labrador::JsonValue& entry, StickSettings& destination);
 // "movement_deadzone", then "aim_deadzone".
 void write_stick_settings(SaveWriter& writer, const StickSettings& sticks);
-// An unknown spelling keeps the switch as it was.
+// An unknown spelling keeps the switch as it was; "toggle_fire" is a boolean.
 void read_seat_comfort(const labrador::JsonValue& entry, SeatComfort& destination);
-// "view_shake", "aim_marker", then "reduce_effects".
+// "view_shake", "aim_marker", "reduce_effects", then "toggle_fire".
 void write_seat_comfort(SaveWriter& writer, const SeatComfort& comfort);

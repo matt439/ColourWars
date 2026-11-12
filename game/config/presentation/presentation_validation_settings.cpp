@@ -66,17 +66,19 @@ void Presentation::Validation::validate_controls_actions() const
 // Phase 1: Sticks' option rows, Apply and Back.
 void Presentation::Validation::validate_sticks_actions() const
 {
-	// Pad sticks: seven option rows, then Apply and Back.
+	// Pad sticks: eight option rows, then Apply and Back.
 	const MenuItem sticks_items[]{ MenuItem::pad, MenuItem::move_deadzone, MenuItem::aim_deadzone,
 		MenuItem::rumble, MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects,
-		MenuItem::apply, MenuItem::back };
+		MenuItem::toggle_fire, MenuItem::apply, MenuItem::back };
+	static_assert(std::size(sticks_items) == settings_rows::sticks_back + 1);
 	for (size_t index = 0; index < std::size(sticks_items); ++index)
 	{
-		check_controls_item(sticks_items[index], static_cast<int>(index), index < 7);
+		check_controls_item(sticks_items[index], static_cast<int>(index),
+			index <= static_cast<size_t>(settings_rows::sticks_toggle_fire));
 	}
 }
 
-// Phase 3: on and off in the Sticks Rumble row and the Controls toggles,
+// Phase 3: on and off in the Sticks Rumble and Toggle fire rows and the Controls toggles,
 // whose value limit later settings checks use.
 Vector2F Presentation::Validation::validate_settings_toggles() const
 {
@@ -85,8 +87,8 @@ Vector2F Presentation::Validation::validate_settings_toggles() const
 	const Vector2F controls_value_limit(
 		menu_geometry::settings_action_width(controls, controls.layout.position.x + controls.layout.spacing.x),
 		controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
-	// Sticks' Rumble row and the three Controls toggles.
-	for (const int row : { settings_rows::sticks_rumble, settings_rows::controls_view_shake,
+	// Sticks' Rumble and Toggle fire rows and the three Controls toggles.
+	for (const int row : { settings_rows::sticks_rumble, settings_rows::sticks_toggle_fire, settings_rows::controls_view_shake,
 		settings_rows::controls_aim_marker, settings_rows::controls_reduce_effects })
 	{
 		const Vector2F position = controls.layout.position +

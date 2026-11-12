@@ -458,7 +458,8 @@
       "profiles": "Profiles",
       "series_stage": "Series stage",
       "variant": "Variant",
-      "vsync": "Vsync"
+      "vsync": "Vsync",
+      "toggle_fire": "Toggle fire"
     }
   },
 

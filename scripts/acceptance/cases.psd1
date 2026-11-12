@@ -29,6 +29,7 @@ Cases = @(
     @{ Name = 'rumble' }
     @{ Name = 'rumble_adapter' }
     @{ Name = 'action_bindings' }
+    @{ Name = 'toggle_fire' }
     @{ Name = 'input_bindings' }
     @{
         # HYG#102: the README and HOW-TO-PLAY controls tables name the defaults.

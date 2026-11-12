@@ -107,6 +107,10 @@ const ActionBindings& fixed_action_bindings()
 		result.menu_keys[static_cast<std::size_t>(MenuInputAction::back)] =
 			{ Key::escape, Key::backspace };
 		result.menu_keys[static_cast<std::size_t>(MenuInputAction::shuffle)] = { Key::r };
+		result.menu_mouse_buttons[static_cast<std::size_t>(MenuInputAction::proceed)] =
+			{ MouseButton::left };
+		result.menu_mouse_buttons[static_cast<std::size_t>(MenuInputAction::back)] =
+			{ MouseButton::right };
 
 		result.menu_buttons[static_cast<std::size_t>(MenuInputAction::proceed)] =
 			{ GamepadButton::a };
@@ -226,6 +230,17 @@ std::array<bool, menu_direction_count> dpad_direction_held(
 		{
 			result[i] = pad.is_down(bindings.directions[i].button);
 		}
+	}
+	return result;
+}
+
+ActionSample menu_action(const ActionBindings& bindings, MenuInputAction action,
+	const MouseState& mouse, const MouseState& previous_mouse)
+{
+	ActionSample result;
+	for (MouseButton button : bindings.menu_mouse_buttons.at(static_cast<std::size_t>(action)))
+	{
+		merge(result, mouse_sample(mouse, previous_mouse, button));
 	}
 	return result;
 }

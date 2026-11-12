@@ -48,6 +48,8 @@ void read_seat_comfort(const JsonValue& entry, SeatComfort& destination)
 	read_seat_switch(entry, "view_shake", destination.view_shake);
 	read_seat_switch(entry, "aim_marker", destination.aim_marker);
 	read_seat_switch(entry, "reduce_effects", destination.reduce_effects);
+	try { destination.toggle_fire = entry.boolean("toggle_fire"); }
+	catch (const std::runtime_error&) {}
 }
 
 void write_seat_comfort(SaveWriter& writer, const SeatComfort& comfort)
@@ -58,4 +60,6 @@ void write_seat_comfort(SaveWriter& writer, const SeatComfort& comfort)
 	writer.string(seat_switch_key(comfort.aim_marker));
 	writer.key("reduce_effects");
 	writer.string(seat_switch_key(comfort.reduce_effects));
+	writer.key("toggle_fire");
+	writer.boolean(comfort.toggle_fire);
 }

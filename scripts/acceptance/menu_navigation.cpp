@@ -220,6 +220,129 @@ namespace
     }
 }
 
+
+namespace
+{
+    // REV#33: the keyboard seat's left click proceeds and right click backs
+    // through an armed release like the keys', so a click held from play (default
+    // Shoot and Sub) cannot confirm the menu it lands on.
+    void check_menu_mouse(const GameTuning& tuning)
+    {
+        GamepadReader reader;
+        Gamepads pads(&reader);
+        Keyboard keyboard;
+        Mouse mouse;
+        keyboard.set_focused(true);
+        mouse.set_focused(true);
+        keyboard.poll();
+        mouse.poll();
+        keyboard.poll();
+        mouse.poll();
+        MenuInput input(&pads, &keyboard, &tuning, &mouse);
+        MenuInput keys_only(&pads, &keyboard, &tuning);
+        // keys_only shares the keyboard, so it sees only what the keys did.
+        MenuInputAction from_keys = MenuInputAction::none;
+        const auto frame = [&]
+        {
+            keyboard.poll();
+            mouse.poll();
+            const MenuInputAction action = input.menu_inputs()[input_slots::keyboard_and_mouse].action;
+            require(action == input.menu_inputs()[input_slots::keyboard_and_mouse].action,
+                "Repeated reads must return the same mouse action");
+            from_keys = keys_only.menu_inputs()[input_slots::keyboard_and_mouse].action;
+            return action;
+        };
+        const auto click_frame = [&]
+        {
+            const MenuInputAction action = frame();
+            require(from_keys == MenuInputAction::none, "A menu reader given no mouse must ignore clicks");
+            return action;
+        };
+        click_frame();
+
+        mouse.on_button_down(MouseButton::left);
+        require(click_frame() == MenuInputAction::none, "Left click must wait for its release");
+        mouse.on_button_up(MouseButton::left);
+        require(click_frame() == MenuInputAction::proceed, "Releasing an observed left click must proceed");
+        require(click_frame() == MenuInputAction::none, "A click must proceed once");
+
+        mouse.on_button_down(MouseButton::right);
+        click_frame();
+        mouse.on_button_up(MouseButton::right);
+        require(click_frame() == MenuInputAction::back, "Releasing an observed right click must back");
+
+        // Shoot (left) and Sub (right) held from play into a new menu.
+        for (const MouseButton held : { MouseButton::left, MouseButton::right })
+        {
+            mouse.on_button_down(held);
+            click_frame();
+            click_frame();
+            input.reset_actions();
+            require(click_frame() == MenuInputAction::none, "A click held into a menu must stay neutral");
+            mouse.on_button_up(held);
+            require(click_frame() == MenuInputAction::none,
+                "Releasing a click held from play must not confirm or back the menu");
+        }
+        mouse.on_button_down(MouseButton::left);
+        click_frame();
+        mouse.on_button_up(MouseButton::left);
+        require(click_frame() == MenuInputAction::proceed, "A fresh click after a held one must proceed");
+
+        mouse.on_button_down(MouseButton::left);
+        mouse.on_button_down(MouseButton::right);
+        click_frame();
+        mouse.on_button_up(MouseButton::left);
+        mouse.on_button_up(MouseButton::right);
+        require(click_frame() == MenuInputAction::none, "Releasing both buttons together must choose neither");
+
+        mouse.on_button_down(MouseButton::left);
+        click_frame();
+        mouse.cancel_buttons();
+        require(click_frame() == MenuInputAction::none, "A cancelled capture must not release a click");
+        require(click_frame() == MenuInputAction::none, "A cancelled click must stay neutral");
+
+        mouse.on_button_down(MouseButton::left);
+        click_frame();
+        mouse.set_focused(false);
+        require(click_frame() == MenuInputAction::none, "Losing focus mid-click must not proceed");
+        mouse.set_focused(true);
+        mouse.on_button_down(MouseButton::left);
+        require(click_frame() == MenuInputAction::none, "Focus return must disarm a held click");
+        mouse.on_button_up(MouseButton::left);
+        require(click_frame() == MenuInputAction::none, "A click held across focus return must not proceed");
+
+        mouse.on_button_down(MouseButton::middle);
+        click_frame();
+        mouse.on_button_up(MouseButton::middle);
+        require(click_frame() == MenuInputAction::none, "Other mouse buttons must not act in menus");
+
+        mouse.on_button_down(MouseButton::left);
+        click_frame();
+        input.reset_pad_actions(0);
+        mouse.on_button_up(MouseButton::left);
+        require(click_frame() == MenuInputAction::proceed, "Resetting a pad must keep the mouse's armed click");
+
+        // A key still works over a click held from play: Enter and Escape
+        // release as usual, and the held click releases nothing afterwards.
+        const std::pair<MouseButton, Key> over[]{ { MouseButton::left, Key::enter },
+            { MouseButton::right, Key::escape }, { MouseButton::left, Key::escape } };
+        for (const auto& [held, key] : over)
+        {
+            mouse.on_button_down(held);
+            frame();
+            input.reset_actions();
+            frame();
+            keyboard.on_key_down(key);
+            require(frame() == MenuInputAction::none, "A key over a held click must wait for its release");
+            keyboard.on_key_up(key);
+            require(frame() == (key == Key::enter ? MenuInputAction::proceed : MenuInputAction::back),
+                "A click held from play must not hold up a key's release");
+            mouse.on_button_up(held);
+            require(frame() == MenuInputAction::none, "A click held from play released an action after a key");
+        }
+    }
+}
+
 int main(int argc, char** argv)
 {
     return acceptance::run_probe("menu navigation", [&]
@@ -231,6 +354,7 @@ int main(int argc, char** argv)
         const float interval = look.menu().repeat_interval;
         check_owner_routing();
         check_seat_reclaim(look.menu_text());
+        check_menu_mouse(tuning);
         require(delay > interval && interval > 0, "Authored repeat must have a longer first delay");
         MenuDirectionRepeat navigation;
         GamepadState pad;
@@ -384,7 +508,7 @@ int main(int argc, char** argv)
         input.reset_pad_actions(0);
         require(input.menu_inputs()[input_slots::keyboard_and_mouse].direction == before_reset,
             "Resetting one pad must preserve other device results");
-        std::cout << "PASS menu navigation: press, repeat, hysteresis, page arming, focus, stable reads, owner routing and seat reclaim\n";
+        std::cout << "PASS menu navigation: press, repeat, hysteresis, page arming, focus, stable reads, owner routing, seat reclaim and mouse clicks\n";
         return EXIT_SUCCESS;
     });
 }

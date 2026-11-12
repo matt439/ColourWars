@@ -2,6 +2,7 @@
 
 #include "engine/input/gamepads.h"
 #include "engine/input/keyboard.h"
+#include "engine/input/mouse.h"
 #include "engine/ui/navigation.h"
 #include "game/input/input_slots.h"
 #include "game/input/action_bindings.h"
@@ -45,8 +46,12 @@ ProcessedMenuInput menu_input_for_owner(
 class MenuInput
 {
 public:
+	// `mouse` is the keyboard seat's (REV#33): left click proceeds and right
+	// click backs through an armed release like the keys', so a click held
+	// from play cannot confirm a menu. Null leaves the seat on keys only.
 	MenuInput(const labrador::Gamepads* gamepads,
-		const labrador::Keyboard* keyboard, const GameTuning* tuning);
+		const labrador::Keyboard* keyboard, const GameTuning* tuning,
+		const labrador::Mouse* mouse = nullptr);
 
 	// Advance navigation once before a page update; reads below do not advance time.
 	void update_directions(float dt, float delay, float interval, bool use_stick = true);
@@ -70,11 +75,13 @@ public:
 private:
 	ProcessedMenuInput menu_input(const labrador::Gamepads& gamepads,
 		int slot);
-	ProcessedMenuInput keyboard_menu_input(const labrador::Keyboard& keyboard);
+	ProcessedMenuInput keyboard_menu_input(const labrador::Keyboard& keyboard,
+		const labrador::Mouse* mouse);
 
 	const labrador::Gamepads* gamepads_ = nullptr;
 	const labrador::Keyboard* keyboard_ = nullptr;
 	const GameTuning* tuning_ = nullptr;
+	const labrador::Mouse* mouse_ = nullptr;
 
 	// Per slot and action: whether this menu observed the current press.
 	// This prevents releasing a gameplay-held button from activating a new menu.
@@ -87,4 +94,7 @@ private:
 
 	// Each logical action owns its aliases; the unbound keyboard Pause stays neutral.
 	bool key_armed_[menu_action_count] = {};
+	// The mouse arms apart from the keys, as each pad does: a click held from
+	// play stays unarmed without holding up an Enter or Escape released over it.
+	bool mouse_armed_[menu_action_count] = {};
 };

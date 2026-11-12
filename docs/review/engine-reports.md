@@ -284,7 +284,7 @@ shipped without the fix, so on 2026-11-05 the author closed it as declined
 
 | # | Report | Exhibit at `96c65373` |
 |---|---|---|
-| 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp`, `painter_visual.cpp` and, since report 25 was spent (2026-11-05), `rumble_adapter.cpp`; a test seam, separate from the pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which stays |
+| 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp`, `painter_visual.cpp` and, since report 25 was spent (2026-11-05), `rumble_adapter.cpp`, and since `REV#31` (2026-11-12) `toggle_fire.cpp`; a test seam, separate from the pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which stays |
 | 28 | Public types and members removed with an engine-only caller count, against the rule from report 7 as extended by `c369e8b`; the deprecation-release ask is declined by policy | `game/carried/` and the `HYG#25` removed-member list |
 | 29 | ~~`Scene` gives no typed access to short-lived objects and no retirement notice~~ withdrawn 2026-11-03, see [Closed](#closed) | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
 | 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:117` and the exact-text checks at `scripts/sandbox/logon.ps1:218` and `:248`; `scripts/check-startup.ps1:225` and `:248` held the same match until 2026-11-04 |
@@ -391,7 +391,8 @@ changing behaviour. The four blocks have drifted to
 2026-11-05 at master `11292fa`: unanswered; the only input-area commit,
 `afdc9f9`, adds an engine-internal browser-transport test
 (`tests/input/web_vibration_tests.cpp`) with a fake actuator, and no reader a
-consumer can set. **Reopen** and
+consumer can set. On 2026-11-12 `REV#31`'s probe added a sixth block,
+`toggle_fire.cpp:15`, which a seam would delete with the rest. **Reopen** and
 hold the filing if a trial build against master (`HYG#24`) shows the four
 blocks need only two trivial extra definitions and the engine says the next tag
 is imminent; then file after the bump with the real extension as evidence.

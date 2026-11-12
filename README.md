@@ -82,8 +82,8 @@ rebinding pages.
 | Pause/resume | Start | Escape |
 | Debug overlay | Back/View | F1 |
 | Menu navigation | Left stick or D-pad | Arrow keys or WASD |
-| Menu confirm | A | Enter or Space |
-| Menu back | B | Escape or Backspace |
+| Menu confirm | A | Enter, Space or left click |
+| Menu back | B | Escape, Backspace or right click |
 
 Each player carries a **sub weapon** beside their tool for the whole match.
 On Weapon Select, **A/Enter** confirms the tool, **Left/Right** chooses the
@@ -100,7 +100,8 @@ the right stick or mouse.
 ### Settings and controllers
 
 Options and Pause both offer **Controls / audio**: music and SFX volume,
-per-pad stick deadzones, rumble, View shake and Aim marker. **Pad sticks**
+per-pad stick deadzones, rumble, View shake, Aim marker and Toggle fire (press
+Shoot once to keep firing, again to stop). **Pad sticks**
 shows live stick input; use D-pad/arrows there so the sticks stay free to
 test. **Pad Buttons** changes Jump, Shoot, Pause and Sub. **Keyboard Keys**
 changes the keyboard seat's actions; Escape always pauses and Down always

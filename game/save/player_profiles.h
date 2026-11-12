@@ -57,7 +57,7 @@ struct PlayerProfiles
 
 // "profiles": [ { "name": "ALEX", "movement_deadzone": -1, "aim_deadzone": -1,
 // "rumble": true, "view_shake": "shared", "aim_marker": "shared",
-// "reduce_effects": "shared", "buttons": { "jump": ["a", "lt"], ... },
+// "reduce_effects": "shared", "toggle_fire": false, "buttons": { "jump": ["a", "lt"], ... },
 // "boost": 0 } ]. Each field recovers to its default independently; an entry
 // without a usable name, or one whose name repeats an earlier entry, is
 // dropped, and entries past max_count are ignored.

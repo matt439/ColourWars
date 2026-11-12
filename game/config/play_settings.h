@@ -41,11 +41,16 @@ enum class SeatSwitch
 // pulses and badge emphasis. Menus, the intro, the countdown, the reveal and
 // world effects every pane draws (muzzle flashes, figure motion, drips) are
 // shared, so they keep the Options switch.
+//
+// Toggle fire (REV#31) rides in the same record, saves and profiles, but is
+// plain Off/On: no Options switch exists for it, so the keyboard seat holds
+// to fire. On, a Shoot press starts firing and the next press stops it.
 struct SeatComfort
 {
 	SeatSwitch view_shake = SeatSwitch::shared;
 	SeatSwitch aim_marker = SeatSwitch::shared;
 	SeatSwitch reduce_effects = SeatSwitch::shared;
+	bool toggle_fire = false;
 
 	static bool resolved(SeatSwitch value, bool shared)
 	{
@@ -119,6 +124,10 @@ struct PlaySettings
 	bool aim_marker_enabled(int slot) const
 	{
 		return SeatComfort::resolved(this->seat_comfort(slot).aim_marker, this->aim_marker);
+	}
+	bool toggle_fire_enabled(int slot) const
+	{
+		return this->seat_comfort(slot).toggle_fire;
 	}
 	bool rumble_enabled(int slot) const
 	{

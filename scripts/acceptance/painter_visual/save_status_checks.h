@@ -84,7 +84,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         const int staged_row = page == 0 ? 3 : page == 1 ? 4 : 1;
         for (int row = 0; row < staged_row; ++row) { tap(Key::down); }
         tap(Key::right);
-        const int remaining = page == 0 ? 3 : page == 1 ? 5 : 6;
+        const int remaining = page == 0 ? 3 : page == 1 ? 5 : 7;
         for (int row = 0; row < remaining; ++row) { tap(Key::down); }
     };
     const auto apply = [&](int page)

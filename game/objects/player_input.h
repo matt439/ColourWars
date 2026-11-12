@@ -37,6 +37,11 @@ public:
 	std::vector<SlotInput> player_inputs(
 		const std::array<int, input_slots::pad_count>& devices);
 
+	// Stop every toggle-fire pad's firing (REV#31). The match calls it when
+	// play stops reading pads - a new round, Pause, Results, focus loss - so
+	// firing never resumes on its own; the next Shoot press starts it again.
+	void release_toggles();
+
 private:
 	SlotInput pad_input(const labrador::Gamepads& gamepads,
 		int device, int slot);
@@ -58,4 +63,16 @@ private:
 	ActionBindings keyboard_bindings_;
 	std::array<PadProfile, input_slots::pad_count> pad_profiles_{};
 	std::array<ActionBindings, input_slots::pad_count> pad_bindings_;
+	// Per pad slot: a toggle-fire pad's Shoot latch, and the frame (the pad's
+	// two snapshots) whose press last flipped it, so a repeated read of that
+	// frame does not flip it back. Two different frames cannot share both
+	// snapshots and still hold a press edge.
+	struct FireToggle
+	{
+		bool firing = false;
+		bool flipped = false;
+		labrador::GamepadState now;
+		labrador::GamepadState before;
+	};
+	std::array<FireToggle, input_slots::pad_count> fire_toggles_{};
 };

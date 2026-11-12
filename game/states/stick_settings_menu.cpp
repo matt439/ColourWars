@@ -182,21 +182,31 @@ void StickSettingsMenu::init()
 	this->view_shake_ = comfort_row("view_shake", MenuItem::view_shake, settings_rows::sticks_view_shake, &SeatComfort::view_shake);
 	this->aim_marker_ = comfort_row("aim_marker", MenuItem::aim_marker, settings_rows::sticks_aim_marker, &SeatComfort::aim_marker);
 	this->reduce_effects_ = comfort_row("reduce_effects", MenuItem::reduce_effects, settings_rows::sticks_reduce_effects, &SeatComfort::reduce_effects);
+	// Toggle fire is plain Off/On (REV#31): there is no shared switch to follow.
+	this->toggle_fire_ = row("toggle_fire", this->text().item(MenuItem::toggle_fire), settings_rows::sticks_toggle_fire,
+		[this](Direction direction)
+		{
+			const size_t slot = static_cast<size_t>(this->slot_);
+			this->selection_.pad_comfort[slot].toggle_fire = direction == Direction::right;
+			this->comfort_edited_[slot] = true;
+			this->refresh_values();
+			this->set_status(this->text().status.sticks_pending);
+		});
 	for (OptionRow* option : { this->pad_.get(), this->movement_.get(), this->aim_.get(), this->rumble_.get(),
-		this->view_shake_.get(), this->aim_marker_.get(), this->reduce_effects_.get() })
+		this->view_shake_.get(), this->aim_marker_.get(), this->reduce_effects_.get(), this->toggle_fire_.get() })
 	{
 		this->text_container_->add_child(option);
 		this->focus_.add(option);
 	}
 	UiText* apply = this->add_text("apply", this->text().item(MenuItem::apply), style.item_font,
-		this->calculate_widget_position(0, 7));
+		this->calculate_widget_position(0, settings_rows::sticks_apply));
 	const RectangleF apply_bounds = apply->bounds();
 	apply->set_scale(menu_geometry::fit_scale(apply_bounds.size(), Vector2F(
 		menu_geometry::settings_action_width(look, apply_bounds.x),
 		look.layout.spacing.y - look.art.focus_padding.y * 2.0f)));
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(this->add_text("back", this->text().item(MenuItem::back), style.item_font,
-		this->calculate_widget_position(0, 8)), [this] { this->pop_page(); });
+		this->calculate_widget_position(0, settings_rows::sticks_back)), [this] { this->pop_page(); });
 	this->status_ = this->add_text("status", L"", look.help_font, look.status_position);
 	this->connection_ = this->add_text("connection", L"", look.help_font, look.controls_position);
 	// One help-font line, measured on the locale's own preview label.
@@ -245,6 +255,7 @@ void StickSettingsMenu::refresh_values()
 	this->view_shake_->set_value(comfort_value(comfort.view_shake, this->selection_.view_shake));
 	this->aim_marker_->set_value(comfort_value(comfort.aim_marker, this->selection_.aim_marker));
 	this->reduce_effects_->set_value(comfort_value(comfort.reduce_effects, this->selection_.reduce_effects));
+	this->toggle_fire_->set_value(comfort.toggle_fire ? this->text().values.on : this->text().values.off);
 	this->refresh_preview();
 }
 
