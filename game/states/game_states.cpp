@@ -19,7 +19,7 @@ GameData* GameMenu::data() const
 void GameMenu::init()
 {
 	this->menu_input_ = std::make_unique<MenuInput>(this->data()->gamepads(),
-		this->data()->keyboard(), this->data()->tuning());
+		this->data()->keyboard(), this->data()->tuning(), this->data()->mouse());
 	this->match_setup_ = std::make_unique<MatchSetup>();
 	if (const auto& remembered = this->data()->save()->last_match_setup(); remembered)
 	{
@@ -178,7 +178,7 @@ void GameLevel::init()
 
 	this->menu_input_ = std::make_unique<MenuInput>(
 		this->data()->gamepads(),
-		this->data()->keyboard(), this->data()->tuning());
+		this->data()->keyboard(), this->data()->tuning(), this->data()->mouse());
 
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
 		this->menu_input_.get(), &this->settings_, static_cast<MenuOwner*>(this));

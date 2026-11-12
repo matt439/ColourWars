@@ -4763,6 +4763,41 @@ A, and checks Apply's merge, the reload and Reset all keys.
 Widening the domain, keyboard alternates and the extra Pause key closing the
 pause menu (Esc does that today) are not started and are not planned.
 
+### Mouse clicks in menus (`REV#33`)
+
+**Done 2026-11-12.** The keyboard seat's mouse now works the menus the way its
+keys do: a left click selects (Enter, Space, pad A) and a right click goes back
+(Escape, Backspace, pad B). The 2026-11-10 project review
+([REV#33](review/2026-11-10-project-review.md#mouse-input-in-menus-rev33)) found
+that menus read keys only.
+
+- **No pointing.** A click acts on the focused row wherever the cursor is; there
+  is no hover focus or hit-testing through the UI camera. That larger half was
+  not designed.
+- **A click held from play cannot confirm a menu.** Left click is the default
+  Shoot and right click the default Sub, so a click held at the buzzer, into
+  Pause or into Results would otherwise release onto a row. The buttons join
+  the keyboard's menu actions (`ActionBindings::menu_mouse_buttons`, fixed like
+  the menu keys) and pass through `MenuInput`'s armed release: a click fires on
+  release only if its press was seen by the menu, so every `reset_actions()`
+  disarms a held click as it does a held key. Releasing both buttons together
+  chooses neither, focus return disarms, and a cancelled mouse capture (a new
+  button epoch) releases nothing.
+- **Where.** The game's menus, the pause and end pages and the replay skip
+  take clicks (`GameMenu`, `GameLevel` and the Debug director pass
+  `GameData::mouse()`). Keyboard Keys' capture reader does not, so a click
+  there is still a Shoot or Sub choice, never Back.
+- **Copy.** The prompt bars and the Controls help still name A/Enter and
+  B/Esc; with no pointing, a click is a shortcut rather than a control to teach
+  there. The README and the how-to-play sheet name it.
+
+`menu_navigation` checks the slice with a real `Mouse`: left proceeds and right
+backs only on release, once; Shoot and Sub held across a `reset_actions()` stay
+neutral on release; a fresh click then works; both buttons together, a
+cancelled capture, a click across focus loss and return, and the middle button
+do nothing; a reader built without a mouse ignores clicks; a pad reset keeps the
+mouse's armed click.
+
 ## Per-player menu focus (`GAP#D1`)
 
 **Implemented and evaluated (2026-10-19).** Team Select now

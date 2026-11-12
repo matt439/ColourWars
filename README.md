@@ -82,8 +82,8 @@ rebinding pages.
 | Pause/resume | Start | Escape |
 | Debug overlay | Back/View | F1 |
 | Menu navigation | Left stick or D-pad | Arrow keys or WASD |
-| Menu confirm | A | Enter or Space |
-| Menu back | B | Escape or Backspace |
+| Menu confirm | A | Enter, Space or left click |
+| Menu back | B | Escape, Backspace or right click |
 
 Each player carries a **sub weapon** beside their tool for the whole match.
 On Weapon Select, **A/Enter** confirms the tool, **Left/Right** chooses the
