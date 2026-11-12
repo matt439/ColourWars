@@ -327,6 +327,8 @@ void GameLevel::on_activated()
 void GameLevel::on_deactivated()
 {
 	const SuspensionGate gate = this->gate();
+	// A toggle-fire pad stops on focus loss and needs a fresh press on return.
+	this->player_input_->release_toggles();
 	if (this->replay_phase_ != ReplayPhase::none)
 	{
 		// A replay has no pause to come back to; it waits, silent, for focus.
@@ -445,6 +447,9 @@ void GameLevel::update(float dt)
 
 	if (this->suspension_.counting_in())
 	{
+		// A Shoot press during the count is dropped like a Sub press: a latch
+		// it started would stay held behind the count's release gate.
+		this->player_input_->release_toggles();
 		// Enabling background work never consumes a manual/focus resume gate.
 		if (!gate.focused) { return; }
 		// Do not enter the debug clock, seat filters or Level at all: every

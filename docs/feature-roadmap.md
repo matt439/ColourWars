@@ -1944,7 +1944,10 @@ a Shoot press starts firing and the next press stops it, with nothing held.
   does not flip it twice. It stops, and needs a fresh press to start again, when
   the pad disconnects (a trigger held across the reconnect does not start it),
   when the option turns off, and when `GameLevel` stops reading pads: a new
-  round, Pause, Results and focus loss (`PlayerInput::release_toggles`). Bots
+  round, Pause, Results and focus loss (`PlayerInput::release_toggles`, the
+  last from `GameLevel::on_deactivated`). A Shoot press during the resume
+  count-in is dropped like a Sub press, so the first press after the count
+  starts firing. Bots
   and the Sub are unchanged.
 - **Save.** Version 10 adds `"toggle_fire"` (a boolean) to each `pad_comfort`
   entry and each `profiles` entry; absent or malformed reads as false, so older

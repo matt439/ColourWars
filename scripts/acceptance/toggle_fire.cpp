@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/player_input.h"
+#include "game/states/resume_countdown.h"
 #include "game/input/input_slots.h"
 #include "engine/input/gamepad_reader.h"
 #include "scripts/acceptance/support/probe.h"
@@ -141,6 +142,41 @@ namespace
 		h.step();
 		require(h.shooting(1), "A fresh press after release_toggles must start firing");
 
+		// The resume count-in, as GameLevel runs it: focus loss releases the
+		// latch, and every counting sample is read, released, then filtered.
+		// A Shoot press during the count is dropped, so the first press after
+		// it starts firing at once rather than undoing a hidden latch.
+		h.players.release_toggles();
+		h.step();
+		h.pad(1).right_trigger = 1.0f;
+		h.step();
+		h.pad(1).right_trigger = 0.0f;
+		h.step();
+		require(h.shooting(1), "Toggle fire did not start before the count-in");
+		h.players.release_toggles();
+		ResumeCountdown count;
+		count.begin(0.25f);
+		const auto count_sample = [&](float trigger)
+		{
+			h.pad(1).right_trigger = trigger;
+			h.step();
+			if (count.active()) { h.players.release_toggles(); }
+			count.filter_inputs(h.inputs);
+			const bool shooting = h.shooting(1);
+			count.advance(0.1f);
+			return shooting;
+		};
+		require(!count_sample(0.0f), "The count-in must not fire a released latch");
+		require(!count_sample(1.0f), "A Shoot press during the count-in must not fire");
+		require(!count_sample(0.0f), "The count-in must stay stopped after a press");
+		require(!count.active(), "The probe count-in did not finish");
+		require(!count_sample(0.0f), "A press during the count-in must not latch past it");
+		require(count_sample(1.0f), "The first press after the count-in must start firing");
+		require(count_sample(0.0f), "Toggle fire must latch after the count-in");
+		require(!count_sample(1.0f), "The next press after the count-in must stop firing");
+		h.pad(1).right_trigger = 0.0f;
+		h.step();
+
 		// A disconnect stops firing, and a trigger held across the reconnect
 		// does not start it.
 		h.pad(1).connected = false;
@@ -188,7 +224,7 @@ int main(int argc, char** argv)
 	{
 		require(argc == 2, "Expected staged content directory");
 		check_latch(argv[1]);
-		std::cout << "PASS toggle fire: per-pad latch, hold default, alternates, repeated reads, release_toggles, "
+		std::cout << "PASS toggle fire: per-pad latch, hold default, alternates, repeated reads, release_toggles, count-in, "
 			"disconnect/reconnect, Off mid-latch and the keyboard seat; no hardware/window\n";
 		return EXIT_SUCCESS;
 	});
