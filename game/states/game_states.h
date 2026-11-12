@@ -24,6 +24,9 @@
 #include "game/input/rumble_sink.h"
 #include "game/match/round_tape.h"
 
+#include <array>
+#include <string_view>
+
 // Stack shapes during a session (docs/architecture.md lists every overlay):
 //
 //     [GameMenu, MainMenu*Page]
@@ -188,6 +191,12 @@ private:
 	// plan, and once the level exists, re-apply its overlays and cheats
 	// (no-ops in Release).
 	void build_and_enter_level();
+	// The level's pad devices and the profile each pad wears (REV#35): after
+	// a build, and every update, since the pause page may hand a seat to a
+	// returning pad and Paused Options may change what a pad wears.
+	void sync_level_pads();
+	// By pad slot, the name of the profile it wears now; empty for none.
+	std::array<std::string_view, input_slots::pad_count> worn_profile_names() const;
 
 	void update_music(float dt, const SuspensionGate& gate);
 	// MenuOwner: a page above the match ticks the match's music. GameLevel

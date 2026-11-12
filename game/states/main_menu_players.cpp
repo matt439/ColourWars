@@ -285,11 +285,8 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		const bool connected = inputs[player].connected;
 		JoinMotionRow& motion = *this->join_motion_[player];
 		// A reserved pad's reconnect note takes the place of its profile's name.
-		const int worn = players[player].controller == PlayerController::human && connected ?
-			this->settings_session()->worn_profile(players[player].num) : -1;
-		const std::wstring label = this->text().worn_profile_label(
-			player_label(*this->level_settings(), player, this->text()), worn < 0 ? std::string_view() :
-			std::string_view(this->save()->profiles().list[static_cast<size_t>(worn)].name)) +
+		const std::wstring label = (connected ? worn_player_label(*this->level_settings(), player,
+			this->text(), *this->settings_session()) : player_label(*this->level_settings(), player, this->text())) +
 			(!connected && players[player].num >= 0 ? this->text().connection.join_reconnect_suffix : L"");
 		const bool row_changed = motion.slot != players[player].num || motion.connected != connected ||
 			this->players_[player]->text() != label;

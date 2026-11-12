@@ -47,6 +47,7 @@ void GameLevel::start_replay()
 	this->level_ = this->level_builder_->build_level(round, this->round_palette_,
 		OpeningMode::off, MatchRandom(this->tape_.seed()), this->start_ == MatchStart::menu);
 	this->level_->set_pad_devices(round.pad_devices());
+	this->level_->set_profile_names(this->worn_profile_names());
 	this->level_->set_player_cheats(this->tape_.damage_immune(), this->tape_.infinite_ammo());
 	this->level_->start_without_countdown();
 	this->replay_player_ = std::make_unique<RoundTapePlayer>(&this->tape_, 0);

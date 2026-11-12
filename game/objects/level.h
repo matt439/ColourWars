@@ -253,6 +253,10 @@ public:
 	// The pad each pad input slot reads (MatchSetup::pad_devices), so
 	// a HUD names the pad a reclaimed seat now uses. Rebuilds only on change.
 	void set_pad_devices(const std::array<int, input_slots::pad_count>& devices);
+	// By pad identity slot: the name of the player profile that pad wears,
+	// empty for a bare pad (REV#35). A human pad seat's HUD identity box
+	// shows it as its last line. Rebuilds only on change.
+	void set_profile_names(const std::array<std::string_view, input_slots::pad_count>& names);
 	// The countdown's opening cards in window pixels while they are drawn,
 	// else none: what a developer panel must not cover.
 	std::vector<labrador::RectangleF> opening_cards() const;

@@ -48,13 +48,15 @@ void PlayerIdentityHud::refresh_texts(const std::vector<Player*>& players, const
 		const bool labelled = participant < this->seat_labels_.size() &&
 			!this->seat_labels_[participant].empty();
 		const HudLabels& labels = this->presentation_->hud().labels;
+		const bool bot = roster.at(participant).controller == PlayerController::bot;
 		this->identity_texts_[participant] = InterfaceGameplay::identity_text(
 			static_cast<int>(participant),
 			player.team() == PlayerTeam::a ? labels.team_a : labels.team_b, labelled ?
 			this->seat_labels_[participant] :
-			(roster.at(participant).controller == PlayerController::bot ?
-				this->presentation_->menu_text().bot_label(roster[participant].difficulty) :
-				this->presentation_->menu_text().device_label(this->pad_device(player.player_num()))));
+			(bot ? this->presentation_->menu_text().bot_label(roster[participant].difficulty) :
+				this->presentation_->menu_text().device_label(this->pad_device(player.player_num()))),
+			bot || !input_slots::is_pad(player.player_num()) ? std::wstring() :
+				this->profile_names_[static_cast<size_t>(player.player_num())]);
 	}
 }
 
@@ -71,6 +73,23 @@ void PlayerIdentityHud::set_pad_devices(const std::array<int, input_slots::pad_c
 	if (devices == this->pad_devices_) { return; }
 	this->pad_devices_ = devices;
 	this->refresh_texts(players, roster);
+}
+
+void PlayerIdentityHud::set_profile_names(const std::array<std::string_view, input_slots::pad_count>& names,
+	const std::vector<Player*>& players, const std::vector<SeatSetup>& roster)
+{
+	// Profile names are A-Z, 0-9 and spaces, so each byte is its character.
+	bool changed = false;
+	for (std::size_t slot = 0; slot < names.size(); ++slot)
+	{
+		std::wstring& kept = this->profile_names_[slot];
+		if (!std::equal(names[slot].begin(), names[slot].end(), kept.begin(), kept.end()))
+		{
+			kept.assign(names[slot].begin(), names[slot].end());
+			changed = true;
+		}
+	}
+	if (changed) { this->refresh_texts(players, roster); }
 }
 
 int PlayerIdentityHud::pad_device(int slot) const

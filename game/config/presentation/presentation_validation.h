@@ -84,6 +84,7 @@ struct Presentation::Validation
 	void validate_generated_values(const SetupGeometry& setup, const StageGeometry& stage_geometry,
 	const ControlsGeometry& control_geometry);
 	void validate_results_text(const StageGeometry& stage_geometry);
+	void validate_hud_identity() const;
 
 	// The phases' page steps, one file per page; only the phase functions above
 	// call them, and only in presentation_validation.cpp, which owns the order.

@@ -275,7 +275,7 @@ void GameLevel::build_and_enter_level()
 	this->player_input_->release_toggles();
 	if (!this->level_->practice()) { this->tape_.start(random.seed(), this->settings_); }
 	this->data()->debug().after_level_build(*this);
-	this->level_->set_pad_devices(this->settings_.pad_devices());
+	this->sync_level_pads();
 	this->menu_context_->reset_connection_audio();
 	this->resume_audio_ = std::make_unique<ResumeAudio>(this->data()->audio_resources(),
 		*this->data()->presentation());
@@ -286,6 +286,22 @@ void GameLevel::build_and_enter_level()
 	// Discard loading time so fixed-step updates do not advance the new match
 	// to catch up with the time spent building it.
 	this->data()->application()->reset_elapsed_time();
+}
+
+void GameLevel::sync_level_pads()
+{
+	this->level_->set_pad_devices(this->settings_.pad_devices());
+	this->level_->set_profile_names(this->worn_profile_names());
+}
+
+std::array<std::string_view, input_slots::pad_count> GameLevel::worn_profile_names() const
+{
+	std::array<std::string_view, input_slots::pad_count> names;
+	for (int slot = 0; slot < input_slots::pad_count; ++slot)
+	{
+		names[static_cast<size_t>(slot)] = this->data()->settings_session()->worn_profile_name(slot);
+	}
+	return names;
 }
 
 // Activation reaches covered states too. Returning to a paused window must
@@ -427,7 +443,7 @@ void GameLevel::update(float dt)
 	const int missing_slot = disconnected_player_slot(this->settings_,
 		*this->data()->gamepads(), this->data()->debug());
 	// The pause page may have handed a seat to a returning pad (ROAD#4).
-	this->level_->set_pad_devices(this->settings_.pad_devices());
+	this->sync_level_pads();
 	if (dt > 0.0f && gate.focused)
 	{
 		this->menu_context_->update_connection_audio();

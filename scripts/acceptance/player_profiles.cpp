@@ -1,6 +1,9 @@
 #include "game/pch.h"
 #include "game/save/save.h"
 #include "game/config/settings_session.h"
+#include "game/config/presentation/presentation_menu_text.h"
+#include "game/match/match_setup.h"
+#include "game/states/player_label.h"
 #include "engine/assets/json.h"
 #include "scripts/acceptance/support/isolated_save.h"
 #include "scripts/acceptance/support/probe.h"
@@ -103,6 +106,9 @@ namespace
 		// Pad 4 wears ALEX: it reads pad 2's old settings, pad 2 is unchanged.
 		require(session.wear_profile(3, alex) && session.worn_profile(3) == alex && session.profile_wearer(alex) == 3,
 			"Pad 4 could not wear ALEX");
+		require(session.worn_profile_name(3) == "ALEX" && session.worn_profile_name(0).empty() &&
+			session.worn_profile_name(input_slots::keyboard_and_mouse).empty() && session.worn_profile_name(-1).empty(),
+			"A worn profile's name did not follow the pad wearing it");
 		require(&session.play_settings() == borrowed && &session.input_bindings() == borrowed_bindings,
 			"Wearing a profile moved the preferences borrowers hold");
 		require(borrowed->stick_settings(3).movement_deadzone == 25 && !borrowed->rumble_enabled(3) &&
@@ -131,6 +137,7 @@ namespace
 
 		// Taking it off restores the pad's own; the profile keeps the edits.
 		require(session.wear_profile(3, -1) && session.worn_profile(3) == -1, "Pad 4 could not take ALEX off");
+		require(session.worn_profile_name(3).empty(), "A pad kept a profile's name after taking it off");
 		require(borrowed->stick_settings(3).aim_deadzone == -1 && !borrowed->toggle_fire_enabled(3) &&
 			borrowed_bindings->pads[3] == PadProfile{},
 			"Taking a profile off did not restore the pad's own settings");
@@ -191,6 +198,56 @@ namespace
 		rejects([&] { session.add_profile_and_save("ONE MORE", -1, saved); }, "A ninth profile was added");
 	}
 
+	// REV#35: the roster label a page shows names the profile the seat's
+	// pad wears, and only a human pad seat's: never a bot's, the keyboard's
+	// or a bare pad's. The copy is set here, so the case needs no content.
+	void check_roster_labels(const acceptance::IsolatedSave& directory)
+	{
+		std::filesystem::remove(directory.save_path());
+		Save save = load();
+		SettingsSession session(save);
+		bool saved = false;
+		const int alex = session.add_profile_and_save("ALEX", -1, saved);
+		const int widest = session.add_profile_and_save("WWWWWWWWWW", -1, saved);
+		MenuText text;
+		text.labels.pad = L"Pad {pad}";
+		text.labels.keyboard_mouse = L"Keyboard/mouse";
+		text.labels.roster_row = L"{player} - {device}";
+		text.labels.bot = L"Bot ({difficulty})";
+		text.labels.bot_easy = L"Easy";
+		text.labels.bot_normal = L"Normal";
+		text.labels.bot_hard = L"Hard";
+		text.labels.worn_profile = L"{device} ({name})";
+		// P1 on pad 3, P2 on the keyboard, P3 on pad 1, P4 a bot.
+		MatchSetup setup;
+		setup.set_player_count(4);
+		setup.set_player_bot(3, BotDifficulty::normal);
+		setup.begin_input_claims(2);
+		require(setup.claim_input_slot(input_slots::keyboard_and_mouse) && setup.claim_input_slot(0),
+			"The roster label fixture could not claim its seats");
+		const auto labels = [&]
+		{
+			std::array<std::wstring, 4> words;
+			for (int seat = 0; seat < 4; ++seat)
+			{
+				words[static_cast<size_t>(seat)] = worn_player_label(setup, seat, text, session);
+			}
+			return words;
+		};
+		const std::array<std::wstring, 4> bare{ L"P1 - Pad 3", L"P2 - Keyboard/mouse", L"P3 - Pad 1", L"P4 - Bot (Normal)" };
+		require(labels() == bare, "A roster label named a profile no pad wears");
+		for (int seat = 0; seat < 4; ++seat)
+		{
+			require(player_label(setup, seat, text) == bare[static_cast<size_t>(seat)],
+				"The plain roster label changed");
+		}
+		require(session.wear_profile(2, widest) && session.wear_profile(0, alex), "The fixture pads could not wear");
+		require(labels() == std::array<std::wstring, 4>{ L"P1 - Pad 3 (WWWWWWWWWW)", L"P2 - Keyboard/mouse",
+			L"P3 - Pad 1 (ALEX)", L"P4 - Bot (Normal)" }, "A roster label did not name the profile its own pad wears");
+		require(player_label(setup, 0, text) == bare[0], "The plain roster label took a profile's name");
+		require(session.wear_profile(2, -1) && labels()[0] == bare[0], "A roster label kept a profile taken off");
+	}
+
 	void check_recovery(const acceptance::IsolatedSave& directory)
 	{
 		directory.write_save("{\"save_version\":4,\"profiles\":["
@@ -236,10 +293,12 @@ int main()
 		check_names();
 		check_overlay(directory);
 		check_cycling_and_delete(directory);
+		check_roster_labels(directory);
 		check_recovery(directory);
 		std::cout << "PASS player_profiles: name rules, profiles carrying sticks, rumble, comfort, "
 			"buttons and Boost, the worn-profile overlay and its write-through, session-only wearing, "
-			"cycling, delete and rename, Boost carry-back, and per-field recovery\n";
+			"cycling, delete and rename, Boost carry-back, roster labels naming the worn profile, "
+			"and per-field recovery\n";
 		return 0;
 	});
 }

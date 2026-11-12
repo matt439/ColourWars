@@ -4037,6 +4037,71 @@ collection was explicitly omitted. Evidence is under `out/validation/road35`:
 `red-debug` (old source), `red-keyboard` (preview only) and the `final-*` runs.
 No real pad or player save was used.
 
+#### Profile names beyond Join (`REV#35`)
+
+**Done 2026-11-12.** A worn profile's name used to appear only on Join and the
+Pad rows; every other roster label said "P1 - Pad 1". The
+[2026-11-10 review](review/2026-11-10-project-review.md#profile-name-on-hud-and-results-rev35)
+asked for the widest name to be checked on each surface first, and the name
+used where it fits.
+
+The check used ten `W`s, the widest name the rules allow, in `en` and
+`qps-ploc`, at the shipped layout, in design pixels:
+
+| surface | limit | plain label ends | with the name ends | outcome |
+|---|---|---|---|---|
+| Team Select | first team icon, x 650 | 376 (406 qps) | 925 (983 qps) | fits only shorter names |
+| Weapon Select | weapon tile border, x 642 | 376 (406 qps) | 925 (983 qps) | fits only shorter names |
+| Results | score bar's right edge, x 1310; panel x 1610 | 900 (940 qps) | 1266 (1326 qps) | fits a row without an award |
+| Pause, two missing pads on a line | paper, 1050 wide | 478 (536 qps) | 1572 (1690 qps) | fits only shorter names |
+| HUD identity box, full-width pane | clock paper, x 845 | 522 | 658 | fits, 187 px to spare |
+
+So the name is used where it fits and the plain label stays where it does not.
+`worn_player_label` ([player_label.h](../game/states/player_label.h)) composes
+`menu_text.labels.worn_profile`, "P1 - Pad 1 (ALEX)", for a human pad seat
+whose pad wears a profile (`SettingsSession::worn_profile_name`). The device
+stays in the label, so a guest can still tell which pad is theirs. Bots, the
+keyboard and bare pads keep their labels. The pages fall back to the plain
+label, which startup validation already fits, at the point where the longer one
+stops fitting:
+
+- **Team and Weapon Select** fall back when the label reaches the first team
+  icon or the weapon tile's border.
+- **Results** falls back when the row reaches its award, or the score bar's
+  right edge when it has none. A name never costs a row its award.
+- **Pause** names the missing pads only while the whole two-to-a-line list
+  fits the paper and ends above the first action's focus card.
+- **The HUD identity box** always fits, so it shows the name as a third line
+  under the pad. `GameLevel` hands each pad's name to `Level::set_profile_names`
+  as plain text, so `game/objects` still never sees `GameData`. It does this
+  after every build and update, because Paused Options can change what a pad
+  wears, and the instant replay's level gets the same names. A new last
+  validation phase holds the widest name, team label and device clear of the
+  clock's paper, closing-clock ticks included, at the widest HUD scale. It fails startup if a font or offset change breaks that.
+  Join keeps its existing rule (`worn_player_label` while connected).
+
+Checks: `player_profiles` covers the session's name lookup and the composed
+labels for pad, keyboard, bot, bare and widest-name seats. `player_identity`
+covers the HUD box's third line, which follows the pad's identity slot and goes
+when the profile comes off. `locales` runs the new HUD fit in `en` and
+`qps-ploc`. `menu_text`, `menu_presentation`, `text_wrap`, `results_awards`,
+`instant_replay`, `match_suspension`, `resume_countdown` and `session` pass
+unchanged (`menu_text`, slow in Debug, in Release only). The whole default Release list passed before the replay hand-off was
+added; the focused cases above passed after it in both builds, and Release
+starts (`check-startup.ps1`).
+On MattPC the painter's `-MenuLabelsOnly` leaf gained a worn-profile block. On
+the real pages, Pad 1 wears ALEX and Pad 4 the widest name. ALEX shows on Team,
+Weapon and Results. The widest name falls back on Team and Weapon, and is kept
+on a Results row with no award. The four-pad Pause list falls back to plain
+labels. Once Pad 4 returns, the three-pad list names ALEX. The leaf passes in
+Debug and Release; in Debug, so do `-ContributionTeamOnly`,
+`-CompetitiveWinnerOnly`, `-ConnectionTextOnly`, `-EndMenuOnly`,
+`-IdentityOnly`, `-HudOnly`, `-JoinPaperOnly`, `-BotPlayersOnly` and
+`-MenuTextOnly`, unchanged. The Debug default list was not run whole. Two parts
+are not covered by a painter check: a Results row falling back because of its
+award, and a drawn HUD box wearing a name. The first rests on the page code;
+the second on `player_identity` and the startup fit. No real pad was used.
+
 ### User stages (`ROAD#16`)
 
 **Scope (2026-10-28).** A player who saves a level with the editor should be
