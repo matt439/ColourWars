@@ -38,6 +38,14 @@ EndMenuInitial::EndMenuInitial(MenuContext* context, const Session& session, boo
 
 }
 
+bool EndMenuInitial::debug_watch_replay()
+{
+	if (!this->replay_) { return false; }
+	this->menu_context()->cancel_music_exit();
+	this->context()->pop(EndMenuAction::watch_replay);
+	return true;
+}
+
 void EndMenuInitial::update_page(float /*dt*/)
 {
 	for (const ProcessedMenuInput& input : this->menu_inputs())

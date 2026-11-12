@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/game_states.h"
 #include "game/config/sound_groups.h"
+#include <algorithm>
 #include <chrono>
 
 using namespace labrador;
@@ -12,6 +13,11 @@ using namespace labrador;
 // the sound groups silent, and its last seconds play at the normal rate. Any
 // confirm, back or pause press ends it early. Afterwards the End menu opens
 // again over the replay's last frame, which is the moment time ran out.
+//
+// The Debug time-lapse (`replay.timelapse`, docs/debug-console.md) is the same
+// replay armed with a speed: it plays the whole tape from its first step,
+// that many taped steps a frame, silent, in Level's arena view (one camera on
+// the stage's overview, no HUD) and with no banner. Release never arms it.
 
 namespace
 {
@@ -50,7 +56,9 @@ void GameLevel::start_replay()
 	this->level_->set_player_cheats(this->tape_.damage_immune(), this->tape_.infinite_ammo());
 	this->level_->start_without_countdown();
 	this->replay_player_ = std::make_unique<RoundTapePlayer>(&this->tape_, 0);
-	this->replay_first_ = this->tape_.step_before_end(this->data()->tuning()->match().replay);
+	this->replay_first_ = this->timelapse_speed_ > 0 ? 0 :
+		this->tape_.step_before_end(this->data()->tuning()->match().replay);
+	this->level_->set_arena_view(this->timelapse_speed_ > 0);
 	this->replay_phase_ = ReplayPhase::preparing;
 	this->menu_input_->reset_actions();
 	const SuspensionGate gate = this->gate();
@@ -88,8 +96,13 @@ bool GameLevel::update_replay(float dt, const SuspensionGate& gate)
 		if (this->replay_player_->step() >= this->replay_first_)
 		{
 			this->replay_phase_ = ReplayPhase::playing;
-			sound_groups::apply(*this->data()->audio_resources(), this->data()->settings_session()->play_settings());
-			this->level_->emphasise_players();
+			// A time-lapse stays silent: its steps run many to a frame.
+			if (this->timelapse_speed_ == 0)
+			{
+				sound_groups::apply(*this->data()->audio_resources(),
+					this->data()->settings_session()->play_settings());
+				this->level_->emphasise_players();
+			}
 		}
 		// The budget was spent on the replay, not on time the round must catch up.
 		this->data()->application()->reset_elapsed_time();
@@ -97,7 +110,17 @@ bool GameLevel::update_replay(float dt, const SuspensionGate& gate)
 	}
 
 	// One taped step per fixed step: the replay runs at the round's own rate.
-	this->step_replay();
+	// A time-lapse runs its speed's worth, then lets the developer tools take
+	// any still that is due (inert in Release, which never arms one).
+	const int steps = std::max(1, this->timelapse_speed_);
+	for (int run = 0; run < steps && !this->replay_player_->finished(); ++run)
+	{
+		this->step_replay();
+	}
+	if (this->timelapse_speed_ > 0)
+	{
+		this->data()->debug().timelapse_frame(*this, this->replay_player_->step(), this->tape_.steps());
+	}
 	if (this->replay_player_->finished()) { this->finish_replay(); }
 	return true;
 }
@@ -131,9 +154,14 @@ void GameLevel::finish_replay()
 
 void GameLevel::end_replay()
 {
+	// A time-lapse is armed for one viewing; the next Watch Replay is the
+	// shipping one.
+	this->timelapse_speed_ = 0;
 	if (this->replay_phase_ == ReplayPhase::none) { return; }
 	this->replay_phase_ = ReplayPhase::none;
 	this->replay_player_.reset();
+	// A build ends a replay with its level already gone.
+	if (this->level_ != nullptr) { this->level_->set_arena_view(false); }
 	sound_groups::apply(*this->data()->audio_resources(), this->data()->settings_session()->play_settings());
 }
 

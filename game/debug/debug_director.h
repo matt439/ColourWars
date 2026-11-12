@@ -108,6 +108,11 @@ public:
 	// start the music or a weapon voice, so the audio is synced again.
 	void end_match_steps(DebugMatchTarget& match, int runs);
 
+	// GameLevel, after each frame of a time-lapse (`replay.timelapse`), with
+	// the next taped step it will play and the tape's length: takes any of the
+	// requested stills that is due. Inert in Release, which never arms one.
+	void timelapse_frame(DebugMatchTarget& match, int step, int steps);
+
 	// Whether the debug clock is paused, so the match's voices stay paused.
 	bool match_audio_paused() const;
 
@@ -193,6 +198,7 @@ inline bool DebugDirector::before_match_step(DebugMatchTarget&, int, MatchStep& 
 }
 inline bool DebugDirector::after_match_step(DebugMatchTarget&) { return true; }
 inline void DebugDirector::end_match_steps(DebugMatchTarget&, int) {}
+inline void DebugDirector::timelapse_frame(DebugMatchTarget&, int, int) {}
 inline bool DebugDirector::match_audio_paused() const { return false; }
 inline bool DebugDirector::background_scripts() const { return false; }
 inline bool DebugDirector::background_updates_allowed() const { return false; }

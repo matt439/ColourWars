@@ -121,6 +121,7 @@ void DebugDirectorImpl::detach_match(const DebugMatchTarget& match)
 		this->stop_playing("the match ended");
 		this->bot_driver_.reset();
 		this->close_live_console("the match ended");
+		this->drop_timelapse("the match ended");
 		this->match_ = nullptr;
 	}
 	// A replay armed for this match's rebuild has no build left to start.
@@ -160,6 +161,8 @@ void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 	}
 	this->stop_playing("the match was rebuilt");
 	this->bot_driver_.reset();
+	// A time-lapse is of the round this build replaces.
+	this->drop_timelapse("the match was rebuilt");
 
 	this->apply_pending_content();
 
@@ -446,6 +449,15 @@ void DebugDirectorImpl::capture_screenshot_if_ready()
 	}
 	const std::string name = *this->pending_screenshot_;
 	this->pending_screenshot_.reset();
+	this->write_screenshot(name);
+}
+
+bool DebugDirectorImpl::write_screenshot(const std::string& name)
+{
+	if (this->application_ == nullptr)
+	{
+		return false;
+	}
 	try
 	{
 		std::filesystem::path directory(widen(directory_consts::screenshot_directory()));
@@ -475,14 +487,16 @@ void DebugDirectorImpl::capture_screenshot_if_ready()
 		if (!write_png(path, image, error))
 		{
 			this->log_.error("screenshot failed: " + error);
-			return;
+			return false;
 		}
 		this->log_.info("screenshot: " + labrador::path_to_utf8(path) + " (" +
 			std::to_string(image.width) + "x" + std::to_string(image.height) + ")");
+		return true;
 	}
 	catch (const std::exception& e)
 	{
 		this->log_.error(std::string("screenshot failed: ") + e.what());
+		return false;
 	}
 }
 
@@ -652,6 +666,7 @@ void DebugDirectorImpl::cancel_capture_work()
 	this->pending_presentation_text_.clear();
 	this->record_armed_.reset();
 	this->play_armed_.reset();
+	this->drop_timelapse("raw keyboard capture");
 	this->waiting_notice_shown_ = false;
 	this->log_.warning("keyboard capture: discarded queued developer work; active recording/replay and settings retained");
 }
@@ -740,6 +755,13 @@ bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt, bool
 			this->waiting_notice_shown_ = true;
 		}
 		return false;
+	}
+
+	// An armed time-lapse takes the round's Results and End pages to Watch
+	// Replay, one a frame.
+	if (this->advance_timelapse(page))
+	{
+		return true;
 	}
 
 	if (this->match_ != nullptr)

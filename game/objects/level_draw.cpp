@@ -22,8 +22,8 @@ void Level::draw(Renderer& renderer) const
 			[this](DrawList& list) { this->draw_countdown_text(list); });
 		return;
 	}
-	if (this->state_ == LevelState::start_countdown ||
-		this->state_ == LevelState::active)
+	if (!this->arena_view_ && (this->state_ == LevelState::start_countdown ||
+		this->state_ == LevelState::active))
 	{
 		this->scene_->draw(renderer,
 			[this](int view_index, DrawList& list)
@@ -58,7 +58,8 @@ void Level::draw(Renderer& renderer) const
 	}
 	else
 	{
-		// The overview draws only the world, with no gameplay overlays.
+		// The overview, and the Debug time-lapse's arena view, draw only the
+		// world, with no gameplay overlays.
 		this->scene_->draw(renderer);
 	}
 }

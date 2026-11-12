@@ -59,6 +59,32 @@ const UiText& Level::station_label(int index) const
 	return *this->station_labels_.at(static_cast<std::size_t>(index));
 }
 
+void Level::set_arena_view(bool on)
+{
+	this->arena_view_ = on;
+	this->refresh_views();
+}
+
+bool Level::arena_view() const
+{
+	return this->arena_view_;
+}
+
+int Level::scene_view_count() const
+{
+	return this->scene_->view_count();
+}
+
+const Scene::View& Level::scene_view(int index) const
+{
+	return this->scene_->view(index);
+}
+
+const Camera& Level::overview_camera() const
+{
+	return this->zoom_out_finish_camera_;
+}
+
 void Level::set_seat_labels(std::vector<std::wstring> labels)
 {
 	this->identity_->set_seat_labels(std::move(labels), this->players_, this->roster_);

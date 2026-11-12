@@ -280,6 +280,19 @@ public:
 	// std::invalid_argument for null.
 	Projectile* admit_projectile(std::unique_ptr<Projectile> projectile);
 
+	// The Debug time-lapse (`replay.timelapse`, docs/debug-console.md): while
+	// on, every state past the opening draws one fullscreen view through the
+	// stage's authored overview camera, the one the results overview ends
+	// on, with no pane HUD, divider or card. Off restores the panes. Changes
+	// only what is drawn, never the simulation.
+	void set_arena_view(bool on);
+	bool arena_view() const;
+	// The views Scene draws, as the last refresh_layout or update left them.
+	int scene_view_count() const;
+	const labrador::Scene::View& scene_view(int index) const;
+	// The overview camera framed for the current window.
+	const labrador::Camera& overview_camera() const;
+
 	// Counts for the perf overlay, as of the last update.
 	int projectile_count() const;
 	int collision_object_count() const;
@@ -396,6 +409,8 @@ private:
 	labrador::Vector2F layout_size_ = labrador::Vector2F::zero;
 	labrador::Camera zoom_out_start_camera_ = labrador::Camera::default_camera;
 	labrador::Camera zoom_out_finish_camera_ = labrador::Camera::default_camera;
+	// set_arena_view; false in every shipping path.
+	bool arena_view_ = false;
 
 	LevelState state_ = LevelState::start_countdown;
 

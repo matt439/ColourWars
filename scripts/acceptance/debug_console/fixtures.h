@@ -195,6 +195,15 @@ namespace debug_console_acceptance
 			return this->obstacles;
 		}
 
+		// replay.timelapse: whether the round keeps a playable tape, the
+		// speed the director last armed (-1: never), and whether one plays.
+		bool round_taped = true;
+		int armed_speed = -1;
+		bool timelapse_running = false;
+		bool debug_round_taped() const override { return this->round_taped; }
+		bool debug_timelapse_running() const override { return this->timelapse_running; }
+		void debug_arm_timelapse(int speed) override { this->armed_speed = speed; }
+
 		int jumps_delivered() const
 		{
 			return static_cast<int>(std::count(this->jumps.begin(), this->jumps.end(), true));
@@ -248,6 +257,14 @@ namespace debug_console_acceptance
 			++this->starts;
 			this->started = plan;
 			return this->start_result;
+		}
+		// replay.timelapse's step toward Watch Replay.
+		bool watch_result = false;
+		int watch_requests = 0;
+		bool debug_watch_replay() override
+		{
+			++this->watch_requests;
+			return this->watch_result;
 		}
 		bool debug_dismiss(bool leaving_match) override
 		{
@@ -595,6 +612,10 @@ namespace debug_console_acceptance
 
 	// series_replay_checks.cpp
 	void check_series_replay(const std::filesystem::path& game_directory);
+
+	// timelapse_checks.cpp
+	void check_timelapse_command(GameTuning& tuning, Presentation& presentation);
+	void check_timelapse_level(const std::filesystem::path& game_directory);
 
 	// level_checks.cpp
 	void check_opening(const std::filesystem::path& game_directory);

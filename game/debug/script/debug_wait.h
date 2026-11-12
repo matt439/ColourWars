@@ -23,6 +23,8 @@ struct DebugWaitContext
 	bool build_pending = false;
 	// A replay is armed, or playing and not finished.
 	bool replay_active = false;
+	// A time-lapse (`replay.timelapse`) is armed or playing.
+	bool timelapse_active = false;
 	// A recording is armed or running.
 	bool recording = false;
 	// A recording is armed and has not started (it starts with the next build).
@@ -98,6 +100,15 @@ public:
 // `wait replay`: the running or armed replay has finished (and holds its
 // last frame, paused).
 class ReplayWait final : public DebugWait
+{
+public:
+	bool satisfied(const DebugWaitContext& context) const override;
+	std::string describe(const DebugWaitContext& context) const override;
+};
+
+// `wait timelapse`: the armed or playing time-lapse has played to its end
+// (or was dropped), and the End menu is back.
+class TimelapseWait final : public DebugWait
 {
 public:
 	bool satisfied(const DebugWaitContext& context) const override;

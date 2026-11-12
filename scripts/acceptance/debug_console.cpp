@@ -62,6 +62,8 @@ namespace debug_console_acceptance
 		".?AVDebugBackgroundInput@@",
 		// Phase 4: script waits.
 		".?AVDebugWait@@", ".?AVUpdatesWait@@", ".?AVMatchWait@@",
+		// replay.timelapse's script wait.
+		".?AVTimelapseWait@@",
 	};
 
 	void check_executable(const std::filesystem::path& game_directory)
@@ -208,6 +210,8 @@ int main(int argc, char** argv)
 			{
 				check_opening(game_directory);
 				check_station_labels(game_directory);
+				check_timelapse_command(tuning, presentation);
+				check_timelapse_level(game_directory);
 			}
 		}
 		require(read_text(source / L"tuning.json") == source_tuning &&
