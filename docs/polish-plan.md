@@ -1925,7 +1925,9 @@ settle to a quiet marker. Test two teammates crossing and overlapping while usin
 the same weapon. Optional team symbols or sparse surface markings could supplement
 the palettes; inspect them on heavily painted terrain before committing to a
 pattern that might clutter the pixel art. Neither identity nor shot readiness
-should depend on colour alone.
+should depend on colour alone. The surface half was measured on heavily painted
+reveals on 2026-11-12 and no pattern was warranted
+([REV#34](polish-match-accents.md#paint-under-colour-vision-simulation-rev34)).
 
 **Try first:** one precision-tool readiness cue and one local-player marker in
 the reference match. Ask players to explain a failed shot and find their character
