@@ -354,7 +354,8 @@
         "watch_replay": "[Watch Replay]",
         "profiles": "[Profiles]",
         "series_stage": "[Series stage]",
-        "variant": "[Variant]"
+        "variant": "[Variant]",
+        "toggle_fire": "[Toggle fire]"
       }
     },
     "main_menu": {

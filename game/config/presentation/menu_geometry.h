@@ -39,6 +39,9 @@ namespace settings_rows
 	inline constexpr int sticks_view_shake = 4;
 	inline constexpr int sticks_aim_marker = 5;
 	inline constexpr int sticks_reduce_effects = 6;
+	inline constexpr int sticks_toggle_fire = 7;
+	inline constexpr int sticks_apply = 8;
+	inline constexpr int sticks_back = 9;
 }
 
 namespace menu_geometry

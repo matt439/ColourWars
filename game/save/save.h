@@ -50,7 +50,9 @@ public:
 	// profile's "sub" (also in "profiles"). Absent reads as the right mouse
 	// button (the left when Shoot has the right) and RB (else LB, else the
 	// first free pad control), which is where older builds put it.
-	static constexpr int version = 9;
+	// 10 adds "toggle_fire" to each "pad_comfort" entry and each "profiles"
+	// entry; absent reads as false, hold to fire, as older builds played.
+	static constexpr int version = 10;
 
 	Save() = default;
 	// Only a missing save without a legacy file uses these first-run display

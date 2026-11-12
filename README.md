@@ -100,7 +100,8 @@ the right stick or mouse.
 ### Settings and controllers
 
 Options and Pause both offer **Controls / audio**: music and SFX volume,
-per-pad stick deadzones, rumble, View shake and Aim marker. **Pad sticks**
+per-pad stick deadzones, rumble, View shake, Aim marker and Toggle fire (press
+Shoot once to keep firing, again to stop). **Pad sticks**
 shows live stick input; use D-pad/arrows there so the sticks stay free to
 test. **Pad Buttons** changes Jump, Shoot, Pause and Sub. **Keyboard Keys**
 changes the keyboard seat's actions; Escape always pauses and Down always

@@ -1920,6 +1920,48 @@ writing), `view_shake` (per-slot shake, Shared fallback, keyboard/bot),
 `aim_marker` (sparse-slot panes) and `player_identity` (own versus other
 viewer's badge emphasis). The painter fixtures cover the longer page.
 
+### Toggle fire (`REV#31`)
+
+**Implemented 2026-11-12; not played.** Shoot was hold-only on every device. The
+2026-11-10 project review
+([REV#31](review/2026-11-10-project-review.md#input-accommodations-beyond-rebinding-rev31))
+found hold-to-toggle the one input accommodation with a clear case, so each pad
+now has a **Toggle fire** row: Off (the default) holds to fire as before; On,
+a Shoot press starts firing and the next press stops it, with nothing held.
+
+- **Per pad, Off/On.** It rides in the `ROAD#7` record (`SeatComfort`) and so
+  takes its save, profile carry, edited-slot Apply and worn-profile write-through
+  for free, but it has no Shared value. The Shared pattern needs an Options
+  switch to follow, and Controls / audio has no free row (eleven rows end
+  above its status line). The keyboard seat therefore holds to fire.
+- **Page.** Pad sticks row 7, after Reduce effects; Apply and Back move to
+  rows 8 and 9 (`settings_rows::sticks_toggle_fire`, `sticks_apply`,
+  `sticks_back`). Copy is `menu_text.items.toggle_fire` with the shared On/Off
+  values, and startup validation fits the label and both values.
+- **The latch** lives in `PlayerInput`, so recorded rounds and replays carry
+  the resolved Shoot and need no format change. Every chosen Shoot control,
+  alternates included, flips it on its press edge; a repeated read of one frame
+  does not flip it twice. It stops, and needs a fresh press to start again, when
+  the pad disconnects (a trigger held across the reconnect does not start it),
+  when the option turns off, and when `GameLevel` stops reading pads: a new
+  round, Pause, Results and focus loss (`PlayerInput::release_toggles`). Bots
+  and the Sub are unchanged.
+- **Save.** Version 10 adds `"toggle_fire"` (a boolean) to each `pad_comfort`
+  entry and each `profiles` entry; absent or malformed reads as false, so older
+  saves play as before.
+
+CPU acceptance: `toggle_fire` drives the real `PlayerInput` with scripted pad
+snapshots (latch, hold default, alternate control, repeated reads,
+`release_toggles`, disconnect and held reconnect, Off mid-latch, the keyboard
+seat); `settings` checks the save field's canonical writing and per-field
+recovery; `player_profiles` the profile carry, worn overlay and recovery;
+`menu_text` the copy. The painter's `-ControlsMenuOnly`, `-RumbleOnly`,
+`-PercentageTextOnly`, `-StickReadoutsOnly`, `-MenuLabelsOnly`,
+`-SettingsMenuOnly`, `-PausedOptionsOnly`, `-ResumeOnly`, `-PracticeReplayOnly`
+and `-KeyboardJumpOnly` leaves pass with the longer page on this machine
+(2026-11-12). How it feels on a pad has not been tried. Stick swap, d-pad
+movement and follow-movement aim stay unscoped beside `ROAD#24` and `GAP#4.2`.
+
 ### More team palette pairs (`ROAD#8`)
 
 **Done 2026-10-27; the author accepted the three new pairs after seeing them.** Six pairs
@@ -4776,13 +4818,15 @@ that menus read keys only.
   not designed.
 - **A click held from play cannot confirm a menu.** Left click is the default
   Shoot and right click the default Sub, so a click held at the buzzer, into
-  Pause or into Results would otherwise release onto a row. The buttons join
-  the keyboard's menu actions (`ActionBindings::menu_mouse_buttons`, fixed like
-  the menu keys) and pass through `MenuInput`'s armed release: a click fires on
-  release only if its press was seen by the menu, so every `reset_actions()`
-  disarms a held click as it does a held key. Releasing both buttons together
-  chooses neither, focus return disarms, and a cancelled mouse capture (a new
-  button epoch) releases nothing.
+  Pause or into Results would otherwise release onto a row. The buttons are
+  fixed menu bindings like the keys (`ActionBindings::menu_mouse_buttons`) and
+  pass through `MenuInput`'s armed release: a click fires on release only if
+  its press was seen by the menu, so every `reset_actions()` disarms a held
+  click as it does a held key. The mouse arms apart from the keys, as each pad
+  does, so a click held from play never holds up Enter or Escape released over
+  it (the keys win a frame where both release). Releasing both buttons
+  together chooses neither, focus return disarms, and a cancelled mouse
+  capture (a new button epoch) releases nothing.
 - **Where.** The game's menus, the pause and end pages and the replay skip
   take clicks (`GameMenu`, `GameLevel` and the Debug director pass
   `GameData::mouse()`). Keyboard Keys' capture reader does not, so a click
@@ -4796,7 +4840,11 @@ backs only on release, once; Shoot and Sub held across a `reset_actions()` stay
 neutral on release; a fresh click then works; both buttons together, a
 cancelled capture, a click across focus loss and return, and the middle button
 do nothing; a reader built without a mouse ignores clicks; a pad reset keeps the
-mouse's armed click.
+mouse's armed click; Enter and Escape released over a click held from play act
+at once, and that click's later release does nothing. The painter's
+`-PracticeReplayOnly` leaf, which pauses and resumes with Enter while the
+keyboard seat holds Shoot, is the case that first showed the keys must not
+share arming with the mouse.
 
 ## Per-player menu focus (`GAP#D1`)
 

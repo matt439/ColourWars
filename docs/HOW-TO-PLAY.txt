@@ -55,6 +55,10 @@ Windows, such as Steam Input.
   Drop through        Left stick down      S or Down
   Pause               Start                Escape
 
+Rather not hold the trigger? Options > Controls / audio > Pad sticks has a
+Toggle fire setting for each controller: turn it On and one press of Shoot
+keeps firing until the next press.
+
 Sub is your sub weapon, carried beside your tool all match. Choose it on
 Weapon Select: confirm your tool with A / Enter, pick the sub with Left/Right,
 then press A / Enter again.

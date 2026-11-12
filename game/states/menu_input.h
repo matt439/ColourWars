@@ -47,7 +47,7 @@ class MenuInput
 {
 public:
 	// `mouse` is the keyboard seat's (REV#33): left click proceeds and right
-	// click backs through the same armed release as the keys, so a click held
+	// click backs through an armed release like the keys', so a click held
 	// from play cannot confirm a menu. Null leaves the seat on keys only.
 	MenuInput(const labrador::Gamepads* gamepads,
 		const labrador::Keyboard* keyboard, const GameTuning* tuning,
@@ -92,7 +92,9 @@ private:
 	MenuDirectionRepeat navigation_[input_slots::count];
 	labrador::Direction directions_[input_slots::count] = {};
 
-	// Each logical action owns its aliases, the mouse buttons included; the
-	// unbound keyboard Pause stays neutral.
+	// Each logical action owns its aliases; the unbound keyboard Pause stays neutral.
 	bool key_armed_[menu_action_count] = {};
+	// The mouse arms apart from the keys, as each pad does: a click held from
+	// play stays unarmed without holding up an Enter or Escape released over it.
+	bool mouse_armed_[menu_action_count] = {};
 };

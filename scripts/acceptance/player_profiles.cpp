@@ -80,6 +80,7 @@ namespace
 		pad_two.sticks[1] = { 25, 40 };
 		pad_two.pad_rumble[1] = false;
 		pad_two.pad_comfort[1].view_shake = SeatSwitch::off;
+		pad_two.pad_comfort[1].toggle_fire = true;
 		require(session.set_play_settings_and_save(pad_two), "Could not seed pad 2's own settings");
 		InputBindings buttons = session.input_bindings();
 		buttons.pads[1][PadAction::jump] = { PadControl::b, PadControl::none };
@@ -91,7 +92,8 @@ namespace
 		require(saved && alex == 0 && save.profiles().list[0].name == "ALEX", "Could not add a profile");
 		const PlayerProfile& copied = save.profiles().list[0];
 		require(copied.sticks.movement_deadzone == 25 && copied.sticks.aim_deadzone == 40 && !copied.rumble &&
-			copied.comfort.view_shake == SeatSwitch::off && copied.buttons[PadAction::jump].primary == PadControl::b,
+			copied.comfort.view_shake == SeatSwitch::off && copied.comfort.toggle_fire &&
+			copied.buttons[PadAction::jump].primary == PadControl::b,
 			"A new profile did not carry its pad's settings");
 		const int sam = session.add_profile_and_save("SAM", input_slots::keyboard_and_mouse, saved);
 		require(sam == 1 && save.profiles().list[1].buttons == PadProfile{} && save.profiles().list[1].rumble,
@@ -104,7 +106,8 @@ namespace
 		require(&session.play_settings() == borrowed && &session.input_bindings() == borrowed_bindings,
 			"Wearing a profile moved the preferences borrowers hold");
 		require(borrowed->stick_settings(3).movement_deadzone == 25 && !borrowed->rumble_enabled(3) &&
-			!borrowed->view_shake_enabled(3) && borrowed_bindings->pads[3][PadAction::jump].primary == PadControl::b,
+			!borrowed->view_shake_enabled(3) && borrowed->toggle_fire_enabled(3) &&
+			borrowed_bindings->pads[3][PadAction::jump].primary == PadControl::b,
 			"Pad 4 does not read the profile it wears");
 		require(borrowed->stick_settings(1).movement_deadzone == 25, "Wearing changed another pad");
 		require(!session.wear_profile(0, alex), "Two pads wore one profile");
@@ -128,7 +131,8 @@ namespace
 
 		// Taking it off restores the pad's own; the profile keeps the edits.
 		require(session.wear_profile(3, -1) && session.worn_profile(3) == -1, "Pad 4 could not take ALEX off");
-		require(borrowed->stick_settings(3).aim_deadzone == -1 && borrowed_bindings->pads[3] == PadProfile{},
+		require(borrowed->stick_settings(3).aim_deadzone == -1 && !borrowed->toggle_fire_enabled(3) &&
+			borrowed_bindings->pads[3] == PadProfile{},
 			"Taking a profile off did not restore the pad's own settings");
 
 		// Profiles persist; who wears them does not.
@@ -191,7 +195,7 @@ namespace
 	{
 		directory.write_save("{\"save_version\":4,\"profiles\":["
 			"{\"name\":\" ALEX \",\"movement_deadzone\":30,\"aim_deadzone\":95,\"rumble\":\"no\","
-			"\"view_shake\":\"on\",\"aim_marker\":\"maybe\",\"reduce_effects\":\"off\","
+			"\"view_shake\":\"on\",\"aim_marker\":\"maybe\",\"reduce_effects\":\"off\",\"toggle_fire\":true,"
 			"\"buttons\":{\"jump\":[\"x\"],\"shoot\":[\"rt\"],\"pause\":[\"start\"]},\"boost\":2},"
 			"{\"name\":\"ALEX\"},"
 			"{\"name\":\"lower\"},"
@@ -210,7 +214,7 @@ namespace
 		// 95 clamps to the 90 cap; "no" is not a boolean, so rumble stays on.
 		require(alex.sticks.movement_deadzone == 30 && alex.sticks.aim_deadzone == 90 && alex.rumble &&
 			alex.comfort.view_shake == SeatSwitch::on && alex.comfort.aim_marker == SeatSwitch::shared &&
-			alex.comfort.reduce_effects == SeatSwitch::off && alex.buttons[PadAction::jump].primary == PadControl::x &&
+			alex.comfort.reduce_effects == SeatSwitch::off && alex.comfort.toggle_fire && alex.buttons[PadAction::jump].primary == PadControl::x &&
 			alex.boost == 2, "A profile's fields did not recover independently");
 		require(profiles.list[1].buttons == PadProfile{} && profiles.list[1].boost == 0,
 			"An invalid button set or Boost was kept");

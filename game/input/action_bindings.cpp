@@ -235,10 +235,9 @@ std::array<bool, menu_direction_count> dpad_direction_held(
 }
 
 ActionSample menu_action(const ActionBindings& bindings, MenuInputAction action,
-	const KeyboardState& keyboard, const KeyboardState& previous_keyboard,
 	const MouseState& mouse, const MouseState& previous_mouse)
 {
-	ActionSample result = menu_action(bindings, action, keyboard, previous_keyboard);
+	ActionSample result;
 	for (MouseButton button : bindings.menu_mouse_buttons.at(static_cast<std::size_t>(action)))
 	{
 		merge(result, mouse_sample(mouse, previous_mouse, button));

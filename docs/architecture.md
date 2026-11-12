@@ -372,7 +372,9 @@ it is not the grenade; absent or unknown is the grenade, which every older
 match carried. Save version 9 adds the Sub action to `input_bindings`
 (`keyboard.sub` and each pad profile's `sub`, also in `profiles`); absent reads
 as the right mouse button (the left when Shoot has the right) and RB (else LB,
-else the first free control), where older builds put it.
+else the first free control), where older builds put it. Save version 10 adds
+`"toggle_fire"` to each `pad_comfort` and `profiles` entry; absent is false,
+hold to fire, as older builds played.
 
 Content resolves beside the executable, not the working directory: the engine's
 rule (`engine/app/content_root.h`), which `Application::load_manifest` applies

@@ -206,20 +206,27 @@ ProcessedMenuInput MenuInput::keyboard_menu_input(const Keyboard& keyboard,
 	// Disarm on focus return: suppressed press edges would otherwise preserve
 	// ownership of a key or button held while the window was unfocused. The
 	// evaluator reconstructs previous-held per physical key before combining
-	// aliases: (held && !pressed) || released. The mouse buttons join the same
-	// actions, so a click held from play is never armed here.
+	// aliases: (held && !pressed) || released. The mouse buttons are a second
+	// source with their own arming, so a click held from play is never armed
+	// here and never blocks a key; the keys win a frame where both release.
 	ProcessedMenuInput result;
 	result.connected = true;
 	const KeyboardState& now = keyboard.state();
 	const KeyboardState& before = keyboard.previous_state();
-	const bool disarm = keyboard.just_focused() || (mouse != nullptr && mouse->just_focused());
 	result.action = released_action(this->key_armed_, [&](MenuInputAction action)
 	{
-		return mouse != nullptr ?
-			menu_action(default_action_bindings(), action, now, before,
-				mouse->state(), mouse->previous_state()) :
-			menu_action(default_action_bindings(), action, now, before);
-	}, disarm);
+		return menu_action(default_action_bindings(), action, now, before);
+	}, keyboard.just_focused());
+	if (mouse != nullptr)
+	{
+		const MouseState& clicked = mouse->state();
+		const MouseState& previous = mouse->previous_state();
+		const MenuInputAction click = released_action(this->mouse_armed_, [&](MenuInputAction action)
+		{
+			return menu_action(default_action_bindings(), action, clicked, previous);
+		}, mouse->just_focused());
+		if (result.action == MenuInputAction::none) { result.action = click; }
+	}
 	result.direction = this->directions_[input_slots::keyboard_and_mouse];
 	return result;
 }
@@ -287,6 +294,10 @@ void MenuInput::reset_actions()
 		}
 	}
 	for (bool& armed : this->key_armed_)
+	{
+		armed = false;
+	}
+	for (bool& armed : this->mouse_armed_)
 	{
 		armed = false;
 	}

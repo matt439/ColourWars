@@ -36,6 +36,7 @@ private:
 	std::unique_ptr<OptionRow> view_shake_;
 	std::unique_ptr<OptionRow> aim_marker_;
 	std::unique_ptr<OptionRow> reduce_effects_;
+	std::unique_ptr<OptionRow> toggle_fire_;
 	std::array<bool, input_slots::pad_count> rumble_edited_{};
 	std::array<bool, input_slots::pad_count> comfort_edited_{};
 	labrador::UiText* connection_ = nullptr;

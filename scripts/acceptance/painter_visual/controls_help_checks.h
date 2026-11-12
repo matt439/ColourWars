@@ -249,8 +249,8 @@ void controls_menu_help_checks(Application& app, const Canvas& canvas, GameTunin
         compare("new-child-pending-refresh-" + std::to_string(repeat), true, next, new_words, false, false, false, true);
         if (repeat == 0)
         {
-            // Aim, Rumble, View shake, Aim marker, Reduce effects, Apply.
-            for (int row = 1; row < 7; ++row) { tap(Key::down); }
+            // Aim, Rumble, View shake, Aim marker, Reduce effects, Toggle fire, Apply.
+            for (int row = 1; row < 8; ++row) { tap(Key::down); }
             const Frame before_interruption = stack_frame(app);
             app.keyboard()->on_key_down(Key::enter); tick();
             static_cast<WindowNotify&>(app).on_deactivated(); tick();

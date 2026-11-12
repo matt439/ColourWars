@@ -128,11 +128,10 @@ ActionSample menu_action(const ActionBindings& bindings, MenuInputAction action,
 	const labrador::KeyboardState& keyboard, const labrador::KeyboardState& previous_keyboard);
 ActionSample menu_action(const ActionBindings& bindings, MenuInputAction action,
 	const labrador::GamepadState& pad, const labrador::GamepadState& previous_pad);
-// The keyboard seat's keys and mouse buttons together. A mouse button's
-// was_held is its previous level within one capture epoch, so a cancelled
-// capture never arms or releases a menu action.
+// The keyboard seat's mouse buttons alone; the menu reader arms them apart
+// from the keys. was_held is the previous level within one capture epoch, so
+// a cancelled capture never arms or releases a menu action.
 ActionSample menu_action(const ActionBindings& bindings, MenuInputAction action,
-	const labrador::KeyboardState& keyboard, const labrador::KeyboardState& previous_keyboard,
 	const labrador::MouseState& mouse, const labrador::MouseState& previous_mouse);
 
 std::array<bool, menu_direction_count> keyboard_direction_held(

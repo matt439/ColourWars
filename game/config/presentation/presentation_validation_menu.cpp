@@ -192,7 +192,8 @@ Presentation::Validation::StatusBacks Presentation::Validation::status_back_card
 	const RectangleF pad_buttons_back = padded_back(controls.layout.position + Vector2F(0.0f,
 		controls.layout.spacing.y * static_cast<float>(pad_entry_count + 3)),
 		controls.item_font, controls.art);
-	const RectangleF sticks_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 8.0f),
+	const RectangleF sticks_back = padded_back(controls.layout.position + Vector2F(0.0f,
+		controls.layout.spacing.y * static_cast<float>(settings_rows::sticks_back)),
 		controls.item_font, controls.art);
 
 	return { options_back, controls_back, pad_buttons_back, sticks_back };

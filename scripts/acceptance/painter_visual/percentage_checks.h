@@ -1,6 +1,6 @@
 // Isolated leaf probe for four preference percentages. No broad Controls matrix,
 // pad injection, gameplay state, foreground input or hardware qualification.
-// Successful run: 189 explicit StateContext updates, 87 readbacks, 52 value CSV
+// Successful run: 201 explicit StateContext updates, 87 readbacks, 52 value CSV
 // rows, four status comparisons and eight compact crops (four states x two sizes).
 void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
@@ -83,7 +83,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     size_t updates = 0, readbacks = 0, csv_rows = 0, crops = 0, status_checks = 0;
     const auto tick = [&](float elapsed = 0.0f)
     {
-        require(updates < 189, "Percentage leaf probe exceeded its explicit update budget");
+        require(updates < 201, "Percentage leaf probe exceeded its explicit update budget");
         ++updates; app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto tap = [&](Key key)
@@ -152,8 +152,8 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         const auto& style = snapshot.menu(); const auto& look = snapshot.controls_settings(); const auto& art = look.art;
         const std::array<const wchar_t*, 11> control_labels{ L"Pad sticks", L"Keyboard Keys", L"Pad Buttons", L"Profiles", L"Music volume", L"SFX volume",
             L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
-        const std::array<const wchar_t*, 9> stick_labels{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Rumble",
-            L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
+        const std::array<const wchar_t*, 10> stick_labels{ L"Pad", L"Move deadzone", L"Aim deadzone", L"Rumble",
+            L"View shake", L"Aim marker", L"Reduce effects", L"Toggle fire", L"Apply", L"Back" };
         const std::array<std::wstring, 2> values{ literal_value(variant, first), literal_value(variant, second) };
         const float width = look.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset -
             look.layout.position.x - look.layout.spacing.x;
@@ -176,8 +176,8 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             const Vector2F position = look.layout.position + Vector2F(0.0f, look.layout.spacing.y * static_cast<float>(row));
             UiText* label = add(sticks ? stick_labels[row] : control_labels[row], position,
                 row == focus_row ? art.focus_ink : art.ink);
-            const bool adjustable = sticks ? row < 7 : (row >= 4 && row <= 8);
-            const bool fitted_action = sticks ? row == 7 : (row >= 1 && row <= 3) || row == 9;
+            const bool adjustable = sticks ? row < 8 : (row >= 4 && row <= 8);
+            const bool fitted_action = sticks ? row == 8 : (row >= 1 && row <= 3) || row == 9;
             if (adjustable || fitted_action)
             {
                 const RectangleF raw = label->bounds();
@@ -201,14 +201,15 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
                     "Percentage reference did not preserve or exercise OptionRow value fitting");
                 row_bounds = RectangleF::union_of(row_bounds, value->bounds());
             }
-            else if (sticks && (row == 0 || row >= 3) && row < 7)
+            else if (sticks && (row == 0 || row >= 3) && row < 8)
             {
                 // The comfort rows follow the shared switches the fixture seeded.
                 const PlaySettings& play = preferences_session.play_settings();
                 const auto shared = [](bool on) { return std::wstring(on ? L"Shared (On)" : L"Shared (Off)"); };
                 const std::wstring copy = row == 0 ? L"Pad " + std::to_wstring(selected_slot + 1) :
-                    row == 3 ? std::wstring(L"On") : shared(row == 4 ? play.view_shake :
-                        row == 5 ? play.aim_marker : play.reduce_effects);
+                    row == 3 ? std::wstring(L"On") :
+                    row == 7 ? std::wstring(play.toggle_fire_enabled(selected_slot) ? L"On" : L"Off") :
+                    shared(row == 4 ? play.view_shake : row == 5 ? play.aim_marker : play.reduce_effects);
                 UiText* value = add(copy, position + Vector2F(look.layout.spacing.x, 0.0f), art.ink);
                 const RectangleF raw = value->bounds();
                 value->set_scale(std::min({ 1.0f, width / raw.width, height / raw.height }));
@@ -390,7 +391,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     tap(Key::down); tap(Key::right); tap(Key::down); tap(Key::left);
     std::ignore = compare("new-child-pending", true, 2, next, PercentageVariant::new_long, 5, 85, false);
     check_status(L"Apply to save pad settings.", false, true);
-    for (int row = 2; row < 7; ++row) { tap(Key::down); }
+    for (int row = 2; row < 8; ++row) { tap(Key::down); }
     tap(Key::enter);
     PlaySettings applied = seeded;
     applied.sticks[static_cast<size_t>(selected_slot)].movement_deadzone = 5;
@@ -399,14 +400,14 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const std::string applied_bytes = saved_bytes();
     require(applied_bytes != seeded_bytes, "Actual percentage Apply did not persist the selected deadzones");
     check_status(L"Pad settings applied and saved.", false, true);
-    const Frame applied_child = compare("new-child-applied", true, 7, next, PercentageVariant::new_long, 5, 85, false);
+    const Frame applied_child = compare("new-child-applied", true, 8, next, PercentageVariant::new_long, 5, 85, false);
     tap(Key::enter);
     require(saved_bytes() == applied_bytes && applied_child.pixels == actual_frame().pixels,
         "Repeated percentage Apply changed private bytes, values or captured font");
     check_preferences(applied);
-    for (int row = 7; row > 1; --row) { tap(Key::up); }
+    for (int row = 8; row > 1; --row) { tap(Key::up); }
     tap(Key::right);
-    for (int row = 1; row < 7; ++row) { tap(Key::down); }
+    for (int row = 1; row < 8; ++row) { tap(Key::down); }
     acceptance::ReplacementLock blocked(save_path);
     require(blocked.hold(), "Cannot lock the private percentage save");
     tap(Key::enter);
@@ -415,9 +416,9 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     check_preferences(active); check_reload(applied);
     require(saved_bytes() == applied_bytes, "Failed percentage save replaced previous private bytes");
     check_status(L"Active for this run. Could not save.", true, true);
-    std::ignore = compare("new-child-save-failed", true, 7, next, PercentageVariant::new_long, 10, 85, false);
+    std::ignore = compare("new-child-save-failed", true, 8, next, PercentageVariant::new_long, 10, 85, false);
     require(blocked.release(), "Cannot remove the owned private percentage write refusal");
-    for (int row = 7; row > 1; --row) { tap(Key::up); }
+    for (int row = 8; row > 1; --row) { tap(Key::up); }
     tap(Key::right);
     std::ignore = compare("new-child-discard-pending", true, 1, next, PercentageVariant::new_long, 15, 85, false);
     tap(Key::escape);
@@ -452,7 +453,7 @@ void percentage_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     require(stack.depth() == 1 && saved_bytes() == applied_bytes,
         "Reopened percentage discard changed persisted preferences or stack ownership");
     check_preferences(active); check_reload(applied);
-    require(updates == 189 && readbacks == 87 && csv_rows == 52 && status_checks == 4 && crops == 8 && records.good(),
+    require(updates == 201 && readbacks == 87 && csv_rows == 52 && status_checks == 4 && crops == 8 && records.good(),
         "Percentage leaf probe drifted from its frozen update/readback/CSV/crop budgets");
     std::ofstream summary(output / "percentage-summary.json");
     summary << "{\n  \"outcome\": \"passed\",\n  \"updates\": " << updates << ",\n  \"readbacks\": " << readbacks <<

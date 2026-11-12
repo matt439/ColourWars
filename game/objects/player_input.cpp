@@ -5,6 +5,16 @@
 
 using namespace labrador;
 
+namespace
+{
+	bool same_snapshot(const GamepadState& a, const GamepadState& b)
+	{
+		return a.connected == b.connected && a.buttons == b.buttons &&
+			a.left_stick == b.left_stick && a.right_stick == b.right_stick &&
+			a.left_trigger == b.left_trigger && a.right_trigger == b.right_trigger;
+	}
+}
+
 PlayerInput::PlayerInput(const Gamepads* gamepads, const Keyboard* keyboard,
 	const Mouse* mouse, const GameTuning* tuning, const PlaySettings* preferences,
 	const InputBindings* input_bindings) :
@@ -60,7 +70,18 @@ SlotInput PlayerInput::pad_input(const Gamepads& gamepads, int device, int slot)
 	const ActionSample jump = action(GameAction::jump);
 	result.jump_held = jump.held;
 	result.jump_pressed = !gamepads.just_connected(device) && jump.pressed;
-	result.primary_shoot = action(GameAction::shoot).held;
+	// Toggle fire (REV#31): each Shoot press flips the latch, so firing
+	// needs no held control. A reconnect neither presses nor keeps it.
+	const ActionSample shoot = action(GameAction::shoot);
+	FireToggle& toggle = this->fire_toggles_[static_cast<std::size_t>(slot)];
+	const bool toggles = this->preferences_->toggle_fire_enabled(slot);
+	if (!toggles || gamepads.just_connected(device)) { toggle = {}; }
+	else if (!shoot.pressed) { toggle.flipped = false; }
+	else if (!toggle.flipped || !same_snapshot(toggle.now, pad) || !same_snapshot(toggle.before, before))
+	{
+		toggle = { !toggle.firing, true, pad, before };
+	}
+	result.primary_shoot = toggles ? toggle.firing : shoot.held;
 	// Like jump, a button already held across a reconnect throws nothing.
 	result.sub_pressed = !gamepads.just_connected(device) && action(GameAction::sub).pressed;
 
@@ -143,6 +164,11 @@ std::vector<SlotInput> PlayerInput::player_inputs()
 	return this->player_inputs(own);
 }
 
+void PlayerInput::release_toggles()
+{
+	this->fire_toggles_.fill(FireToggle{});
+}
+
 std::vector<SlotInput> PlayerInput::player_inputs(
 	const std::array<int, input_slots::pad_count>& devices)
 {
@@ -155,6 +181,7 @@ std::vector<SlotInput> PlayerInput::player_inputs(
 		{
 			result[slot] = this->pad_input(*this->gamepads_, device, slot);
 		}
+		else { this->fire_toggles_[static_cast<std::size_t>(slot)] = FireToggle{}; }
 	}
 
 	// Always expose the keyboard/mouse slot, independent of recent activity.

@@ -125,13 +125,13 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
         "Actual rumble On/Off lettering did not change within its complete row");
     require(off.pixels == stack_frame(app).pixels, "Frozen rumble settings draw changed pixels");
     save(on, output / "rumble-settings-on.ppm"); save(off, output / "rumble-settings-off.ppm");
-    move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::a);
+    move(GamepadButton::dpad_down, 5); pad(3, GamepadButton::a);
     verify("applied-off", { true, true, true, false }, { true, true, true, false }, 0, 0);
     const std::string applied_bytes = bytes();
     pad(3, GamepadButton::a);
     require(bytes() == applied_bytes, "Repeated rumble Apply changed canonical save bytes");
-    move(GamepadButton::dpad_up, 4); pad(3, GamepadButton::dpad_right);
-    move(GamepadButton::dpad_down, 5); pad(3, GamepadButton::a);
+    move(GamepadButton::dpad_up, 5); pad(3, GamepadButton::dpad_right);
+    move(GamepadButton::dpad_down, 6); pad(3, GamepadButton::a);
     require(stack.depth() == 2 && bytes() == applied_bytes, "Rumble Back saved its pending On choice");
     move(GamepadButton::dpad_down, 9); pad(3, GamepadButton::a);
     verify("parent-merge", { true, true, true, false }, { true, true, true, false }, 10, 10);
@@ -139,13 +139,13 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     move(GamepadButton::dpad_up, 9); pad(3, GamepadButton::a);
     move(GamepadButton::dpad_down, 3); pad(3, GamepadButton::dpad_right);
     require(blocked.hold(), "Cannot isolate one rumble save failure");
-    move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::a);
+    move(GamepadButton::dpad_down, 5); pad(3, GamepadButton::a);
     verify("save-failed", { true, true, true, true }, { true, true, true, false }, 10, 10);
     require(blocked.release(), "Cannot release the private rumble save blocker");
     pad(3, GamepadButton::a);
     verify("save-recovered", { true, true, true, true }, { true, true, true, true }, 10, 10);
     const std::string recovered_bytes = bytes();
-    move(GamepadButton::dpad_up, 4); pad(3, GamepadButton::dpad_left); pad(3, GamepadButton::b);
+    move(GamepadButton::dpad_up, 5); pad(3, GamepadButton::dpad_left); pad(3, GamepadButton::b);
     require(stack.depth() == 2 && bytes() == recovered_bytes, "Rumble Back action saved its pending Off choice");
     verify("discard", { true, true, true, true }, { true, true, true, true }, 10, 10);
 
@@ -153,10 +153,10 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     PlaySettings independent = preferences_session.play_settings(); independent.pad_rumble[1] = false;
     require(preferences_session.set_play_settings_and_save(independent), "Cannot prepare an independent pad-slot edit");
     move(GamepadButton::dpad_down, 3); pad(3, GamepadButton::dpad_left);
-    move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::a);
+    move(GamepadButton::dpad_down, 5); pad(3, GamepadButton::a);
     verify("edited-slot-merge", { true, false, true, false }, { true, false, true, false }, 10, 10);
     const std::string merged_bytes = bytes();
-    move(GamepadButton::dpad_up, 4); pad(3, GamepadButton::dpad_right);
+    move(GamepadButton::dpad_up, 5); pad(3, GamepadButton::dpad_right);
     painter_scripted_pads::states[3].connected = false; tick();
     keyboard(Key::escape);
     require(stack.depth() == 2 && bytes() == merged_bytes,
@@ -171,7 +171,7 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     pad(3, GamepadButton::dpad_left);
     require(bytes() == comfort_before, "Pending View shake Off wrote the save before Apply");
     verify("comfort-pending", { true, false, true, false }, { true, false, true, false }, 10, 10);
-    move(GamepadButton::dpad_down, 3); pad(3, GamepadButton::a);
+    move(GamepadButton::dpad_down, 4); pad(3, GamepadButton::a);
     comfort[3].view_shake = SeatSwitch::off;
     verify("comfort-applied", { true, false, true, false }, { true, false, true, false }, 10, 10);
     const PlaySettings& resolved = preferences_session.play_settings();

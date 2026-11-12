@@ -272,6 +272,7 @@ void GameLevel::build_and_enter_level()
 	this->round_palette_ = this->data()->save()->team_palette();
 	this->level_ = this->level_builder_->build_level(this->settings_,
 		this->round_palette_, opening, random, this->start_ == MatchStart::menu);
+	this->player_input_->release_toggles();
 	if (!this->level_->practice()) { this->tape_.start(random.seed(), this->settings_); }
 	this->data()->debug().after_level_build(*this);
 	this->level_->set_pad_devices(this->settings_.pad_devices());
@@ -397,6 +398,8 @@ void GameLevel::update(float dt)
 	}
 	else
 	{
+		// A toggle-fire pad stops firing too, and does not resume on return.
+		this->player_input_->release_toggles();
 		// Neutral physical baseline, then the normal seat filter supplies bots
 		// or replay input. Actual pad presence is checked separately below.
 		player_inputs.resize(input_slots::count);
@@ -608,6 +611,7 @@ void GameLevel::open_pause_menu(int player_num)
 {
 	this->suspension_.open_pause_menu();
 	this->stop_rumble();
+	this->player_input_->release_toggles();
 	this->menu_input_->reset_actions();
 	this->context()->push<PauseMenuAction>(
 		std::make_unique<PauseMenuInitial>(this->menu_context_.get(),
@@ -684,6 +688,7 @@ void GameLevel::open_results_menu()
 	this->results_audio_ = std::make_unique<ResultsAudio>(this->data()->audio_resources(),
 		&this->data()->settings_session()->play_settings(), *this->data()->presentation());
 	if (this->gate().clock_paused) { this->results_audio_->suspend(); }
+	this->player_input_->release_toggles();
 	this->menu_input_->reset_actions();
 	this->context()->push(
 		std::make_unique<ResultsMenuInitial>(this->menu_context_.get(),

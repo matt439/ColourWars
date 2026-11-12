@@ -29,6 +29,7 @@ Cases = @(
     @{ Name = 'rumble' }
     @{ Name = 'rumble_adapter' }
     @{ Name = 'action_bindings' }
+    @{ Name = 'toggle_fire' }
     @{ Name = 'input_bindings' }
     @{ Name = 'keyboard_jump_capture' }
     @{ Name = 'ammo' }
