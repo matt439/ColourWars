@@ -44,49 +44,52 @@ candidate's `build-info.txt` must name that commit without `-dirty`, and name
 the checked-out engine pin. An older ZIP can have the same version while
 containing older runtime data; do not reuse it solely because its name matches.
 
-From a plain PowerShell at the repository root, the build helper loads the
-Visual Studio C++ environment and usable vcpkg itself:
+From a plain PowerShell at the repository root, one command builds the
+candidate, checks it and writes its receipt (`REL#3`):
 
 ```powershell
-pwsh -NoProfile -File scripts/build.ps1 -Preset x64-release -Package
-pwsh -NoProfile -File scripts/check-release-package.ps1 `
-  -OutputDirectory out/validation/release-preparation/package
-pwsh -NoProfile -File scripts/check-startup.ps1 `
-  -Executable out/validation/release-preparation/package/ColourWars-windows-x64/ColourWars.exe `
-  -RequireAudio -SystemOnlyPath `
-  -OutputDirectory out/validation/release-preparation/startup
+pwsh -NoProfile -File scripts/release-candidate.ps1
 ```
 
-The build produces
-`out/build/x64-release/packages/ColourWars-<version>-windows-x64.zip`.
-The package checker extracts it, checks required runtimes, help, licences,
-accepted-bank hash and the absence of developer-console classes. The startup
-check uses a separate working directory, an isolated save, a system-only DLL
-search path and a hidden, muted process. It checks content loading, executable
-version, DPI awareness, window fit and graceful shutdown.
+[`scripts/release-candidate.ps1`](../scripts/release-candidate.ps1) refuses a
+tree with any uncommitted or untracked change, and an engine submodule that is
+not at the pin, before it builds anything. Then, into one new folder
+`out/validation/release-candidate/<commit>-<UTC time>/` (`-OutputDirectory`
+moves the parent, relative to the caller's location), it:
 
-Check the optional-bank fallback separately in a fresh extraction, leaving the
-normal candidate intact:
+1. builds and packages `x64-release` through `scripts/build.ps1 -Package`,
+   which loads the Visual Studio C++ environment and usable vcpkg itself, and
+   keeps the build log;
+2. inspects the ZIP with `scripts/check-release-package.ps1`: required
+   runtimes, help, licences, the accepted bank's hash, no PDB and no
+   developer-console classes, and the executable naming its symbols as plain
+   `ColourWars.pdb`;
+3. checks that the packaged `build-info.txt` names this commit, the engine
+   pin, the version and `Release`;
+4. starts the extracted game with `scripts/check-startup.ps1 -RequireAudio
+   -SystemOnlyPath`: a separate working directory, an isolated save, a
+   system-only DLL search path and a hidden, muted process. It checks content
+   loading, executable version, DPI awareness, window fit and graceful
+   shutdown;
+5. starts a fresh extraction with `sounds/paint_exe.xwb` removed
+   (`-RequireNoAudio`), leaving the first intact. This must load the silent
+   substitute with only the expected missing-bank diagnostic. It does not
+   qualify listening or the normal audible bank's mix.
 
-```powershell
-. ./scripts/release-package-path.ps1
-$fallbackFixture = Join-Path 'out/validation/release-preparation/fallback' ([Guid]::NewGuid().ToString('N'))
-Expand-Archive -LiteralPath (Get-ColourWarsReleasePackagePath (Get-Location).Path) `
-  -DestinationPath $fallbackFixture
-Remove-Item -LiteralPath (Join-Path $fallbackFixture 'sounds/paint_exe.xwb')
-pwsh -NoProfile -File scripts/check-startup.ps1 `
-  -Executable (Join-Path $fallbackFixture 'ColourWars.exe') `
-  -RequireNoAudio -SystemOnlyPath `
-  -OutputDirectory out/validation/release-preparation/fallback-startup
-```
+It writes `candidate.json` beside the evidence: commit, engine pin, version,
+the ZIP's path, size and SHA256, the packaged `build-info.txt`, and each
+check's outcome, log and `result.json`. A copy of the ZIP stays in the folder
+for the sandbox run (`REL#2`). Every check runs even when an earlier one
+failed, and the script fails at the end if any did. `-SkipBuild` checks the ZIP
+already in `out/build/x64-release/packages/` instead; it must still name this
+clean commit, so a ZIP from an older commit is refused rather than reused.
+[`scripts/check-release-candidate.ps1`](../scripts/check-release-candidate.ps1)
+checks the refusals in a scratch repository without a build, in CI's Release
+leg.
 
-This must load the silent substitute with only the expected missing-bank
-diagnostic. It does not qualify listening or the normal audible bank's mix.
-
-Retain the build log, extracted `build-info.txt`, startup `result.json` and ZIP
-SHA256 beside the local evidence. Check that the packaged guide and runtime
-assets match the committed sources. Evidence under `out/validation/` is local,
-not a public download or a hosted CI result.
+Check that the packaged guide and runtime assets match the committed sources.
+Evidence under `out/validation/` is local, not a public download or a hosted
+CI result.
 
 These checks establish package integrity and startup on the machine that ran
 them. The hardware, participant and listening checks waived on 2026-11-05
@@ -102,10 +105,42 @@ release preparation.
 
 When the author authorizes the first tag, tag the selected commit on `master`
 with the version matching `project(VERSION)`. The tag push runs full CI. Its
-[`publish` job](../.github/workflows/ci.yml) checks master ancestry and version,
-then publishes that run's inspected and started ZIP as the GitHub Release.
-The local candidate is for review; the published archive comes from that tag's
-own successful run.
+[`publish` job](../.github/workflows/ci.yml) runs
+[`scripts/ci/release.py`](../scripts/ci/release.py) to check that the tagged
+commit is on `master` and that its own `CMakeLists.txt` declares the tag's
+version, then publishes that run's inspected and started ZIP as the GitHub
+Release, with the same executable's `ColourWars.pdb` beside it and the notes
+`release.py` writes. `scripts/ci/test_release.py` tests the check and the notes
+in the lint job (`REL#4`). The local candidate is for review; the published
+archive comes from that tag's own successful run.
+
+### If publish fails
+
+Nothing is published until `gh release create` succeeds; it creates the
+release with both assets in one call. What to do depends on the step that
+failed:
+
+- **The tag check** (`The tag is on master and names the packaged version`).
+  The tag is wrong: it names a commit off `master`, or a version other than
+  that commit's `project(VERSION)`. A rerun cannot help. Delete the tag
+  (`git push origin :refs/tags/v<version>` and `git tag -d v<version>`), fix
+  the cause (tag `master`'s commit, or land the version bump through a pull
+  request first), then push the tag again.
+- **A Windows job.** `publish` did not start. If the tree failed CI it is not
+  a release: fix it through a pull request, then delete the tag and push it
+  again on the fixed commit. Use **Re-run failed jobs** instead only when the
+  runner failed rather than the tree, such as a download or cache failure.
+- **Downloading the artifacts or creating the release.** The ZIP and PDB
+  artifacts are kept 14 days. Within that time, use **Re-run failed jobs** on
+  the tag's run: it publishes the same checked ZIP and PDB without a rebuild.
+  If a partial attempt left a release with that tag, delete the release, not
+  the tag (`gh release delete v<version>`), before rerunning. After 14 days
+  the artifacts are gone: delete the tag and push it again, which builds and
+  checks the tree afresh.
+
+Never attach a ZIP or PDB built anywhere else to the release by hand: the
+published archive is the one its own run inspected and started, and the PDB
+fits only the executable it was linked with.
 
 After publication, point the README's download step at the release, verify the
 asset name and player instructions, and close `FTR#1` in the same commit that
@@ -119,8 +154,8 @@ Each item has a row there. Ids are `REL#n` and are never reused. Line numbers
 were checked against `68e3dc2` with the engine pin at `e7fc50e` (`v0.3.0` plus
 nine commits).
 
-`REL#5` and `REL#7` change the executable. A candidate built before they land
-proves the procedure, not the archive the first tag will publish.
+`REL#5` and `REL#7` changed the executable. A candidate built before they
+landed proves the procedure, not the archive the first tag will publish.
 
 ### Release candidate evidence (`REL#1`)
 
@@ -131,13 +166,14 @@ is in `out/build/x64-release/packages/`, but `out/validation/release-preparation
 does not exist: no package check, startup result or hash was kept beside it.
 
 **First step.** On a clean checkout of `master`'s tip, run
-[Build a clean candidate](#build-a-clean-candidate) as written: the package
-check, `check-startup.ps1 -RequireAudio -SystemOnlyPath` and the
-missing-bank fallback start.
+[Build a clean candidate](#build-a-clean-candidate) as written:
+`scripts/release-candidate.ps1`, which runs the package check, the packaged
+`build-info.txt` check, `check-startup.ps1 -RequireAudio -SystemOnlyPath` and
+the missing-bank fallback start.
 
 **Done when** this entry records the commit, engine pin, version, ZIP SHA256 and
-each check's result, and the local evidence holds the build log,
-`build-info.txt` and both startup `result.json` files. `build-info.txt` must not
+each check's result from `candidate.json`, and the local evidence holds the
+build log, `build-info.txt` and both startup `result.json` files. `build-info.txt` must not
 say `-dirty`. A later commit supersedes the record; rebuild rather than reuse.
 
 ### Sandbox run of the candidate (`REL#2`)
@@ -160,65 +196,56 @@ and Labrador's `PI-14` can be pointed at the record.
 
 ### One-command candidate receipt (`REL#3`)
 
-**Open.** [Build a clean candidate](#build-a-clean-candidate) is four commands
-run by hand, including a typed `Expand-Archive`/`Remove-Item` fixture. The
-clean-tree check and the evidence (build log, `build-info.txt`, `result.json`,
-ZIP SHA256) are also gathered by hand, and NOW asks for a rebuild after every
-commit. `CI#6` scripted only the package inspection
-(`scripts/check-release-package.ps1`).
-
-**First step.** Write `scripts/release-candidate.ps1`. It refuses a dirty tree,
-runs the four steps into one `-OutputDirectory` under the repository's
-`OutputDirectory` rule, and writes `candidate.json`: commit, engine pin,
-version, ZIP SHA256 and each check's result path.
-
-**Done when** this guide's candidate procedure is that one command, the script
-is in [scripts/README.md](../scripts/README.md), and a check covers its refusals
-(dirty tree, missing ZIP) without starting a build.
+**Done 2026-11-12.** [Build a clean candidate](#build-a-clean-candidate) is
+now one command, [`scripts/release-candidate.ps1`](../scripts/release-candidate.ps1).
+It refuses a dirty tree (any tracked change or untracked file) and an engine
+submodule that is not at the pin before it builds, runs the four steps that
+were typed by hand, adds a check that the packaged `build-info.txt` names the
+clean commit and pin, and writes `candidate.json` (commit, engine pin, version,
+ZIP SHA256 and each check's outcome, log and result path) into one folder
+under the repository's `OutputDirectory` rule.
+[`scripts/check-release-candidate.ps1`](../scripts/check-release-candidate.ps1)
+covers the refusals (an untracked file, an edited tracked file, `-SkipBuild`
+with no ZIP, and no evidence folder left by a refusal) in a scratch repository
+without starting a build, under Windows PowerShell 5.1 and pwsh, in CI's
+Release leg. Both are in [scripts/README.md](../scripts/README.md#release).
+The candidate evidence itself is still `REL#1`.
 
 ### Tested publish step (`REL#4`)
 
-**Open.** The `publish` job has never run, because no tag exists. Its version
-match is an inline `sed` (`.github/workflows/ci.yml:419`), a third parser beside
-CMake and `scripts/release-package-path.ps1:4`. Its release notes are an inline
-heredoc (`ci.yml:431-439`). `scripts/ci/test_lint.py` tests tag selection
-(lines 162 and 228) but nothing tests publish. A tag that does not match
-`project(VERSION)` is the only rehearsal possible, so the first time this code
-runs is the real `v0.1.0`. This guide says nothing about a publish that fails
-after the tag is pushed.
-
-**First step.** Move the ancestry and version check and the notes into
-`scripts/ci/release.py`, with `test_release.py` beside it so the lint job's
-existing `unittest discover -s scripts/ci` runs it (`ci.yml:42`). Call it from
-`publish`. The notes keep `FTR#6`'s player instructions.
-
-**Done when** `publish` calls the script, its tests cover a matching tag, a
-mismatched tag, a tag off `master` and the notes text, and this guide has an
-"If publish fails" paragraph. It should say when to rerun the job (the ZIP
-artifact is kept 14 days, `ci.yml:390`) and when to delete and push the tag
-again.
+**Done 2026-11-12.** The `publish` job's inline `sed` version match, ancestry
+check and heredoc notes are now
+[`scripts/ci/release.py`](../scripts/ci/release.py). Its `check` refuses a tag
+off `master`, a malformed tag, and a tag that does not match the
+`project(VERSION)` in **the tagged commit's** `CMakeLists.txt` (read with
+`git show`, not from the working tree), and hands `publish` the ZIP and PDB
+asset names. Its `notes` writes the release notes, which keep `FTR#6`'s player
+instructions and add one line saying the PDB is not needed to play.
+[`scripts/ci/test_release.py`](../scripts/ci/test_release.py) runs in the lint
+job's existing `unittest discover -s scripts/ci` against real Git histories: a
+matching tag, a mismatched tag, the version read from the tagged commit rather
+than a later one, a tag off `master`, malformed tags, an unreadable version, an
+unknown commit, the `GITHUB_OUTPUT` values and the notes text. The job itself
+still cannot run before a real tag, so its first end-to-end run is `v0.1.0`;
+[If publish fails](#if-publish-fails) says when to rerun the job and when to
+delete and push the tag again.
 
 ### Version in the game and its failure record (`REL#5`)
 
-**Open.** A player of the `v0.1.0` ZIP never sees `0.1.0`. The title screen's
-label is `Build <commit> / <configuration>` (`cmake/write_build_info.cmake:30`,
-drawn at `game/states/main_menu.cpp:228`), and `last-error.log` records the
-revisions, configuration and backends but no version
-(`game/fatal_report.cpp:190-194`). The version reaches only `build-info.txt`
-(`write_build_info.cmake:31`) and the executable's resource
-(`game/CMakeLists.txt:348`). The bug form asks for "the release/tag".
-
-**First step.** Add the version to `cmake/build_info.h.in`, put it first in the
-title label (`v0.1.0 · Build <commit> / Release` or similar) and add a
-`version=` field to `last-error.log`.
-
-**Done when** the label still fits where it is checked
-(`game/config/presentation/presentation_validation_menu.cpp:143` and
-`scripts/acceptance/painter_visual/main_menu_checks.h:148`), the
-`fatal_report` probe checks the new field beside the others
-(`scripts/acceptance/fatal_report.cpp:64-68`), and
+**Done 2026-11-12.** The title screen's build line is now
+`v0.1.0 / Build <revision> / Release`. It is player copy, so it comes from
+`presentation.json` (`menu_text.title.build`, a template that must use
+`{version}`, `{revision}` and `{configuration}` once each); `qps-ploc` brackets
+it like the rest of the title, and a locale can reword it but not drop a field
+([menu-presentation.md](menu-presentation.md)). `cmake/build_info.h.in` gained
+`version` and `game_short_revision`; `build_info::label` stays the untranslated
+identity the console and replay files use. The title layout check
+(`presentation_validation_menu.cpp`) and the painter's two title checks measure
+the formatted line, so it still has to fit where the label did.
+`last-error.log` gained `version=`, which the `fatal_report` probe and
+`check-failure-reporting.ps1` check beside the other fields, and
 [failure-reporting.md](failure-reporting.md#persisted-metadata-and-privacy)
-lists it.
+lists it. The bug form asks for the version shown under the title.
 
 ### Versioning rule (`REL#6`)
 
@@ -240,23 +267,17 @@ marked pre-release.
 
 ### Release symbols (`REL#7`)
 
-**Open.** The symbols half of `REV#63`
+**Done 2026-11-12.** The symbols half of `REV#63`
 ([record](review/2026-11-10-project-review.md#no-crash-dump-and-no-release-symbols-rev63)).
-The `x64-release` preset is plain `Release` (`CMakePresets.json:21-25`) with no
-`/Zi` or `/DEBUG`, and CI uploads only the ZIP (`ci.yml:383-390`), so no PDB is
-kept. A crash in a published build can never be symbolised, so this has to land
-before the first tag. The PDB holds no player data; the privacy question
-belongs to the crash-dump half, which stays `REV#63` and the author's call.
-
-**First step.** Build Release with `/Zi` and link `ColourWars` with `/DEBUG
-/OPT:REF /OPT:ICF` (`/DEBUG` turns those two off unless they are named) and
-`/PDBALTPATH:%_PDB%`, so the executable names the PDB without a local path.
-Keep the PDB out of the ZIP: `cmake/release_package.cmake:25` installs only the
-executable, and `scripts/check-release-package.ps1:51` already refuses a
-`.pdb`.
-
-**Done when** the Release leg uploads `ColourWars.pdb` as an artifact named for
-the revision, `publish` attaches it to the GitHub Release, the package check
-still passes, and the executable's debug directory names `ColourWars.pdb` with
-no path. [The development guide](development.md#release-zip) says where the
-symbols are.
+Every target now compiles Release with `/Zi`
+(`CMAKE_MSVC_DEBUG_INFORMATION_FORMAT` in the root `CMakeLists.txt`), and
+`ColourWars` links with `/DEBUG:FULL /OPT:REF /OPT:ICF /PDBALTPATH:%_PDB%`
+(`game/CMakeLists.txt`), so `out/build/x64-release/game/ColourWars.pdb` is
+written and the executable's CodeView record names `ColourWars.pdb` with no
+path. The ZIP still installs only the executable;
+`scripts/check-release-package.ps1` refuses a `.pdb` as before and now also
+reads the executable's debug directory and requires exactly that name. CI's
+Release leg uploads the PDB as `ColourWars-symbols-<commit>`, and `publish`
+attaches it to the GitHub Release. [The development guide](development.md#release-zip)
+says where the symbols are. The crash-dump half, which is the privacy
+question, stays `REV#63` and the author's call.

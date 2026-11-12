@@ -26,7 +26,7 @@ namespace
     {
         require(!text.empty() && text.back() == '\n', "Metadata record is incomplete");
         const std::set<std::string> fixed{
-            "report_format", "utc", "phase", "category", "game_revision", "engine_revision",
+            "report_format", "utc", "phase", "category", "version", "game_revision", "engine_revision",
             "configuration", "render_backend", "audio_backend", "causes_truncated", "message_truncated"
         };
         Record fields;
@@ -61,7 +61,8 @@ namespace
             if (index == 4 || index == 7 || index == 10 || index == 13 || index == 16 || index == 19) { continue; }
             require(utc[index] >= '0' && utc[index] <= '9', "UTC timestamp has a non-numeric component");
         }
-        require(fields.at("game_revision") == build_info::game_revision &&
+        require(fields.at("version") == build_info::version &&
+            fields.at("game_revision") == build_info::game_revision &&
             fields.at("engine_revision") == build_info::engine_revision &&
             fields.at("configuration") == build_info::configuration &&
             fields.at("render_backend") == build_info::render_backend &&

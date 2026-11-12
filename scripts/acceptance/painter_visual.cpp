@@ -46,7 +46,6 @@
 #include "game/states/pad_buttons_menu.h"
 #include "game/input/controls_text.h"
 #include "game/objects/stick_response.h"
-#include "game/build_info.h"
 #include "game/save/save.h"
 #include "game/debug/dev_tools.h"
 #if COLOURWARS_DEV_TOOLS

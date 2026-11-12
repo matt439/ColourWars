@@ -283,6 +283,13 @@ add_executable(ColourWars WIN32
     resource.rc
     settings.manifest
 )
+# REL#7: the Release PDB. /DEBUG turns /OPT:REF and /OPT:ICF off unless they
+# are named, and /PDBALTPATH:%_PDB% records the PDB's file name without the
+# build machine's path. CI uploads the PDB; the ZIP leaves it out.
+if(MSVC)
+    target_link_options(ColourWars PRIVATE
+        "$<$<CONFIG:Release>:/DEBUG:FULL;/OPT:REF;/OPT:ICF;/PDBALTPATH:%_PDB%>")
+endif()
 target_link_libraries(ColourWars PRIVATE
     colourwars_game
     colourwars_rumble_gamepads

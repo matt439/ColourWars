@@ -58,8 +58,10 @@ is no fallback beside the executable or in the working directory.
 Format 1 is a UTF-8 `key=value` record containing only these controlled fields:
 
 - UTC timestamp, phase and startup/runtime category.
-- Game and engine revisions, configuration, render backend and audio backend
-  from the generated build stamp.
+- Version (`project(VERSION)`, as in `build-info.txt`), game and engine
+  revisions, configuration, render backend and audio backend from the
+  generated build stamp. `version=` was added by `REL#5` without changing
+  `report_format=1`: the record is `key=value`, and the checks name every key.
 - Ordered, fixed exception-kind names. Standard system/generic error categories
   may include their numeric error code. Custom category names, messages and codes
   are omitted.

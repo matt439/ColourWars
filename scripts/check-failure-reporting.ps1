@@ -358,7 +358,7 @@ try {
     foreach ($line in Get-Content -LiteralPath $buildDetails) {
         if ($line -match '^([^:]+): (.*)$') { $details[$Matches[1]] = $Matches[2] }
     }
-    foreach ($key in 'ColourWars', 'Labrador', 'Configuration', 'Render', 'Audio') {
+    foreach ($key in 'Version', 'ColourWars', 'Labrador', 'Configuration', 'Render', 'Audio') {
         if (-not $details.ContainsKey($key)) { throw "Build details omit $key." }
     }
     if ($details.Configuration -cne $configuration -or $details.Render -cne $cache.LABRADOR_RENDER_BACKEND -or
@@ -367,6 +367,7 @@ try {
         report_format = '1'
         phase = 'content_definitions'
         category = 'startup'
+        version = $details.Version
         game_revision = $details.ColourWars
         engine_revision = $details.Labrador
         configuration = $details.Configuration

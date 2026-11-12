@@ -32,7 +32,8 @@ body:
     attributes:
       label: Release or source build
       description: |
-        Give the release/tag or source commit and Debug/Release configuration.
+        Give the version under the title (for example v0.1.0 / Build <commit> / Release)
+        or the source commit and Debug/Release configuration.
         Paste or attach build-info.txt from beside ColourWars.exe when available.
         If the game has not built, give the preset and failing build step instead.
     validations:

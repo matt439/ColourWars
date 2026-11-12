@@ -145,7 +145,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         look.title_subtitle_y);
     const RectangleF start = centered(style.item_font, L"LET'S PLAY", look.title_start_y);
     const RectangleF no_pad = centered(style.item_font, L"Connect a controller", look.title_no_pad_y);
-    const RectangleF build = centered(presentation.prompt_bar().font, build_info::label,
+    const RectangleF build = centered(presentation.prompt_bar().font, presentation.menu_text().title.build_label(),
         look.build_id_y);
     const RectangleF heading(look.home_position, measure(style.heading_font, L"Make your mark."));
     const RectangleF home_subtitle(look.home_subtitle_position,
