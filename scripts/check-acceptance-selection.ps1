@@ -255,10 +255,15 @@ try {
     try {
         $debugNames = $observations['default-debug'].selected
         $releaseNames = $observations['default-release'].selected
-        Require ($debugNames.Count -gt 1 -and $debugNames[-1] -ceq 'balance_runner') 'Debug defaults lost the final balance_runner case.'
-        Require (@($debugNames | Where-Object { $_ -ceq 'balance_runner' }).Count -eq 1) 'Debug defaults repeat balance_runner.'
-        Require (@($releaseNames | Where-Object { $_ -ceq 'balance_runner' }).Count -eq 0) 'Release defaults include balance_runner.'
-        Require-Names ([string[]]@($debugNames | Where-Object { $_ -cne 'balance_runner' })) $releaseNames
+        # Debug's list is Release's plus each declared Debug-only case, once.
+        $debugOnlyNames = [string[]]@((Import-PowerShellDataFile -LiteralPath $caseFile).Cases |
+            Where-Object { $_.ContainsKey('Group') -and $_.Group -ceq 'debug-only' } | ForEach-Object { $_.Name })
+        Require ($debugOnlyNames -ccontains 'balance_runner' -and $debugOnlyNames -ccontains 'level_heap') 'The case declarations lost a Debug-only case.'
+        foreach ($name in $debugOnlyNames) {
+            Require (@($debugNames | Where-Object { $_ -ceq $name }).Count -eq 1) "Debug defaults lost or repeat $name."
+            Require (@($releaseNames | Where-Object { $_ -ceq $name }).Count -eq 0) "Release defaults include $name."
+        }
+        Require-Names ([string[]]@($debugNames | Where-Object { $_ -cnotin $debugOnlyNames })) $releaseNames
         # The sanitizer preset runs Release's list.
         Require-Names ([string[]]@($observations['default-asan'].selected)) $releaseNames
         $defaultRecord.debug_cases = $debugNames.Count

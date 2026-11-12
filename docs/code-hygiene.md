@@ -168,20 +168,48 @@ recorded, with any that does not fit said so.
 
 ### A heap-leak check over repeated `Level` builds (`HYG#100`)
 
-**Open.** MSVC's AddressSanitizer has no leak detection (`REV#61`, not
-checked), and nothing else looks: no file under `game/`, `editor/` or
-`scripts/` calls `_CrtMemCheckpoint` or `_CrtSetDbgFlag`. The only CRT debug
-call is report-mode setup in `scripts/acceptance/reader_mutations.cpp:378`. A
-rematch or series builds a new `Level` each round, so a per-round leak would
-grow over a long couch session unseen.
+**Done 2026-11-12.** MSVC's AddressSanitizer has no leak detection (`REV#61`,
+not checked), and nothing else looked: no file under `game/`, `editor/` or
+`scripts/` called `_CrtMemCheckpoint` or `_CrtSetDbgFlag`. A rematch or series
+builds a new `Level` each round, so a per-round leak would grow over a long
+couch session unseen.
 
-First step: a Debug-only CPU acceptance case, or a section of an existing
-`Level` case, that builds and destroys one `Level` against the probe fakes to
-warm first-use caches, takes `_CrtMemCheckpoint`, builds and destroys N more on
-a real stage, and requires `_CrtMemDifference` to find no normal-block growth.
-Declare it in `scripts/acceptance/cases.psd1`.
+`level_heap` is a new `debug-only` case in
+[cases.psd1](../scripts/acceptance/cases.psd1)
+([level_heap.cpp](../scripts/acceptance/level_heap.cpp)); it refuses to compile
+without `_DEBUG`, since only the debug CRT keeps the counts. Against the probe
+fakes (CPU assets, silent banks, no thread pool, so every allocation is on the
+checked thread) it registers every stage the manifest lists, then builds a
+`Level` on each with one keyboard player holding fire and three bots, two to a
+team, plays 180 fixed steps and destroys it. One round over all 13 stages warms
+the first-use caches; two more rounds run between two `_CrtMemCheckpoint`
+calls, with tools, difficulties and the seed rotating per round.
+`_CrtMemDifference` must then find no growth in normal or client blocks, by
+count or by bytes, and the window must have allocated something. On growth the
+case prints the totals and, up to 200 blocks, `_CrtMemDumpAllObjectsSince`
+(allocation number, address, size, first bytes) on stderr. It first checks the
+detector itself: one `new int` between two checkpoints reads as one block of
+growth, and none once deleted.
 
-Done when the case passes, and fails on a planted leak of one block per build.
+[check-acceptance-selection.ps1](../scripts/check-acceptance-selection.ps1)
+assumed `balance_runner` was the only Debug-only case and the last in Debug's
+list; it now reads the Debug-only cases from the declarations and requires each
+once in Debug's list and never in Release's.
+
+Results (MattPC, `x64-debug`, under parallel build load):
+
+- The case passes: 26 measured builds over 13 stages, 0 blocks and 0 bytes of
+  growth, with about 1.0 GB allocated and freed in the window. No leak was
+  found. It compiles in 4 seconds and runs in 5, so it is not slow in Debug.
+- A planted leak of one block per build (`new int(0)` discarded at the top of
+  `LevelBuilder::build_level`, not committed) failed it with `26 blocks,
+  104 bytes` and the 26 four-byte blocks listed. The planted line was reverted
+  and the case passed again on the rebuilt library.
+- `check-acceptance-selection.ps1` passed under pwsh 7.
+
+Not checked: leaks of the shell around a match (the state stack, menus,
+`GameLevel`'s results and replay), which need a device; Release, whose heap
+has no debug counts; and memory the two vcpkg DLLs allocate.
 
 ### One clang-tidy defect pass (`HYG#101`)
 
@@ -4133,7 +4161,9 @@ Not checked:
 - The game itself. `ColourWars.exe` from `x64-asan` was built and not
   started, and the opt-in cases, the painter, startup and the editor checks
   were not run under the sanitizer.
-- Leaks. MSVC's AddressSanitizer has no leak detection.
+- Leaks. MSVC's AddressSanitizer has no leak detection. The Debug case
+  `level_heap` now checks repeated `Level` builds with the debug CRT heap
+  ([`HYG#100`](#a-heap-leak-check-over-repeated-level-builds-hyg100)).
 - clang-tidy was not attempted.
 
 #### The `/analyze` verdicts (2026-11-10)
