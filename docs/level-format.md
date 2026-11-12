@@ -132,6 +132,16 @@ within 1,048,576 units of the origin and neither side longer than that
 rectangles: the loader does not require them to nest or enforce an aspect ratio.
 Only object rectangles, not these bounds, accept `rectangle_tlbr`.
 
+**Seal the arena.** A player whose box lies wholly outside `out_of_bounds` is
+not eliminated: the game closes with its failure report, and the round in
+progress and any unfinished series are lost
+([`REV#1`](review/2026-11-10-project-review.md#a-player-leaving-the-arena-ends-the-process-rev1)).
+Neither the loader nor the user-stage scan checks that an arena is enclosed, so
+a gap in the walls, floor or ceiling shows up only in play. Surround everything a
+player can reach with solid structures, and test every reachable edge,
+including those a mover, gate or drop-through platform opens. This note goes
+when `REV#1` is decided.
+
 Spawn entries are `{ "x": 100, "y": 1075 }`, the character's **top-left**, not its
 feet or centre. Character size comes from `tuning.player.size`; the template
 places the current 52-by-120 character five units above the floor. The loader

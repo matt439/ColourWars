@@ -1811,6 +1811,75 @@ intended on 2026-11-05, so the validator keeps its paper-only practice check.
 Changing it later means widening the spacing, shrinking the padding for that
 page or dropping a row, with the validator taking the row rule.
 
+### Muted-play cue audit (`POL#47`)
+
+**Open (2026-11-12).** Nobody has checked that a player with the sound off
+loses no game information. The finish review lists "crowded effects and muted
+audio" under combat readability ([§7](#7-acceptance-and-delivery)), but that
+review (`POL#24`) was waived on 2026-11-05 and not performed. Several cues in
+the [new cue list](audio-inventory.md#4-the-new-cue-list) carry state rather than
+mood: `weapon.recovered`, `sniper.ready`, `ui.pad_lost`/`ui.pad_back`,
+`match.last_ten` and `match.time_up`. The audio inventory has no column for a
+visual counterpart, and
+[Reduced effects](polish-reduced-effects.md#presentation-policy) claims that
+its kept visuals read "even with sound muted" only for the effects it lists.
+`REV#41` has already found one signal carried by sound and camera alone (time
+up). Low paint is covered: its HUD tag and tank change before exhaustion
+(`POL#38`, [design-process B4](design-process.md#b-in-the-match)).
+
+First step, from the code alone: add a table to the audio inventory's §4 that
+maps each cue the game plays today to its visual counterpart (file:line), or
+marks it "none". Cues not yet hooked (`paint.capture`, `player.hit_confirm`)
+are out of scope.
+
+Done when every hooked cue has a row, and each "none" is either filed in its
+owner or recorded as accepted. `REV#41` and `REV#37` are cited, not filed again,
+and the declined `player.hit_confirm` (`POL#23`) is not reopened. This is a desk
+audit: it closes no human gate and claims no acceptance.
+
+### Photosensitive flash check (`POL#48`)
+
+**Open (2026-11-12).** No record measures the game against a photosensitivity
+threshold, and HOW-TO-PLAY carries no warning; the only WCAG work so far is
+contrast. Before the first public release, check the default presentation
+against WCAG 2.3.1 (no more than three flashes in any one second, or flashes
+below the general and red flash area thresholds). Reduce effects defaults Off
+([Reduced effects](polish-reduced-effects.md)), so the default is what to check.
+
+The likely result is a documented pass. The blinking sources are slow: the
+low-paint tag and tank use `blink_period` 0.5 s
+([presentation.json](../game/content/presentation.json) lines 806 and 960).
+The story opening's flicker is one colour preview per half at
+`preview_strength` 0.6 (line 1246; [backstory](backstory.md#building-it)), not a
+strobe. Reduced effects already notes that there are no full-screen flashes in
+its treatment.
+
+First step: from the timing values, list each sudden or repeating brightness
+change in the default presentation, with its rate and its share of the screen.
+Include the opening preview, the reveal, the countdown pulse, the low-paint
+blink, elimination bursts and muzzle bursts, at 1P and 4P. Where timing alone
+does not settle a source, use the painter's existing frame captures.
+
+Done when the result is recorded here, source by source, and any source over the
+threshold has its own row. Whether HOW-TO-PLAY gains a standard photosensitivity
+warning is the author's call, whatever the result.
+
+### Reduce effects default from Windows (`POL#49`)
+
+**Decision for the author (2026-11-12).** Should a fresh save start with Reduce
+effects On when Windows' **Animation effects** setting is off? Today the shared
+default is fixed: `bool reduce_effects = false;`
+([play_settings.h](../game/config/play_settings.h) line 95), and nothing in
+`game/` or `editor/` reads the Windows setting (`SystemParametersInfo` with
+`SPI_GETCLIENTAREAANIMATION`). Engine `REV#60` on Labrador's `master` proposes
+a read-only reduced-motion fact and notes that no native client reads the
+setting today; a read here would also be the client exhibit that row lacks.
+
+If yes: read the setting only where `Save` writes its own defaults on first run,
+so an existing save keeps its value and nothing seeds a save. The per-seat
+comfort switch keeps following the shared value. Add a check to the save case.
+If no, record the answer here and close the row.
+
 ### Help players read the tool and the fight
 
 The current [weapon update](../game/objects/weapon.cpp) distinguishes ammunition

@@ -1768,6 +1768,20 @@ none.
   and inserting keys in `tune.save`: the fifty-eight listed colour fields above are
   implemented; see [the remaining scope](debug-console-record.md#remaining-live-tuning-work-dbg1) (`DBG#1`).
 - **Replays across builds or machines**, and across step sizes (`DBG#2`).
+- **The true shape of a fixed slab in the collision overlay** (`DBG#19`,
+  noticed 2026-11-12). F2 draws every object's `shape()->bounding_box()`
+  (`game/debug/debug_overlay_draw.cpp:99`), and `colour_for` (`:54-75`) has no
+  case for `structure_fixed_slab`, so it falls to `default` and the projectile
+  yellow. A slab's shape is a `RectangleRotated`
+  (`game/objects/fixed_slab_paintable.cpp:47`), so on the slab trial, which
+  is in Random, F2 shows a yellow axis-aligned box around each sloping slab,
+  where [Overlays](#overlays) promises the collision shape. First step: give
+  the slab its own colour and draw the rotated rectangle's four edges as thin
+  rotated sprites through `Pen`, then extend the `debug_console` case, or the
+  station-tour evidence on `turbulence_slab_trial`, to cover it. Acceptance:
+  F2 on the slab trial outlines each slab along its slope in a colour that is
+  not a projectile's. Debug-only code, no engine change; the engine's own
+  shape debug draw is its `GAP#6`.
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
   this machine has no pad; both are covered on the CPU side only (`DBG#7`).
   The physical-pad check was waived by the author on 2026-11-05 and was not

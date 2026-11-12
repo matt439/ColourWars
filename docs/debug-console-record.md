@@ -484,10 +484,14 @@ gate is closed by these checks.
 
 ## Replays across rounds (`DBG#2`)
 
-**Current format: 9 (`ROAD#22`, 2026-11-07).** Each round's settings require its
-named match variant. Endless paint is restored independently of Debug cheats;
-unknown, malformed or missing variants and prior format versions are refused.
-The dated format-8 implementation record follows.
+**Current format: 11** (`ReplayFile::format_version` in
+`game/debug/replay/replay.h`; corrected 2026-11-12, when this line still said
+9). Format 9 (`ROAD#22`, 2026-11-07) made each round's named match variant
+required, and Endless paint is restored independently of Debug cheats. Format
+10 added the Sub action's input flag and format 11 each seat's `sub`, both for
+`ROAD#11`. Unknown, malformed or missing variants and prior format versions
+are refused; [Seed, record and play](debug-console.md#seed-record-and-play)
+keeps the current list. The dated format-8 implementation record follows.
 
 **Done (2026-11-04).** A recording now crosses the round boundary, and `play`
 replays every round it holds. The rest of `DBG#2` (another build, machine or
