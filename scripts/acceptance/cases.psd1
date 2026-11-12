@@ -30,6 +30,11 @@ Cases = @(
     @{ Name = 'rumble_adapter' }
     @{ Name = 'action_bindings' }
     @{ Name = 'input_bindings' }
+    @{
+        # HYG#102: the README and HOW-TO-PLAY controls tables name the defaults.
+        Name = 'controls_help'
+        Arguments = @('repo')
+    }
     @{ Name = 'keyboard_jump_capture' }
     @{ Name = 'ammo' }
     @{ Name = 'match_variants' }

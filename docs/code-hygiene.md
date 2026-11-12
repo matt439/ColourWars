@@ -468,23 +468,37 @@ console was analysed too).
 
 ### Controls help against the default bindings (`HYG#102`)
 
-**Open.** The default controls are written three times: the code
-(`game/input/input_bindings.h:56`, read by `default_action_bindings` at
-`game/input/input_bindings.cpp:430`), the README's
-[Controls](../README.md#controls) table and the table in
-[HOW-TO-PLAY.txt](HOW-TO-PLAY.txt) (lines 50-56), which ships in the ZIP.
-Packaging checks only that HOW-TO-PLAY is present and matches its source's hash
-(`cmake/check_runtime_staging.cmake:95-96`,
-`scripts/check-release-package.ps1:62`). A changed default would ship stale
-help.
+**Done 2026-11-12.** The default controls were written three times: the code
+(`PadProfile` and `InputBindings` in `game/input/input_bindings.h`, read by
+`default_action_bindings`), the README's [Controls](../README.md#controls)
+table and the table in [HOW-TO-PLAY.txt](HOW-TO-PLAY.txt), which ships in the
+ZIP. Packaging checks only that HOW-TO-PLAY is present and matches its source's
+hash (`cmake/check_runtime_staging.cmake`, `scripts/check-release-package.ps1`),
+so a changed default would have shipped stale help.
 
-First step: a default-group acceptance case that reads the default bindings,
-names each action's default pad and keyboard input through the game's own name
-table, and requires each name on that action's row of both tables. Match names
-on rows, not the tables' layout, so rewording the prose does not break it.
+The default-group acceptance case `controls_help`
+(`scripts/acceptance/controls_help.cpp`, declared in
+`scripts/acceptance/cases.psd1` with the repository as its argument) now ties
+them together. It reads `default_action_bindings()` for the keyboard and mouse
+(which includes the fixed Escape pause and Down drop) and the default
+`PadProfile` for the pad, names each control with the game's own tokens
+(`labrador::key_name`, `desktop_control_name`, `pad_control_name`), and
+requires one of that token's help spellings ("left trigger" or "LT", "Escape"
+or "Esc", "Left mouse button" or "Left click") as a whole word in the right
+column of the action's row in both tables. Move and Drop on the pad are stick
+readings, not bindings: the case requires "left stick" there and fails if
+either ever gains a pad binding. Rows are found by their label's first word
+(Move, Jump, Shoot, Sub, Drop, Pause) and cells by the Gamepad and Keyboard
+headers, so rewording a cell's prose or the rows' order does not break it. A
+default control with no help spelling in the case, or a new pad or keyboard
+action, fails until the case and the tables are given it.
 
-Done when the case passes, fails when one table names a different key, and is
-declared in `scripts/acceptance/cases.psd1`.
+The case also proves it can fail: for every expected control it swaps that
+control's spellings in its cell for another key and requires the matching
+failure, and it requires a copy of HOW-TO-PLAY whose Jump row says Enter for
+Space to fail. On 2026-11-12 it passed in x64-debug and x64-release, and a
+README naming the right mouse button for Shoot failed it with the stale cell
+named.
 
 ### Every script in the scripts index (`HYG#103`)
 
