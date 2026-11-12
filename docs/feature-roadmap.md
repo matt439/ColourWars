@@ -4248,7 +4248,7 @@ reported and the write goes ahead. The legacy path is never written, so it is
 never copied. Every successful write also creates the player's `stages`
 folder if it is missing (`FTR#14`), silently and best effort; looking the
 folder up still creates nothing. `match_records`' `check_newer_save` covers
-both writers (`save_to_file` and a recorded round), the byte-identical copy,
+both writers (`save_to_file` and `remember_match_setup_and_save`), the byte-identical copy,
 the second load's second copy, no copy on a later write and the folder, and
 `check-startup.ps1` requires the folder in its isolated profile. The in-game
 notice for these stderr lines stays the author's call (`REV#5`). New sections use nested keys: `"records"`, the last-match

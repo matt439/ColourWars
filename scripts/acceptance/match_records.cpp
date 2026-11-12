@@ -1,6 +1,9 @@
 #include "game/pch.h"
 #include "game/save/save.h"
 #include "game/save/match_records.h"
+#include "game/save/last_match_setup.h"
+#include "game/match/match_setup.h"
+#include "game/input/input_slots.h"
 #include "game/objects/level_end_info.h"
 #include "game/states/results_menu.h"
 #include "game/directory_consts.h"
@@ -322,6 +325,21 @@ namespace
 	// write keeps a byte-identical save_data.newer-<n>.json before dropping the
 	// unknown parts (REV#5), once per load, and never replaces an earlier copy.
 	// The same write makes the player's stages folder (FTR#14).
+	// The smallest valid remembered setup: one human on the keyboard in Arena.
+	LastMatchSetup solo_setup()
+	{
+		MatchSetup setup;
+		setup.set_player_count(1);
+		setup.set_screen_layout(labrador::ScreenLayout::one_player);
+		setup.set_stage("arena");
+		setup.set_best_of(1);
+		setup.begin_input_claims(input_slots::keyboard_and_mouse);
+		setup.set_player_team(0, PlayerTeam::a);
+		setup.set_player_weapon(0, WeaponType::sprayer);
+		require(setup.input_roster_complete(), "The solo setup fixture did not claim its roster");
+		return LastMatchSetup::capture(setup);
+	}
+
 	void check_newer_save(const IsolatedSaveDirectory& directory)
 	{
 		const std::filesystem::path folder = directory.save_path().parent_path();
@@ -352,13 +370,14 @@ namespace
 			require(directory.save_bytes() == bytes && !std::filesystem::exists(newer_copy(copy)),
 				"Loading a newer save changed it or copied it before any write");
 
-			// The first write: the second pass writes through a recorded round,
-			// the other writer every match reaches.
+			// The first write: the first pass goes through save_to_file, the
+			// second through remember_match_setup_and_save, which writes a
+			// candidate and leaves save_to_file out. Both reach write_save_file.
 			bool written = false;
 			errors = captured_stderr(directory, [&]
 			{
 				written = copy == 1 ? newer.save_to_file() :
-					newer.record_result_and_save("arena", versus(150.0f, 50.0f)).recorded;
+					newer.remember_match_setup_and_save(solo_setup());
 			});
 			require(written, "Saving over a newer save did not write");
 			require(std::count(errors.begin(), errors.end(), '\n') == 1 &&
