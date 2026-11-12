@@ -2124,15 +2124,12 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
   painter or a shield tool would differ most. Each new tool needs art, audio
   and bot ballistics. It waited for `POL#27`, which the author settled on
   2026-11-05, so it is no longer blocked. A new subclass suits the OOP rule.
-  **First step (2026-11-12):** write a scope proposal for one archetype, in
-  the shape [Sub weapons](#sub-weapons-road11) used: which archetype and why
-  it differs most from the five tools, what else was considered, its rule as
-  a `Weapon` subclass beside the numbers it reads from tuning, its art, audio
-  and bot ballistics, slices each with its own acceptance case, and the
-  questions it puts to the author. Acceptance: the proposal is recorded here
-  and no code, tuning or content changes. The row then becomes `DECISION`;
-  nothing is built before the author answers. `REV#57`'s sniper charge, if
-  taken, rides with it.
+  **Proposal recorded (2026-11-12):** the
+  [umbrella tool proposal](#umbrella-tool-proposal-road13) recommends a
+  Splatoon brella, with the brush second. It changed no code, tuning or
+  content, and nothing is built until the author answers its questions Q1-Q7.
+  Its first slice is `REV#3`'s fix. `REV#57`'s sniper charge, if taken, argues
+  for a splatling instead (Q1).
 - **Map pickups (`ROAD#14`).** TowerFall chests, Paint Rumble power-ups and
   Smash items. Needs a match toggle and bot awareness. It waited for
   `POL#27`, which the author settled on 2026-11-05, so it is no longer blocked.
@@ -2579,6 +2576,172 @@ sniper's rounds are unchanged, since its throws are always within its reach. A
 bot throws its grenade about 40% less often (1.53 a round against 2.56) and
 plants the sprinkler and wall as often as before. Endless paint is untouched.
 
+### Umbrella tool proposal (`ROAD#13`)
+
+**Proposed 2026-11-12; nothing is built.** This is the first step the
+2026-11-12 audit set for `ROAD#13`: a scope proposal for one new tool
+archetype, written in the shape [Sub weapons](#sub-weapons-road11) used. No
+code, tuning or content changed. No slice starts until the author answers the
+questions at the end.
+
+**The archetype: an umbrella (Splatoon's brella).** It fires a short fan of
+paint pellets. While Shoot is held, a canopy opens in front of the player and
+stops the enemy shots that reach it. It differs most from the five tools
+because each of those is a way of placing paint: a stream (Sprayer), a jet
+(Sniper), a contact volume at the feet (Roller), a mist (Mister) and a lob
+(Bucket). None of them answers a shot, while the umbrella makes Shoot a defence
+as well. A Sniper facing one has to break the canopy or go round it, and a
+Roller can walk through it. Much of the mechanism is already qualified: the
+paint wall's `takes_hits`/`take_hit` path through `Level::strike_breakables`
+(`game/objects/level.cpp:505-521`) and the sprinkler's fan of drops
+(`ProjectilePlanted::spray`).
+
+**Considered instead.**
+- *Brush* (the fast painter). The player runs faster while Shoot is held,
+  leaves a thin floor trail and flicks drops on a tap. Of the five it fits the
+  fiction best: the paint program's Brush is the one classic tool the drawings
+  lack, and the Sprayer is its airbrush. But the brush's rule is a player
+  speed, and three qualified things depend on speed. A faster take-off clears
+  gaps the arenas were built around. The movers' relative-displacement budget
+  (`LevelStructures::validate_budget`, `game/objects/level_structures.cpp:301`)
+  counts the player's own speed. Bot navigation was qualified at today's speeds
+  through `bot_team_trials`. Its trail also overlaps the Roller's. It is the
+  second choice (Q1).
+- *Dualies.* Their dodge roll is a new movement verb. It has the brush's speed
+  ripple, plus a new player state and a dodge policy for bots.
+- *Splatling.* It charges, then fires a stream. The stream is the Sprayer's and
+  only the charge is new. The charge is also the mechanism `REV#57` proposes
+  for the Sniper. If the author takes `REV#57`, a splatling would share its
+  hold-to-charge rule, which is the case for choosing it instead (Q1).
+- *Blaster.* Its shot bursts in the air near the target. The burst is the paint
+  grenade's (`ProjectileGrenade`) and the lob is the Bucket's, so this
+  archetype adds the least.
+
+**Rule (proposed).** C++ says how the umbrella behaves and `tuning.json` says
+how much.
+- *Type and class.* `WeaponType::umbrella` sits between `bucket` and
+  `random_primary` (the `static_assert`s and `weapon_names` in
+  `game/objects/weapon_type.h` move with it). The class is `WeaponUmbrella
+  final : RelativeVelocityWeapon`, beside `WeaponBucket`, so the player's run
+  adds to the pellets as it does to the Bucket's ball. That is the game's usual
+  subclass grammar, and every `Weapon` hook stays.
+- *Fire.* Every `shoot_interval`, a paid shot releases `pellets` drops in a fan
+  `spread` wide around the aim (the sprinkler's fan, aimed), on a new
+  `ProjectileType::pellet` record with its own splash clip. One shot costs
+  `ammo_usage`. `WeaponUmbrella` overrides `shoot`.
+- *Canopy.* While Shoot is held the canopy is open. It is an upright
+  `canopy.size` rectangle placed `canopy.reach` from the player's centre, on the
+  side the aim points, and axis-aligned like the paint wall. It stops every
+  enemy shot that reaches it, using the wall's rule, and lets its own team's
+  shots through. Players of both teams walk through it. The `canopy.hits`th hit
+  breaks it, and a broken canopy stays shut for `canopy.recover` seconds while
+  the tool keeps firing. Blocking a shot costs no paint. Releasing Shoot shuts
+  the canopy, and the canopy does not slow its holder (Q4).
+- *Where Level asks.* A virtual `Weapon::canopy()`, empty by default, gives
+  `strike_breakables` the canopy's rectangle and team, and
+  `Weapon::take_canopy_hit()` spends a hit. The weapons join the projectile walk
+  that already exists, and the canopy is never a Scene object, so nothing
+  outlives the weapon that owns it.
+- *Prerequisite: `REV#3`.* A canopy stands in front of its holder, which is the
+  case `REV#3` records for a player standing inside the paint wall.
+  `strike_breakables` runs after `scene_->resolve()` (`level.cpp:388-401`) on
+  travel bounding boxes. So when a shot reaches the holder and the canopy in the
+  same tick, it hits the holder, and the canopy never counts it. The canopy
+  therefore needs `REV#3`'s fix: breakables swept as participants in
+  `Projectile::resolve_sweep` (`game/objects/projectile_contacts.cpp:403`),
+  before player contacts. `REV#3` is blocked on `ROAD#11`'s play review (Q2).
+
+**Numbers in `tuning.json`.** `weapons.umbrella` holds a tool's usual record
+(offset, size, nozzle offset, `shoot_interval`, `starting_vel_length`,
+`ammo_usage`, sheet and frame, projectile, sounds, `add_player_velocity`) plus
+`pellets`, `spread` and a `canopy` record (`size`, `reach`, `hits`, `recover`).
+It is joined by `projectiles.pellet` and `paint.splash.animations.pellet`. The
+starting values are provisional. They borrow the Bucket's 0.5 s interval and
+0.1 tank per shot, and the wall's 15 hits.
+
+**Art.** `weapons.json` gains the tool's four poses (`umbrella`,
+`umbrella_motion_1`, `umbrella_motion_2`, `umbrella_lift`), each with its paint
+layer ([weapons README](../game/art/weapons/README.md)). The painter gains its
+grip, and Weapon Select gains its choice frames. The `paint_fx` sheet gains a
+canopy strip (open, cracked by hits left, and shut) and `shot_pellet` and
+`impact_pellet`, drawn in the sub strips' keylined greyscale and tinted by
+team. Weapon Select lays out six tools and Random where it laid out five
+(`main_menu.weapon_select`); the painter's `-WeaponCatalogOnly` and
+`-WeaponPaperOnly` leaves check that layout.
+
+**Audio.** There are four new cues: `umbrella.shot`, `umbrella.open`,
+`umbrella.block` (a shot stopped by the canopy) and `umbrella.break`. They are
+cut from recordings the `paint_exe` bank already retains, as sub slice 7's
+were, and recorded with an acceptance amendment. The empty, recovered and low
+cues stay the tools' shared ones.
+
+**Bot ballistics.** Bots aim with `match_bot_ballistics::aim_direction` on the
+pellet record and judge reach with `horizontal_reach`, as for every tool. The
+canopy needs one new `MatchBot` rule: hold Shoot facing a visible enemy whose
+tool reaches the bot, even when the enemy is beyond the bot's own reach (the
+wall's slice-6 test), and release it while the canopy is broken. The balance
+pass repeats the slice-6 bot-round method (1,440 one-minute rounds) with the
+umbrella against each tool, against the five-tool balance accepted on
+2026-11-05 (`POL#27`).
+
+**Records and formats.**
+- *Save.* The name joins the save's `last_match`. An older build reads an
+  unknown weapon as the Sprayer (`game/save/last_match_setup.cpp:135-136`), so
+  the save stays at version 9.
+- *Replays.* The Debug match plan and replays carry the name. The match
+  fingerprint gains each seat's canopy state (open, hits left, recovery time),
+  which moves the Debug replay format from 11 to 12.
+- *Random.* Weapon Select's Random draws `rand() % max_prim_wep`
+  (`game/states/main_menu_weapon_select.cpp:135`), so a sixth tool changes every
+  seeded Random tool pick. The painter pins that count Random draws move with
+  it.
+- *Presentation and copy.* The presentation arrays sized by
+  `tuned_weapon_count` (grips, muzzle sizes, motion styles, idle drips), the
+  choices and the descriptions each gain an entry. The copy lives in
+  `presentation.json` and its locale overlay, and the README and
+  `HOW-TO-PLAY.txt` name the tool.
+
+**Slices.** Each slice is a pull request with its own acceptance case.
+1. **Breakables before player contacts** (`REV#3`'s fix). Breakables are swept
+   before player contacts, and `sub_weapons` gains a diagonal near-miss check
+   and a check with a player inside the wall. This closes `REV#3`.
+2. **Umbrella end to end.** The `WeaponType`, the class, the tuning, the pellet
+   projectile and the canopy through `strike_breakables`, with placeholder art
+   (the Bucket's frames and the wall's strip) and existing waves. It is
+   selectable on Weapon Select and through Random, and carried by the save, the
+   match plan, replay format 12 and the copy. A new `umbrella` case checks the
+   tuning and its refusals, the fan, the cost, the canopy opening, shutting,
+   breaking and recovering, a shot from the front stopped while one from behind
+   is not, the holder's team passing, and a real round.
+3. **Bots carry it.** Aim with the pellet record, and the canopy rule under each
+   difficulty and refill switch, checked by `bot_driver` and by
+   `bot_team_trials` with the umbrella in its rotations, then the balance pass.
+4. **Art and audio.** The final frames and strips, and the four masters with
+   provenance, checked by the painter leaves.
+
+Then comes the author's attended play review, which implementation does not
+close.
+
+**Questions for the author.**
+- **Q1, the archetype.** The umbrella (recommended), the brush (best fit with
+  the fiction, but it changes player speed), or the splatling if `REV#57` is
+  taken?
+- **Q2, `REV#3`.** Unblock `REV#3` for slice 1 now, ahead of `ROAD#11`'s play
+  review, or wait for that review?
+- **Q3, the canopy input.** Open whenever Shoot is held (Splatoon's rule,
+  recommended), or only after a short hold without firing?
+- **Q4, speed.** Does an open canopy slow its holder? The recommendation is no
+  for the first slice: a slowdown would be the first tool-dependent speed, and
+  it carries the brush's ripple.
+- **Q5, the canopy's shape.** Upright on the aim side (recommended), or turned
+  with the aim? The strike test has no rotated check, and the fixed slab's rigid
+  frame is the nearest precedent.
+- **Q6, the name** players read. "Umbrella" is the working name; the copy lives
+  in `presentation.json`.
+- **Q7, two shields.** May an umbrella carry the paint wall sub? The
+  recommendation is yes: the loadout stays free, as decided for `ROAD#11`, and
+  is revisited at the play review.
+
 ### Input
 
 - **Non-XInput controllers (`ROAD#23`).** INVERSUS and most Steam releases
@@ -2934,8 +3097,8 @@ are controlled inspection states; attended clarity/preference remains
 
 **UNSCOPED (2026-10-28); `ROAD#28`'s first slice was promoted on 2026-11-03,
 below, and its paint-driven second slice built the same day. Regraded
-2026-11-12: `ROAD#28`'s remainder is deferred and `ROAD#29` has a first step,
-both below.** These are the remaining capabilities from
+2026-11-12: `ROAD#28`'s remainder is deferred, and `ROAD#29`'s contract draft
+is recorded and awaits the author, both below.** These are the remaining capabilities from
 `ROAD#15`, not ready implementations or prerequisites of the three slices
 above:
 
@@ -2958,16 +3121,12 @@ above:
   paint-tile identity, changing scored area and retained paint/contribution
   credit before choosing an implementation. `PaintSurfaceSample` explicitly
   requires a scoring rule for scale; resizing a rendered rectangle is not one.
-  **First step (2026-11-12):** draft the sponge's contract on the
-  [vertical-lift precedent](#vertical-lift-contract-draft-road28): an
-  inventory of the sites that assume a scored object's area never changes
-  (`PaintableObject` totals and `PaintCredit`, `PaintTile` identity,
-  `PaintSurfaceSample` and the bots' paint surfaces, awards, the replay
-  fingerprint, the editor), an engineering answer for each that names its
-  precedent, and the gameplay option sets the author chooses from. Acceptance
-  as for the lift draft: every inventory row resolved against the tree at the
-  commit that records it, no code, tuning or content changed, and no trial
-  chosen. The row then becomes `DECISION`.
+  **Draft recorded (2026-11-12):** the
+  [growing-sponge contract draft](#growing-sponge-contract-draft-road29)
+  resolves the fixed-area sites against `220d4809`, answers each one
+  (E1-E12), and leaves the gameplay sets G1-G7 to the author. It changed no
+  code, tuning or content and chose no trial. Nothing is promoted until the
+  author picks.
 
 Promote a bounded slice only once its owner records those choices and its
 acceptance. Neither adds a new physics/scoring requirement to an accepted
@@ -3351,6 +3510,180 @@ lift's foot the sign hangs over a player waiting beneath it: players draw over
 it, and the clearance beneath the lowest pose keeps it off terrain, but whether
 it reads there, or should be a fixed indicator above the shaft instead, is a
 `ROAD#30` question.
+
+#### Growing-sponge contract draft (`ROAD#29`)
+
+**Draft recorded 2026-11-12; awaiting the author.** This is the written step
+the 2026-11-12 audit set, on the
+[vertical-lift precedent](#vertical-lift-contract-draft-road28). It changes no
+code, tuning or content, chooses no trial, and leaves every accepted arena
+alone (`POL#21`). It is accepted on the same terms as the lift draft: every
+inventory row below is resolved against `220d4809`, the tree it was written on,
+and every engineering answer names its precedent.
+
+*A sponge, for this draft,* is a solid paintable block whose rectangle changes
+between a rest pose and a larger grown pose during a match. Splatoon's sponges
+swell when inked. What grows it, how far, and what its growth scores are the
+gameplay calls in section 3.
+
+**1. Sites that assume a scored object's area never changes.** "Assumes" is
+what the site takes for granted; "A sponge needs" is the change, keyed to an
+answer in section 2. Line numbers are those of `220d4809`.
+
+| Area | Site | Assumes | A sponge needs |
+|---|---|---|---|
+| Scoring role | `game/objects/paintable_object.h:75-89` (`PaintableObject`) | held area and capture tallies come from one fixed tile set | the tile set G3 picks (E2) |
+| Tile area | `game/objects/paint_tile.cpp:179-182` (`PaintTile::area`) | a tile's area is its construction rectangle | unchanged per tile; under G3(a) the tile is drawn scaled while its area stays (E2) |
+| Tile generation | `game/objects/structure_paintable.cpp:53`, `:320-393` (`generate_paint_tiles`) | tiles and strips are built once from the authored rectangle, with faces clipped against neighbouring terrain at that moment | built once on the frame G3 picks; the envelope (E4) keeps the clip true at every pose |
+| Sample contract | `game/objects/paintable_object.h:57-74` (`PaintSurfaceSample`, note at `:68-69`) | "Rigid transforms preserve this area; a future shape/scale needs its own rule" | G3 is that rule: `corners` give the drawn world quad and `scored_area` the scored area (E2) |
+| Paint lookup | `game/objects/structure_paintable.cpp:152-191` (`paint_from_projectile`) | a strip's origin and pitch are fixed, and the splash is already in tile space | the splash mapped into the scoring frame first (E3) |
+| Underfoot paint | `game/objects/structure_paintable.cpp:395-425` (`top_paint_team`, `top_paint_team_translated`) | the top strip spans a fixed x range | world x mapped into the scoring frame (E3) |
+| Capture credit | `game/objects/paintable_object.h:13-38` (`PaintCredit::add`), `structure_paintable.cpp:191` | credit is added on capture and never taken back | unchanged (E5) |
+| Object totals | `game/objects/structure_paintable.cpp:434-461` (`paint_total`) | the total sums every tile | the tiles G3 counts (E6) |
+| Level sum | `game/objects/level.cpp:854-903` (`level_end_info`) | each paintable's totals are summed once, at time-up | unchanged; under G3(c) the pose at time-up decides (E6) |
+| Coverage, shares, winner | `game/objects/level_end_info.cpp:42-104`, `:139-148` | `total_area` is the same throughout a match | under G3(c) the sponge's pose at time-up moves the total (E6) |
+| Solo record | `game/save/match_records.cpp:60-70` | the coverage ratio is over a fixed total | the same as the row above |
+| Awards | `game/objects/level_end_info.cpp:150-175` (`awards`) | laid and recaptured are capture tallies | unchanged (E5) |
+| Paint-driven precedents | `game/objects/team_gate_structure_paintable.cpp:57-89` (`paint_leader`, `settle`), `game/contracts/team_gate_contract.h:55-65` (`leader`), `game/objects/translating_structure_paintable.cpp:88-94` (`drive_heading`) | a share of the object's own fixed paintable area | the same leader rule over the sponge's scoring area, if G1 is paint (E7) |
+| Collision shape | `game/objects/translating_structure_paintable.h:66-68` (`bounds`, `shape` overrides) | a structure's shape is its authored rectangle unless it is a mover | `bounds` and `shape` overridden with the pose (E1) |
+| Pose timing | `game/objects/level.cpp:381` (`settle_gates`, before the Scene update) | a gate's permission changes only at the step boundary | the pose changes there too (E1) |
+| Projectile sweeps | `game/objects/projectile_contacts.cpp:115-124` (`relative_rectangle_at`), `:206` (`any_mover`), `:403` (`resolve_sweep`) | a moving target is a rigid translation; everything else is static | static within a tick, so the ordinary sweep applies (E1) |
+| Shots the pose engulfs | `game/objects/level.cpp:535-537` (a burst drop's `resolve_launch_obstruction`) | a drop that starts inside cover is resolved where it stands | the same treatment for a shot a new pose covers (E1) |
+| Players | `game/objects/player.cpp:592` (`apply_carrier`), `game/objects/level_structures.cpp:409` (`hold_closing_lifts`), `team_gate_structure_paintable.cpp:69-89` (`settle`) | a support is static or a rigid mover carried by identity; a gate stays open while its team is inside | a hold while a living player is in the next pose, and carry for a rider on top (E8) |
+| Admission | `game/objects/level_structures.cpp:196-300` (`admit_horizontal`, `validate_admission`), `team_gate_contract.h:74-80` (`require_clear_of_spawn`) | the lift's clear column; no spawn body inside a gate | the largest pose's column clear, and no spawn body inside it (E4) |
+| Shadows | `game/objects/level_object_builder.cpp:317`, `:658-690` (`build_shadows`) | a caster's rectangle is fixed or rigidly translated | the shadow follows the pose (E9) |
+| Bot supports and obstacles | `game/objects/level_bot_world.cpp:102-112` (`obstacles`), `:114-131` (`supports`; flag at `:129`) | boxes are read from the shape on each query; `moving` means `mover() != nullptr` | the sponge flagged as moving (E10) |
+| Bot paint surfaces | `game/objects/level_bot_world.cpp:82-100`; `game/ai/match_bot_driver.cpp:26`, `:126`, `:229`, `:268`; `game/ai/match_bot_territory.h:73-113` | sample corners locate a tile, and thickness comes from tuning | corners are the drawn quad, so aim points stay true (E2) |
+| Match fingerprint | `game/debug/replay/match_fingerprint.cpp:36-99` (the motion block and its domain tag), `:189-192` (totals) | movers print their spec and tiles; totals are hashed | a sponge block with its own domain tag (E11) |
+| Replay version | `game/debug/replay/replay.h:57` (`format_version = 11`) | the current layout | 12 (E11) |
+| Format and loader | `game/contracts/level_format.h:78-80` (keys `motion`, `gate`), `:138-147` (object types); `game/objects/level_object_builder.cpp:321-345` (`checked_record_gate`); `game/contracts/level.schema.json:201-209` | a gate is a key on a `StructurePaintable` record | a `sponge` key read the same way (E12) |
+| Editor | `editor/level_document.cpp:590-594`, `:639-642`, `:771-810`, `:844` (`duplicate`); `editor/paint_mechanism_guide.h:12` (`PaintMechanismKind`); `editor/level_document_mirror.cpp:40` (`mirror_object`) | it knows gates, ferries and lifts only | the sponge's label, clear, palette entry, guide, duplicate and mirror (E12) |
+| Debug paint overlay | `game/states/game_level_dev_tools.cpp:168-170` | reads the level totals | nothing |
+| Stage preview | `game/objects/structure_paintable.cpp:81` (`draw_miniature`) | draws the authored rectangle | the rest pose |
+
+**2. Engineering answers, each following existing practice.**
+
+- **E1. The pose changes only at the step boundary.** Sponges settle with the
+  gates, before the Scene update (`level.cpp:381`), reading the paint held
+  before the step. Within a tick a sponge is a static rectangle, so sweeps,
+  contacts, `top_paint_team` and the bots all read one shape, and nothing ever
+  needs a swept scale. A growth rate (G2) is many small boundary steps.
+  `bounds()` and `shape()` take the pose, as the mover's do. A shot that a new
+  pose covers is resolved where it stands, as a burst drop that starts inside
+  cover is (`level.cpp:535-537`), and paints the face it is in. *Precedent:*
+  the gate's settle, and the ferry's heading read from the paint held before
+  the step.
+- **E2. One scored lattice: the corners show, the area scores.** Tiles are
+  built once, on the frame G3 picks. Each `PaintSurfaceSample` carries the
+  drawn world quad in `corners` and the scored area in `scored_area`, which the
+  sample contract already keeps apart ("Authoritative area from the scored
+  tile, not recomputed corner arithmetic"). Bots aim at the corners, so they aim
+  at what is drawn. *Precedent:* fixed slabs, whose samples are rigid quads
+  (`fixed_slab_paintable.cpp:221`).
+- **E3. Paint lands in the scoring frame.** A splash rectangle, or a world x
+  for underfoot paint, is mapped into the lattice by inverting the pose before
+  the existing strip lookup. Under G3(a) that means scaling about the anchor;
+  under (b) and (c) it means shifting by the face's offset. *Precedent:* "Paint
+  lands in the rest frame: the splash is shifted back by the pose"
+  (`translating_structure_paintable.h:69-71`) and
+  `top_paint_team_translated`.
+- **E4. Admission keeps the envelope clear.** The largest pose must stay
+  inside the Scene and off every other collision object, together with a body
+  width each side and a body height above. That is the lift's column. No spawn
+  body may lie inside it, by the gate's spawn rule. Construction-time terrain
+  clipping then holds at every pose, and E8's hold is the only occupancy rule.
+  A sponge is solid only, because a rising top passes the feet a jump-through
+  landing compares against. *Precedent:* the lift's column and solid-only
+  refusal ([first slice](#vertical-lift-first-slice-road28)), and
+  `require_clear_of_spawn`.
+- **E5. Credit is never taken back.** `PaintCredit` counts captures. A tile
+  that is hidden or shrinks debits no one, just as a recapture debits no one
+  today, so the awards are unchanged. *Precedent:* `PaintCredit::add` only
+  adds.
+- **E6. Held area and total follow G3, read at time-up as today.** Under G3(a)
+  and (b) the total never changes. Under (c), coverage, the shares, the winner
+  and the solo record use what the sponge shows at time-up, with no special
+  case in the results. *Precedent:* `level_end_info` already reads every
+  paintable once, at the end.
+- **E7. Paint drive reads the sponge's own totals** through the gate's
+  `leader` rule (a majority and a minimum share of its scoring area), using the
+  paint held before the step. *Precedent:* the gate's settle and the ferry's
+  `paint_heading`.
+- **E8. Occupied growth holds, and a rider on top is carried.** A pose step
+  that would overlap a living player anywhere except standing on the top holds
+  for that step and resumes once they are clear. A player standing on the top
+  moves with it by the top's displacement, before their own integration, and is
+  released on a jump or drop as on a lift. A shrinking top lowers its rider the
+  same way. Unlike the lift's hold, this one is a gameplay rule that fires in
+  ordinary play, because the envelope is open space until the sponge grows into
+  it. The trial must test a player stalling a sponge, which is the case the
+  lift's amended E3 refused to allow. *Precedent:* the gate held open while its
+  team is inside, `hold_closing_lifts`, and the lift's carry (`apply_carrier`).
+- **E9. The shadow follows the pose** under the existing caster rule (wider
+  than tall, and thinner than `shadow_caster_limit`). *Precedent:* the
+  translated shadow follows the mover's offset.
+- **E10. Bots read a sponge as a moving support.** `supports()` already reads
+  the shape's box on each query; the `moving` flag also becomes true for a
+  sponge, and riding code treats it as it treats a mover. Deliberate sponge
+  routing is a later slice, as it is for lifts. *Precedent:* the movers' flag,
+  and lift routing left out of both lift slices.
+- **E11. Version the record.** The fingerprint gains a sponge block under its
+  own domain tag (`colourwars-sponge-1`), hashing each sponge's pose, its hold
+  and its tile list, as the motion block does. `ReplayFile::format_version`
+  goes from 11 to 12 and refuses 11. The shipping instant-replay tape is held
+  in memory and re-simulated, so it carries no format. *Precedent:* the lift's
+  E5.
+- **E12. Format and editor follow the gate.** A sponge is a `"sponge"` object
+  on a `StructurePaintable` record, beside `gate`. A new engine-free
+  `game/contracts/sponge_contract.h` decodes it for both the loader (beside
+  `checked_record_gate`) and the editor, so both refuse in the game's words.
+  The class is `SpongeStructurePaintable : StructurePaintable`, in the game's
+  usual subclass grammar. The schema gains its entry. In the editor, the sponge
+  gets its inspector label, its clear and its palette entry, a
+  `PaintMechanismKind::sponge` guide drawing the rest and largest poses, a
+  duplicate placed past the envelope, and a mirror that reflects the growth
+  side. A sponge refuses a `motion` or `gate` key. *Precedent:* the team gate's
+  key, contract header and subclass.
+
+**3. Gameplay calls, as options for the author.** Values are provisional
+reference points only, and none of these gates the engineering.
+
+- **G1. What grows it.** (a) Paint, by the gate's rule: it grows while one team
+  leads its paint by at least a share of its area, and returns to rest when no
+  team leads. (b) Any paint: the more of its area painted by either team, the
+  larger it is. (c) A cycle, with no paint. *Recommended:* (a), because it
+  reuses a qualified contract (E7) and gives the leading team a route.
+- **G2. How it grows.** (a) Between two poses, rest and grown, at a fixed rate
+  (the lift's 160 units/s as a reference). (b) In proportion to the leading
+  share, which gives many poses. *Recommended:* (a). Two poses keep the
+  envelope, the hold and the guide simple.
+- **G3. What its growth scores.** (a) The rest area scores and the grown pose
+  draws the same tiles scaled, so the total never changes and growth is route
+  and cover only. (b) The grown lattice always scores, and tiles hidden at rest
+  keep their paint and still count. (c) Only shown tiles score; hidden tiles
+  keep their paint and come back with it, so a grown sponge adds territory.
+  (d) Like (c), but hidden tiles return neutral. *Recommended:* (a) for a first
+  slice, since no scoring site changes. Choose (c) if play shows a sponge
+  should be worth territory.
+- **G4. Which way it grows.** (a) Up and to both sides from a fixed foot,
+  standing on a floor. (b) Up only, as a rising column. (c) About its centre,
+  floating. *Recommended:* (a). It reads as a sponge, and the fixed foot keeps
+  its bottom face clipped by the floor at every pose.
+- **G5. Occupancy.** (a) E8 as written: hold while a player is in the way, and
+  carry riders on top. (b) Riders hold it too, so standing on a sponge stops
+  its growth. *Recommended:* (a).
+- **G6. Which trial carries it.** (a) A new explicit-only Sponge Trial derived
+  from Turbulence Yard like its siblings. (b) A variant of an existing trial.
+  Neither joins Random or touches Turbulence's selected geometry (`POL#21`).
+  *Recommended:* (a).
+- **G7. Bots.** (a) Bots ride a sponge they happen to stand on and paint it,
+  with no routing by it, as for lifts. (b) Deliberate routing in the first
+  slice. *Recommended:* (a). Routing waits on a consumer, as lift routing waits
+  on `REV#27`.
+
+Once the author has chosen, a bounded first slice is promoted with
+`moving_structure`, `level_format`, `paint_ferry`-style scoring checks and
+editor acceptance on its trial, as the lift's was.
 
 ### Paint-object trial play (`ROAD#30`)
 
