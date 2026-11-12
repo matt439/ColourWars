@@ -16,7 +16,6 @@ Next actions that need no author call:
 
 1. `PIN#2`: qualify engine master's behaviour changes on the trial build `PIN#1` rehearsed; the
    real pin stays.
-2. `REV#7`: measure static-paint draw cost on a quiet machine.
 
 The release candidate (`REL#1`) and its sandbox run (`REL#2`) passed on 2026-11-12
 ([evidence](docs/releasing.md#release-candidate-evidence-rel1)); the first tag is `FTR#1`.
@@ -177,7 +176,6 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 | `REV#3` | BLOCKED | LOW | M | Planted sprinklers and walls take hits by a shot's travel bounding box, tested after the tick's contacts: diagonal shots hit up to about 17 units wide, and a player inside the wall is hit before it. Waits on the `ROAD#11` play review. [Record](docs/review/2026-11-10-project-review.md#breakable-subs-are-struck-by-travel-bounding-box-rev3). |
 | `REV#4` | DECISION | LOW | M | An exception in the live round or instant replay step exits the game; recovery was scoped out with `GAP#7.3` and the replay has no known Release cause. Author's call whether to contain it at `GameLevel`, after `REV#1` removes the reachable throw. [Record](docs/review/2026-11-10-project-review.md#no-containment-around-the-match-or-replay-step-rev4). |
 | `REV#5` | DECISION | LOW | S | Save trouble reaches only stderr; a newer save is now copied aside before a downgrade write ([Save layout](docs/feature-roadmap.md#stage-records-and-the-sectioned-save-gap62)). Author's call: whether a one-line Title/Home notice from `presentation.json` shows the load notices (moves menu painter fixtures). [Record](docs/review/2026-11-10-project-review.md#save-recovery-notices-reach-only-stderr-rev5). |
-| `REV#7` | OPEN | LOW | M | Static paint submits up to three sprites per owned tile per pane; draw cost was never measured. Next: run the `REV#38` four-bot Crossfeed script with `perf.capture` at round start and at 95% paint and compare. Merging runs would move painter pins. [Record](docs/review/2026-11-10-project-review.md#static-paint-draws-one-tile-at-a-time-rev7). |
 
 **Release, README and repository**
 
