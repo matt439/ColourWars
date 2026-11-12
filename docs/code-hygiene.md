@@ -4863,7 +4863,7 @@ not establish hardware or attended visual acceptance.
 ### Editor build-profile isolation (`HYG#14`)
 
 **Done (2026-10-28).** The next ranked candidate from the
-[editor review](level-editor.md#raw-nul-json-admission-ed12) was an observed
+[editor review](level-editor-record.md#raw-nul-json-admission-ed12) was an observed
 tooling defect: `check-level-editor.ps1` redirected `LOCALAPPDATA` before
 configure, so vcpkg lost the caller's existing registry cache. During `ED#11`,
 this triggered a fresh registry fetch that failed at the unavailable GitHub

@@ -37,6 +37,7 @@ records and reviews. The open-work index is [TODO.md](../TODO.md).
 | [debug-console.md](debug-console.md) | the Debug-only console, debug menu, launch arguments, live tuning, bots, record and play, scripts: the reference |
 | [debug-console-record.md](debug-console-record.md) | how each `DBG` row was done or why it waits, and `CI#1` |
 | [level-editor.md](level-editor.md) | `ColourWarsEditor.exe`, the desktop level editor |
+| [level-editor-record.md](level-editor-record.md) | how each `ED` slice was built and checked: the 2026-10-28 shortlist and the `ED#7`-`ED#27` backlogs |
 | [level-format.md](level-format.md), [level.schema.json](../game/contracts/level.schema.json) | the level file format and its schema |
 | [gameplay-tuning.md](gameplay-tuning.md) | `tuning.json`: its key rules, tool angles and accepted ranges, the headless balance runner (`TOOL#1`-`TOOL#3`) and the two-bot team measurement (`REV#22`) |
 | [menu-presentation.md](menu-presentation.md) | `presentation.json`'s menu geometry, artwork and text |
