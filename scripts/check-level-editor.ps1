@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('x64-debug', 'x64-release')]
+    [ValidateSet('x64-debug', 'x64-release', 'x64-asan')]
     [string] $Preset = 'x64-debug',
     [switch] $SkipBuild
 )
@@ -349,6 +349,7 @@ $run = Join-Path $evidence ([Guid]::NewGuid().ToString('N'))
 # Save to My Stages writes under LOCALAPPDATA: point it, for the acceptance
 # executable and every editor launch, at a profile inside this run.
 $previousLocalAppData = $env:LOCALAPPDATA
+$previousPath = $env:PATH
 $isolatedProfile = Join-Path $run 'profile'
 [System.IO.Directory]::CreateDirectory($isolatedProfile) | Out-Null
 
@@ -389,9 +390,24 @@ try {
     if ([System.IO.Path]::GetFullPath($cache.CMAKE_HOME_DIRECTORY) -ne $repo) {
         throw 'The configured build belongs to another checkout.'
     }
-    $configuration = if ($Preset -eq 'x64-debug') { 'Debug' } else { 'Release' }
+    # x64-asan is RelWithDebInfo with every target of this tree instrumented (HYG#99).
+    $asan = $Preset -eq 'x64-asan'
+    $configuration = if ($Preset -eq 'x64-debug') { 'Debug' } elseif ($asan) { 'RelWithDebInfo' } else { 'Release' }
     if ($cache.CMAKE_BUILD_TYPE -ne $configuration) {
         throw "$Preset must contain a $configuration build."
+    }
+    if ($asan) {
+        if (-not $cache.ContainsKey('CMAKE_CXX_FLAGS') -or -not $cache.ContainsKey('CMAKE_CXX_COMPILER') -or
+            @($cache.CMAKE_CXX_FLAGS -split '\s+') -cnotcontains '/fsanitize=address') {
+            throw 'The x64-asan build was not configured with /fsanitize=address.'
+        }
+        # The runtime DLL ships beside the compiler that built the editor and
+        # must be that toolset's, whichever one the caller's PATH finds first.
+        $sanitizerRuntimeDirectory = Split-Path -Parent $cache.CMAKE_CXX_COMPILER
+        if (-not (Test-Path -LiteralPath (Join-Path $sanitizerRuntimeDirectory 'clang_rt.asan_dynamic-x86_64.dll') -PathType Leaf)) {
+            throw "Missing the sanitizer runtime beside $($cache.CMAKE_CXX_COMPILER). Install Visual Studio's 'C++ AddressSanitizer' component."
+        }
+        $env:PATH = "$sanitizerRuntimeDirectory;$previousPath"
     }
     $executable = Join-Path $build 'editor/colourwars_editor_acceptance.exe'
     if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
@@ -440,5 +456,6 @@ try {
 }
 finally {
     $env:LOCALAPPDATA = $previousLocalAppData
+    $env:PATH = $previousPath
     Pop-Location
 }
