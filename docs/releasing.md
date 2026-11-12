@@ -90,6 +90,17 @@ clean commit, so a ZIP from an older commit is refused rather than reused.
 checks the refusals in a scratch repository without a build, in CI's Release
 leg.
 
+Then run the candidate's ZIP in Windows Sandbox, a clean Windows with no
+Visual Studio or Visual C++ runtime (`REL#2`, [`ROAD#37`](feature-roadmap.md#windows-sandbox-run-of-the-release-zip-road37)):
+
+```powershell
+pwsh -NoProfile -File scripts/sandbox-release.ps1 -Zip out/validation/release-candidate/<run>/ColourWars-<version>-windows-x64.zip -Run
+```
+
+It passes when the receipt's ZIP hash matches the host's, the window opens, the
+save is created and `WM_CLOSE` exits 0. It proves the loader and runtime
+requirements, not a player's GPU.
+
 Check that the packaged guide and runtime assets match the committed sources.
 Evidence under `out/validation/` is local, not a public download or a hosted
 CI result.
@@ -162,40 +173,35 @@ landed proves the procedure, not the archive the first tag will publish.
 
 ### Release candidate evidence (`REL#1`)
 
-**Open.** No candidate evidence exists for the current `master`. The
-documentation and packaging pass is merged, and NOW asks for a clean
-candidate. On MattPC a ZIP built from `fba0bb1` (the same tree as `68e3dc2`)
-is in `out/build/x64-release/packages/`, but `out/validation/release-preparation/`
-does not exist: no package check, startup result or hash was kept beside it.
+**Done 2026-11-12.** `scripts/release-candidate.ps1` ran on MattPC on a clean
+tree at `ccfe9b7` (branch `todo-clear-2026-11-12`, the tree pull request #81
+brings to `master`), engine pin `e7fc50e`, version `0.1.0`, under pwsh 7.4.6.
+The receipt's outcome was `passed`:
 
-**First step.** On a clean checkout of `master`'s tip, run
-[Build a clean candidate](#build-a-clean-candidate) as written:
-`scripts/release-candidate.ps1`, which runs the package check, the packaged
-`build-info.txt` check, `check-startup.ps1 -RequireAudio -SystemOnlyPath` and
-the missing-bank fallback start.
+| check | result |
+|---|---|
+| build (`build.ps1 -Package`) | passed |
+| package (`check-release-package.ps1`) | passed, 35 checks on 69 files |
+| packaged `build-info.txt` | passed: `ColourWars: ccfe9b7ee877…`, `Labrador: e7fc50e3…`, `Release`, no `-dirty` |
+| startup (`-RequireAudio -SystemOnlyPath`) | passed |
+| missing-bank fallback (`-RequireNoAudio`) | passed, with only the expected optional-bank diagnostic |
 
-**Done when** this entry records the commit, engine pin, version, ZIP SHA256 and
-each check's result from `candidate.json`, and the local evidence holds the
-build log, `build-info.txt` and both startup `result.json` files. `build-info.txt` must not
-say `-dirty`. A later commit supersedes the record; rebuild rather than reuse.
+ZIP `ColourWars-0.1.0-windows-x64.zip`, 21,986,009 bytes, SHA256
+`b53bcc12aa7f3aec39147f4901d36ec7e05d453efd99407e180b90e0426cd5e3`. The
+evidence (build log, `build-info.txt`, both startup `result.json` files and
+`candidate.json`) is local, under
+`out/validation/release-candidate/ccfe9b7ee877-20261112T135445Z/`. Any later
+change to code or content supersedes this record; rebuild rather than reuse.
+The archive the first tag publishes still comes from that tag's own CI run.
 
 ### Sandbox run of the candidate (`REL#2`)
 
-**Open.** The only Windows Sandbox runs of the ZIP were made at engine `v0.2.0`
-on 2026-10-28 and 2026-10-30
-([`ROAD#37`](feature-roadmap.md#windows-sandbox-run-of-the-release-zip-road37)).
-The pin is now past `v0.3.0`. Labrador's `PI-14` waits on exactly this run:
-its `TODO.md:112` at the pin says "close as delegated, or await its `v0.3.0`
-run". `ROAD#1`'s clean-PC run was waived on 2026-11-05; the sandbox run was not.
-`scripts/sandbox-release.ps1 -Run` already works on MattPC, so no author
-hardware is needed. This guide does not yet mention the sandbox.
-
-**First step.** Run `pwsh -NoProfile -File scripts/sandbox-release.ps1 -Zip
-<REL#1 candidate> -Run`.
-
-**Done when** the receipt's hash, engine revision, exit code and guest details
-are added to `ROAD#37`'s record, the candidate steps above name the sandbox run,
-and Labrador's `PI-14` can be pointed at the record.
+**Done 2026-11-12.** `scripts/sandbox-release.ps1 -Run` ran the `REL#1` ZIP
+in Windows Sandbox and passed. The details are in `ROAD#37`'s
+[record](feature-roadmap.md#windows-sandbox-run-of-the-release-zip-road37),
+and [Build a clean candidate](#build-a-clean-candidate) now names the step.
+Labrador's `PI-14` can be pointed at that record: it is the `v0.3.0`-era run it
+was waiting for (the engine pin is `v0.3.0` plus nine commits).
 
 ### One-command candidate receipt (`REL#3`)
 

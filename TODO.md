@@ -14,11 +14,12 @@ The [release guide](docs/releasing.md) owns this pass and the candidate checks.
 
 Next actions that need no author call:
 
-1. Candidate evidence for current `master`: `REL#1`, then `REL#2` (sandbox), now one command
-   (`scripts/release-candidate.ps1`).
-2. `PIN#2`: qualify engine master's behaviour changes on the trial build `PIN#1` rehearsed; the
+1. `PIN#2`: qualify engine master's behaviour changes on the trial build `PIN#1` rehearsed; the
    real pin stays.
-3. `REV#7`: measure static-paint draw cost on a quiet machine.
+2. `REV#7`: measure static-paint draw cost on a quiet machine.
+
+The release candidate (`REL#1`) and its sandbox run (`REL#2`) passed on 2026-11-12
+([evidence](docs/releasing.md#release-candidate-evidence-rel1)); the first tag is `FTR#1`.
 
 The other `OPEN` rows can follow in any order. A push, pull request and publication need their
 own instructions; the required `gate` and up-to-date `master` rule still apply.
@@ -47,8 +48,6 @@ release checks `ROAD#1`, `ROAD#2`, `POL#24` and `POL#25` were waived 2026-11-05,
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `REL#1` | OPEN | MED | M | No candidate evidence exists for current master: build, package-check and start a clean candidate (audible and missing-bank), and record commit, pin, version, ZIP SHA256 and results. [Item](docs/releasing.md#release-candidate-evidence-rel1). |
-| `REL#2` | OPEN | LOW | S | Windows Sandbox runs of the ZIP stop at engine v0.2.0; run `sandbox-release.ps1 -Run` on the `REL#1` candidate and record it under `ROAD#37` for Labrador's PI-14. [Item](docs/releasing.md#sandbox-run-of-the-candidate-rel2). |
 | `REL#6` | DECISION | LOW | S | No versioning rule: when the version moves after a tag, what minor and patch mean, and whether 0.x releases are marked pre-release. [Item](docs/releasing.md#versioning-rule-rel6). |
 
 ## Art direction, characters and the UI

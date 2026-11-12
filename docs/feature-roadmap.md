@@ -1606,7 +1606,7 @@ are recorded in [audio inventory §9](audio-inventory.md#9-runtime-migration-and
 
 ### Windows Sandbox run of the Release ZIP (`ROAD#37`)
 
-**Done 2026-10-30.** A Windows Sandbox run proves that the ZIP loads and runs
+**Done 2026-10-30; rerun 2026-11-12 (`REL#2`).** A Windows Sandbox run proves that the ZIP loads and runs
 on a clean OS. It does not prove that the game runs on a player's PC or GPU.
 The clean-PC run of `ROAD#1` was waived by the author on 2026-11-05 and was not
 performed, so that remains unproven; no CI job runs a sandbox.
@@ -1699,6 +1699,17 @@ trial now leaves `-Results` at that default as the sandbox does.
 
 These runs did not include a match, any input, audio or a physical pad. They
 also did not cover a target or non-paravirtual GPU.
+
+**The `REL#2` run (MattPC, 2026-11-12).** `-Run` on the `REL#1` candidate ZIP
+(ColourWars `ccfe9b7`, engine `e7fc50e`, `v0.3.0` plus nine commits, SHA-256
+`B53BCC12...D453EFD99407E180B90E0426CD5E3`) passed. The receipt's hash matched
+the host's. The guest was Windows 11 Enterprise 24H2 26100.9974, with none of
+the three runtime DLLs in System32. Its adapters were the RTX 5080 on the
+paravirtual driver 10.0.26100.1150, plus the Remote Display Adapter. The title
+screen drew with "v0.1.0 / Build ccfe9b7ee877 / Release", the save was created,
+stderr and `last-error.log` were empty, and `WM_CLOSE` exited 0. This is the
+run Labrador's `PI-14` waited for at `v0.3.0`. It had the same limits as the
+earlier runs: no match, input, audio, physical pad or target GPU.
 
 ## Fourth increment: pause controls/settings
 
