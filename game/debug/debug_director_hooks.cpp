@@ -649,7 +649,8 @@ void DebugDirectorImpl::cancel_capture_work()
 	const bool pending = this->scripts_.running() || !this->request_.empty() || this->leave_requested_ ||
 		this->pending_goto_.has_value() || this->pending_screenshot_.has_value() ||
 		this->pending_tuning_ != nullptr || this->pending_presentation_ != nullptr ||
-		this->record_armed_.has_value() || this->play_armed_ != nullptr;
+		this->record_armed_.has_value() || this->play_armed_ != nullptr ||
+		this->timelapse_pending();
 	if (!pending) { return; }
 	// Capture starts from page input, after the script tick has returned. Keep
 	// one cancellation notice rather than a separate warning for every queue.

@@ -1631,8 +1631,15 @@ as the game. In Release:
   `DebugPageTarget` interface and `DebugMatchTarget` with its three bases,
   `DebugMatchView`, `DebugMatchControl` and `DebugMatchEdits` (their RTTI names
   and vtables), `GameLevel`'s small `debug_*` adapters and the pages'
-  `debug_start_match`/`debug_dismiss`/`debug_reset_input`, all unreachable
+  `debug_start_match`/`debug_dismiss`/`debug_reset_input`/`debug_watch_replay`
+  (the last on `ResultsMenuInitial` and `EndMenuInitial`), all unreachable
   (the match step is not among them);
+  the time-lapse's `debug_round_taped`, `debug_timelapse_running` and
+  `debug_arm_timelapse` with their `GameLevel` adapters and
+  `GameLevel::timelapse_speed_`, always 0;
+  `Level`'s arena view (`set_arena_view`, `arena_view_`, false in Release) and
+  its `arena_view`, `scene_view_count`, `scene_view` and `overview_camera`
+  accessors, never called;
   `Level`'s overlay member and its developer setters, `Player`'s two cheat flags
   and `place_at`/`force_respawn`, never called; `LevelLoadedInfo::stations()`
   and its validation, which are level data and correct in both;
@@ -1643,7 +1650,8 @@ as the game. In Release:
   `collision_object_count`, `InterfaceGameplay`'s label overload (the slot
   overload forwards to it), `debug_countdown_over`, `debug_set_seat_labels` and
   `debug_screen_obstacles` with their `GameLevel` adapters, and
-  `DebugDirector::begin_match_draw`, an inline no-op; the
+  `DebugDirector::begin_match_draw` and `DebugDirector::timelapse_frame`,
+  inline no-ops; the
   `SeatInputFilter` interface, also used by the shipping round tape, and
   the `seats` parameter of `Level::update`, which in Release only ever
   carries that tape (shipping bots are owned by Level); `DebugMatchView::debug_level`;

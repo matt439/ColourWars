@@ -109,7 +109,7 @@ namespace debug_console_acceptance
 			log_contains(impl.log(), "replay.timelapse: ended early", DebugSeverity::info),
 			"A time-lapse ended by a press is over when a page is back on top");
 
-		// Drops: off, a rebuild, a spoiled tape at the End menu, the match ending.
+		// Drops: off, a rebuild, raw keyboard capture, a spoiled tape at the End menu, the match ending.
 		page.watch_result = false;
 		require(impl.execute("replay.timelapse 8").ok && impl.execute("replay.timelapse off").ok &&
 			!impl.wait_context().timelapse_active && match.armed_speed == 0,
@@ -119,6 +119,14 @@ namespace debug_console_acceptance
 		require(!impl.wait_context().timelapse_active && match.armed_speed == 0 &&
 			log_contains(impl.log(), "replay.timelapse: disarmed (the match was rebuilt)", DebugSeverity::warning),
 			"A rebuild drops an armed time-lapse");
+		// Raw keyboard capture with only the time-lapse queued still drops it.
+		require(impl.execute("replay.timelapse 8").ok, "Armed before raw keyboard capture");
+		impl.log().clear();
+		director.begin_keyboard_capture();
+		director.end_keyboard_capture();
+		require(!impl.wait_context().timelapse_active && match.armed_speed == 0 &&
+			log_contains(impl.log(), "replay.timelapse: disarmed (raw keyboard capture)", DebugSeverity::warning),
+			"Raw keyboard capture drops an armed time-lapse that is the only queued work");
 		require(impl.execute("replay.timelapse 8").ok, "Armed before the round ends spoiled");
 		match.finish_after = 0;
 		match.round_taped = false;
