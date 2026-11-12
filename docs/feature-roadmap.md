@@ -2212,7 +2212,9 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
 - **End-of-round instant replay (`ROAD#19`, done 2026-10-27).** TowerFall
   replays each round's final seconds and can save a GIF. The End menu now
   offers Watch Replay; see [Instant replay](#instant-replay-road19) below.
-  Saving a clip was not taken up.
+  Saving a clip was not taken up. A Debug whole-round time-lapse followed
+  ([`REV#48`](#whole-round-time-lapse-rev48)); a player-facing one is not
+  designed.
 
 ### Sessions and setup
 
@@ -3824,6 +3826,34 @@ Replay does and requires every taped step to match: player boxes, states, team
 colours and projectile count, then the final paint. Leaving out the pause's
 gaps diverges on Press Tower, and a wrong seed diverges at the first step. The
 case also checks the tape rules.
+
+### Whole-round time-lapse (`REV#48`)
+
+Watch Replay shows only the last `match.replay` seconds in the round's own
+panes, though the tape holds the whole round. Splatoon 3's Battle Replays
+re-create a whole battle from a top-down camera. The 2026-11-10 review
+proposed a time-lapse of the whole round from one arena camera
+([record](review/2026-11-10-project-review.md#whole-round-time-lapse-replay-rev48)).
+
+**Debug half done 2026-11-12.** `replay.timelapse [speed] [stills]`
+([Time-lapse](debug-console.md#time-lapse)) plays the whole tape again,
+`speed` taped steps a frame (default 16, so a 240-second round takes 15
+seconds), through the stage's authored overview camera, silent, with no HUD,
+clock or REPLAY card, and can save evenly spaced stills: candidates for the
+README image (`REV#12`). It reuses the instant replay's rebuild; what is new
+is a step multiple per frame and `Level::set_arena_view`, a single fullscreen
+view through `zoom_out_finish_bounds` that leaves the simulation alone. The
+`debug_console` case checks that a whole tape played that way ends on the
+round's own paint.
+
+**Open: the player-facing End row.** Not designed. It needs rulings on the
+pacing (a fixed speed or a target length), on whether the clock or any HUD
+shows during the pass and whether sound plays, and on where the row sits.
+The End paper was resized for six rows (above), and `POL#15` wanted fewer
+steps between rounds. Then it needs the row's copy in `presentation.json`, the
+End menu's validation and painter updates, and a play check, since the payoff
+is unproven without play. It runs after the reveal, so the `ROAD#17` decline
+does not apply.
 
 ### Menu cards stay on the paper face (`ROAD#25`)
 

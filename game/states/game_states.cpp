@@ -546,7 +546,10 @@ void GameLevel::draw(Renderer& renderer) const
 	{
 		this->level_->draw_resume_countdown(renderer, this->suspension_.countdown().remaining());
 	}
-	if (this->replay_phase_ != ReplayPhase::none) { this->level_->draw_replay_banner(renderer); }
+	if (this->replay_phase_ != ReplayPhase::none && this->timelapse_speed_ == 0)
+	{
+		this->level_->draw_replay_banner(renderer);
+	}
 	this->data()->debug().draw_status(renderer);
 }
 

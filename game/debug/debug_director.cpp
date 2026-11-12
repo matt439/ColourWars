@@ -114,6 +114,14 @@ void DebugDirector::end_match_steps(DebugMatchTarget& match, int runs)
 	}
 }
 
+void DebugDirector::timelapse_frame(DebugMatchTarget& match, int step, int steps)
+{
+	if (this->impl_ != nullptr)
+	{
+		this->impl_->timelapse_frame(match, step, steps);
+	}
+}
+
 bool DebugDirector::match_audio_paused() const
 {
 	return this->impl_ != nullptr && (this->impl_->clock().paused() ||

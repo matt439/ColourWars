@@ -61,6 +61,11 @@ bool ResultsMenuInitial::debug_dismiss(bool /*leaving_match*/)
 	return true;
 }
 
+bool ResultsMenuInitial::debug_watch_replay()
+{
+	return this->debug_dismiss(false);
+}
+
 void ResultsMenuInitial::update_page(float dt)
 {
 	const ResultsMenuPresentation& look = this->look();

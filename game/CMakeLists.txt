@@ -105,6 +105,7 @@ add_library(colourwars_game STATIC
     debug/commands/player_commands.cpp
     debug/replay/replay.cpp
     debug/replay/replay_commands.cpp
+    debug/replay/timelapse_commands.cpp
     debug/script/script_commands.cpp
     debug/tune/tune_commands.cpp
     debug/tune/tune_document.cpp

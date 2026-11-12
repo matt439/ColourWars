@@ -319,6 +319,14 @@ DebugStatus DebugDirectorImpl::wait_command(const DebugArgs& args)
 		}
 		return this->scripts_.set_wait(std::make_unique<ReplayWait>());
 	}
+	if (word == "timelapse")
+	{
+		if (!context.timelapse_active)
+		{
+			return DebugStatus::failure("wait timelapse: no time-lapse is armed or playing");
+		}
+		return this->scripts_.set_wait(std::make_unique<TimelapseWait>());
+	}
 	if (word == "record")
 	{
 		if (!context.recording)
@@ -341,7 +349,7 @@ DebugStatus DebugDirectorImpl::wait_command(const DebugArgs& args)
 	if (args.has(1))
 	{
 		return DebugStatus::failure("usage: wait <updates> | <seconds>s | match | frames <n> | "
-			"replay | record");
+			"replay | timelapse | record");
 	}
 
 	long long updates = 0;
@@ -636,10 +644,11 @@ void DebugDirectorImpl::register_script_commands()
 			return DebugStatus::success(std::to_string(count) + " script(s) in " + where);
 		}, DebugMenuTraits::of("console", Form::run));
 
-	registry.add_command("wait", "in a script: wait <updates> | <seconds>s | match | frames <n> | replay | record",
-		{ { "n|<x>s|match|frames|replay|record", false, []
+	registry.add_command("wait", "in a script: wait <updates> | <seconds>s | match | frames <n> | replay | "
+		"timelapse | record",
+		{ { "n|<x>s|match|frames|replay|timelapse|record", false, []
 			{
-				return std::vector<std::string>{ "match", "frames", "replay", "record" };
+				return std::vector<std::string>{ "match", "frames", "replay", "timelapse", "record" };
 			} },
 			{ "frames", true, {} } },
 		[this](Args args, DebugLog&) { return this->wait_command(args); },
