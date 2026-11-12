@@ -224,19 +224,22 @@ declared in `scripts/acceptance/cases.psd1`.
 
 ### Every script in the scripts index (`HYG#103`)
 
-**Open.** AGENTS.md says [scripts/README.md](../scripts/README.md) indexes the
-scripts and must be kept true, and nothing checks it. On 2026-11-12
-`release-package-path.ps1`, dot-sourced by `build.ps1`,
+**Done** (2026-11-12). AGENTS.md says [scripts/README.md](../scripts/README.md)
+indexes the scripts and must be kept true; until this row nothing checked it.
+On 2026-11-12 `release-package-path.ps1`, dot-sourced by `build.ps1`,
 `sandbox-release.ps1`, `check-release-package.ps1` and
 [releasing.md](releasing.md), was the one tracked top-level entry under
 `scripts/` the index did not name; its row was added the same day.
 
-First step: a test in `scripts/ci/`, run by the lint job's existing
-`unittest discover`, that every tracked top-level file and folder under
-`scripts/` is named in `scripts/README.md`.
-
-Done when the test passes, and fails with the name of a planted unindexed
-script.
+[scripts/ci/test_scripts_index.py](../scripts/ci/test_scripts_index.py), run by
+the lint job's existing `unittest discover -s scripts/ci`, lists the tracked
+top-level files and folders under `scripts/` with `git ls-files` and requires
+each to be the first path component of a relative link in the index
+(`[ci/](ci/)` and `[studies/](studies/README.md)` both name their folder). A
+name in prose or a link that leaves `scripts/` does not count; the index names
+itself. It reads whatever is tracked, so a new script fails it until it has a
+row. Planting an untracked-then-intent-added `scripts/planted.ps1` failed the
+test with `scripts/README.md does not link: planted.ps1`; removing it passed.
 
 ## Hygiene review (2026-11-05)
 

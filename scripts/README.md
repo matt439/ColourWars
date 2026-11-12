@@ -127,7 +127,7 @@ to `cases.psd1`.
 | Folder | What |
 |---|---|
 | [debug/](debug/) | the shipped developer-console scripts (`exec <name>`), listed in [debug-console.md](../docs/debug-console.md#scripts) |
-| [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the engine pin's check against Labrador, the Markdown link check, and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
+| [ci/](ci/) | CI's changed-line lint, the decision whether an event needs the Windows jobs, the engine pin's check against Labrador, the Markdown link check, the test that this index links every tracked entry under `scripts/`, and their tests; `export-msvc-environment.ps1` runs vcvars64 once per job into `GITHUB_ENV` |
 | [balance/](balance/) | `TOOL#4`'s matrix driver/designs and analyser: tool and 2v2 team paint/eliminations, bot counters, profile checks and independent A/B intervals with design margins ([gameplay-tuning.md](../docs/gameplay-tuning.md#balance-matrix-tool-tool4)), and its test |
 | [perf/](perf/) | frame-pacing analysis and its test |
 | [studies/](studies/README.md) | the kits for the drawing-mistake human studies ([drawing-mistakes-research.md](../docs/drawing-mistakes-research.md#8-human-tests)): Study A's references, sheets and analysis, Study B's stimulus capture, test page and analysis |
