@@ -10,7 +10,7 @@ grid. Every hue lives in these texels; runtime draws the sheet with a WHITE tint
 Run `powershell -ExecutionPolicy Bypass -File scripts/build-terrain-art.ps1`
 from the repository root. Windows System.Drawing fills the integer-cell shapes
 without antialiasing and draws lines cell by cell. Each cell expands to exactly
-4x4 texels, producing the 2048x2536 working atlas
+4x4 texels, producing the 2048x3232 working atlas
 `../sources/textures/terrain.png`, runtime
 `../../content/textures/terrain.json` and `.png` (a copy of the working PNG),
 and the review [`lineup.png`](lineup.png). Ordinary builds need neither
@@ -60,6 +60,9 @@ gutter.
 | `cq_bench` | 384x128 | a low workbench with a vice, a tin of brushes, a roller lying down, a rag and a drawer, cluttered along its top |
 | `cq_timber` | 224x160 | three planks stood almost upright against the wall with end grain, offcuts on the floor beside them; short and steep so no plank reads as a ramp up to the deck |
 | `cq_drums` | 256x176 | two paint drums with hoops, a blank label and a grey drip, and a third on its side showing its end |
+| `cf_paint_tube` | 128x256 | Crossfeed: squeezed-out paint tube standing on its ribbed cap, crimped end up, two crumple lines and a blank colour band |
+| `cf_pencil_cup` | 160x288 | Crossfeed: plain banded cup with two sharpened pencils, one upside down on its eraser and a leaning stub |
+| `cf_palette` | 384x256 | Crossfeed: kidney palette propped on a stick, thumb hole and notch, grey wells and one empty ring |
 | `shadow_0`..`shadow_3` | 64x32 | shadow_deep specks dense in the top two rows, shadow specks thinning to none in the last; columns 0 and 15 empty so tiles abut in any order |
 | `swatch_<role>` | 4x4 | one opaque block per palette role |
 

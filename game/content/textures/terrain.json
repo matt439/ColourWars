@@ -684,6 +684,39 @@
                                            "w":  256,
                                            "h":  176
                                        }
+                          },
+                          {
+                              "name":  "cf_paint_tube",
+                              "position":  {
+                                               "x":  492,
+                                               "y":  2940
+                                           },
+                              "size":  {
+                                           "w":  128,
+                                           "h":  256
+                                       }
+                          },
+                          {
+                              "name":  "cf_palette",
+                              "position":  {
+                                               "x":  624,
+                                               "y":  2940
+                                           },
+                              "size":  {
+                                           "w":  384,
+                                           "h":  256
+                                       }
+                          },
+                          {
+                              "name":  "cf_pencil_cup",
+                              "position":  {
+                                               "x":  1012,
+                                               "y":  2940
+                                           },
+                              "size":  {
+                                           "w":  160,
+                                           "h":  288
+                                       }
                           }
                       ]
 }
