@@ -522,7 +522,7 @@ int main(int argc, char* argv[])
 		GameTuning tuning((std::filesystem::path(argv[1]) / "tuning.json").string().c_str());
 		check_pure(tuning.input()); check_wrappers(argv[1]);
 		std::cout << "PASS default actions: independent frozen legacy mappings, aliases/source edges, focus/connection/epoch boundaries, "
-			"strict triggers/drop, menu arming/chords/reset/repeated reads, direction aliases, raw sticks and live per-slot preferences; no hardware/window\n";
+			"strict triggers/drop, menu arming/chords/reset/repeated reads, direction aliases, Debug-only F1/Back panel, raw sticks and live per-slot preferences; no hardware/window\n";
 		return 0;
 	});
 }
