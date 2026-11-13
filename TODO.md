@@ -17,8 +17,8 @@ The engine pin moved to master `1dc8533c` on 2026-11-13 (`ENG#36`, `PIN#2` and `
 [record](docs/review/engine-reports.md#what-the-2026-11-13-bump-changed)); five atlases now ship
 as PNG through the engine's loader ([`PIN#3`](docs/review/engine-reports.md#png-atlases-and-texconv-pin3)).
 
-Next actions: the two `OPEN` rows, `HYG#95` and `HYG#96`, each owe one hosted nightly run once
-this work is pushed. The required `gate` and up-to-date `master` rule still apply. The author's
+Next actions: none open. `HYG#96` waits on the first green scheduled nightly after the
+2026-11-13 ASan link fix reaches `master`; that night should close issue #72 itself. The required `gate` and up-to-date `master` rule still apply. The author's
 calls of 2026-11-13 on the decision rows are recorded in
 [Project review calls](docs/feature-roadmap.md#project-review-calls-2026-11-13) and the owners;
 the rows they opened (`REV#1`, `REV#13`, `REV#14`, `REV#63`, `POL#49`) were built 2026-11-13.
@@ -108,8 +108,7 @@ queue closed 2026-11-07.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#95` | OPEN | LOW | S | Baseline comparison landed (`report-analyze.ps1 -Baseline`, nightly passes it, keeps continue-on-error); still to see the hosted nightly job summary show the comparison, on the pull request's nightly trial or the first night after merge. [Item](docs/code-hygiene.md#read-the-nightly-analyze-count-against-a-baseline-hyg95). |
-| `HYG#96` | OPEN | LOW | S | `close` job landed in nightly.yml (closes `Nightly sweep failed` on a green scheduled night; `workflow_dispatch` input `close_trial` runs only that path). Owed after a push: a dispatched trial closing a test issue (open #72 has the same title and would close too). [Item](docs/code-hygiene.md#close-the-nightly-issue-on-a-green-night-hyg96). |
+| `HYG#96` | BLOCKED | LOW | S | Waits on a green scheduled nightly. The 2026-11-13 night failed at the ASan link (fixed on the same day), and its `report` job commented on #72 as designed. The next green night must close #72 through the `close` job; a dispatched trial would wrongly close #72 while it tracks a real failure. [Item](docs/code-hygiene.md#close-the-nightly-issue-on-a-green-night-hyg96). |
 
 ## Tooling, CI and docs
 

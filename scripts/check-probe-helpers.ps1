@@ -38,14 +38,14 @@ foreach ($preset in 'x64-debug', 'x64-release', 'x64-asan') {
         CMAKE_HOME_DIRECTORY = $repo; CMAKE_BUILD_TYPE = $(if ($debug) { 'Debug' } elseif ($asan) { 'RelWithDebInfo' } else { 'Release' })
         CMAKE_CXX_COMPILER = (Join-Path $repo 'cl.exe'); VCPKG_INSTALLED_DIR = $installed
         LABRADOR_RENDER_BACKEND = 'd3d11'; LABRADOR_AUDIO_BACKEND = 'xaudio2'
-        LABRADOR_INPUT_BACKEND = 'xinput'; VCPKG_TARGET_TRIPLET = 'x64-windows'
+        LABRADOR_INPUT_BACKEND = 'xinput'; VCPKG_TARGET_TRIPLET = $(if ($asan) { 'x64-windows-asan' } else { 'x64-windows' })
     }
     $sanitizerRuntime = Join-Path $repo 'clang_rt.asan_dynamic-x86_64.dll'
     if ($asan) {
         $cache.CMAKE_CXX_FLAGS = '/EHsc /fsanitize=address'
         [IO.File]::WriteAllText($sanitizerRuntime, 'preflight fixture, not a runtime')
     }
-    $dependency = Join-Path $installed ('x64-windows/' + $(if ($debug) { 'debug/lib' } else { 'lib' }))
+    $dependency = Join-Path $installed ($cache.VCPKG_TARGET_TRIPLET + '/' + $(if ($debug) { 'debug/lib' } else { 'lib' }))
     $files = @($cache.CMAKE_CXX_COMPILER,
         (Join-Path $build 'game/colourwars_game.lib'),
         (Join-Path $build 'game/colourwars_rumble_gamepads.lib'),
