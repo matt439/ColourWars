@@ -9,8 +9,11 @@
 // mask empties, so neither cover nor players contact it), deals no damage,
 // and every `interval` seconds for `lifetime` it releases drops, each a
 // ProjectileBall on the sub's burst record, laid out by the concrete class
-// (spray). Enemy shots that reach it are spent on it: Level hands it one hit
-// for each (takes_hits), and the last of `hits` retires it. Meeting an enemy
+// (spray). Enemy shots that reach it are spent on it, and the last of `hits`
+// retires it: Level passes it to every shot's swept travel (takes_hits), so a
+// flying shot stops where its path enters it, before any player behind or
+// inside it, and hands it one hit; a roller's volume, which is not swept, is
+// struck after the tick's contacts (Level::strike_breakables). Meeting an enemy
 // player before cover, or the body's delete_timer running out in the air,
 // retires it as any flying shot, unplanted.
 class ProjectilePlanted : public Projectile
@@ -52,7 +55,8 @@ public:
 
 protected:
 	void resolve_travel(std::span<labrador::CollisionObject* const> objects,
-		std::optional<ProjectileTargetFlags> known) override;
+		std::optional<ProjectileTargetFlags> known,
+		std::span<Projectile* const> breakables) override;
 	// It sticks to bare cover rather than splashing, so it never duds.
 	bool duds_on_bare_cover() const override { return false; }
 

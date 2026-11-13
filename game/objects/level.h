@@ -333,6 +333,10 @@ private:
 	// what the coming end_tick() retires, so neither holds a dead pointer.
 	std::vector<Projectile*> projectiles_;
 	std::vector<Projectile*> pending_projectiles_;
+	// The admitted shots that took hits (takes_hits) as this tick's travel
+	// began, in scene order: what each swept shot can be spent on. Refilled by
+	// resolve_projectile_movement() each tick; kept only to reuse its storage.
+	std::vector<Projectile*> breakables_;
 
 	// What overlay.stations names: the authored stations, then the spawns.
 	std::vector<LevelStation> stations_;
@@ -452,9 +456,11 @@ private:
 	// Admits the drops of every grenade (Projectile::take_burst) that retired
 	// this tick, after contacts settle and before the shot list follows the scene.
 	void burst_projectiles();
-	// Each enemy shot in flight whose travel this tick reaches a projectile
-	// that takes hits (a planted sprinkler) is spent on it.
+	// Each enemy roller whose one-step volume this tick reaches a projectile
+	// that takes hits (a planted sprinkler or wall) is spent on it. Swept shots
+	// met those in resolve_projectile_movement(), along their path.
 	void strike_breakables();
+	// Each shot's swept travel against the targets and this tick's breakables_.
 	void resolve_projectile_movement();
 	// Every scene end_tick() in Level goes through end_scene_tick(), which keeps
 	// projectiles_ in step: retire_projectiles() first prunes it to the shots

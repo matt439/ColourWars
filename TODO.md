@@ -52,7 +52,7 @@ or above (2026-10-27). The owner records the gaps left out by choice and the exc
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ROAD#13` | DECISION | LOW | M | Umbrella answers recorded 2026-11-13 (Q1 umbrella, Q3-Q7 as recommended). Left: the author's call, now that `PIN#2` is done, whether to build slices 2-4, which reopens the five-tool balance and adds four unheard cues. Slice 1 is `REV#3`. [Proposal](docs/feature-roadmap.md#umbrella-tool-proposal-road13). |
+| `ROAD#13` | DECISION | LOW | M | Umbrella answers recorded 2026-11-13 (Q1 umbrella, Q3-Q7 as recommended). Left: the author's call, now that `PIN#2` is done, whether to build slices 2-4, which reopens the five-tool balance and adds four unheard cues. Slice 1 (`REV#3`) is done. [Proposal](docs/feature-roadmap.md#umbrella-tool-proposal-road13). |
 | `ROAD#14` | UNSCOPED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#28` | DEFERRED | LOW | L | Cycling and paint-driven lifts are done. Left: deliberate bot lift routing. Deferred behind `REV#27`, because lifts stand only on the two trials that are out of Random, so routing has no consumer yet. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
 | `ROAD#29` | DEFERRED | LOW | M | Growing sponges parked 2026-11-13 behind `REV#27`: no G1-G7 picks until a Random arena wants a sponge, then resume from the [contract draft](docs/feature-roadmap.md#growing-sponge-contract-draft-road29)'s recommendations. |
@@ -126,12 +126,6 @@ paint games and similar C++ projects; every row was checked against the code and
 decisions, and nothing was built or played. Its
 [last section](docs/review/2026-11-10-project-review.md#proposed-and-not-given-rows) lists what
 was proposed and given no row. Here `UNSCOPED` means examined by the review but never designed.
-
-**Code and robustness**
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `REV#3` | OPEN | LOW | M | Planted sprinklers and walls take hits by a shot's travel bounding box, tested after the tick's contacts: diagonal shots hit up to about 17 units wide, and a player inside the wall is hit before it. First step: sweep breakables in `Projectile::resolve_sweep` before player contacts ([roadmap](docs/feature-roadmap.md#umbrella-tool-proposal-road13)). [Record](docs/review/2026-11-10-project-review.md#breakable-subs-are-struck-by-travel-bounding-box-rev3). |
 
 **Release, README and repository**
 

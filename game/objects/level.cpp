@@ -394,9 +394,10 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 			this->blocked_shot_feedback_->emit(*contact);
 		}
 	}
-	// Enemy shots that reached a planted sprinkler break it, then a sub's
-	// grenade that retired this tick bursts where it stopped and a planted
-	// sprinkler sprays on its schedule.
+	// Enemy rollers that reached a planted sub break it (swept shots met it
+	// along their path, in resolve_projectile_movement), then a sub's grenade
+	// that retired this tick bursts where it stopped and a planted sub sprays
+	// on its schedule.
 	this->strike_breakables();
 	this->burst_projectiles();
 
@@ -516,8 +517,11 @@ void Level::strike_breakables()
 		for (Projectile* shot : this->projectiles_)
 		{
 			if (!target->takes_hits()) { break; }
-			// Only enemy shots in flight; a shot spends itself on the hit.
+			// Only enemy rollers; a swept shot met it in its sweep, along its
+			// path (REV#3), so its travel's bounding box never counts. A shot
+			// spends itself on the hit.
 			if (shot == target || shot->for_deletion() || shot->takes_hits() ||
+				is_swept(shot->projectile_type()) ||
 				shot->team() == target->team() || !shot->travel_bounds().intersects(bounds)) { continue; }
 			shot->set_for_deletion(true);
 			target->take_hit();
@@ -560,9 +564,19 @@ void Level::resolve_projectile_movement()
 	// can consume it in scene order or miss a thin paintable face.
 	// What the targets answer about movers and slabs was asked at admission.
 	const ProjectileTargetFlags flags = this->structures_.target_flags();
+	// The planted subs standing as this tick's travel begins, in scene order.
+	// One planted during the walk takes hits from the next tick, whatever its
+	// place in the scene; one broken during it stops nothing more (the sweep
+	// asks takes_hits again).
+	this->breakables_.clear();
 	for (Projectile* projectile : this->projectiles_)
 	{
-		projectile->resolve_movement_contacts(this->structures_.projectile_targets(), flags);
+		if (projectile->takes_hits()) { this->breakables_.push_back(projectile); }
+	}
+	for (Projectile* projectile : this->projectiles_)
+	{
+		projectile->resolve_movement_contacts(this->structures_.projectile_targets(), flags,
+			this->breakables_);
 	}
 }
 

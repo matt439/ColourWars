@@ -2209,8 +2209,8 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
   2026-11-05, so it is no longer blocked. A new subclass suits the OOP rule.
   **Proposal recorded (2026-11-12), answered (2026-11-13):** the
   [umbrella tool proposal](#umbrella-tool-proposal-road13) recommended a
-  Splatoon brella, and the author took it and answered Q1-Q7. Its first slice
-  is `REV#3`'s fix, open either way. Building slices 2-4 is a separate call
+  Splatoon brella, and the author took it and answered Q1-Q7. Its first slice,
+  `REV#3`'s fix, was done on 2026-11-13. Building slices 2-4 is a separate call
   after `PIN#2`.
 - **Map pickups (`ROAD#14`).** TowerFall chests, Paint Rumble power-ups and
   Smash items. Needs a match toggle and bot awareness. It waited for
@@ -2455,7 +2455,9 @@ to fill the last one's gaps. An enemy player met first, or the body's
 shot. Enemy shots break it: `Level::strike_breakables` runs after the tick's
 contacts, spends each enemy shot whose travel this tick
 (`Projectile::travel_bounds`) reaches a projectile that `takes_hits`, and
-the `hits`th (3) retires it; its own team's shots leave it be.
+the `hits`th (3) retires it; its own team's shots leave it be. (Since
+umbrella slice 1, `REV#3`, swept shots meet it along their path instead; see
+the [umbrella proposal's slice record](#umbrella-tool-proposal-road13).)
 `Projectile::take_burst` is now asked every tick, which is how the planted
 sprinkler sprays. It costs half the tank, with a 4 s cooldown. Each seat's
 `SeatSetup::sub` chooses its sub, defaulting to the grenade, which
@@ -2684,9 +2686,10 @@ because each of those is a way of placing paint: a stream (Sprayer), a jet
 (Bucket). None of them answers a shot, while the umbrella makes Shoot a defence
 as well. A Sniper facing one has to break the canopy or go round it, and a
 Roller can walk through it. Much of the mechanism is already qualified: the
-paint wall's `takes_hits`/`take_hit` path through `Level::strike_breakables`
-(`game/objects/level.cpp:505-521`) and the sprinkler's fan of drops
-(`ProjectilePlanted::spray`).
+paint wall's `takes_hits`/`take_hit` path, which since slice 1 stops a shot
+along its swept path (`Projectile::resolve_movement_contacts`, given
+`Level::resolve_projectile_movement`'s breakables), and the sprinkler's fan of
+drops (`ProjectilePlanted::spray`).
 
 **Considered instead.**
 - *Brush* (the fast painter). The player runs faster while Shoot is held,
@@ -2730,19 +2733,21 @@ how much.
   the tool keeps firing. Blocking a shot costs no paint. Releasing Shoot shuts
   the canopy, and the canopy does not slow its holder (Q4).
 - *Where Level asks.* A virtual `Weapon::canopy()`, empty by default, gives
-  `strike_breakables` the canopy's rectangle and team, and
-  `Weapon::take_canopy_hit()` spends a hit. The weapons join the projectile walk
-  that already exists, and the canopy is never a Scene object, so nothing
+  Level the canopy's rectangle and team, and `Weapon::take_canopy_hit()` spends
+  a hit. The canopy joins the swept breakables that
+  `Level::resolve_projectile_movement` hands each shot (slice 1), which then
+  carry a rectangle, a team and a hit to spend rather than only planted
+  projectiles; it does not go through `strike_breakables`, which is left to the
+  roller's unswept volume. The canopy is never a Scene object, so nothing
   outlives the weapon that owns it.
-- *Prerequisite: `REV#3`.* A canopy stands in front of its holder, which is the
-  case `REV#3` records for a player standing inside the paint wall.
-  `strike_breakables` runs after `scene_->resolve()` (`level.cpp:388-401`) on
-  travel bounding boxes. So when a shot reaches the holder and the canopy in the
-  same tick, it hits the holder, and the canopy never counts it. The canopy
-  therefore needs `REV#3`'s fix: breakables swept as participants in
-  `Projectile::resolve_sweep` (`game/objects/projectile_contacts.cpp:403`),
-  before player contacts. `REV#3` was blocked on `ROAD#11`'s play review,
-  which was waived on 2026-11-13, so it is open work and Q2 is moot.
+- *Prerequisite: `REV#3`, satisfied 2026-11-13 by slice 1.* A canopy stands in
+  front of its holder, which is the case `REV#3` recorded for a player standing
+  inside the paint wall. Planted subs used to be struck by
+  `strike_breakables` after `scene_->resolve()`, on travel bounding boxes, so a
+  shot that reached the holder and the canopy in the same tick would have hit
+  the holder and never counted against the canopy. Slice 1 sweeps breakables
+  as participants in `Projectile::resolve_sweep` and its translating and slab
+  forms, before player contacts, so the canopy has the order it needs.
 
 **Numbers in `tuning.json`.** `weapons.umbrella` holds a tool's usual record
 (offset, size, nozzle offset, `shoot_interval`, `starting_vel_length`,
@@ -2795,11 +2800,12 @@ umbrella against each tool, against the five-tool balance accepted on
   `HOW-TO-PLAY.txt` name the tool.
 
 **Slices.** Each slice is a pull request with its own acceptance case.
-1. **Breakables before player contacts** (`REV#3`'s fix). Breakables are swept
-   before player contacts, and `sub_weapons` gains a diagonal near-miss check
-   and a check with a player inside the wall. This closes `REV#3`.
+1. **Breakables before player contacts** (`REV#3`'s fix), *done 2026-11-13*.
+   Breakables are swept before player contacts, and `sub_weapons` gains a
+   diagonal near-miss check and a check with a player inside the wall. This
+   closes `REV#3`.
 2. **Umbrella end to end.** The `WeaponType`, the class, the tuning, the pellet
-   projectile and the canopy through `strike_breakables`, with placeholder art
+   projectile and the canopy among the swept breakables, with placeholder art
    (the Bucket's frames and the wall's strip) and existing waves. It is
    selectable on Weapon Select and through Random, and carried by the save, the
    match plan, replay format 12 and the copy. A new `umbrella` case checks the
@@ -2815,11 +2821,39 @@ umbrella against each tool, against the five-tool balance accepted on
 Then comes the author's attended play review, which implementation does not
 close.
 
+**Slice 1, done 2026-11-13 (`REV#3`).** A planted sub (a projectile that
+`takes_hits`) is now a participant in the shot's sweep rather than a box test
+after it. `Level::resolve_projectile_movement` snapshots the admitted
+projectiles that take hits, in scene order, into `Level::breakables_` before
+its walk, and hands that list to every `Projectile::resolve_movement_contacts`.
+`Projectile::resolve_sweep`, its slab form (`resolve_fixed_slab_sweep`) and its
+moving-structure form (`resolve_translating_contacts`) each find the earliest
+enemy breakable the shot's path enters (`sweep_interval` against its bounds,
+the earlier in the list on a tie) and compare it with the obstruction they
+chose: an earlier breakable wins, cover keeps a tied entry, and a breakable
+takes a tie from a player. A shot that loses to a breakable stops just inside
+the face it entered, with the same inset cover gives it (so a struck grenade
+bursts at the face, not past it), retires, and hands the sub one hit; it
+paints, damages and cues nothing, as before. `takes_hits` is asked again as
+the sweep reaches each breakable, so one broken earlier in the walk stops
+nothing more; one planted during the walk takes hits from the next tick, in
+any scene order. An empty list skips every new comparison, so a match without
+a planted sub runs exactly the arithmetic it did. `Level::strike_breakables`
+remains only for the roller, whose one-step volume is not swept, so no swept
+shot can be counted twice. The launch sweep (`resolve_launch_obstruction`)
+takes no breakables, deliberately: a muzzle that spans an enemy wall is still
+caught by the next tick's sweep, as before. `sub_weapons` gains a Sniper jet
+rising past the wall's top corner, whose travel box overlaps it but whose path
+does not (the wall keeps its hits), the mirrored corner shot that does reach
+the face (one hit), a host standing ten units inside the wall's face, shielded
+by it, and a host just in front of the face, hit first. No seeded pin moved.
+
 **The author's answers (2026-11-13).**
 - **Q1, the archetype: the umbrella.** The brush was not taken. The splatling
   left the list when `REV#57`'s Sniper charge was declined.
-- **Q2, `REV#3`.** Moot: `ROAD#11`'s play review was waived, so `REV#3` is
-  open work and slice 1, whichever way the build call goes.
+- **Q2, `REV#3`.** Moot: `ROAD#11`'s play review was waived, so `REV#3` was
+  open work and slice 1, whichever way the build call goes. It was done on
+  2026-11-13.
 - **Q3, the canopy input: open while Shoot is held** (Splatoon's rule).
 - **Q4, speed: no slowdown.** An open canopy does not slow its holder, so no
   tool-dependent speed arrives with it.
@@ -4685,7 +4719,7 @@ been built says so and when.
 **Partly decided.**
 - **Umbrella questions answered (`ROAD#13`).** Q1-Q7 are recorded in the
   [umbrella proposal](#umbrella-tool-proposal-road13). Building slices 2-4 is a
-  separate call after `PIN#2`; slice 1 is `REV#3`, open either way.
+  separate call after `PIN#2`; slice 1 (`REV#3`) was done on 2026-11-13.
 
 **Deferred, each with its trigger.**
 - **Bot takeover of a missing seat (`REV#28`).** Trigger: a series actually

@@ -906,9 +906,72 @@ namespace
         }
         for (int count = 0; count < static_cast<int>(shot.details.delete_timer / dt) + 10; ++count) { step(); }
         require(level->projectile_count() == 0, "Its last hit did not break the wall");
+
+        // REV#3: a shot meets the wall along its path, not by the box its
+        // tick's travel spans, and before a player its path reaches later.
+        // The Sniper's jet flies straight at an unchanging speed (no gravity
+        // or drag), so one step moves it exactly `reach` on each axis.
+        const ProjectileTuning& jet = game.projectile(ProjectileType::jet);
+        require(jet.details.gravity == 0.0f && jet.details.wind_resistance == 0.0f &&
+            jet.details.player_damage > 0.0f, "The jet record no longer flies straight or hurts");
+        const float speed = 1800.0f;
+        const float reach = speed * dt;
+        const Vector2F size = jet.details.col_rect_size;
+        const auto fire = [&](float right, float bottom, Vector2F velocity)
+        {
+            level->admit_projectile(std::make_unique<ProjectileBall>(
+                RectangleF(Vector2F(right - size.x / 2.0f, bottom - size.y / 2.0f), size),
+                velocity, PlayerTeam::b, 1, Colour::white, &world.assets.render, strip(jet), &jet));
+        };
+        // Rising past its top corner: the shot's foot clears the top a
+        // quarter of the way through the step, before its front reaches the
+        // face at six tenths. Its travel's box overlaps the corner; its path
+        // does not, so the wall keeps its hits and the shot flies on.
+        wall = stand_wall();
+        RectangleF face = wall->bounds();
+        // (The scene frees a spent shot as the step ends, so only the wall
+        // and the host are read back.)
+        fire(face.left() - 0.6f * reach, face.top() + 0.25f * reach, Vector2F(speed, -speed));
+        step();
+        require(wall->hits_left() == tuning.hits,
+            "A shot whose path passed a wall's corner was spent on the box its travel spans");
+        // The same corner the other way round reaches the face while the
+        // foot is still below the top: one hit.
+        fire(face.left() - 0.25f * reach, face.top() + 0.6f * reach, Vector2F(speed, -speed));
+        step();
+        require(wall->hits_left() == tuning.hits - 1,
+            "A shot whose path entered a wall's corner passed it");
+        // Let that wall and the shot that passed it go, so the next stands alone.
+        for (int count = 0; level->projectile_count() != 0 && count < static_cast<int>(10.0f / dt); ++count)
+        { step(); }
+        require(level->projectile_count() == 0, "A wall or a shot outlived its lifetime");
+
+        // A player standing half inside the wall, behind its face: the shot
+        // enters the face first, so the wall takes it and the player does not.
+        wall = stand_wall();
+        face = wall->bounds();
+        const Vector2F player_size = game.player().size;
+        require(level->place_player(0, Vector2F(face.left() + 10.0f, floor - player_size.y)),
+            "Cannot place the host inside the wall");
+        const float middle = level->player(0).center().y;
+        const float health = level->player(0).health();
+        fire(face.left() - 5.0f, middle + size.y / 2.0f, Vector2F(speed, 0.0f));
+        step();
+        require(wall->hits_left() == tuning.hits - 1 && level->player(0).health() == health,
+            "A player inside a wall was hit before the wall that stands in front of them");
+        // Just in front of the face, the player is reached first and takes
+        // it, though the same step's travel would reach the wall too.
+        require(level->place_player(0, Vector2F(face.left() - player_size.x - 2.0f, floor - player_size.y)),
+            "Cannot place the host in front of the wall");
+        fire(face.left() - player_size.x - 7.0f, middle + size.y / 2.0f,
+            Vector2F((player_size.x + 20.0f) / dt, 0.0f));
+        step();
+        require(wall->hits_left() == tuning.hits - 1 && level->player(0).health() < health,
+            "A player in front of a wall was not hit before it");
         std::cout << "PASS wall: set down " << tuning.reach << " to either side at the player's feet; it stands, "
             "stops enemy shots and not its own team's, paints beneath, goes after its lifetime and on its "
-            << tuning.hits << "th hit\n";
+            << tuning.hits << "th hit; a shot meets it along its path, not by its travel's box, and before "
+            "a player behind its face\n";
     }
 
 namespace
