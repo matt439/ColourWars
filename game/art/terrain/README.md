@@ -39,6 +39,13 @@ gutter.
 | `birds` | 96x32 | two bg_line gull strokes |
 | `brush_pot` | 256x320 | quiet stationery pot with three differently shaped brushes, flat fills and a plain rim with no highlights; bg_line outlines distinguish it from walkable terrain |
 | `tape_roll` | 256x160 | flat roll with a paper core and short peeled end, no shading inside the core or on the end; the same backdrop roles, without team colours or text |
+| `press_roof_bay` | 600x96 | Press Tower: one sawtooth roof tooth in section, a paper-glazed upright with a cross mullion, a bg_mid roof slab falling to the right, a bottom chord and two truss webs; tiles edge to edge |
+| `press_chimneys` | 176x72 | Press Tower: a distant bg_far gable and two chimneys, one capped, meant to show only above a roof slope |
+| `press_frame` | 640x680 | Press Tower: the screw press, two riveted bg_mid columns under an arched crosshead, a nut, a bg_far threaded screw, a tilted capstan bar and four knee braces |
+| `press_trestle` | 144x320 | Press Tower: a two-legged bg_mid trestle, cross-braced in bg_line, hung under a stair tread |
+| `press_sign` | 160x256 | Press Tower: a blank bg_mid board a little out of true on two bg_line rods; mid-tone so it never reads as a HUD panel, and no lettering |
+| `press_hook` | 96x288 | Press Tower: a crane trolley, a bg_line chain and a hook block |
+| `press_rolls` | 160x120 | Press Tower: three bg_far paper rolls stacked end-on with paper cores |
 | `shadow_0`..`shadow_3` | 64x32 | shadow_deep specks dense in the top two rows, shadow specks thinning to none in the last; columns 0 and 15 empty so tiles abut in any order |
 | `swatch_<role>` | 4x4 | one opaque block per palette role |
 

@@ -187,7 +187,7 @@ There is no lettering anywhere: the two signs are blank boards.
 | `press_chimneys` | 176x72 | A distant gable and two chimneys, one capped, in `bg_far`. Two of them sit behind the roof bays, so only their tops show in the sky above the slopes. |
 | `press_frame` | 640x680 | The screw press: two riveted columns standing on the bed's ends, an arched crosshead above the summit, a nut, a threaded screw that comes down onto the crown, and a tilted capstan bar. Knee braces under each hoist ruler make the frame and shoulder read as bolted to the columns. |
 | `press_trestle` | 144x320 | A two-legged cross-braced trestle. One under each stair tread, its foot hidden behind the floor or ramp. |
-| `press_sign` | 160x256 | A blank board, slightly out of true, on two rods from the roof chord. One over each catwalk. |
+| `press_sign` | 160x256 | A blank `bg_mid` board, slightly out of true, on two rods from the roof chord. One over each catwalk. The board was first drawn in `bg_detail`, which is within a shade of `hud_paper`; in the 4P panes it read as one more HUD box beside the clock, so it is mid-tone. |
 | `press_hook` | 96x288 | A crane trolley on the roof chord, a chain and a hook block. One over each gantry. |
 | `press_rolls` | 160x120 | Three paper rolls stacked end-on, in `bg_far` with paper cores, on the yard floor under each catwalk. |
 

@@ -222,7 +222,7 @@
     {
       "name": "press_sign", "cells": [40, 64], "outline": { "role": "bg_line", "edges": "all" },
       "fill": [
-        ["poly", "bg_detail", 0, 46, 39, 44, 39, 60, 1, 63]
+        ["poly", "bg_mid", 0, 46, 39, 44, 39, 60, 1, 63]
       ],
       "detail": [
         ["line", "bg_line", 5, 0, 5, 46], ["line", "bg_line", 34, 0, 34, 45],
