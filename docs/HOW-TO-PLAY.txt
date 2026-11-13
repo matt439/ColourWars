@@ -94,6 +94,10 @@ Settings are saved in %LOCALAPPDATA%\ColourWars (paste that into Explorer's
 address bar). Stages you build go in the "stages" folder there, which the
 game makes the first time it saves your settings.
 
+If your settings file, save_data.json, cannot be read or was written by a
+newer version, the game keeps a copy in the same folder, named
+save_data.unreadable-<n>.json or save_data.newer-<n>.json.
+
 To update, extract the new ZIP and delete the old folder; your settings stay.
 To remove the game, delete its folder, and %LOCALAPPDATA%\ColourWars if you
 also want your settings gone.

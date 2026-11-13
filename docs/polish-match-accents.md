@@ -181,11 +181,14 @@ normal viewing distance. Bot paint is not human paint (a 95% painted Crossfeed
 is more than a played round is likely to leave), there is one seed per pair,
 and only two of the four window sizes were captured.
 
-A reveal-only minimum weight or body tint was not built. It is the author's
-call, and the objection in
+**Deferred, 2026-11-13: the strips are left as drawn.** The author kept the
+reveal's paint as it is, with no reveal-only minimum weight or body tint. The
+objection in
 [the record](review/2026-11-10-project-review.md#paint-strips-are-hairline-thin-in-the-reveal-rev38)
 stands: the reveal would then show a picture that differs from the one fought
-over.
+over, and the cards already carry the verdict. The trigger is the `POL#16` art
+pass changing how paint is drawn, or someone watching a real reveal at couch
+distance being unable to tell where the paint is.
 
 ## Paint under colour-vision simulation (`REV#34`)
 

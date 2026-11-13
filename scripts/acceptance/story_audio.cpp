@@ -18,7 +18,7 @@
 #include "engine/assets/sound_bank_loader.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/null/recording.h"
-#include "engine/collision/partitioner.h"
+#include "engine/core/partitioner.h"
 #include "engine/math/triangle.h"
 #include "engine/math/vector2i.h"
 #include "engine/render/sprite_font_file.h"

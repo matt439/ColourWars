@@ -70,6 +70,7 @@ function Get-ProbeBuild {
         (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
         (Join-Path $build 'external/labrador/engine/math/LabradorMath.lib'),
         (Join-Path $dependencyLibraries 'DirectXTK.lib'),
+        (Join-Path $dependencyLibraries 'lodepng.lib'),
         (Join-Path $dependencyLibraries 'xaudio2_9redist.lib')
     )
     $outputs = @($cache.CMAKE_CXX_COMPILER) + $libraries + @((Join-Path $game 'ColourWars.exe'))

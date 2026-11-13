@@ -526,7 +526,9 @@ findings to go into TODO the same way as the architecture review's. The
 findings are recorded, frozen, in
 [the review](review/2026-11-05-code-hygiene-review.md); this section owns their
 status. 500 verified findings are grouped into the rows below. The one engine-side
-finding is ledger draft `ENG#35` in [engine-reports.md](review/engine-reports.md).
+finding was ledger draft `ENG#35`; on 2026-11-13 the author parked it to ride
+with the next audio report
+([engine-reports.md](review/engine-reports.md#what-is-deliberately-not-here)).
 
 The rows keep the rules the [architecture rows](#architecture-review-2026-10-30)
 work under. They may rename, add a small shared helper and move code between
@@ -4290,15 +4292,14 @@ arrays and one of objects, are named regression inputs that the probe runs
 before its sweep. `user_stages` and the editor's document acceptance cover
 the limit, the step past it and a deep file.
 
-The save has the same overflow and it is not fixed here: `Save` reads through
-the engine's `read_json_file`, whose parse is recursive at the pinned
-revision, and no game code runs first. Engine master already parses
-iteratively, so this is ledger
-[report 36](review/engine-reports.md#36-json-parsing-recurses-once-per-nesting-level---answered-on-master-before-it-was-drafted),
-answered before it was drafted and spent at the pin bump that brings the
-answer: the probe's `save_max_nesting` bound of 64 goes then (`ENG#36`).
-Until then a save nested thousands deep, which only a hand edit or a
-corrupted disk produces, still ends the game at startup.
+The save had the same overflow and it was not fixed here: `Save` reads
+through the engine's `read_json_file`, whose parse was recursive at the pin of
+the time, and no game code runs first. Engine master already parsed
+iteratively, so this was ledger
+[report 36](review/engine-reports.md#36-json-parsing-recurses-once-per-nesting-level--8362e2d-spent-2026-11-13),
+answered before it was drafted. It was spent at the 2026-11-13 pin bump
+(`ENG#36`): the probe's `save_max_nesting` bound of 64 is gone, a save takes
+the level's deep depths, and each loads or is refused without a crash.
 
 Nothing else failed. No mutant made either reader throw past its contract,
 hold a loaded value its first reader refused, or write a save it could not
@@ -4510,7 +4511,7 @@ and neither is a defect:
   bounded by nothing. The chunk costs 6% of the reserve and does not decide
   whether a deeply nested file overflows: that is the save's overflow recorded
   under [`REV#62`](#mutation-probe-for-the-save-and-user-stage-readers-rev62), ledger
-  [report 36](review/engine-reports.md#36-json-parsing-recurses-once-per-nesting-level---answered-on-master-before-it-was-drafted),
+  [report 36](review/engine-reports.md#36-json-parsing-recurses-once-per-nesting-level--8362e2d-spent-2026-11-13),
   already answered on engine master and not a new report.
 - C28020 at `xwb_file.cpp:208` indexes the 16-entry `adaptation` table with
   `nibble`, which is `byte >> 4` or `byte & 0x0F` of an `unsigned char` and so

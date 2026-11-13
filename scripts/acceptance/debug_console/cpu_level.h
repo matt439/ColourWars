@@ -15,7 +15,7 @@
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/audio/sound_bank.h"
-#include "engine/collision/partitioner.h"
+#include "engine/core/partitioner.h"
 #include "engine/core/registry.h"
 #include "engine/input/mouse.h"
 #include "engine/render/render_resources.h"

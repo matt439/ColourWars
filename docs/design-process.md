@@ -402,6 +402,14 @@ The whole acceptance would be redrafted if the main audience turns out not to
 be a couch group, or if a planned release ships the editor, which changes P5,
 J4, F6 and F7 materially.
 
+**The editor stays source-only** (the author, 2026-11-13;
+[`REV#64`](review/2026-11-10-project-review.md#level-editor-is-not-shipped-to-players-rev64)).
+No release aim ships it, so P5 remains the game's author and J4, F6 and F7
+stand as written. `REV#65`'s Play Stage and Open My Stages commands
+([record](review/2026-11-10-project-review.md#editor-has-no-test-play-command-rev65))
+close with it. *Reopen* both when players other than the author ask to make
+stages, or when the author sets the editor as a release aim.
+
 ## Traceability and gap pass (`DES#2`)
 
 **Done 2026-11-03.** One pass over all 49 accepted stories, each mapped against

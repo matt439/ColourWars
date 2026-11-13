@@ -334,7 +334,8 @@ can be intentional boundary geometry and are allowed.
 Neither the editor nor the game checks that the arena is sealed, and a player
 who leaves `out_of_bounds` currently closes the game
 ([Seal the arena](level-format.md#coordinates-bounds-and-spawns), `REV#1`).
-Play every reachable edge before sharing a stage.
+Play every reachable edge before sharing a stage. `REV#1`, taken 2026-11-13,
+will make leaving the arena an elimination; this warning goes when it lands.
 
 ## Acceptance checks
 

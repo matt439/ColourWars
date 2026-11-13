@@ -68,7 +68,9 @@ Format 1 is a UTF-8 `key=value` record containing only these controlled fields:
 - Fixed reason codes for two diagnostics: `player_out_of_bounds` for the game's
   own `PlayerOutOfBounds` exception, recognised by type, and
   `no_hardware_device` when the engine's message matches exactly (it has no type
-  of its own; engine report 30).
+  of its own; engine report 30). `REV#1`, taken 2026-11-13, makes leaving the
+  arena an elimination; when it lands, `player_out_of_bounds` and its checks
+  are removed, or kept and marked unreachable.
 - Cause-count and diagnostic-text truncation flags.
 
 Arbitrary exception messages, RTTI names, file paths, command-line arguments,
@@ -127,3 +129,31 @@ native Win32 callback boundaries are outside this boundary. In particular, the
 engine's modal window callback can tick the game outside the ordinary run-loop
 call stack. This change does not add recovery to the menu, an exception
 hierarchy, minidumps or engine callback containment.
+
+### Crash record plan (`REV#63`)
+
+The author decided on 2026-11-13 that the game writes no minidump
+([record](review/2026-11-10-project-review.md#no-crash-dump-and-no-release-symbols-rev63)).
+The next step, not yet built, is a controlled-fields crash record:
+`SetUnhandledExceptionFilter` and `std::set_terminate` handlers that write the
+existing `last-error.log` `key=value` format, with a crash phase, the exception
+code, the faulting module and its RVA. The module field names only
+`ColourWars.exe`, the engine or a system module, and says `other` for anything
+else, so an injected third-party module is never named. The published
+`ColourWars.pdb` ([release symbols](releasing.md#release-symbols-rel7))
+symbolicates the address.
+
+When it lands, the boundary above stops being "caught C++ failure reporting,
+not a general crash handler": structured exceptions and `noexcept`
+terminations then reach a record. Two limits stay: a stack overflow may not
+reach the filter, and an exception swallowed inside a Win32 callback never
+arrives at it.
+
+### No match-step containment (`REV#4`)
+
+Declined by the author on 2026-11-13, once `REV#1` lands
+([record](review/2026-11-10-project-review.md#no-containment-around-the-match-or-replay-step-rev4)).
+`REV#1` removes the only throw a player can reach, so the match and replay
+step keep no containment of their own and an escaping exception still ends at
+`wWinMain`. Reopen if a released build produces a runtime failure report
+(phase `run_loop`) that `REV#1` does not explain.

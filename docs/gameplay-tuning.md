@@ -1043,7 +1043,7 @@ The checked-in design completed **5,504 device-free Debug matches**: 1,600
 revision is `94783857`, with Labrador `e7fc50e`. All 566 input pins were
 unchanged, every job's two output hashes checked, and the separate 16-match
 repeat reproduced its main and paint CSVs byte for byte. These results close
-`TOOL#4`; the bot counter boundary remains `TOOL#5` below.
+`TOOL#4`; the bot counter boundary is `TOOL#5` below.
 
 The 1v1 figures below are equal-weight cell means excluding mirrors, with
 unadjusted 95% intervals. They describe these bots, tools, stages and horizon.
@@ -1149,6 +1149,11 @@ These describe the 2026-10-30 build and its bots, not today's game.
 
 ## Bot diagnostics (`TOOL#5`)
 
+**Closed 2026-11-13 on the measured diagnostics.** The author declined the
+passive game-code observer, so the proxies below are the final counters.
+*Reopen* when `REV#20`'s per-tool bot roles are scoped and need exact shot or
+sub-use rates.
+
 **Diagnostic slice measured, 2026-11-10.** The shipping bot plays every tool by one policy
 (`REV#20`), so each number is bot and tool together. The Sniper's profile is
 intended, but its bot paints only when no enemy is in view, and its reach
@@ -1156,8 +1161,8 @@ exceeds `bots.sight_distance`, so any visible enemy holds its aim. How much of
 its low paint is the tool and how much the bot is only partly measured. The
 runner now records per-seat engagement/refilling and action proxies and has
 run the aim/reaction ladder below, with no change to game code. The original
-scope also asked for exact shots and sub uses; that part needs the author to
-allow an observer, as recorded below. The output feeds `REV#20` and decides
+scope also asked for exact shots and sub uses; the author declined the observer
+that part needed, as recorded below. The output feeds `REV#20` and decides
 nothing about the accepted bot values.
 
 **Implemented diagnostic slice, 2026-11-10.** Schema 3 exports per-seat engaged
@@ -1171,15 +1176,15 @@ ticks and the two action proxies over active minutes. The separate
 0.20-radian aim error, and 1-step and 24-step reaction delay, changing one factor
 at a time; it is evidence and never applies its values to the game.
 
-**Remaining decision: exact paid-event counters.** A ready intent can be killed
+**Declined: exact paid-event counters.** A ready intent can be killed
 by a contact later in the tick, before its weapon runs. An observed cooldown
 rise identifies a sub use at shipped cooldowns but can miss a patched cooldown
 at or below one tick, including zero. The public weapon APIs expose no exact
 paid-event observer, and their visual pulses intentionally coalesce stream
 shots. These columns are named as proxies and are not shots or exact sub-use
-counts. Completing that part requires the author to allow a passive game-code
-observer, which the original no-game-code-change scope forbids. The diagnostic
-slice therefore does not close TOOL#5.
+counts. Completing that part needed a passive game-code observer, which the
+original no-game-code-change scope forbids; the author declined it on
+2026-11-13, and TOOL#5 closes on the proxies.
 
 ### Aim and reaction ladder (2026-11-10)
 
@@ -1234,7 +1239,7 @@ the game. Audit SHA256:
 `5F3BCEF6A1BEA8F4667ECFFB545120EA531595608D0C274BB42CEEC6882029C1`;
 aggregate audit:
 `AC14B4FDA651C1B9760B91BCFEBD6343F332FD6509C090BB7D837A3ECE6BBFD9`.
-The exact paid-event observer remains an author decision.
+The exact paid-event observer was declined on 2026-11-13.
 
 ### Sight-distance ladder (`REV#19`, 2026-11-12)
 

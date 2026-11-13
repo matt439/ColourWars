@@ -14,7 +14,7 @@
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/level_object_builder.h"
 #include "engine/render/viewport_manager.h"
-#include "engine/collision/partitioner.h"
+#include "engine/core/partitioner.h"
 
 class Presentation;
 

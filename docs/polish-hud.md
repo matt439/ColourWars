@@ -171,10 +171,13 @@ verdict. A larger screen or a closer seat lowers it; a smaller one raises it.
   size they are still distinct letters, so the issue is reading distance,
   not rasterisation.
 
-The floor is a proposal, so the outcome is an author call (TODO.md): adopt
-this floor or another one, add an Options size row (Normal, Large) for split
-panes, or set no floor and leave split-pane text proportional. Any floor or
-size row moves the HUD boxes the painter pins pixel-exactly, so it rebaselines
-those fixtures. It also grows the HUD in an already small pane, and the
-review's "look on a couch first" still applies. That look was waived
-unperformed under `POL#24`.
+**Deferred, 2026-11-13: no floor.** The author set no floor, and split-pane
+text stays proportional to its pane. The floor above remains a measurement, not
+a rule. The trigger is a player reporting split-pane text unreadable, or the
+`POL#16` UI pass rebaselining the HUD fixtures for its own reasons. Then the
+answer is an opt-in Options row, **HUD text: Normal / Large**, defaulting to
+Normal, rather than a global floor: Large grows text only for players who ask,
+and the default picture stays the one the painter pins. Any size row moves the
+HUD boxes the painter pins pixel-exactly, so it rebaselines those fixtures, and
+it grows the HUD in an already small pane. The review's "look on a couch first"
+still applies; that look was waived unperformed under `POL#24`.
