@@ -81,7 +81,7 @@ to `cases.psd1`.
 
 | Script | What |
 |---|---|
-| [check-startup.ps1](check-startup.ps1) | starts a hidden game process and checks DPI awareness, an isolated save and its `stages` folder, diagnostics and graceful shutdown; `-Locale` starts it in a locale |
+| [check-startup.ps1](check-startup.ps1) | starts a hidden game process and checks DPI awareness, an isolated fresh save (its window fit and Reduce effects from Windows' Animation effects) and its `stages` folder, diagnostics and graceful shutdown; `-Locale` starts it in a locale |
 | [check-failure-reporting.ps1](check-failure-reporting.ps1) | the caught-failure report ([failure-reporting.md](../docs/failure-reporting.md)) |
 | [check-display-awake.ps1](check-display-awake.ps1) | `GameLevel`'s display-idle request over a match's lifetime, with a recording adapter |
 | [check-debug-console.ps1](check-debug-console.ps1), [check-debug-console/](check-debug-console/) | drives the Debug console with real key events; phase 3 compiles a CPU menu-navigation probe against the game's model (`-CompileOnly` builds/queries it without a GUI); the full driver needs a foreground desktop, so it is local only (`CI#1`) |

@@ -43,15 +43,6 @@ questions in the polish sub-docs are superseded, not open.
 | `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through the accepted arenas (selected 2026-11-05); remaining UI art is a later polish pass. Waits on the author setting it as the next aim. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 | `POL#35` | DEFERRED | LOW | S | Signage and captioned Paint-artefact jokes need the author's wording; with `POL#16`. [Terrain](docs/polish-terrain.md#stage-approval-and-remaining-environment-work-2026-10-20). |
 
-## Feel and feedback
-
-**Owner:** [docs/polish-plan.md §8](docs/polish-plan.md#8-further-improvements-to-prototype);
-[Movement Course](docs/polish-movement-course.md). `POL#3`, `POL#18`, `POL#19`, `POL#38`,
-`POL#39` and `POL#45` were accepted or waived 2026-11-05.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-
 ## Comparable-game gaps
 
 **Owner:** [docs/feature-roadmap.md, Comparable-game gaps](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27)
@@ -238,6 +229,7 @@ A new row for one of these gets its section back.
 | Content pipeline | [Text scope](docs/menu-presentation.md#remaining-text-slices-gap84), [art/content policy](game/art/README.md#runtime-content-separation-gap86) | a new authored text role or accepted runtime-content requirement; the scoped `GAP#8.4` extraction is complete |
 | Code TODO/FIXME markers | `game/`, `editor/`, `scripts/`, `cmake/` | a new marker, which should be a row here instead |
 | OOP showcase (`OOP#1`) | [oop-guide.md](docs/oop-guide.md) | a new hierarchy, extension point or registration the guide no longer describes; never a request to flatten one. Sub weapons and [Add a sub weapon](docs/oop-guide.md#add-a-sub-weapon) were added 2026-11-12 |
+| Feel and feedback (`POL`) | [polish-plan.md §8](docs/polish-plan.md#8-further-improvements-to-prototype); [Movement Course](docs/polish-movement-course.md) | a new feel or feedback defect; `POL#3`, `POL#18`, `POL#19`, `POL#38`, `POL#39` and `POL#45` were accepted or waived 2026-11-05, and `POL#49` (Reduce effects from Windows on a fresh save) was built 2026-11-13 |
 | Movement Course icon (`ED#6`, retired) | [level-editor.md](docs/level-editor.md#movement-course-icon-ed6-retired) | an accepted screen actually displays stage icons; current Stage Select uses a live preview |
 
 ---
