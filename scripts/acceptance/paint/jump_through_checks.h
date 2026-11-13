@@ -4,7 +4,7 @@
 #include "game/contracts/simulation.h"
 #include "game/objects/level.h"
 #include "game/objects/player_builder.h"
-#include "engine/collision/partitioner.h"
+#include "engine/core/partitioner.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/slot_seats.h"

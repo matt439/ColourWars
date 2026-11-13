@@ -13,9 +13,13 @@ results go in their owners, and `git log` is the changelog.
 was published as a pre-release on 2026-11-13 ([record](docs/releasing.md#first-release-v010));
 `master` is now `0.1.1` (`REL#6`).
 
+The engine pin moved to master `1dc8533c` on 2026-11-13 (`ENG#36` and `PIN#2` done,
+[record](docs/review/engine-reports.md#what-the-2026-11-13-bump-changed)).
+
 Next actions:
 
-1. `ENG#36` and `PIN#2`: qualify engine master on the `PIN#1` trial build and bump the pin.
+1. `PIN#3`: decode the shipped PNGs through the engine's loader and move each atlas that
+   matches its DDS.
 
 The other `OPEN` rows can follow in any order. The required `gate` and up-to-date `master` rule
 still apply. The author's calls of 2026-11-13 on the decision rows are recorded in
@@ -24,8 +28,9 @@ they opened `REV#1`, `REV#13`, `REV#14`, `REV#63` and `POL#49`.
 
 **Author calls** (every `DECISION` row):
 
-- `ROAD#13`: whether to build umbrella slices 2-4, after `PIN#2`.
+- `ROAD#13`: whether to build umbrella slices 2-4 (`PIN#2` is done).
 - `ENG#PARKED`: approve the drafted mouse-button comment for labrador#122.
+- `ENG#39`: file the `FLT_MAX` round-trip draft as an issue, or fix it in the engine.
 
 The hardware, participant and listening checks waived on 2026-11-05 were not performed. Arena
 art (`POL#16`) stays deferred; bot lift routing, non-XInput pads and growing sponges are
@@ -61,7 +66,7 @@ or above (2026-10-27). The owner records the gaps left out by choice and the exc
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ROAD#13` | DECISION | LOW | M | Umbrella answers recorded 2026-11-13 (Q1 umbrella, Q3-Q7 as recommended). Left: the author's call, after `PIN#2`, whether to build slices 2-4, which reopens the five-tool balance and adds four unheard cues. Slice 1 is `REV#3`. [Proposal](docs/feature-roadmap.md#umbrella-tool-proposal-road13). |
+| `ROAD#13` | DECISION | LOW | M | Umbrella answers recorded 2026-11-13 (Q1 umbrella, Q3-Q7 as recommended). Left: the author's call, now that `PIN#2` is done, whether to build slices 2-4, which reopens the five-tool balance and adds four unheard cues. Slice 1 is `REV#3`. [Proposal](docs/feature-roadmap.md#umbrella-tool-proposal-road13). |
 | `ROAD#14` | UNSCOPED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#28` | DEFERRED | LOW | L | Cycling and paint-driven lifts are done. Left: deliberate bot lift routing. Deferred behind `REV#27`, because lifts stand only on the two trials that are out of Random, so routing has no consumer yet. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
 | `ROAD#29` | DEFERRED | LOW | M | Growing sponges parked 2026-11-13 behind `REV#27`: no G1-G7 picks until a Random arena wants a sponge, then resume from the [contract draft](docs/feature-roadmap.md#growing-sponge-contract-draft-road29)'s recommendations. |
@@ -70,7 +75,7 @@ or above (2026-10-27). The owner records the gaps left out by choice and the exc
 | `ROAD#41` | UNSCOPED | LOW | M | Grey, non-scoring practice targets in the workshop that pop and redraw with no damage readout; needs a scope section first. Related to `REV#56`. [Item](docs/feature-roadmap.md#practice-targets-in-the-workshop-road41). |
 | `ROAD#42` | UNSCOPED | LOW | M | Weapon Select could show each tool's shot shape, drawn from its tuning, beside the text (story A6). No problem has been observed; it may wait on `POL#16`. [Item](docs/feature-roadmap.md#shot-shapes-on-weapon-select-road42). |
 | `ROAD#43` | UNSCOPED | LOW | L | Flood-fill paint object that fills one authored region for the team holding its trigger. Needs a contract draft on the lift precedent before an author call on the territory swing. [Item](docs/feature-roadmap.md#flood-fill-paint-object-road43). |
-| `ROAD#44` | UNSCOPED | LOW | M | Circle collision shapes for the ball and grenade, once a pin bump brings engine master's circle narrow phase (`f6752ca7`). Measure the contact changes, then the author decides on hit feel. [Item](docs/feature-roadmap.md#circle-shapes-for-round-projectiles-road44). |
+| `ROAD#44` | OPEN | LOW | M | Circle collision shapes for the ball and grenade; the pin has the circle narrow phase (`f6752ca7`) since 2026-11-13. Measure the contact changes in a seeded replay, then the author decides on hit feel. [Item](docs/feature-roadmap.md#circle-shapes-for-round-projectiles-road44). |
 
 ## Engine demonstration
 
@@ -85,24 +90,22 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 ## Engine reports
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
-engine master before filing, not the pin. The pin is master `e7fc50e` (`v0.3.0` plus vsync);
-engine master was `3fe88f64`, 95 commits on, at the 2026-11-12 recheck. On 2026-11-05 the owed
-reports were filed and 28 was closed as declined; on 2026-11-13 35 was parked and 37 withdrawn. A pin bump that answers one is when its
-workaround is deleted.
+engine master before filing, not the pin. The pin is master `1dc8533c` (2026-11-13, 129
+commits past `v0.3.0` plus vsync; no tag since `v0.3.0`). On 2026-11-05 the owed reports were
+filed and 28 was closed as declined; on 2026-11-13 35 and 38 were parked, 36 spent at the bump
+and 37 withdrawn. A pin bump that answers one is when its workaround is deleted.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#PARKED` | DECISION | LOW | S | Asks waiting for a vehicle: `window_size_changed`, desktop size (exhibit for engine `REV#83`), atomic JSON write, registry forgetting, install facts, listener/voice cap, display-awake owner, non-XInput reader (`ROAD#23`), colour transforms (was `GAP#F10`), engine `GAP#6`/`REV#60` (leaves when `POL#49` lands), sound-group lookup (was `ENG#35`). Author: approve the drafted mouse-button comment for labrador#122, then post it. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
+| `ENG#PARKED` | DECISION | LOW | S | Asks waiting for a vehicle: window presence (was 38), `window_size_changed`, desktop size (exhibit for engine `REV#83`), atomic JSON write, registry forgetting, install facts, listener/voice cap, display-awake owner, non-XInput reader (`ROAD#23`), colour transforms (was `GAP#F10`), engine `GAP#6`/`REV#60` (leaves when `POL#49` lands), sound-group lookup (was `ENG#35`). Author: approve the drafted mouse-button comment for labrador#122, then post it. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#26`, `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed 2026-11-05 as [labrador#122](https://github.com/matt439/Labrador/issues/122) (27 with the 26 rider), #123, #124 and #125 (the Bug). Waits on the engine. When one is answered, spend it at the next pin bump; for 34, also settle what CI's strict gates accept. [Ledger](docs/review/engine-reports.md#live) |
-| `ENG#36` | OPEN | LOW | M | Master `8362e2d` parses JSON iteratively; at the next pin bump (rehearsed by `PIN#1`) drop `save_max_nesting` from `reader_mutations`. The author chose 2026-11-13 to bump after `v0.1.0`, which is now published. Never filed. [Bump](docs/review/engine-reports.md#preparing-the-next-pin-bump-2026-11-12) |
-| `ENG#38` | BLOCKED | LOW | S | Window presence reaches the game as one bool, so Debug `debug_background.cpp` subclasses the HWND. Blocked on `PIN#2`: file if it leaves shipped code that must tell minimised or hidden from inactive, otherwise park it. [Report](docs/review/engine-reports.md#38-presence-reaches-the-game-as-one-bool---blocked-on-pin2) |
+| `ENG#39` | DECISION | LOW | S | `FLT_MAX` written to JSON reads back one double step above it, so `gameplay_tuning` tests one float below. Drafted 2026-11-13, not filed. Author: issue route or engine fix. [Report](docs/review/engine-reports.md#39-a-float-written-as-flt_max-does-not-read-back---draft-not-filed) |
 
-**Next pin bump (`PIN`)**
+**Pin follow-up (`PIN`)**
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `PIN#2` | OPEN | LOW | M | Qualify master's behaviour changes on a trial build of engine master (`PIN#1` built and started it, 2026-11-12): pads read disconnected while inactive (Join page, `DBG#6`), nothing drawn while minimised, and the new throws. [Item](docs/review/engine-reports.md#qualify-masters-behaviour-changes-pin2). |
-| `PIN#3` | DEFERRED | LOW | M | Once the pin has the engine's PNG loader, ship the PNG atlases and retire the texconv premultiply step, keeping the DDS for any atlas that does not match byte for byte. [Item](docs/review/engine-reports.md#png-atlases-and-texconv-pin3). |
+| `PIN#3` | OPEN | LOW | M | The pin has the engine's PNG loader since 2026-11-13: decode each shipped PNG through it, ship the atlases that match their DDS and retire the texconv premultiply step for them, keeping the DDS for any that does not. [Item](docs/review/engine-reports.md#png-atlases-and-texconv-pin3). |
 
 ## Developer console
 

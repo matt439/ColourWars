@@ -22,7 +22,10 @@ namespace
 			catch (const std::runtime_error& error)
 			{
 				diagnostic = error.what();
-				named = diagnostic.find("main_menu") != std::string::npos &&
+				// The engine's float-range refusal names the key's JSON path,
+				// which for a menu_style key does not say main_menu.
+				named = (diagnostic.find("main_menu") != std::string::npos ||
+					diagnostic.find(" is out of range for a float") != std::string::npos) &&
 					diagnostic.find(key) != std::string::npos;
 			}
 			if (!named)

@@ -2813,8 +2813,9 @@ close.
 - **Q7, two shields: yes.** An umbrella may carry the paint wall sub; the
   loadout stays free, as decided for `ROAD#11`.
 
-**Still open: whether to build slices 2-4.** That call is separate and comes
-after `PIN#2` ([engine ledger](review/engine-reports.md#qualify-masters-behaviour-changes-pin2)).
+**Still open: whether to build slices 2-4.** That call is separate and came
+after `PIN#2` ([engine ledger](review/engine-reports.md#qualify-masters-behaviour-changes-pin2)),
+which finished 2026-11-13, so it is the author's to make now.
 Building reopens the five-tool balance accepted on 2026-11-05 (`POL#27`) and
 adds four cues nobody will hear before they ship, which are the reasons
 `REV#50` and `REV#43` were declined
@@ -4835,17 +4836,17 @@ bulk territory swing fits the balance accepted on 2026-11-05.
 
 ### Circle shapes for round projectiles (`ROAD#44`)
 
-**UNSCOPED, LOW, M; after the next pin bump.** Every projectile collides as a
+**OPEN, LOW, M; the pin has the narrow phase since the 2026-11-13 bump.** Every projectile collides as a
 `RectangleF`, the round ones included (`ProjectileBall::shape` and
 `ProjectileGrenade::shape` return their rectangle), and `game/` names no
-`Circle`. The pinned engine threw from `Scene::resolve` for a circle; engine
-master now collides circles in the narrow phase (Labrador `f6752ca7`,
-"Collide circles in the narrow phase", 2026-11-04, after the pin). `GAP#D5`
+`Circle`. The engine pinned until 2026-11-13 threw from `Scene::resolve` for a
+circle; the pin now collides circles in the narrow phase (Labrador `f6752ca7`,
+"Collide circles in the narrow phase", 2026-11-04). `GAP#D5`
 added rotated slabs and horizontal movers only. As the engine's real client,
 this game would be the first to drive the circle-against-polygon paths. It adds
 a shape and keeps the hierarchy.
 
-First step, after a bump that includes the change: measure how a ball's and a
+First step: measure how a ball's and a
 grenade's contacts change under a `Circle` in a seeded replay and the
 projectile acceptance cases. `Projectile::resolve_sweep` takes rectangles, so
 the sweep is part of the measurement. The change in hit feel is then the

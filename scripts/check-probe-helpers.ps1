@@ -53,14 +53,15 @@ foreach ($preset in 'x64-debug', 'x64-release', 'x64-asan') {
         (Join-Path $build 'game/ColourWars.exe'), (Join-Path $build 'game/presentation.json'),
         (Join-Path $build 'external/labrador/engine/LabradorEngine.lib'),
         (Join-Path $build 'external/labrador/engine/math/LabradorMath.lib'),
-        (Join-Path $dependency 'DirectXTK.lib'), (Join-Path $dependency 'xaudio2_9redist.lib'))
+        (Join-Path $dependency 'DirectXTK.lib'), (Join-Path $dependency 'lodepng.lib'),
+        (Join-Path $dependency 'xaudio2_9redist.lib'))
     foreach ($file in $files) {
         $null = New-Item -ItemType Directory -Path (Split-Path -Parent $file) -Force
         [IO.File]::WriteAllText($file, 'preflight fixture, not a compiler or library')
     }
     Write-Cache $cache $cachePath
     $contract = Get-ProbeBuild -Repo $repo -Preset $preset -RequiredContent 'presentation.json'
-    Assert-Helper ($contract.Debug -eq $debug -and $contract.Libraries.Count -eq 7) "$preset build and adapters"
+    Assert-Helper ($contract.Debug -eq $debug -and $contract.Libraries.Count -eq 8) "$preset build and adapters"
     Assert-Helper ($contract.WindowsLibraries -contains 'Xinput.lib') "$preset XInput link library"
     Assert-Helper ($contract.CompileArguments -contains '/DUSING_XINPUT') "$preset XInput definition"
     Assert-Helper ($contract.CompileArguments -contains ('/external:I' + (ConvertTo-ProbeResponsePath (Join-Path $repo 'external/rapidjson/include')))) "$preset client RapidJSON include"
@@ -81,7 +82,7 @@ foreach ($preset in 'x64-debug', 'x64-release', 'x64-asan') {
         [IO.File]::WriteAllText($sanitizerRuntime, 'preflight fixture, not a runtime')
     }
     $fakeAdapters = Get-ProbeBuild -Repo $repo -Preset $preset -Adapters @()
-    Assert-Helper ($fakeAdapters.Libraries.Count -eq 5 -and -not ($fakeAdapters.Libraries -match 'colourwars_(rumble_gamepads|display_awake)\.lib$')) "$preset fake adapter omissions"
+    Assert-Helper ($fakeAdapters.Libraries.Count -eq 6 -and -not ($fakeAdapters.Libraries -match 'colourwars_(rumble_gamepads|display_awake)\.lib$')) "$preset fake adapter omissions"
     Assert-Refused { Get-ProbeBuild -Repo $repo -Preset $preset -RequiredContent 'missing.json' } 'Missing build output'
     foreach ($entry in @(@('LABRADOR_INPUT_BACKEND', 'web'), @('CMAKE_BUILD_TYPE', 'Wrong'),
                           @('VCPKG_TARGET_TRIPLET', 'x86-windows'), @('CMAKE_HOME_DIRECTORY', $run))) {

@@ -59,9 +59,8 @@
 // (-RunTimeoutSeconds) is only the backstop. Crashes: the unhandled-exception
 // filter names the mutant, and the runner fails on the exit code.
 //
-// Not covered: no Level is built or stepped from an accepted mutant, the
-// replay codec is out of scope, and a save's nesting is bounded
-// (save_max_nesting, below) until the engine pin moves.
+// Not covered: no Level is built or stepped from an accepted mutant, and the
+// replay codec is out of scope.
 
 using namespace labrador;
 
@@ -75,17 +74,10 @@ namespace
 	constexpr int save_iterations = 200;
 	constexpr std::chrono::seconds mutant_deadline(120);
 
-	// How deep the nesting operator goes in a save. The pinned engine parses
-	// with rapidjson's recursive parser, so a save nested a few thousand deep
-	// overflows the stack inside read_json_file before any game code sees it:
-	// engine report 36 (docs/review/engine-reports.md), which engine master
-	// has already answered with an iterative parse. That class is skipped
-	// here, and only here, until the pin includes the answer; the report says
-	// what to change then. A level has no such bound: the level format's own
-	// nesting limit refuses the file before a parser sees it.
-	constexpr std::size_t save_max_nesting = 64;
-	// Depths past the level format's limit, for a level: just over it, and far
-	// past where a recursive parser overflows.
+	// Depths past the level format's limit: just over it, and far past where a
+	// recursive parser overflows. A level is refused by the format's own
+	// nesting limit before a parser sees it; a save reaches the engine's
+	// iterative parse, which loads it or refuses it (engine report 36).
 	constexpr std::size_t deep_nesting[] = { level_format::limit::max_nesting, level_format::limit::max_nesting + 1,
 		100, 1000, 10000, 100000 };
 
@@ -229,12 +221,12 @@ namespace
 	}
 
 	// Wraps one number, or a new root member nothing reads, in arrays or
-	// objects: 1 to `shallow` of them, or, when `deep`, as often one of
+	// objects: as often 1 to the level format's limit of them as one of
 	// deep_nesting.
-	std::string nest(const std::string& source, Random& random, std::size_t shallow, bool deep)
+	std::string nest(const std::string& source, Random& random)
 	{
-		const std::size_t depth = deep && random.below(2) == 0 ?
-			deep_nesting[random.below(std::size(deep_nesting))] : 1 + random.below(shallow);
+		const std::size_t depth = random.below(2) == 0 ?
+			deep_nesting[random.below(std::size(deep_nesting))] : 1 + random.below(level_format::limit::max_nesting);
 		const bool arrays = random.below(2) == 0;
 		std::string open, close;
 		for (std::size_t level = 0; level < depth; ++level)
@@ -262,7 +254,7 @@ namespace
 	enum class Kind { level, save };
 	const char* const kind_names[] = { "level", "save" };
 
-	Mutant mutate(Kind kind, const std::string& source, std::size_t source_index, int iteration)
+	Mutant mutate(const std::string& source, std::size_t source_index, int iteration)
 	{
 		if (iteration == 0) { return { Operator::none, source }; }
 		Random random(source_index, iteration);
@@ -295,8 +287,7 @@ namespace
 		case Operator::remove_key: mutant.bytes = edit_keys(source, random, false); break;
 		case Operator::duplicate_key: mutant.bytes = edit_keys(source, random, true); break;
 		case Operator::nest:
-			mutant.bytes = kind == Kind::level ? nest(source, random, level_format::limit::max_nesting, true) :
-				nest(source, random, save_max_nesting, false);
+			mutant.bytes = nest(source, random);
 			break;
 		default: break;
 		}
@@ -465,7 +456,7 @@ namespace
 		{
 			for (int iteration = 0; iteration < iterations; ++iteration)
 			{
-				const Mutant mutant = mutate(kind, sources[index].bytes, index, iteration);
+				const Mutant mutant = mutate(sources[index].bytes, index, iteration);
 				const std::size_t made = static_cast<std::size_t>(mutant.made);
 				begin_mutant(kind, index, iteration);
 				try

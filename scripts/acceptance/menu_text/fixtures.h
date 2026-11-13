@@ -440,6 +440,14 @@ namespace menu_text_acceptance
             catch (const std::runtime_error& error)
             {
                 diagnostic = error.what();
+                // A value past float's range is refused by the engine's
+                // JsonValue::number before this reader runs; that refusal
+                // names the file and the value's JSON path, not the field label.
+                if (diagnostic.find(path.filename().string()) != std::string::npos &&
+                    diagnostic.find(" is out of range for a float") != std::string::npos)
+                {
+                    return;
+                }
                 contextual = diagnostic.find(path.filename().string()) != std::string::npos &&
                     diagnostic.find("menu_text") != std::string::npos;
                 size_t begin = 0;

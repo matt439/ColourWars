@@ -12,14 +12,12 @@
 > rider, 30 as [#123](https://github.com/matt439/Labrador/issues/123), 33 as
 > [#124](https://github.com/matt439/Labrador/issues/124) and 34 as the Bug
 > [#125](https://github.com/matt439/Labrador/issues/125). Each waits on the
-> engine's answer. A sixth, **36**, was answered on engine master before it
-> was drafted (2026-11-10) and was never filed; it stays live only until a pin
-> bump brings the answer here. A seventh, **38**, is the unfiled
-> window-presence draft from the 2026-11-12 TODO audit, blocked on `PIN#2`
-> since 2026-11-13. On 2026-11-13 the author moved **35** to the
+> engine's answer. A sixth, **39**, is an unfiled draft from the 2026-11-13
+> pin bump. On 2026-11-13 the author moved **35** to the
 > [parked list](#what-is-deliberately-not-here), to ride with the next audio
-> report, and withdrew **37**.
-> **Thirty are closed** (1–25, 28, 29, 31, 32 and 37) and kept below as one paragraph
+> report, and withdrew **37**; the bump that day spent **36**, and `PIN#2`
+> parked **38** beside 35.
+> **Thirty-one are closed** (1–25, 28, 29, 31, 32, 36 and 37) and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
 > on, if anything. A report is closed when it is answered, whether or not the
@@ -159,6 +157,13 @@ is drafted as a comment on labrador#122 and waits for the author's approval
 of its text, and `REV#60` leaves the parked list once the game's `POL#49`
 first-run read lands. Labrador#122 had no comments that day.
 
+**Moved 2026-11-13 to upstream master `1dc8533c`**, 129 commits past
+`e7fc50e`, still untagged since `v0.3.0`, with a green `build and test` push
+run. It carries the answer to 36, which was spent at the bump; issues #122 to
+#125 were still open with no comments, and nothing in the 129 commits answers
+26, 27, 30, 33 or 34. `PIN#2` parked 38 and the bump drafted 39. See
+[What the 2026-11-13 bump changed](#what-the-2026-11-13-bump-changed).
+
 ## The rule that governs this file
 
 **Check the engine's master before filing, not the pin.** `external/labrador`
@@ -257,10 +262,9 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 | 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/config/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | narrowed 2026-10-30 to reclaiming memory (`HYG#47`); filed 2026-11-05 as the rider on [labrador#122](https://github.com/matt439/Labrador/issues/122); awaiting an answer |
 | 27, 30, 33 | Three still live from the 2026-10-30 architecture review (28 declined, 29 withdrawn; 31 and 32 answered in `v0.3.0`) | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | filed 2026-11-05 as [#122](https://github.com/matt439/Labrador/issues/122), [#123](https://github.com/matt439/Labrador/issues/123) and [#124](https://github.com/matt439/Labrador/issues/124); awaiting answers |
 | 34 | `RenderDeviceKind::hardware` describes a software rasteriser | [the hosted runner's Basic Render Driver](#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit) logged as `kind=hardware`, which the strict painter, paint-fx and frame-pacing gates rely on | filed 2026-11-05 as the Bug [#125](https://github.com/matt439/Labrador/issues/125), saying this client will adapt its gates to the engine's answer; what those gates accept is settled when it lands |
-| 36 | JSON parsing recurses once per nesting level | the [`save_max_nesting`](../../scripts/acceptance/reader_mutations.cpp) bound in the `reader_mutations` case | found 2026-11-10; already answered on master by `8362e2d` (iterative parse), which the pin `e7fc50e` predates; never filed; spent at the pin bump that includes it, which [`PIN#1`](#rehearse-against-engine-master-pin1) rehearses |
-| 38 | Presence reaches the game as one bool | [`debug_background.cpp`](../../game/debug/input/debug_background.cpp) subclasses the engine's window to tell minimised, hidden and power-suspended apart | drafted 2026-11-12 against master `3fe88f64`; blocked on [`PIN#2`](#qualify-masters-behaviour-changes-pin2) (2026-11-13): filed only if shipped code must tell minimised or hidden from inactive, otherwise parked |
+| 39 | A float written as `FLT_MAX` does not read back | the [`boundary_factor`](../../scripts/acceptance/gameplay_tuning.cpp) check, moved one float below `FLT_MAX` | found 2026-11-12 by `PIN#1`, rechecked at the 2026-11-13 bump to `1dc8533c`; drafted, not filed; the author chooses the issue route or an engine fix (`ENG#39`) |
 
-Nothing else is outstanding, on either side, beyond reports 26, 34, 36 and 38 below, the three still live
+Nothing else is outstanding, on either side, beyond reports 26, 34 and 39 below, the three still live
 [from the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
@@ -689,149 +693,51 @@ comment on or open anything upstream.
 
 ---
 
-## 36. JSON parsing recurses once per nesting level - **answered on master before it was drafted**
+## 39. A float written as `FLT_MAX` does not read back - **draft, not filed**
 
-**Found 2026-11-10** by the `reader_mutations` acceptance case
-([record](../code-hygiene.md#mutation-probe-for-the-save-and-user-stage-readers-rev62)),
-and checked the same day against Labrador master `043589e`, as
-[the rule that governs this file](#the-rule-that-governs-this-file) asks.
-Master already has the answer: `8362e2d` (2026-11-05, "Bound what files can ask
-of the core and asset readers") makes `parse_into` in `engine/assets/json.cpp`
-parse with `rapidjson::kParseIterativeFlag`, and `CHANGES.md` says "Deeply
-nested JSON is refused with the parse error instead of overflowing the stack."
-The pin `e7fc50e` is 46 commits behind it and still calls
-`document.Parse(text, length)` (`json.cpp:56`). So nothing was filed and
-nothing is owed: this entry is here because the ledger is what gets read after
-a pin bump, and the bump has something to spend.
+**Found 2026-11-12** by [`PIN#1`](#rehearse-against-engine-master-pin1) and
+rechecked 2026-11-13 at the bump to master `1dc8533c`. Not filed: whether it
+goes through the issue route or is fixed by an engine commit is the author's
+call (`ENG#39`).
 
 ### Exhibit
 
-[`scripts/acceptance/reader_mutations.cpp`](../../scripts/acceptance/reader_mutations.cpp),
-`save_max_nesting`: the case wraps a value of a save in nested arrays or
-objects, and stops at 64 deep for a save. For a level it goes to 100,000.
+[`scripts/acceptance/gameplay_tuning.cpp`](../../scripts/acceptance/gameplay_tuning.cpp),
+the `boundary_factor` check: it used to load `wind_stop_factor` at exactly
+`FLT_MAX` and now loads the largest float below it, as do the two rejections
+that reach the game's finite stop-speed product check, with a comment naming this
+report. The Debug `tune.save` path, which writes `tuning.json` with
+RapidJSON's writer, can make the same round trip.
 
 ### What happens
 
-At the pin, `read_json_file` and `parse_json` spend a native stack frame for
-each open array or object. A save whose text opens a few thousand brackets
-overflows the 1 MB stack inside `Save::load_save_file` and the process ends
-with `0xC00000FD`; no game code has run, so there is nothing for the game to
-catch. The same parse overflowed on a level, confirmed with the probe's bound
-raised (`crashed on level source 0, iteration 3`). `SECURITY.md:76-78`
-discloses it at the pin, and still reads that way on master, where the code
-no longer matches it.
-
-The level half is closed in this repository, not by the engine: the level
-format has its own nesting limit (`level_format::limit::max_nesting`, 64),
-checked on the text before `parse_json` is called. It has to stay after the
-bump, because `LevelLoadedInfo` has two recursive walks of its own behind the
-engine's parse (a second rapidjson parse for the content hash, and
-`StageSemanticHash::append`), which an iterative engine parse would otherwise
-reach with a deep document.
-
-### What the pin bump lets this repository delete
-
-The `save_max_nesting` bound and its comment in `reader_mutations.cpp`: give
-the save the level's deep depths and require a load or a refusal. Nothing
-between `read_json_file` and the save's sections recurses (they read by key),
-so no game change is expected; if the case then fails, that is a new finding.
-In the same commit range master's `JsonValue::number` throws for a number
-outside `float`'s range, which moves this case's printed counts; they are not
-pinned. Master's repeated-key refusal is in the manifest, sprite-sheet and
-sound-bank loaders, which this case does not feed. Then strike this entry.
-
-The [`PIN#1` rehearsal](#rehearse-against-engine-master-pin1) made that change
-on master `3fe88f64`, and the case passed: every deep save loaded or was
-refused, and none crashed.
-
----
-
-## 38. Presence reaches the game as one bool - **blocked on `PIN#2`**
-
-**Drafted 2026-11-12 from the TODO audit, not filed.** Checked the same day
-against upstream master `3fe88f64` (confirmed with `ls-remote`). The pin
-`e7fc50e` has the same shape. A read-only `gh` search of Labrador's issues for
-minimised, minimized and presence returned nothing. The exhibit is Debug-only
-tooling, which makes it weaker than a shipped workaround.
-
-**Author's decision 2026-11-13: blocked on
-[`PIN#2`](#qualify-masters-behaviour-changes-pin2).** Master suspends the pad
-reader whenever the window is not in the foreground and shown, and draws
-nothing while minimised, so `PIN#2` decides whether shipped code here has to
-react to those states. File this report if `PIN#2` leaves shipped code that
-must tell minimised or hidden apart from inactive; that code is then the
-exhibit, and a stronger one than the Debug subclass. Otherwise move it to
-[What is deliberately not here](#what-is-deliberately-not-here) and strike it
-from the live table.
-
-### Exhibit
-
-[`game/debug/input/debug_background.cpp`](../../game/debug/input/debug_background.cpp)
-at `:27-109`. `DebugBackgroundWindow::attach` takes `Application::window()`,
-the native handle, and installs `SetWindowSubclass` on it (`:93`). The
-subclass procedure records `WM_SIZE` with `SIZE_MINIMIZED` (`:54-58`),
-`WM_SHOWWINDOW` (`:59-62`) and `WM_POWERBROADCAST` with `PBT_APMSUSPEND` and the
-two resume codes (`:63-75`), and seeds the minimised flag from `IsIconic`
-(`:91`). `state()` adds `IsWindowVisible` (`:107`). `background_window_allows`
-(`:9-12`) then admits a script only in a window that is shown, not minimised
-and not power-suspended. `DebugDirectorImpl::attach`
-(`game/debug/debug_director_impl.cpp:65`) is the one caller.
-
-It exists for `DBG#6`'s `script.background`, which
-[the record](../debug-console-record.md#background-script-work-dbg6) defines
-as automation "in an ordinarily inactive, shown window", while "hidden,
-minimized and power-suspended windows remain held". The game needs to tell
-"in the background but still on screen" from "not on screen at all", and the
-engine gives it only the first question.
-
-### What happens
-
-On master, `Window::Impl` (`engine/app/win32/window.cpp`) tracks every one of
-these facts: `active` from `WM_ACTIVATEAPP`, `minimized` from `WM_SIZE`, and
-`power_suspended` from `WM_POWERBROADCAST`. `update_suspension` folds the last
-two into `on_suspending`/`on_resuming`. `Application` keeps them as
-`foreground_` and `shown_` (`engine/app/application.h:537-538`, both private),
-and `settle_presence` folds those into one `present` (`application.cpp:548-568`).
-A state hears that as the `on_activated`/`on_deactivated` edge, which
-`engine/core/state.h:74-75` says covers "alt-tab, minimise, a power suspend",
-or as `StateContext::active()`. `Application` has no query for foreground,
-shown or minimised, and `Window` has none either. So a game that wants to treat
-an alt-tab differently from a minimise has to watch the window's messages
-itself, beside the engine's own procedure.
-
-The engine has only made this sharper since the pin. `b1a4559a` (2026-11-10)
-stops drawing while minimised, so being minimised now changes what the engine
-does, and still cannot be asked about.
-
-**Reproduction.** In a state, pause a match on `on_deactivated` only when the
-window is minimised or hidden, and keep it running when the player has merely
-alt-tabbed to a second monitor. The edge arrives the same way for both, and
-`StateContext::active()` answers false for both. No public call says which it
-was.
+RapidJSON's writer prints `FLT_MAX`, widened to a double, as
+`3.4028234663852886e38`, which is that double exactly. `parse_into`
+(`engine/assets/json.cpp:61-62`) parses with
+`kParseDefaultFlags | kParseIterativeFlag`, without
+`kParseFullPrecisionFlag`, and the default algorithm reads that text back as
+`3.402823466385289e38`, one double step above. `JsonValue::number`
+(`json.cpp:247-251`) then refuses it as "out of range for a float". A
+standalone parse of the same text with full precision reads it back exactly.
 
 ### The ask
 
-A read-only answer to the facts the engine already holds: whether the window
-is in the foreground and whether it is shown (not minimised, hidden or
-suspended), for example as queries on `Application` or as a reason passed with
-the activation edge. The spelling, and whether a browser canvas answers the
-same questions, are engine decisions. The engine may decline under T1, as
-game policy; a decline closes this report and the subclass stays.
+A number the engine's own writer could have written for a float reads back
+as that float: parse with full precision, or compare the range after rounding
+to `float`. The spelling is the engine's.
 
 ### What an answer lets this repository delete
 
-The `Impl` class in `debug_background.cpp`, with its `SetWindowSubclass`,
-`RemoveWindowSubclass` and the `WM_NCDESTROY` guard, and the `CommCtrl.h`
-include. `DebugBackgroundWindow::state` becomes calls to the engine's query.
-`background_window_allows` stays, because the policy is the game's.
+The `nextafter` in `gameplay_tuning.cpp`, whose check goes back to `FLT_MAX`
+itself, and the comment that names this report.
 
 ---
 
 # Closed
 
-Thirty reports: twenty-seven answered, one declined by this repository's author and two withdrawn. Twenty were
-spent here in code: 23 and 32 at the 2026-11-03 bump, and 31 and 25 on
-2026-11-05. Seven spent nothing in code: 1 was fixed before it was
+Thirty-one reports: twenty-eight answered, one declined by this repository's author and two withdrawn. Twenty-one were
+spent here in code: 23 and 32 at the 2026-11-03 bump, 31 and 25 on
+2026-11-05, and 36 at the 2026-11-13 bump. Seven spent nothing in code: 1 was fixed before it was
 filed; 9 and 10 were answered as document only, and those two changed only
 comments and docs; 15 was answered as document only, 17 changed only a
 manifest comment, 19 needs more evidence and 21 was declined — an answer that
@@ -849,7 +755,7 @@ for 7 and 8, the parent of `487b8d2` for 13 and 21, `d9f1656` for 11, 16,
 to `1e60fb2` for 24, `8bfa00f7` for 29, and the parent of the commit that
 moved the pin to `v0.3.0` for 23, 25, 31 and 32, and the parent of the commit
 that closed it (2026-11-05) for 28, and the parent of the commit that closed it
-(2026-11-13) for 37.
+(2026-11-13) for 36 and 37.
 
 ## 1. ~~`StateContext` never empties its stack~~
 
@@ -2023,6 +1929,21 @@ which `Font::wrap` does not do, so it stays.
 
 ---
 
+## 36. ~~JSON parsing recurses once per nesting level~~ — `8362e2d`, spent 2026-11-13
+
+Found 2026-11-10 by the `reader_mutations` case: at the old pin
+`read_json_file` spent a native stack frame per open bracket, so a save nested
+a few thousand deep overflowed the stack inside `Save::load_save_file` before
+any game code ran. Engine master had already answered it before it was
+drafted (`8362e2d`, an iterative parse), so it was never filed. **Spent at the
+2026-11-13 bump** to `1dc8533c`: the probe's `save_max_nesting` bound of 64 is
+gone, and a save now takes the level's deep depths (up to 100,000), each of
+which loads or is refused; none crashed in Debug or Release. The level
+format's own nesting limit stays, because `LevelLoadedInfo` has two recursive
+walks of its own behind the engine's parse.
+
+---
+
 ## 37. ~~Long render golden filenames break ordinary Windows clones~~ — withdrawn by the author, 2026-11-13
 
 Drafted 2026-11-10 from the first-run review's
@@ -2203,6 +2124,19 @@ still only reads.
   The window shell is still the more natural owner. This stays parked and
   unfiled, small enough to ride with another report.
 
+- **Presence reaches the game as one bool** (was report 38, parked
+  2026-11-13 by [`PIN#2`](#qualify-masters-behaviour-changes-pin2), on the
+  author's rule of that day). `Application` keeps foreground and shown
+  privately and states hear one `on_activated`/`on_deactivated` edge, so the
+  Debug-only [`debug_background.cpp`](../../game/debug/input/debug_background.cpp)
+  subclasses the window to tell minimised, hidden and power-suspended from
+  inactive. `PIN#2` found no shipped code that needs the difference: every
+  shipped reader of pad presence or activation is gated on
+  `StateContext::active()`. Master's suspended pad reader also means a Debug
+  background match cannot read pads at all, so its missing-pad check now
+  waits for the first focused update, which an engine presence query would
+  not change. **Reopen** if shipped code must treat an alt-tab differently from
+  a minimise; the full draft is in the parent of the commit that parked it.
 - **XInput is the only pad reader.** `engine/input/gamepad_reader.h` is one
   concrete class chosen at build time (`sample`, `read`, `suspend`, `resume`,
   `vibrate`, `stop_vibration`), with XInput and browser backends and no other
@@ -3029,7 +2963,7 @@ real pin.
 
 **Report 36 rides with this bump** (`ENG#36`): master's `8362e2d` parses JSON
 iteratively, and the bump drops `save_max_nesting` from `reader_mutations.cpp`
-as [report 36](#36-json-parsing-recurses-once-per-nesting-level---answered-on-master-before-it-was-drafted)
+as [report 36](#36-json-parsing-recurses-once-per-nesting-level--8362e2d-spent-2026-11-13)
 says. **The author chose on 2026-11-13 that the bump lands after this game's
 first tag, `v0.1.0` (`FTR#1`),** so the first release is the build the release
 work has already checked; before would have shipped an engine that refuses deep
@@ -3186,9 +3120,53 @@ it:
 - **Acceptance:** each change above is marked harmless, or has a scoped client
   change owed before the bump.
 
+**Done 2026-11-13** on master `1dc8533c`, the revision the bump then pinned.
+Every change was read against every client caller, and each claim that a
+change was owed was checked a second time by trying to refute it:
+
+- **Suspended pad reader: harmless in shipped code.** `settle_presence`
+  suspends the reader and calls `on_deactivated` in one call, and pads are
+  polled only at the top of the next update, so no update both sees itself
+  active and reads the false disconnect; on return `resume()` runs before
+  `on_activated`. Every shipped reader of pad presence returns while
+  `!context()->active()`: the Join page's rows and suffix
+  (`main_menu_players.cpp:392-395`), the setup pages' `wait_for_players`, the
+  match's missing-pad pause (`GameLevel::update` returns before it in
+  Release), connection cues and rumble. The return arrives as `just_connected`,
+  which the existing reconnect suppression already turns into no press.
+- **Suspended pad reader: one Debug change, made.** With `script.background 1`
+  a shown, inactive match kept updating and checked pad presence, which master
+  now answers disconnected for every pad, so any human pad seat opened the
+  pause menu at once and held the run. `GameLevel::update` now checks presence
+  only on a focused update, and a pad lost in the background is caught on the
+  first update after return. The painter's Debug background supplement pins
+  both halves (`missing-pad-not-judged-in-background`, then
+  `missing-pad-real-pause`; 21 cases) and passed.
+- **Nothing drawn while minimised: harmless.** No shipped `draw` advances
+  state, nothing shipped waits on `frame_timings().frame`, and the Debug perf
+  capture already needs consecutive frames. Minimise reaches the game as an
+  activation loss, and the client size it sees never becomes 0x0, so the
+  stricter `Camera::frame` and `ViewportManager::player_viewport` are not
+  reached with a degenerate rectangle.
+- **The throws: harmless.** Every wave index comes from the bank that resolves
+  it; no shipped one-shot depends on playing while suspended; no computed
+  volume, pitch or pan can be NaN; the game calls no circle predicate; and
+  `JsonValue::number`'s range refusal throws the `std::runtime_error` the
+  content readers already threw, now naming the file and JSON path. Its only
+  cost is three probe expectations, changed at the bump.
+- **Driven:** a script cycled the Release title screen and a Debug four-bot
+  Crossfeed match, with and without `script.background 1`, through another
+  window in front, back, minimised, restored, hidden and shown: each window
+  lost and regained the foreground, nothing was written to stderr and every
+  process stayed up until it was closed. No pad was attached, so the Join
+  page's pad rows were not seen.
+
+Report 38 has no shipped exhibit, so it is
+[parked](#what-is-deliberately-not-here) as the author's 2026-11-13 rule says.
+
 ## PNG atlases and texconv (`PIN#3`)
 
-**Deferred until the pin has the PNG loader.** All six runtime textures under
+**Ready since the 2026-11-13 bump**, which brought the PNG loader. All six runtime textures under
 `game/content/textures/` are `.dds`. Four build scripts shell out to the
 vendored `texconv.exe` only to premultiply a PNG they have already written
 (`scripts/build-weapon-art.ps1:340`, `build-painter-art.ps1:584`,
@@ -3202,3 +3180,44 @@ both.
 - **Acceptance:** an atlas moves to PNG only if it matches or the painter pins
   still pass; any that differs keeps its DDS. The painter and paint-fx scripts,
   which stage the `.dds` by name, follow.
+
+# What the 2026-11-13 bump changed
+
+**Moved 2026-11-13 to upstream master `1dc8533c`** (*Bring TODO.md's NOW and
+REV#124's ledger in line with the batch*), 129 commits past `e7fc50e`: the 95
+[`PIN#1`](#rehearse-against-engine-master-pin1) rehearsed against and 34
+more, whose behaviour changes (a 32-bit compiler refused at configure, NaN
+audio levels and non-finite `Camera` input refused, invalid circles rejected)
+[`PIN#2`](#qualify-masters-behaviour-changes-pin2) read with the rest. No tag
+has been cut since `v0.3.0`; the pin goes back to a tag at the next release.
+The rehearsal's work list held:
+
+- **`lodepng`** is in `vcpkg.json`, and in `scripts/probe-build.ps1`'s library
+  list with its self-test's counts (`check-probe-helpers.ps1`, 56 checks).
+- **`Partitioner`** is included from `engine/core/partitioner.h` at the four
+  sites the rehearsal listed.
+- **Report 36** is spent: `reader_mutations` gives a save the level's deep
+  depths, and `save_max_nesting` is gone.
+- **`JsonValue::number`'s range refusal** reaches the rejection helpers of
+  probes that required the client's own wording. `menu_text`'s `rejects` and
+  `story_audio`'s main-menu `rejected` now also accept the engine's refusal,
+  which names the file and the value's JSON path; the rehearsal saw only the
+  first failure in each, and `menu_text` had more. `gameplay_tuning` loads one
+  float below `FLT_MAX`, because `FLT_MAX` itself does not read back: drafted
+  as [report 39](#39-a-float-written-as-flt_max-does-not-read-back---draft-not-filed).
+  `content_value.h`'s comment says who refuses `1e100` now.
+- **One Debug change** from `PIN#2`: a background match checks pad presence
+  only when focused.
+
+## Verification of the 2026-11-13 bump
+
+On MattPC both presets configured and built from the bumped tree. Default
+acceptance passed in Debug (85 cases, the slow four included) and in Release
+(83 cases: `menu_text` failed on the first run, which compiled it before the
+helper change above, and passed with `story_audio`, `gameplay_tuning` and
+`reader_mutations` on a rerun of the final sources). After the Debug change,
+`debug_console` passed again in Debug and the painter's Debug `-RumbleOnly`
+leaf passed with its 21-case background supplement. The presence driving is
+recorded under `PIN#2`. Not run here: the full painter and paint-effects
+sweeps (nightly), the startup and package checks (CI runs both), and anything
+needing a pad.

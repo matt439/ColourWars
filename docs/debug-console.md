@@ -1325,8 +1325,9 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
   a shown window that is not in front, for an unattended review such as
   `ColourWars.exe +script.background 1 +stage movement_course +bot all paint +wait 300 +quit`.
   Physical input stays out, music and SFX are muted without touching the saved
-  preferences, and rumble stays at zero; hidden, minimised and power-suspended
-  windows still stop the script. Turning it off while inactive restores the
+  preferences, and rumble stays at zero. A lost pad is noticed only on return,
+  because the engine reads no pad while the window is inactive. Hidden,
+  minimised and power-suspended windows still stop the script. Turning it off while inactive restores the
   normal hold. How it was qualified is in
   [the work record](debug-console-record.md#background-script-work-dbg6).
 - **Typed or bound.** A typed or bound `exec` closes the console and starts on

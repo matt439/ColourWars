@@ -597,6 +597,15 @@ pacing or pending manual steps. Disabling the mode during an inactive match
 holds the next script statement and queued match action until activation.
 Default-off menu-side script handling keeps its earlier behavior.
 
+**Amended 2026-11-13 at the engine pin bump** ([`PIN#2`](review/engine-reports.md#qualify-masters-behaviour-changes-pin2)).
+The engine now suspends its pad reader whenever the window is not in front and
+shown, and a suspended reader answers every pad disconnected, so an inactive
+window cannot read pad presence at all. A background match no longer checks
+it: `GameLevel::update` asks only on a focused update, and a pad lost while in
+the background opens the waiting pause on the first update after return. A
+human pad seat therefore no longer stops an unattended run at once; it stays
+neutral, as every non-bot seat does in the background.
+
 Both game presets build under `/W4 /WX`. The focused `debug_console
 --background-only` case passes in Debug and Release, including all-field
 post-mouse neutralization, driver ordering, held edges, both disable-batch
@@ -604,7 +613,7 @@ orders, command validation, existing clock/script/bot/replay regressions,
 shared layouts and Release command/RTTI exclusion. Nine relevant existing
 consumer cases also pass per preset.
 
-The Debug `RumbleOnly` supplement passes twenty cases through actual GameLevel
+The Debug `RumbleOnly` supplement passes twenty cases (twenty-one since the 2026-11-13 amendment) through actual GameLevel
 and StateContext, with injected window facts and synthetic activation. It
 records and replays 420 updates, checks the final fingerprint and neutral
 non-bot tape channels, pre-update Music/SFX gains, every motor intent and
