@@ -281,17 +281,17 @@
       ]
     },
     {
-      "name": "cq_timber", "cells": [56, 56], "outline": { "role": "bg_line", "edges": "all" },
+      "name": "cq_timber", "cells": [56, 40], "outline": { "role": "bg_line", "edges": "all" },
       "fill": [
-        ["poly", "bg_mid", 2, 2, 9, 0, 22, 56, 15, 56],
-        ["poly", "bg_far", 13, 7, 20, 6, 31, 56, 24, 56],
-        ["poly", "bg_mid", 24, 3, 31, 3, 40, 56, 33, 56],
-        ["rect", "bg_far", 38, 46, 17, 5], ["rect", "bg_mid", 41, 51, 14, 5]
+        ["poly", "bg_mid", 5, 4, 11, 3, 15, 40, 9, 40],
+        ["poly", "bg_far", 15, 0, 21, 0, 24, 40, 18, 40],
+        ["poly", "bg_mid", 25, 6, 31, 6, 32, 40, 26, 40],
+        ["rect", "bg_far", 37, 31, 18, 4], ["rect", "bg_mid", 40, 35, 15, 5]
       ],
       "detail": [
-        ["path", "bg_line", 13, 8, 24, 55], ["path", "bg_line", 24, 4, 33, 55],
-        ["ellipse", "bg_detail", 3, 1, 5, 3], ["ellipse", "bg_detail", 25, 4, 5, 3],
-        ["line", "bg_line", 38, 50, 54, 50]
+        ["line", "bg_line", 18, 3, 21, 38],
+        ["ellipse", "bg_detail", 6, 4, 4, 2], ["ellipse", "bg_detail", 16, 1, 4, 2], ["ellipse", "bg_detail", 26, 7, 4, 2],
+        ["line", "bg_line", 37, 35, 54, 35]
       ]
     },
     {

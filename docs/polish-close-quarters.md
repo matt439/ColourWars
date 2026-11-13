@@ -288,15 +288,24 @@ language instead: a cloud, a gull and a hill line in miniature.
 
 Eight props in [the terrain recipe](../game/art/terrain/terrain.json),
 described in the [kit's README](../game/art/terrain/README.md); the build
-packs them on the landmark shelves and the atlas grows to 2048x1228 on this
+packs them on the landmark shelves and the atlas grows to 2048x1196 on this
 branch. Close Quarters now has 24 decorations: paper, the works wall and roof
-beam (three swatches), six windows at Y=4332, the pipe run (2388, 4300), the
-tank on the upper deck (2872, 4370), the loading doors behind the home rooms
-(420 and 5196, 4600), the racks standing on the approach bridges (1200 and
-4512, 4546), timber in the left bay (960, 5026) and the right of the lower lane
-(3740, 5026), drums under each home floor (40 and 5704, 5074), the bench in the
-lower lane (1900, 5122), then the brush pot and tape roll. The `_a`/`_b` pairs
-are exact mirrors. No collision geometry, spawn, station or bound moved.
+beam (three swatches), six windows at Y=4332, the pipe run hung from the
+underside of the roof beam (2388, 4204), the tank on the upper deck
+(2872, 4370) with the pipe's drop entering its hatch, the loading doors behind
+the home rooms (420 and 5196, 4600), the racks standing on the approach bridges
+(1200 and 4512, 4546), timber in the left bay (960, 5090) and the right of the
+lower lane (3740, 5090), drums under each home floor (40 and 5704, 5074), the
+bench in the lower lane (1900, 5122), then the brush pot and tape roll. The
+`_a`/`_b` pairs are exact mirrors. No collision geometry, spawn, station or
+bound moved.
+
+A review pass changed two things. The timber first leaned at a shallow angle
+to within a few units of the main deck's underside, so in a 4P pane it read as
+a ramp up to the deck; it is now three short planks stood almost upright, 160
+units tall, well clear of the deck. The pipe run first stopped about 100 units
+below the roof beam, so its risers ended in mid-air in the overview; it now
+hangs from the beam.
 
 Composition was iterated in 1P, 4P and the whole-arena time-lapse view at
 seeds 7, 0 and 3. Shelf boards are kept off the heights of the real steps
@@ -308,12 +317,15 @@ top, so only the overview and time-lapse show it, as the edge of the building.
 
 The tests describe the new intended state rather than being loosened. The
 terrain probe pins the new layering (landmarks at index 22 of 24 after the
-bench) and the 2048x1228 atlas, and counts Close Quarters as an interior
+bench) and the 2048x1196 atlas, and counts Close Quarters as an interior
 alongside Press Tower: no clouds, no drift. The editor's drift-phase mirror
 example moved to the Movement Course's identical `cloud_4`. The painter's
 parallax prototype keeps its exact matrix and counts, with Close Quarters as a
 zero-displacement interior control. Its cloud-drift contexts drop Close
-Quarters and the 4P sky composition built around its `cloud_4`.
+Quarters and the 4P sky composition built around its `cloud_4`; 4P cloud
+drift stays covered by the isolated raster matrix, but no arena context frames
+a cloud in a 4P pane any more. The painter's evidence record and diagnostic
+text say the same.
 
 Debug acceptance passed for `terrain`, `cq_blockout`, `stage_selection`,
 `level_format`, `paint`, `user_stages`, `debug_console`, `instant_replay`,
@@ -322,7 +334,10 @@ exposed paint stays **136,320**, as before the change. `check-level-editor.ps1`
 and `check-painter.ps1 -CompileOnly` passed, as did the whitespace lint and
 `check_doc_links.py`. The editor run's first attempt failed one native
 keyboard-state check while game windows were open on the same desktop; it
-passed on a rerun with no game running.
+passed on a rerun with no game running. After the review pass the same twelve
+cases, `check-level-editor.ps1 -SkipBuild` and
+`check-painter.ps1 -CompileOnly` passed again, paint still 136,320, and the
+atlas rebuilds byte-identically.
 
 ### Human checks still open
 

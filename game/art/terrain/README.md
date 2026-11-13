@@ -45,7 +45,7 @@ gutter.
 | `cq_tank` | 256x320 | a paint tank on three legs: domed top with a hatch, two staircase seams, a sight glass half full, a dial with a needle and a side outlet |
 | `cq_pipes` | 640x192 | a pipe run hung from the ceiling: a main pipe with flanges and a valve wheel ending in a drop, and a second pipe rising back into the roof |
 | `cq_bench` | 384x128 | a low workbench with a vice, a tin of brushes, a roller lying down, a rag and a drawer, cluttered along its top |
-| `cq_timber` | 224x224 | three planks leaning on the wall with end grain, offcuts on the floor beside them |
+| `cq_timber` | 224x160 | three planks stood almost upright against the wall with end grain, offcuts on the floor beside them; short and steep so no plank reads as a ramp up to the deck |
 | `cq_drums` | 256x176 | two paint drums with hoops, a blank label and a grey drip, and a third on its side showing its end |
 | `shadow_0`..`shadow_3` | 64x32 | shadow_deep specks dense in the top two rows, shadow specks thinning to none in the last; columns 0 and 15 empty so tiles abut in any order |
 | `swatch_<role>` | 4x4 | one opaque block per palette role |
