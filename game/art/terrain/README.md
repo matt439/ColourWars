@@ -10,7 +10,7 @@ grid. Every hue lives in these texels; runtime draws the sheet with a WHITE tint
 Run `powershell -ExecutionPolicy Bypass -File scripts/build-terrain-art.ps1`
 from the repository root. Windows System.Drawing fills the integer-cell shapes
 without antialiasing and draws lines cell by cell. Each cell expands to exactly
-4x4 texels, producing the 2048x920 working atlas
+4x4 texels, producing the 2048x1604 working atlas
 `../sources/textures/terrain.png`, runtime
 `../../content/textures/terrain.json` and `.png` (a copy of the working PNG),
 and the review [`lineup.png`](lineup.png). Ordinary builds need neither

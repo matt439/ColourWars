@@ -19,9 +19,9 @@ namespace
 		// Read the actual staged runtime PNG through the CPU asset reader; no
 		// texture device or unstaged working-image file is needed.
 		const TextureData image = read_png_file((content / "textures/terrain.png").string());
-		require(image.width == 2048 && image.height == 920 && image.format == TextureFormat::r8g8b8a8_unorm &&
-			!image.levels.empty() && image.levels.front().width == 2048 && image.levels.front().height == 920 && !image.pixels.empty(),
-			"The landmark frames require the complete staged 2048x920 RGBA terrain atlas");
+		require(image.width == 2048 && image.height == 1604 && image.format == TextureFormat::r8g8b8a8_unorm &&
+			!image.levels.empty() && image.levels.front().width == 2048 && image.levels.front().height == 1604 && !image.pixels.empty(),
+			"The landmark frames require the complete staged 2048x1604 RGBA terrain atlas");
 	}
 
 	void check_shipped_landmarks(World& world, const LevelObjectBuilder& builder,
@@ -42,7 +42,7 @@ namespace
 			{"turbulence", {1488.0f, 5016.0f}, {4256.0f, 5176.0f}, 17, 24, "hill_7"},
 			{"close_quarters", {1792.0f, 4652.0f}, {3952.0f, 4812.0f}, 17, 24, "hill_7"},
 			{"crossfeed", {1672.0f, 564.0f}, {2260.0f, 892.0f}, 6, 8, "hill_b"},
-			{"press_tower", {132.0f, 644.0f}, {1672.0f, 652.0f}, 15, 17, "hanger_b2"}
+			{"press_tower", {132.0f, 644.0f}, {3212.0f, 812.0f}, 23, 25, "sign_b"}
 		};
 		const auto found = std::find_if(std::begin(expected), std::end(expected),
 			[&](const Expected& entry) { return stage == entry.stage; });

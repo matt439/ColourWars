@@ -139,6 +139,10 @@ into home in native play, are still for attended play.
 
 ## Decoration
 
+The placeholder dressing this section describes was replaced by drawn props on
+2026-11-14; see [Arena art](#arena-art-pol16-2026-11-14). It is kept as the
+record of what the blockout shipped with.
+
 Interior dressing only, all `terrain` sheet, WHITE, no drift: the works wall,
 six skylights, the roof truss, `tower_backwall` behind the hoist and bed, two
 hanging signs on four hangers, the brush pot on home A's roof and the tape roll
@@ -161,6 +165,86 @@ stand behind a walking lane, the yard or the bed, and could suggest collision
 that is not there, which the art rules forbid. Supports are therefore left to
 the art pass, as visuals only with no collision change, once native captures
 show what reads.
+
+## Arena art (`POL#16`, 2026-11-14)
+
+**Play identity.** One tall object in the middle that everyone climbs toward,
+two mirrored homes at the edges. The art has to say "the thing in the middle
+is a machine you climb", and stay out of the way of the floor and stair lanes.
+
+**Environment direction.** The inside of a print shop, seen in section: a
+sawtooth roof with glazed faces and a little sky above its slopes, the press
+itself standing on the bed, the stairs on steel trestles, and the shop's
+stock and tackle along the walls. Everything is grey, in the backdrop roles
+only, outlined in `bg_line` and drawn on the cell grid with staircase curves.
+There is no lettering anywhere: the two signs are blank boards.
+
+**Props** (all new frames in the `terrain` recipe, at native size):
+
+| Frame | Texels | Drawing and placement |
+|---|---|---|
+| `press_roof_bay` | 600x96 | One sawtooth tooth in section: a glazed upright face with a cross mullion, a sloping roof slab and a bottom chord, with truss webs between. Six bays tile the top of the camera (Y 380-476). |
+| `press_chimneys` | 176x72 | A distant gable and two chimneys, one capped, in `bg_far`. Two of them sit behind the roof bays, so only their tops show in the sky above the slopes. |
+| `press_frame` | 640x680 | The screw press: two riveted columns standing on the bed's ends, an arched crosshead above the summit, a nut, a threaded screw that comes down onto the crown, and a tilted capstan bar. Knee braces under each hoist ruler make the frame and shoulder read as bolted to the columns. |
+| `press_trestle` | 144x320 | A two-legged cross-braced trestle. One under each stair tread, its foot hidden behind the floor or ramp. |
+| `press_sign` | 160x256 | A blank board, slightly out of true, on two rods from the roof chord. One over each catwalk. |
+| `press_hook` | 96x288 | A crane trolley on the roof chord, a chain and a hook block. One over each gantry. |
+| `press_rolls` | 160x120 | Three paper rolls stacked end-on, in `bg_far` with paper cores, on the yard floor under each catwalk. |
+
+**Layering**, back to front, which is the array order: the `works_wall`
+backing, `roof_sky` (a `swatch_paper` strip behind the roof), the chimneys, the
+six roof bays, the press frame, the six trestles, the rolls, hooks and signs,
+then the brush pot and tape roll. The terrain probe expects the two landmarks
+last.
+
+**Removed placeholders**: the six skylight swatches, `roof_truss`,
+`tower_backwall`, both flat sign swatches and the four hanger rods. The
+`sign_a`/`sign_b` names now belong to the drawn signs. The old signs and hangers
+drew with `prop_accent` and `metal_dark`; now every texel in the backdrop is a
+backdrop role.
+
+**What stays from the shared kit.** The brush pot stays where it was, on home
+A's roof. The tape roll moves off the summit, where it sat behind both standing
+slots, to the matching spot on home B's roof (X 3212, Y 812, art ending on the
+roof at Y 960). The pot and the roll now face each other across the arena, and
+the press screw is the only thing behind the summit. No sun, clouds or hills:
+this is still an interior.
+
+**Material palette.** Unchanged. The stage already has its own mix: ground
+floors, bed and base, ruler gantries, catwalks and hoist rulers, pencil stair
+treads, a paint-tin press head, an eraser crown, and set-square ramps. With the
+screw now drawn down onto the crown, the eraser reads as the end of the screw.
+No collision object, material, face, spawn, station or bound changed, so paint
+totals and scoring cannot change. The probes still pin the 140,400 total and
+all 30 pieces.
+
+**Mirror pairs.** Every `_a` visual has a `_b` partner at X' = 3600 - X - W
+with the same frame, which is what the level editor's mirror-copy check
+requires. The roof bays, chimneys and press frame have no suffix. The roof bays
+and press frame mirror onto themselves. The chimneys cannot be mirrored: only
+the right end of a bay leaves sky above its slope. The frame
+is drawn symmetric except for the capstan bar's tilt.
+
+**Checks.** The terrain probe now expects a 2048x1604 atlas (the arena props
+pack below the landmarks), and Press Tower's landmarks at index 23 of 25 after
+`sign_b`, with the tape roll at (3212, 812). The press tower probe expects 25
+visuals. The level editor's symmetry report now lists four pieces of
+unpartnered art, `chimneys_1, chimneys_2, brush_pot, tape_roll`, where it used
+to list only `brush_pot`; every play object still has a partner. Run on x64-debug: acceptance cases `terrain`, `press_tower`,
+`level_format`, `stage_selection`, `paint`, `instant_replay`, `locales`,
+`camera_framing`, `paint_surfaces` and `balance_regions`, then
+`check-level-editor.ps1` and `check-stage-registration.ps1`, then
+the lint job's `git diff --check` and `scripts/ci/check_doc_links.py`. All of
+them passed on 2026-11-14. The atlas rebuilt from the recipe with no build
+script change, and every new texel is a backdrop role. Screenshots were taken
+at 4P and in the whole-arena time-lapse view on seeds 7 and 0.
+
+**Still a human check.** How it looks on a real GPU at every pane size, and in
+play: whether the crosshead's curved top or the trestles' caps ever read as
+somewhere to stand, whether the screw behind a crown holder costs any
+readability, and whether the signs and hooks crowd a jump from the gantry.
+Native painter captures (`-PressTowerOnly`, surface finish, miniature terrain)
+were not rerun for this change.
 
 ## Tool hypotheses (to measure, not balance claims)
 
@@ -488,7 +572,10 @@ Rerun: `scripts/run-acceptance.ps1 -Cases bot_arena_routes,bot_team_trials`
   live-fire checks.
 - Bot evidence (`POL#41`, above): bots favour the hoist and summit, and seldom
   take R2 to the far yard at Normal or Hard.
-- Support art for the brief, above.
+- Support art for the brief: drawn on 2026-11-14 as backdrop only, with the
+  press columns, the knee braces under the hoist rulers and the stair trestles
+  ([Arena art](#arena-art-pol16-2026-11-14)). Whether it reads right in play is
+  still a human check.
 - Review frames: `ColourWars.exe +exec review_press_tower +quit` writes the
   seeded 1-4P clean and heavy frames and every station
   ([`DBG#18`](debug-console-record.md#arena-review-screenshot-pack-dbg18)).

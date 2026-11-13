@@ -60,11 +60,18 @@ namespace level_editor_acceptance
             require(reading.report.unmatched.empty(),
                 "Press Tower reports objects without a mirror partner: " + labels(reading.report.unmatched));
             require(reading.report.paint_ferries.empty(), "Press Tower reports paint ferries");
-            // Its one lone decoration, the left brush pot, is art and listed apart.
-            require(reading.report.unmatched_art.size() == 1 && reading.report.unmatched_art[0].label == "brush_pot",
-                "Press Tower's unpartnered art is not exactly brush_pot: " + labels(reading.report.unmatched_art));
-            require(reading.line.find("Art without partner: brush_pot") != std::string::npos,
-                "Press Tower's symmetry line does not list brush_pot as art: " + reading.line);
+            // Its lone decorations are art and listed apart: the two distant
+            // chimneys show only where a roof slope leaves sky, so they cannot
+            // mirror, and the brush pot and tape roll face each other from the
+            // two home roofs as two different landmarks (POL#16).
+            const std::vector<std::string> lone_art{ "chimneys_1", "chimneys_2", "brush_pot", "tape_roll" };
+            bool lone_art_matches = reading.report.unmatched_art.size() == lone_art.size();
+            for (std::size_t index = 0; lone_art_matches && index < lone_art.size(); ++index)
+                lone_art_matches = reading.report.unmatched_art[index].label == lone_art[index];
+            require(lone_art_matches, "Press Tower's unpartnered art is not exactly the chimneys, brush_pot and tape_roll: " +
+                labels(reading.report.unmatched_art));
+            require(reading.line.find("Art without partner: chimneys_1, chimneys_2, brush_pot, tape_roll") != std::string::npos,
+                "Press Tower's symmetry line does not list the chimneys, brush_pot and tape_roll as art: " + reading.line);
             require(reading.total > 0.0 && close(reading.sides.left, reading.sides.right),
                 "Press Tower's left and right scoring areas differ: " + std::to_string(reading.sides.left) +
                 " / " + std::to_string(reading.sides.right));

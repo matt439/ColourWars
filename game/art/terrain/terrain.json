@@ -155,6 +155,107 @@
         ["ellipse", "bg_line", 17, 9, 22, 15], ["ellipse", "paper", 19, 11, 18, 11],
         ["path", "bg_line", 43, 21, 51, 22, 60, 28]
       ]
+    },
+    {
+      "name": "press_roof_bay", "cells": [150, 24], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [
+        ["rect", "bg_mid", 0, 0, 12, 21],
+        ["poly", "bg_mid", 12, 0, 150, 17, 150, 21, 12, 4],
+        ["rect", "bg_mid", 0, 20, 150, 3]
+      ],
+      "detail": [
+        ["rect", "paper", 2, 2, 8, 16],
+        ["line", "bg_line", 6, 2, 6, 17], ["line", "bg_line", 2, 10, 9, 10],
+        ["path", "bg_line", 12, 20, 35, 7, 58, 20, 81, 12, 104, 20, 127, 18],
+        ["line", "bg_line", 35, 7, 35, 20], ["line", "bg_line", 81, 12, 81, 20]
+      ]
+    },
+    {
+      "name": "press_chimneys", "cells": [44, 18], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [
+        ["poly", "bg_far", 0, 18, 0, 12, 10, 7, 21, 12, 21, 18],
+        ["rect", "bg_far", 26, 0, 6, 18],
+        ["rect", "bg_far", 36, 6, 6, 12],
+        ["rect", "bg_far", 35, 4, 8, 3],
+        ["rect", "bg_far", 20, 13, 24, 5]
+      ],
+      "detail": [
+        ["line", "bg_line", 27, 5, 30, 5], ["line", "bg_line", 27, 10, 30, 10],
+        ["line", "bg_line", 37, 11, 40, 11], ["rect", "bg_line", 8, 12, 3, 3]
+      ]
+    },
+    {
+      "name": "press_frame", "cells": [160, 170], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [
+        ["poly", "bg_mid", 0, 30, 2, 18, 10, 10, 26, 5, 50, 2, 80, 1, 110, 2, 134, 5, 150, 10, 158, 18, 160, 30, 146, 30, 140, 24, 124, 19, 104, 16, 80, 15, 56, 16, 36, 19, 20, 24, 14, 30],
+        ["rect", "bg_mid", 2, 28, 12, 132], ["poly", "bg_mid", 0, 170, 2, 158, 14, 158, 17, 170],
+        ["rect", "bg_mid", 146, 28, 12, 132], ["poly", "bg_mid", 143, 170, 146, 158, 158, 158, 160, 170],
+        ["poly", "bg_mid", 14, 93, 27, 93, 14, 106], ["poly", "bg_mid", 14, 133, 27, 133, 14, 146],
+        ["poly", "bg_mid", 146, 93, 133, 93, 146, 106], ["poly", "bg_mid", 146, 133, 133, 133, 146, 146],
+        ["rect", "bg_mid", 70, 14, 20, 6],
+        ["rect", "bg_far", 75, 19, 10, 36],
+        ["poly", "bg_mid", 56, 27, 104, 20, 104, 23, 56, 30],
+        ["ellipse", "bg_mid", 51, 25, 7, 7], ["ellipse", "bg_mid", 102, 18, 7, 7]
+      ],
+      "detail": [
+        ["line", "bg_line", 76, 26, 83, 24], ["line", "bg_line", 76, 31, 83, 29], ["line", "bg_line", 76, 36, 83, 34],
+        ["line", "bg_line", 76, 41, 83, 39], ["line", "bg_line", 76, 46, 83, 44], ["line", "bg_line", 76, 51, 83, 49],
+        ["rect", "bg_line", 5, 44, 1, 1], ["rect", "bg_line", 10, 44, 1, 1], ["rect", "bg_line", 5, 84, 1, 1], ["rect", "bg_line", 10, 84, 1, 1],
+        ["rect", "bg_line", 5, 124, 1, 1], ["rect", "bg_line", 10, 124, 1, 1],
+        ["rect", "bg_line", 149, 44, 1, 1], ["rect", "bg_line", 154, 44, 1, 1], ["rect", "bg_line", 149, 84, 1, 1], ["rect", "bg_line", 154, 84, 1, 1],
+        ["rect", "bg_line", 149, 124, 1, 1], ["rect", "bg_line", 154, 124, 1, 1],
+        ["rect", "bg_line", 30, 9, 1, 1], ["rect", "bg_line", 52, 6, 1, 1], ["rect", "bg_line", 108, 6, 1, 1], ["rect", "bg_line", 130, 9, 1, 1]
+      ]
+    },
+    {
+      "name": "press_trestle", "cells": [36, 80], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [
+        ["rect", "bg_mid", 0, 0, 36, 3],
+        ["rect", "bg_mid", 2, 3, 4, 77],
+        ["rect", "bg_mid", 30, 3, 4, 77]
+      ],
+      "detail": [
+        ["path", "bg_line", 6, 3, 29, 23, 6, 43, 29, 63, 6, 79],
+        ["path", "bg_line", 29, 3, 6, 23, 29, 43, 6, 63, 29, 79]
+      ]
+    },
+    {
+      "name": "press_sign", "cells": [40, 64], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [
+        ["poly", "bg_detail", 0, 46, 39, 44, 39, 60, 1, 63]
+      ],
+      "detail": [
+        ["line", "bg_line", 5, 0, 5, 46], ["line", "bg_line", 34, 0, 34, 45],
+        ["path", "bg_line", 4, 49, 35, 47, 35, 58, 4, 60, 4, 49]
+      ]
+    },
+    {
+      "name": "press_hook", "cells": [24, 72], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [
+        ["ellipse", "bg_mid", 3, 0, 6, 6], ["ellipse", "bg_mid", 15, 0, 6, 6],
+        ["rect", "bg_mid", 1, 4, 22, 5],
+        ["poly", "bg_mid", 7, 47, 17, 47, 18, 58, 6, 58]
+      ],
+      "detail": [
+        ["path", "bg_line", 12, 9, 11, 13, 13, 17, 11, 21, 13, 25, 11, 29, 13, 33, 11, 37, 13, 41, 12, 47],
+        ["ellipse", "bg_line", 9, 49, 6, 6], ["ellipse", "bg_far", 10, 50, 4, 4],
+        ["path", "bg_line", 11, 58, 11, 64, 13, 68, 16, 68, 18, 65, 18, 62],
+        ["path", "bg_line", 12, 58, 12, 64, 14, 67, 16, 67, 17, 65]
+      ]
+    },
+    {
+      "name": "press_rolls", "cells": [40, 30], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [
+        ["ellipse", "bg_far", 0, 10, 20, 20], ["ellipse", "bg_far", 20, 10, 20, 20],
+        ["ellipse", "bg_far", 10, 0, 20, 20]
+      ],
+      "detail": [
+        ["ellipse", "bg_line", 20, 10, 20, 20], ["ellipse", "bg_far", 21, 11, 18, 18],
+        ["ellipse", "bg_line", 10, 0, 20, 20], ["ellipse", "bg_far", 11, 1, 18, 18],
+        ["ellipse", "bg_line", 7, 17, 6, 6], ["ellipse", "paper", 8, 18, 4, 4],
+        ["ellipse", "bg_line", 27, 17, 6, 6], ["ellipse", "paper", 28, 18, 4, 4],
+        ["ellipse", "bg_line", 17, 7, 6, 6], ["ellipse", "paper", 18, 8, 4, 4]
+      ]
     }
   ],
   "speckle": {
