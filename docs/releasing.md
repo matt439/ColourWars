@@ -360,7 +360,7 @@ reads the executable's debug directory and requires exactly that name. CI's
 Release leg uploads the PDB as `ColourWars-symbols-<commit>`, and `publish`
 attaches it to the GitHub Release. [The development guide](development.md#release-zip)
 says where the symbols are. The crash half of `REV#63` was decided on
-2026-11-13: no minidump. The planned slice writes a controlled-fields crash
-record to `last-error.log` instead, symbolicated against this PDB; the
-[failure-reporting guide](failure-reporting.md#crash-record-plan-rev63) holds
-the plan.
+2026-11-13: no minidump. Instead, since 2026-11-13, a controlled-fields crash
+record goes to `last-error.log`, its `crash_rva` symbolicated against this PDB;
+the [failure-reporting guide](failure-reporting.md#crash-record-rev63)
+describes it.

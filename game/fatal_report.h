@@ -17,6 +17,17 @@ enum class FailurePhase
 	running
 };
 
+// The record's phase= and category= values ("run_loop", "runtime" and so on).
+const char* failure_phase_name(FailurePhase phase) noexcept;
+const char* failure_category(FailurePhase phase) noexcept;
+
+// The fixed head of every last-error.log record, report_format= through
+// audio_backend=, with no trailing newline. It allocates nothing, so the crash
+// handlers share it (crash_record.h). Returns the length, or -1 when it does
+// not fit.
+inline constexpr std::size_t record_header_capacity = 1024;
+int format_record_header(char* buffer, std::size_t size, FailurePhase phase) noexcept;
+
 // The original diagnostic is for stderr and the local dialog. The automatic
 // file contains only controlled metadata, never arbitrary exception text.
 class FatalReport
@@ -33,6 +44,8 @@ public:
 	// was not; the dialog names it.
 	std::wstring dialog_text(const std::string& saved_path) const;
 	std::string record_text() const;
+	// The cause_N fields and causes_truncated, each line led by its newline.
+	std::string cause_fields() const;
 	// A failed write preserves the previous complete file and the original error.
 	bool write_record(const std::filesystem::path& path) const noexcept;
 

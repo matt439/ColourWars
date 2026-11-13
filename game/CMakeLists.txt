@@ -27,6 +27,7 @@ add_library(colourwars_game STATIC
     config/locale.cpp
     config/initial_display.cpp
     fatal_report.cpp
+    crash_record.cpp
     game_data.cpp
     save/last_match_setup.cpp
     save/match_records.cpp

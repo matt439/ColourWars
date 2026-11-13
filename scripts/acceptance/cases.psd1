@@ -115,6 +115,7 @@ Cases = @(
         Arguments = @('game', 'repo')
     }
     @{ Name = 'fatal_report' }
+    @{ Name = 'crash_record' }
     @{ Name = 'gameplay_tuning' }
     @{
         Name = 'menu_presentation'

@@ -4666,6 +4666,7 @@ been built says so and when.
   [failure reporting's Boundary](failure-reporting.md#boundary). A stack
   overflow, or an exception swallowed in a Win32 callback, may not reach it.
   ([Record](review/2026-11-10-project-review.md#no-crash-dump-and-no-release-symbols-rev63).)
+  Done 2026-11-13 ([crash record](failure-reporting.md#crash-record-rev63)).
 - **Reduce effects from Windows on first run (`POL#49`, S; built
   2026-11-13).** Yes; the
   [polish item](polish-plan.md#reduce-effects-default-from-windows-pol49) owns

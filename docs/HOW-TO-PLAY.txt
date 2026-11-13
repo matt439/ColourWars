@@ -106,7 +106,9 @@ If the game stops with an error, the message box says why, and a short
 report is written to %LOCALAPPDATA%\ColourWars\last-error.log.
 Copy the full error dialog (Ctrl+C while it is focused) when reporting it:
 the short report does not contain that message. Include build-info.txt from
-beside the executable and last-error.log if it was saved.
+beside the executable and last-error.log if it was saved. If the game
+closes with no message at all, last-error.log may still hold a short crash
+report; include it.
 
 Help with startup, controllers, downloads and building:
 https://github.com/matt439/ColourWars#if-something-goes-wrong

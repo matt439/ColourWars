@@ -154,7 +154,9 @@ back to player count to choose a new roster.
   `build-info.txt` from beside the executable and, if it was saved,
   `%LOCALAPPDATA%\ColourWars\last-error.log`. That short report records build
   and failure categories; it does not contain the message, so include the
-  copied dialog too. For a build failure, attach the build log instead.
+  copied dialog too. If the game closes with no dialog at all, the same file
+  may hold a short crash report; attach it. For a build failure, attach the
+  build log instead.
 
 The [player guide](docs/HOW-TO-PLAY.txt), included beside the executable,
 covers starting the game, controls, where settings are saved and removing it.

@@ -10,28 +10,28 @@
 #include <new>
 #include <system_error>
 
+const char* failure_phase_name(FailurePhase phase) noexcept
+{
+	switch (phase)
+	{
+	case FailurePhase::preferences: return "preferences";
+	case FailurePhase::definitions: return "content_definitions";
+	case FailurePhase::initialization: return "application_initialization";
+	case FailurePhase::manifest: return "manifest";
+	case FailurePhase::validation: return "content_validation";
+	case FailurePhase::launch: return "launch_configuration";
+	case FailurePhase::running: return "run_loop";
+	}
+	return "unknown";
+}
+
+const char* failure_category(FailurePhase phase) noexcept
+{
+	return phase == FailurePhase::running ? "runtime" : "startup";
+}
+
 namespace
 {
-	const char* phase_name(FailurePhase phase)
-	{
-		switch (phase)
-		{
-		case FailurePhase::preferences: return "preferences";
-		case FailurePhase::definitions: return "content_definitions";
-		case FailurePhase::initialization: return "application_initialization";
-		case FailurePhase::manifest: return "manifest";
-		case FailurePhase::validation: return "content_validation";
-		case FailurePhase::launch: return "launch_configuration";
-		case FailurePhase::running: return "run_loop";
-		}
-		return "unknown";
-	}
-
-	const char* prefix(FailurePhase phase)
-	{
-		return phase == FailurePhase::running ? "runtime" : "startup";
-	}
-
 	const char* phase_description(FailurePhase phase)
 	{
 		switch (phase)
@@ -50,7 +50,7 @@ namespace
 	void fallback(FailurePhase phase, const char* message) noexcept
 	{
 		const char* cause = message != nullptr ? message : "No exception details available.";
-		std::fprintf(stderr, "%s failure: %s\n", prefix(phase), cause);
+		std::fprintf(stderr, "%s failure: %s\n", failure_category(phase), cause);
 		std::fflush(stderr);
 		MessageBoxA(nullptr, cause, phase == FailurePhase::running ?
 			"ColourWars - runtime failure" : "ColourWars - startup failure", MB_OK | MB_ICONERROR);
@@ -134,7 +134,7 @@ void FatalReport::capture(const std::exception_ptr& failure)
 }
 
 const std::string& FatalReport::message() const { return this->message_; }
-const char* FatalReport::stderr_prefix() const { return prefix(this->phase_); }
+const char* FatalReport::stderr_prefix() const { return failure_category(this->phase_); }
 const wchar_t* FatalReport::caption() const
 {
 	return this->phase_ == FailurePhase::running ?
@@ -172,25 +172,25 @@ std::wstring FatalReport::dialog_text(const std::string& saved_path) const
 	return labrador::widen(text);
 }
 
-std::string FatalReport::record_text() const
+int format_record_header(char* buffer, std::size_t size, FailurePhase phase) noexcept
 {
 	SYSTEMTIME now{};
 	GetSystemTime(&now);
-	char utc[32]{};
-	std::snprintf(utc, sizeof(utc), "%04u-%02u-%02uT%02u:%02u:%02uZ",
+	const int written = std::snprintf(buffer, size,
+		"report_format=1\nutc=%04u-%02u-%02uT%02u:%02u:%02uZ\nphase=%s\ncategory=%s\nversion=%s"
+		"\ngame_revision=%s\nengine_revision=%s\nconfiguration=%s\nrender_backend=%s\naudio_backend=%s",
 		static_cast<unsigned>(now.wYear), static_cast<unsigned>(now.wMonth),
 		static_cast<unsigned>(now.wDay), static_cast<unsigned>(now.wHour),
-		static_cast<unsigned>(now.wMinute), static_cast<unsigned>(now.wSecond));
-	std::string text = "report_format=1\nutc=";
-	text += utc;
-	text += "\nphase="; text += phase_name(this->phase_);
-	text += "\ncategory="; text += this->stderr_prefix();
-	text += "\nversion="; text += build_info::version;
-	text += "\ngame_revision=";text += build_info::game_revision;
-	text += "\nengine_revision="; text += build_info::engine_revision;
-	text += "\nconfiguration="; text += build_info::configuration;
-	text += "\nrender_backend="; text += build_info::render_backend;
-	text += "\naudio_backend="; text += build_info::audio_backend;
+		static_cast<unsigned>(now.wMinute), static_cast<unsigned>(now.wSecond),
+		failure_phase_name(phase), failure_category(phase), build_info::version,
+		build_info::game_revision, build_info::engine_revision, build_info::configuration,
+		build_info::render_backend, build_info::audio_backend);
+	return written >= 0 && static_cast<std::size_t>(written) < size ? written : -1;
+}
+
+std::string FatalReport::cause_fields() const
+{
+	std::string text;
 	for (std::size_t index = 0; index < this->causes_.size(); ++index)
 	{
 		const Cause& cause = this->causes_[index];
@@ -204,10 +204,21 @@ std::string FatalReport::record_text() const
 		if (cause.reason != nullptr) { text += key + "_reason=" + cause.reason; }
 	}
 	text += this->causes_truncated_ ? "\ncauses_truncated=true" : "\ncauses_truncated=false";
-	text += this->message_truncated_ ? "\nmessage_truncated=true\n" : "\nmessage_truncated=false\n";
 	return text;
 }
 
+std::string FatalReport::record_text() const
+{
+	char header[record_header_capacity]{};
+	if (format_record_header(header, sizeof(header), this->phase_) < 0)
+	{
+		throw std::length_error("Failure record header does not fit its buffer");
+	}
+	std::string text = header;
+	text += this->cause_fields();
+	text += this->message_truncated_ ? "\nmessage_truncated=true\n" : "\nmessage_truncated=false\n";
+	return text;
+}
 bool FatalReport::write_record(const std::filesystem::path& path) const noexcept
 {
 	try
