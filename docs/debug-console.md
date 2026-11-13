@@ -302,10 +302,11 @@ names are lower-case letters, digits and `_`, unique, not `spawn_a`/`spawn_b`,
 and inside the level's out-of-bounds rectangle; a bad one fails at startup like
 any other level content bug.
 
-The Movement Course names ten, each with its feet 5 units above its surface:
+The Movement Course names eleven, each with its feet 5 units above its surface:
 `drop_through`, `short_gap`, `long_gap`, `running_gap` (680 units of run-up),
 `low_ceiling`, `steps`, `high_step`, `recovery_lane`, `workshop` (beside the
-left spawn) and `refill` (on the right runway).
+left spawn), `refill` (on the right runway) and `sub` (at the right
+runway's far end).
 Each also carries the lesson untimed solo practice shows there
 ([polish-movement-course.md](polish-movement-course.md#practice-workshop));
 `goto` lands inside it. A developer start (`+stage movement_course`) is the
@@ -1355,7 +1356,7 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 | Script | Does |
 |---|---|
 | `review_feedback_ab` | the movement feedback A/B below |
-| `station_tour` | one player on the Movement Course, god and the collision overlay on, a screenshot at each of the ten stations and both spawns, into `screens\station-tour-<time>\` |
+| `station_tour` | one player on the Movement Course, god and the collision overlay on, a screenshot at each of the eleven stations and both spawns, into `screens\station-tour-<time>\` |
 | `bots_4p` | four paint bots on Close Quarters, seed 7, 20 match seconds at x4, then a paused screenshot with the paint overlay and the checksum, into `screens\bots-4p-<time>\` |
 | `feedback_ab_pass`, `feedback_ab_shot` | helpers of `review_feedback_ab` |
 | `review_finish_details` | the [finish-review detail A/B](polish-plan.md#finish-review-detail-ab-script-pol43): seed 7, four seats on Crossfeed (seat 4 idle with a sprayer), frames `t07s`, `t17s` and `t54s` with every presentation detail on, then once per `enabled` flag off (`tune ... off restart`), each with its checksum, into `screens\review-finish-details-<time>\`; ends with `tune.reset presentation`. `scripts/check-finish-details.ps1` runs it and requires equal checksums across the eleven variants |

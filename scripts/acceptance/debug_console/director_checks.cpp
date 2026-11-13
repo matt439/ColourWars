@@ -773,9 +773,9 @@ namespace debug_console_acceptance
 		for (const LevelStation& station : stations) { names.push_back(station.name); }
 		require(names == std::vector<std::string>{ "drop_through", "short_gap", "long_gap",
 			"running_gap", "low_ceiling", "steps", "high_step", "recovery_lane",
-			"workshop", "refill", "spawn_a", "spawn_b" }, "The course lists its ten stations, then the spawns");
-		require(stations[10].position == info.team_a_spawns()[0] &&
-			stations[11].position == info.team_b_spawns()[0], "spawn_a and spawn_b are the first spawns");
+			"workshop", "refill", "sub", "spawn_a", "spawn_b" }, "The course lists its eleven stations, then the spawns");
+		require(stations[11].position == info.team_a_spawns()[0] &&
+			stations[12].position == info.team_b_spawns()[0], "spawn_a and spawn_b are the first spawns");
 
 		struct Surface { std::string name; labrador::RectangleF rectangle; bool jump_through; };
 		std::vector<Surface> surfaces;

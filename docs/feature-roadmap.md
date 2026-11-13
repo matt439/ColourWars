@@ -2587,8 +2587,12 @@ tools'. The author's attended play review was waived on 2026-11-13.
 **Player documents, 2026-11-10.** `HOW-TO-PLAY.txt` and the README gained the
 Sub control row and a loadout paragraph, and the README's Pad Buttons and
 Keyboard Keys sentences now name Sub (`REV#9`). The `SeatSetup::sub` comment
-says what slice 5 made true (`REV#8`). The Movement Course still has no sub
+says what slice 5 made true (`REV#8`). The Movement Course still had no sub
 station (`REV#56`).
+
+**Sub lesson, 2026-11-13.** The Movement Course gained a `sub` station and
+lesson at the right runway's far end (`REV#56`,
+[polish-movement-course.md](polish-movement-course.md#practice-workshop)).
 
 **Nightly follow-up, 2026-11-10.** No scheduled nightly ran between the
 slices. The first after them failed eight Release painter leaves, one Debug
@@ -4894,7 +4898,7 @@ respawn, with no HUD element or number, avoids that objection.
 First step: a scope section for a new station kind that places such a figure,
 which takes hits through the existing `Collider` path, in untimed solo practice
 only, with the `practice_workshop` checks it adds. It is a new subclass beside
-the existing ones and flattens nothing. Related: `REV#56` (the Sub lesson);
+the existing ones and flattens nothing. Related: `REV#56` (the Sub lesson, done 2026-11-13);
 solo practice on any stage (`REV#55`) was declined on 2026-11-13, so the
 figure stays in the workshop.
 

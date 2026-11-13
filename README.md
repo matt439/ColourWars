@@ -40,7 +40,8 @@ into an Easy, Normal or Hard bot with **Left/Right**. Choose **1 Player** for
 solo practice.
 
 New? Select **Single Match > 1 Player > Movement Course** for lesson cards on
-moving, jumping, dropping through platforms and refilling your paint.
+moving, jumping, dropping through platforms, refilling your paint and using
+your sub.
 
 Choose teams, a tool and a sub weapon for each player, then an arena. Random
 uses Crossfeed, Press Tower, Close Quarters and Slab Yard, which Stage Select

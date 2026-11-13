@@ -39,7 +39,8 @@ and mouse) to take a seat. No friends around? Player 1 can move to an empty
 seat with Up/Down and press Left/Right to turn it into a bot (Easy, Normal or
 Hard). For solo practice, choose Single Match, then 1 player.
 New? Choose Single Match > 1 Player > Movement Course for lesson cards on
-moving, jumping, dropping through platforms and refilling your paint.
+moving, jumping, dropping through platforms, refilling your paint and using
+your sub.
 
 Up to four players: one may use the keyboard and mouse, the others need
 Xbox-style (XInput) controllers. PlayStation and Switch controllers are not
