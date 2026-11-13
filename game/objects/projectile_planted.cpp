@@ -104,6 +104,11 @@ bool ProjectilePlanted::takes_hits() const
 	return this->planted_ && !this->for_deletion();
 }
 
+const ProjectilePlanted* ProjectilePlanted::planted_sub() const
+{
+	return this->takes_hits() ? this : nullptr;
+}
+
 void ProjectilePlanted::take_hit()
 {
 	if (!this->takes_hits()) { return; }

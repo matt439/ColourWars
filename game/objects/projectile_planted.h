@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/objects/projectile.h"
+#include "game/objects/sub_type.h"
 #include "engine/render/colour.h"
 
 // A sub that sticks where it lands (ROAD#11): the sprinkler and the paint
@@ -44,6 +45,10 @@ public:
 	float player_damage() const override;
 	bool takes_hits() const override;
 	void take_hit() override;
+	// This, while it takes hits.
+	const ProjectilePlanted* planted_sub() const override;
+	// Which planted sub it is, for the bots' query (BotPlantedSub).
+	virtual SubType sub_type() const = 0;
 
 	// The drops due this tick, if any: the first at once on planting, then
 	// one release each interval while it stands.

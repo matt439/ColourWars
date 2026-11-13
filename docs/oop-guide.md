@@ -90,7 +90,7 @@ Level also borrows pointers to the Scene's players. Its
 borrows the stage's translating structures, team gates and projectile targets,
 collected once when the match's objects are admitted. Its
 [LevelBotWorld](../game/objects/level_bot_world.h) borrows the scene, the
-player vector and that part by reference, and answers the shipping bots'
+player vector, that part and the admitted shot list by reference, and answers the shipping bots'
 [BotWorld](../game/ai/bot_world.h) queries with values, so the bots never see
 a `Level` or a `Player`. Its [PaperCard](../game/objects/paper_card.h),
 [PracticeLessons](../game/objects/practice_lessons.h) and
@@ -480,10 +480,13 @@ below are what the sprinkler and the wall needed after the grenade.
 7. Teach the bots. `MatchBot::sub_use` in
    [match_bot.cpp](../game/ai/match_bot.cpp) switches on the bot's own
    `SubType` to decide when and where to use it; a sub with no case there is
-   thrown at a visible enemy like the grenade. `BotWorld` tells a bot its own
-   sub and whether it is ready, but has no query for an enemy's planted sub,
-   so bots neither shoot an enemy sprinkler nor see a wall (`REV#21`). A new
-   planted sub inherits that gap.
+   thrown at a visible enemy like the grenade. A new planted sub overrides
+   `ProjectilePlanted::sub_type`, and `BotWorld::planted_subs` then lists it
+   while it stands; decide whether an enemy's blocks a bot's sight (as the
+   wall does, in `MatchBotDriver::clear_sight`) and whether bots shoot it (as
+   the sprinkler is shot, through `MatchBotObservation::enemy_sprinklers`),
+   which is `REV#21`'s answer in
+   [the roadmap](feature-roadmap.md#sub-weapons-road11).
 8. Extend the `sub_weapons` acceptance case
    ([sub_weapons.cpp](../scripts/acceptance/sub_weapons.cpp)), which names each
    sub and checks its tuning, its use and a seat that carries it, then build

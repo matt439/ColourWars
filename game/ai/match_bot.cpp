@@ -296,6 +296,16 @@ void MatchBot::decide(const MatchBotObservation& view)
 	Vector2F goal = this->has_goal_ ? this->goal_ :
 		view.center + Vector2F(this->heading_ * view.size.x * 4.0f, 0.0f);
 	const bool engaging = enemy != nullptr && nearest <= view.engage_distance * view.engage_distance;
+	// The nearest visible enemy sprinkler this tool reaches, shot at while no
+	// enemy is engaged. It changes only the aim: the bot neither walks to one
+	// out of reach nor holds for it (REV#21).
+	const Vector2F* sprinkler = nullptr;
+	float nearest_sprinkler = view.engage_distance * view.engage_distance;
+	for (const Vector2F& candidate : view.enemy_sprinklers)
+	{
+		const float distance = Vector2F::distance_squared(candidate, view.center);
+		if (distance <= nearest_sprinkler) { nearest_sprinkler = distance; sprinkler = &candidate; }
+	}
 	// A visible opponent outside this tool's range still needs an approach.
 	// Using the firing radius as the pursuit gate stranded short-range tools
 	// on unrelated paint goals before they could ever enter combat.
@@ -436,6 +446,12 @@ void MatchBot::decide(const MatchBotObservation& view)
 		const WeaponTuning& tool = this->tuning_->weapon(view.weapon);
 		aim = match_bot_ballistics::aim_direction(tool, this->tuning_->projectile(tool.details.proj_type),
 			view.velocity, enemy->center - view.center, enemy->velocity);
+	}
+	else if (sprinkler != nullptr)
+	{
+		const WeaponTuning& tool = this->tuning_->weapon(view.weapon);
+		aim = match_bot_ballistics::aim_direction(tool, this->tuning_->projectile(tool.details.proj_type),
+			view.velocity, *sprinkler - view.center, {});
 	}
 	else if (view.support_paint && (finishing || this->deliberate(view.weapon)))
 	{

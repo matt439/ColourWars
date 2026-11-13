@@ -2670,6 +2670,44 @@ sniper's rounds are unchanged, since its throws are always within its reach. A
 bot throws its grenade about 40% less often (1.53 a round against 2.56) and
 plants the sprinkler and wall as often as before. Endless paint is untouched.
 
+**Bots answer enemy planted subs (`REV#21`, done 2026-11-13).** Until now a
+bot never shot an enemy sprinkler and fired straight into an enemy paint wall,
+because `BotWorld` had no query for a planted sub and bot sight ignored the
+wall. `BotWorld::planted_subs` now lists every standing planted sub, either
+team's, by bounds, team and type (`LevelBotWorld` reads Level's admitted shots
+through `Projectile::planted_sub`, which a sprinkler or wall answers only while
+enemy shots still break it). Two rules use it, both in the shipping driver:
+
+- *An enemy wall blocks sight.* `MatchBotDriver::clear_sight` is the world's
+  line of sight, also stopped by an enemy paint wall whose bounds cross the
+  line; a bot's own team's wall never blocks it, since only enemy shots are
+  spent on a wall. Every sight test in `drive` uses it: an enemy behind the
+  wall is not observed (the wall is cover, as it would be for a player),
+  support paint behind it is not aimed at, and a territory sample behind it
+  becomes a route destination where the stage has team gates, or is dropped.
+  Bodies still walk through walls, so obstacles and supports are unchanged.
+- *An enemy sprinkler in reach is a target.* A standing enemy sprinkler in
+  sight is observed by its centre, and while no enemy is engaged the bot aims
+  its tool at the nearest one within its own engagement distance and fires.
+  The aim order is an engaged enemy, then that sprinkler, then support paint,
+  then the paint goal.
+
+Not taught, deliberately: a bot does not walk to a sprinkler out of its reach,
+does not shoot at an enemy wall to break it, and does not pursue an enemy it
+lost behind one. Each of these subs stands 4-8 s, so the bounded answer is
+the one above; whether bots should do more is a play-feel call for later. No
+random draw moved (the aim error is drawn every decision already, and territory
+samples are drawn before their sight test), so a match with no enemy planted
+sub in sight is step-identical to before. The balance tables above were
+measured with the old policy and were not re-measured; the half-tank cost
+stands. `sub_weapons` checks that the bots' world lists a sprinkler and a wall
+exactly while each stands (not in flight, after breaking or past its lifetime)
+and, through `MatchBotDriver` at every difficulty with the Sprayer and the
+Sniper, that a bot aims past its own wall but never through an enemy's, shoots
+an enemy sprinkler in reach and in sight but not its own team's, one beyond
+reach or one behind an enemy wall, and fights an engaged enemy first. The
+balance runner's `engaged_ticks` uses the same sight.
+
 ### Umbrella tool proposal (`ROAD#13`)
 
 **Proposed 2026-11-12; questions answered 2026-11-13; nothing is built.** This

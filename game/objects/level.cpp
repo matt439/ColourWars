@@ -66,7 +66,8 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 	}
 	if (this->view_participants_.empty())
 	{ throw std::invalid_argument("Level requires at least one human view"); }
-	this->bot_world_ = std::make_unique<LevelBotWorld>(*this->scene_, this->players_, this->structures_);
+	this->bot_world_ = std::make_unique<LevelBotWorld>(*this->scene_, this->players_, this->structures_,
+		this->projectiles_);
 	if (roster != nullptr && roster->bot_count() != 0)
 	{ this->bot_driver_ = std::make_unique<MatchBotDriver>(tuning, *roster, round_setup.random.bot_seed()); }
 	this->cards_ = std::make_unique<CountdownCards>(stage.name, &tuning->match(), presentation,

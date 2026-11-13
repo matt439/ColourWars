@@ -4,6 +4,7 @@
 #include "game/objects/collision_object_type.h"
 #include "game/objects/level_structures.h"
 #include "game/objects/player.h"
+#include "game/objects/projectile_planted.h"
 #include "game/objects/structure.h"
 #include "game/objects/team_gate_structure_paintable.h"
 #include "game/objects/weapon.h"
@@ -28,8 +29,8 @@ namespace
 }
 
 LevelBotWorld::LevelBotWorld(const Scene& scene, const std::vector<Player*>& players,
-    const LevelStructures& structures) :
-    scene_(scene), players_(players), structures_(structures)
+    const LevelStructures& structures, const std::vector<Projectile*>& projectiles) :
+    scene_(scene), players_(players), structures_(structures), projectiles_(projectiles)
 {
 }
 
@@ -168,6 +169,18 @@ std::optional<PlayerTeam> LevelBotWorld::top_paint_team(Vector2F foot) const
     }
     if (!supported) { return std::nullopt; }
     return answer;
+}
+
+std::vector<BotPlantedSub> LevelBotWorld::planted_subs() const
+{
+    std::vector<BotPlantedSub> planted;
+    for (const Projectile* projectile : this->projectiles_)
+    {
+        const ProjectilePlanted* sub = projectile->planted_sub();
+        if (sub == nullptr) { continue; }
+        planted.push_back({ sub->bounds(), sub->team(), sub->sub_type() });
+    }
+    return planted;
 }
 
 bool LevelBotWorld::line_of_sight(Vector2F from, Vector2F to) const

@@ -174,12 +174,14 @@ namespace balance_runner
                         const float reach = match_bot_ballistics::horizontal_reach(tool, projectile) + body.muzzle_reach +
                             projectile.details.col_rect_size.x * 0.5f + this->tuning_->player().size.x * 0.5f;
                         const float radius = std::min(reach, this->tuning_->bots().sight_distance);
+                        // The shipping bot's sight, which an enemy paint wall blocks (REV#21).
+                        const std::vector<BotPlantedSub> planted = world.planted_subs();
                         for (int other = 0; other < world.participant_count(); ++other)
                         {
                             const BotBody enemy = world.body(other);
                             if (other != view && enemy.alive && enemy.health > 0.0f && enemy.team != body.team &&
                                 Vector2F::distance_squared(body.center, enemy.center) <= radius * radius &&
-                                world.line_of_sight(body.center, enemy.center))
+                                MatchBotDriver::clear_sight(world, planted, body.team, body.center, enemy.center))
                             { ++result.engaged_ticks; break; }
                         }
                     }

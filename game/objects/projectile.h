@@ -18,6 +18,7 @@
 #include <vector>
 
 class PaintAudio;
+class ProjectilePlanted;
 
 // The tuning's sheet and animation strip as one resolved pair. Load-time.
 labrador::RenderResources::SheetStrip resolve_projectile_strip(
@@ -90,6 +91,9 @@ public:
 	// tick's contacts instead (Level::strike_breakables).
 	virtual bool takes_hits() const { return false; }
 	virtual void take_hit() {}
+	// This shot as a planted sub that stands and takes hits now (takes_hits),
+	// or null: what the bots' planted-sub query lists (REV#21).
+	virtual const ProjectilePlanted* planted_sub() const { return nullptr; }
 
 	// Where a launch from an owner centred at owner_centre is swept from:
 	// the owner's centre, for every shot and sub but the wall, which is set

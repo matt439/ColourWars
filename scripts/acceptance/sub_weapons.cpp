@@ -2,6 +2,7 @@
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/ai/match_bot.h"
 #include "game/ai/match_bot_ballistics.h"
+#include "game/ai/match_bot_driver.h"
 #include "game/contracts/match_variant.h"
 #include "game/contracts/simulation.h"
 #include "game/input/input_bindings.h"
@@ -27,9 +28,11 @@
 // it sticks, how long it sprays, what it touches and what breaks it; and
 // the paint wall: where a player sets it down, and in a real round that it
 // stands on the floor, stops enemy shots and not its own team's, paints
-// beneath itself, breaks and expires; and the loadout: Weapon Select's
-// tool-then-sub steps, Random, the sub line's copy, and the HUD's readiness
-// mark.
+// beneath itself, breaks and expires; the bots' answer to an enemy's planted
+// subs (REV#21): the world lists each standing one, an enemy wall blocks a
+// bot's sight, and a bot shoots an enemy sprinkler in its reach; and the
+// loadout: Weapon Select's tool-then-sub steps, Random, the sub line's copy,
+// and the HUD's readiness mark.
 
 namespace
 {
@@ -683,6 +686,148 @@ namespace
             "wall's height, against a harmless or absent enemy\n";
     }
 
+    // REV#21's driver fixture: flat open floor, the bot (team A) at the
+    // origin and one enemy (team B) on the floor ahead, every sight line
+    // clear but for the planted subs it lists.
+    class PlantedWorld final : public BotWorld
+    {
+    public:
+        PlantedWorld(const GameTuning& tuning, WeaponType tool) : tuning_(&tuning), tool_(tool) {}
+
+        Vector2F enemy;
+        bool enemy_alive = true;
+        std::vector<BotPlantedSub> planted;
+
+        int participant_count() const override { return 2; }
+        BotBody body(int participant) const override
+        {
+            BotBody result;
+            result.team = participant == 0 ? PlayerTeam::a : PlayerTeam::b;
+            result.center = participant == 0 ? Vector2F::zero : this->enemy;
+            result.alive = participant == 0 || this->enemy_alive;
+            result.health = 100.0f;
+            result.grounded = true;
+            result.ammo = this->tuning_->starting_ammo();
+            result.weapon = participant == 0 ? this->tool_ : WeaponType::sprayer;
+            result.tool_ready = true;
+            return result;
+        }
+        std::vector<PlayerTeam> gate_permissions() const override { return {}; }
+        std::vector<PaintSurfaceSample> paint_surfaces() const override { return {}; }
+        std::vector<RectangleF> obstacles(PlayerTeam) const override { return { floor() }; }
+        std::vector<MatchBotSupport> supports(PlayerTeam) const override { return { { floor(), false } }; }
+        std::vector<MatchBotRamp> ramps() const override { return {}; }
+        std::optional<PlayerTeam> top_paint_team(Vector2F) const override { return std::nullopt; }
+        std::vector<BotPlantedSub> planted_subs() const override { return this->planted; }
+        bool line_of_sight(Vector2F, Vector2F) const override { return true; }
+        bool traversal_line_of_sight(Vector2F, Vector2F, PlayerTeam) const override { return true; }
+
+        RectangleF floor() const
+        { return { -3000.0f, this->tuning_->player().size.y * 0.5f, 6000.0f, 100.0f }; }
+
+    private:
+        const GameTuning* tuning_;
+        WeaponType tool_;
+    };
+
+    // Bots answer an enemy's planted subs (REV#21): an enemy paint wall
+    // blocks their sight and their own team's does not; an enemy sprinkler
+    // in the tool's reach is shot while no enemy is engaged, and an engaged
+    // enemy comes first. Driven through MatchBotDriver, as a match drives it.
+    void check_bot_answers_planted(const GameTuning& tuning)
+    {
+        const Vector2F wall_size = tuning.sub(SubType::wall).body.details.col_rect_size;
+        const Vector2F sprinkler_size = tuning.sub(SubType::sprinkler).body.details.col_rect_size;
+        const float floor_top = tuning.player().size.y * 0.5f;
+        int pairs = 0;
+        for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+        {
+            const int window = tuning.bot(difficulty).reaction_steps * 3 + 2;
+            const float error = tuning.bot(difficulty).aim_error_radians;
+            for (const WeaponType tool : { WeaponType::sprayer, WeaponType::sniper })
+            {
+                const WeaponTuning& weapon = tuning.weapon(tool);
+                const ProjectileTuning& shot = tuning.projectile(weapon.details.proj_type);
+                // MatchBotDriver's engagement distance for a body with no muzzle reach.
+                const float reach = match_bot_ballistics::horizontal_reach(weapon, shot) +
+                    shot.details.col_rect_size.x * 0.5f + tuning.player().size.x * 0.5f;
+                const auto run = [&](const PlantedWorld& world)
+                {
+                    MatchBotDriver driver(&tuning,
+                        std::vector<std::optional<BotDifficulty>>{ difficulty, std::nullopt }, 41);
+                    std::vector<PlayerInputData> inputs(2);
+                    for (int step = 0; step < window; ++step) { driver.drive(inputs, world); }
+                    require(inputs.front().connected && std::isfinite(inputs.front().shoot_angle),
+                        "A bot emitted invalid input");
+                    return inputs.front();
+                };
+                // Whether the shot is on the aim at target, within the difficulty's error.
+                const auto aims_at = [&](const PlayerInputData& input, Vector2F target)
+                {
+                    const Vector2F aim = match_bot_ballistics::aim_direction(weapon, shot, {}, target, {}).normalized();
+                    return input.shoot_direction_requested &&
+                        Vector2F::dot(input.shoot_direction, aim) >= std::cos(error) - 0.001f;
+                };
+                const auto wall_at = [&](float x, PlayerTeam team)
+                {
+                    return BotPlantedSub{ RectangleF(x - wall_size.x * 0.5f, floor_top - wall_size.y,
+                        wall_size.x, wall_size.y), team, SubType::wall };
+                };
+                // Stuck under cover above the floor: its centre lies well clear
+                // of the floor-ward aim a bot with no target takes.
+                const auto sprinkler_at = [&](float x, PlayerTeam team)
+                {
+                    return BotPlantedSub{ RectangleF(x - sprinkler_size.x * 0.5f, -150.0f - sprinkler_size.y * 0.5f,
+                        sprinkler_size.x, sprinkler_size.y), team, SubType::sprinkler };
+                };
+
+                // An enemy in reach: aimed at in clear sight and past its own
+                // team's wall, never through an enemy wall.
+                PlantedWorld duel(tuning, tool);
+                duel.enemy = Vector2F(reach * 0.5f, 0.0f);
+                require(aims_at(run(duel), duel.enemy), "A bot did not aim at an enemy in clear sight");
+                duel.planted = { wall_at(reach * 0.25f, PlayerTeam::b) };
+                require(!aims_at(run(duel), duel.enemy), "A bot aimed at an enemy through an enemy paint wall");
+                duel.planted = { wall_at(reach * 0.25f, PlayerTeam::a) };
+                require(aims_at(run(duel), duel.enemy), "Its own team's wall hid an enemy from a bot");
+
+                // No enemy alive: an enemy sprinkler in reach ahead is fired
+                // on; its own team's, one out of reach, or one
+                // behind an enemy wall is not.
+                PlantedWorld lone(tuning, tool);
+                lone.enemy = Vector2F(reach * 0.5f, 0.0f);
+                lone.enemy_alive = false;
+                const BotPlantedSub target = sprinkler_at(reach * 0.6f, PlayerTeam::b);
+                const Vector2F centre = target.bounds.center();
+                lone.planted = { target };
+                const PlayerInputData fired = run(lone);
+                require(aims_at(fired, centre) && fired.primary_shoot,
+                    "A bot did not shoot an enemy sprinkler in its reach");
+                lone.planted = { sprinkler_at(reach * 0.6f, PlayerTeam::a) };
+                require(!aims_at(run(lone), centre), "A bot shot its own team's sprinkler");
+                const BotPlantedSub remote = sprinkler_at(reach + sprinkler_size.x, PlayerTeam::b);
+                lone.planted = { remote };
+                require(!aims_at(run(lone), remote.bounds.center()),
+                    "A bot shot at an enemy sprinkler beyond its reach");
+                lone.planted = { target, wall_at(reach * 0.3f, PlayerTeam::b) };
+                require(!aims_at(run(lone), centre), "A bot shot at an enemy sprinkler through an enemy wall");
+
+                // An enemy in reach on one side and a sprinkler on the other:
+                // the enemy first.
+                PlantedWorld both(tuning, tool);
+                both.enemy = Vector2F(reach * 0.5f, 0.0f);
+                both.planted = { sprinkler_at(-reach * 0.5f, PlayerTeam::b) };
+                const PlayerInputData fight = run(both);
+                require(aims_at(fight, both.enemy) && !aims_at(fight, both.planted.front().bounds.center()),
+                    "A bot shot a sprinkler while an enemy in reach was engaged");
+                ++pairs;
+            }
+        }
+        std::cout << "PASS bot answers planted subs: " << pairs << " difficulty/tool pairs aim past their own "
+            "wall and never through an enemy's, shoot an enemy sprinkler in reach and in sight (never their own, "
+            "one out of reach or behind an enemy wall), and fight an engaged enemy first\n";
+    }
+
     // A roller and a sprayer bot on crossfeed for a minute, under either
     // refill rule, carrying each sub in turn.
     void check_bot_round(World& world)
@@ -733,6 +878,16 @@ namespace
     }
 }
 
+    // What the shipping bots' world lists of a match's planted subs (REV#21):
+    // exactly this one, as it stands, or nothing when sub is null.
+    bool bots_list(const Level& level, const ProjectilePlanted* sub, PlayerTeam team, SubType type)
+    {
+        const std::vector<BotPlantedSub> planted = level.bot_world().planted_subs();
+        if (sub == nullptr) { return planted.empty(); }
+        return planted.size() == 1 && planted.front().bounds == sub->bounds() &&
+            planted.front().team == team && planted.front().type == type;
+    }
+
     // The sprinkler in a real round: dropped at the idle host's feet, it
     // sticks to the floor, touches nothing, sprays on its schedule for its
     // lifetime and retires; enemy shots break it, its own team's do not.
@@ -765,10 +920,14 @@ namespace
         const auto step = [&] { level->update(idle, dt); };
 
         ProjectileSprinkler* sprinkler = drop_sprinkler(feet, PlayerTeam::a);
+        require(bots_list(*level, nullptr, PlayerTeam::a, SubType::sprinkler),
+            "The bots' world listed a sprinkler still in flight");
         int steps = 0;
         while (!sprinkler->planted() && steps < 120) { step(); ++steps; }
         require(sprinkler->planted() && sprinkler->mask() == 0 && sprinkler->player_damage() == 0.0f &&
             sprinkler->takes_hits(), "A dropped sprinkler did not stick to the floor, or still touches players");
+        require(bots_list(*level, sprinkler, PlayerTeam::a, SubType::sprinkler),
+            "The bots' world did not list a planted sprinkler as it stands");
         const Vector2F planted_at = sprinkler->bounds().center();
         const float before = level->level_end_info().team_a_area;
         // Live until just before its lifetime ends, staying put and spraying
@@ -783,6 +942,8 @@ namespace
         for (int index = 0; index < static_cast<int>((tuning.interval + tuning.burst.details.delete_timer) / dt) + 10; ++index)
         { step(); }
         require(level->projectile_count() == 0, "A sprinkler outlived its lifetime");
+        require(bots_list(*level, nullptr, PlayerTeam::a, SubType::sprinkler),
+            "The bots' world listed a sprinkler past its lifetime");
 
         // Shots reaching it: its own team's leave it be, each enemy one is
         // spent on it, and the last of its hits breaks it.
@@ -813,12 +974,15 @@ namespace
         }
         const int sprays = sprinkler->sprays();
         shoot_at(PlayerTeam::b);
+        require(bots_list(*level, nullptr, PlayerTeam::a, SubType::sprinkler),
+            "The bots' world listed a broken sprinkler");
         // The last hit retires it this tick; the scene drops it at the next.
         for (int index = 0; index < static_cast<int>(tuning.burst.details.delete_timer / dt) + 10; ++index) { step(); }
         require(level->projectile_count() == 0 && sprays < static_cast<int>(tuning.lifetime / tuning.interval),
             "Its last hit did not break the sprinkler");
         std::cout << "PASS sprinkler: a seat carries it; it sticks, sprays " << expected <<
-            " times over its life and retires; " << tuning.hits << " enemy shots break it, its own team's do not\n";
+            " times over its life and retires; " << tuning.hits << " enemy shots break it, its own team's do not; "
+            "the bots' world lists it only while it stands\n";
     }
 
     // The paint wall: a player sets it down beside them, foot level with
@@ -874,6 +1038,8 @@ namespace
         };
         const float before = level->level_end_info().team_a_area;
         ProjectileWall* wall = stand_wall();
+        require(bots_list(*level, wall, PlayerTeam::a, SubType::wall),
+            "The bots' world did not list a standing wall as it stands");
         // A shot of the burst record (small, so it clears the floor) at the
         // wall's middle from one side, moving across it.
         const ProjectileTuning& shot = tuning.burst;
@@ -896,6 +1062,8 @@ namespace
         for (int count = 0; count < static_cast<int>((tuning.lifetime + shot.details.delete_timer) / dt) + 10; ++count)
         { step(); }
         require(level->projectile_count() == 0, "A wall outlived its lifetime");
+        require(bots_list(*level, nullptr, PlayerTeam::a, SubType::wall),
+            "The bots' world listed a wall past its lifetime");
 
         // Its last hit breaks it well before then.
         wall = stand_wall();
@@ -904,6 +1072,7 @@ namespace
             require(wall->takes_hits(), "A wall broke before its last hit");
             shoot(PlayerTeam::b);
         }
+        require(bots_list(*level, nullptr, PlayerTeam::a, SubType::wall), "The bots' world listed a broken wall");
         for (int count = 0; count < static_cast<int>(shot.details.delete_timer / dt) + 10; ++count) { step(); }
         require(level->projectile_count() == 0, "Its last hit did not break the wall");
 
@@ -1102,6 +1271,7 @@ int wmain(int argc, wchar_t* argv[])
         check_round(world);
         check_bot_policy(world.assets.tuning);
         check_bot_planted_subs(world.assets.tuning);
+        check_bot_answers_planted(world.assets.tuning);
         check_bot_round(world);
         check_sprinkler(world);
         check_wall(world);

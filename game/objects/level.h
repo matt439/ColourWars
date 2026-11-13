@@ -323,7 +323,7 @@ private:
 	std::vector<SeatSetup> roster_;
 	std::vector<int> view_participants_;
 	std::vector<int> participant_views_;
-	// Borrows scene_, players_ and structures_; never null after construction.
+	// Borrows scene_, players_, structures_ and projectiles_; never null after construction.
 	std::unique_ptr<LevelBotWorld> bot_world_;
 	std::unique_ptr<MatchBotDriver> bot_driver_;
 	// Scene-owned cosmetics, advanced after final player contacts and muzzle repair.
