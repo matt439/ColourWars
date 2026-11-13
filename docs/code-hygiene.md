@@ -898,13 +898,13 @@ path, and two impossible menu states throw instead of drawing `ERROR`/`Error`.
   the fixed `%LOCALAPPDATA%` spelling.
 - The spawn diagnostic says a player built outside `out_of_bounds` stops the
   match with a player-out-of-bounds failure; its sibling in
-  `station_contract.h` (the editor's words) and its comment say the same.
+  `station_contract.h` (the editor's words) and its comment say the same. The
+  paintable-role error says a `structure_paintable` collision object has no
+  paintable role.
 - Superseded by `REV#1` (2026-11-14): leaving the arena is now an elimination,
   so the throw, `PlayerOutOfBounds`, its header and the `player_out_of_bounds`
   reason are gone, and the two diagnostics say a player built there is
-  eliminated on its first tick. The
-  paintable-role error says a `structure_paintable` collision object has no
-  paintable role.
+  eliminated on its first tick.
 - The seven `std::exception("...")` throws (`level_end_info.cpp`,
   `player_figure.cpp`, `player.cpp`, three in `projectile.cpp`,
   `team_colour.cpp`) are `std::logic_error`, or `std::invalid_argument` for

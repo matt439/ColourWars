@@ -4628,7 +4628,8 @@ review is a frozen record, so its rulings live here. A later gap list checks
 this section first: a declined row below is an intended absence, and each
 names what would reopen it. Detail stays with the row's owner, linked.
 
-**Taken.** Each row is open work with a first step; none is built yet.
+**Taken.** Each row was taken as open work with a first step; a row that has
+been built says so and when.
 - **Out of bounds is an elimination (`REV#1`, M; built 2026-11-14).** A live
   player whose box leaves the bounds is killed through `Player::kill()` in
   place of the throw at the end of `Level::update` (`game/objects/level.cpp`),

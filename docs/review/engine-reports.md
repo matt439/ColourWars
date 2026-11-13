@@ -299,7 +299,7 @@ shipped without the fix, so on 2026-11-05 the author closed it as declined
 | 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp`, `painter_visual.cpp` and, since report 25 was spent (2026-11-05), `rumble_adapter.cpp`, and since `REV#31` (2026-11-12) `toggle_fire.cpp`; a test seam, separate from the pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which stays |
 | 28 | Public types and members removed with an engine-only caller count, against the rule from report 7 as extended by `c369e8b`; the deprecation-release ask is declined by policy | `game/carried/` and the `HYG#25` removed-member list |
 | 29 | ~~`Scene` gives no typed access to short-lived objects and no retirement notice~~ withdrawn 2026-11-03, see [Closed](#closed) | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
-| 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:117` and the exact-text checks at `scripts/sandbox/logon.ps1:218` and `:248`; `scripts/check-startup.ps1:225` and `:248` held the same match until 2026-11-04 |
+| 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:115` and the exact-text checks at `scripts/sandbox/logon.ps1:218` and `:248`; `scripts/check-startup.ps1:225` and `:248` held the same match until 2026-11-04 |
 | 31 | ~~`JsonValue` cannot report keys nobody read, so a misspelled optional key is silent~~ answered in `v0.3.0` and spent 2026-11-05, see [Closed](#closed) | the optional `has()` reads in `game/config/tuning.cpp` (`:461`, `:477`, `:484` and others) |
 | 32 | ~~Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false~~ answered and spent in `v0.3.0`, see [Closed](#closed) | `game/config/text_wrap.h` and its caller `WrappedTextDropShadow` |
 | 33 | `CollisionObject::on_contact` hands the other party over `const` (unchanged on master `8e91aab`), so a response that changes both parties has no route back to the other one | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h), the one `const_cast` in `game/`: a painted surface's answer reaches the projectile through it, where it used to reach `mutable` flags through a `const` method (`HYG#49`, 2026-10-30) |
@@ -544,7 +544,7 @@ authorization.
 **Exhibit** (client at `f5303302`). This repository has to tell one startup
 failure apart from the rest, in two places:
 
-- [`FatalReport::capture`](../../game/fatal_report.cpp) at `:117-120` compares
+- [`FatalReport::capture`](../../game/fatal_report.cpp) at `:115-118` compares
   `what()` with `std::strcmp` against `"No Direct3D hardware device found"`. On
   a match it records `cause_0_reason=no_hardware_device` in `last-error.log`.
   `scripts/acceptance/fatal_report.cpp:108-112` pins that match.
@@ -570,7 +570,7 @@ The spelling, and whether a missing audio device shares the same type, are
 engine decisions.
 
 **What an answer lets this repository delete.** The `strcmp` at
-`game/fatal_report.cpp:117` goes, and a type or code test replaces it. The
+`game/fatal_report.cpp:115` goes, and a type or code test replaces it. The
 exact-text checks at `scripts/sandbox/logon.ps1:218` and `:248` also go. In
 their place the script would read the `cause_0_reason` that `last-error.log`
 already records, which it does not check today. (`check-startup.ps1` held the
