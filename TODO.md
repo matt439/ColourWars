@@ -15,8 +15,8 @@ image, Stage Select's order, and the pin bump after the tag.
 
 Next actions (publication authorized 2026-11-13):
 
-1. `FTR#1`: rerun the candidate and sandbox checks on the committed release branch (this branch
-   changed code and content after `REL#1`), merge it on a green `gate`, tag `v0.1.0` on
+1. `FTR#1`: the candidate and sandbox checks passed again on the release branch (2026-11-13,
+   [evidence](docs/releasing.md#release-candidate-evidence-rel1)); merge it on a green `gate`, tag `v0.1.0` on
    `master`, check the published pre-release, then point the README at its tag page (`0.x`
    releases are pre-releases, which `/releases/latest` skips) and move to `0.1.1` (`REL#6`).
 2. `ENG#36` and `PIN#2`: after the tag, qualify engine master on the `PIN#1` trial build and bump

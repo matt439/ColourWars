@@ -185,10 +185,30 @@ landed proves the procedure, not the archive the first tag will publish.
 
 ### Release candidate evidence (`REL#1`)
 
-**Done 2026-11-12.** `scripts/release-candidate.ps1` ran on MattPC on a clean
-tree at `ccfe9b7` (branch `todo-clear-2026-11-12`, the tree pull request #81
-brings to `master`), engine pin `e7fc50e`, version `0.1.0`, under pwsh 7.4.6.
-The receipt's outcome was `passed`:
+**Done 2026-11-12, rerun 2026-11-13.** The release branch changed code and
+content (Stage Select's order and fresh-save default, the Slab Yard rename), so
+`scripts/release-candidate.ps1` ran again on MattPC on a clean tree at
+`c61cb21` (branch `release-v0.1.0`), engine pin `e7fc50e`, version `0.1.0`,
+under pwsh 7.4.6. The receipt's outcome was `passed`, with the same checks as
+the first run:
+
+| check | result |
+|---|---|
+| build (`build.ps1 -Package`) | passed |
+| package (`check-release-package.ps1`) | passed, 35 checks on 69 files |
+| packaged `build-info.txt` | passed: `ColourWars: c61cb219af7d…`, `Labrador: e7fc50e3…`, `Release`, no `-dirty` |
+| startup (`-RequireAudio -SystemOnlyPath`) | passed |
+| missing-bank fallback (`-RequireNoAudio`) | passed, with only the expected optional-bank diagnostic |
+
+ZIP `ColourWars-0.1.0-windows-x64.zip`, 21,986,119 bytes, SHA256
+`736086e2d97b554242e904aec380df3ae078711e6181ed4200f5d8efb84c6534`; the
+evidence is under
+`out/validation/release-candidate/c61cb219af7d-20261113T014146Z/`.
+
+The first run, superseded by that one, was on a clean tree at `ccfe9b7`
+(branch `todo-clear-2026-11-12`, the tree pull request #81 brings to
+`master`), engine pin `e7fc50e`, version `0.1.0`, under pwsh 7.4.6. Its
+receipt's outcome was `passed`:
 
 | check | result |
 |---|---|
@@ -214,6 +234,9 @@ in Windows Sandbox and passed. The details are in `ROAD#37`'s
 and [Build a clean candidate](#build-a-clean-candidate) now names the step.
 Labrador's `PI-14` can be pointed at that record: it is the `v0.3.0`-era run it
 was waiting for (the engine pin is `v0.3.0` plus nine commits).
+On 2026-11-13 the rerun candidate's ZIP (`c61cb21`, SHA256 `736086e2…`) passed
+the same Sandbox run: the hash matched the host, the game window opened, the
+save was created and `WM_CLOSE` exited 0.
 
 ### One-command candidate receipt (`REL#3`)
 
