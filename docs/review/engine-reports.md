@@ -3215,7 +3215,9 @@ moved.
   `check-paint-fx.ps1` hash the staged `.png`.
 - **Docs:** [game/art/README.md](../../game/art/README.md) and the painter,
   weapons, terrain and paint-fx READMEs, and `NOTICE` for `menu_paint`. The
-  polish records that name a DDS are records and are left as written.
+  present-tense staging sentences in the painter, tools and paint-effects
+  polish docs name the PNG; their dated validation records still say DDS, as
+  written.
 
 **Verification, on MattPC.** Debug and Release build; the staged
 `textures/` holds the five `.png`, `sprite_sheet_1.dds` and the six `.json`,

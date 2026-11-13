@@ -44,7 +44,9 @@ camera and audio timing are unchanged.
 
 Run `powershell -ExecutionPolicy Bypass -File scripts/build-painter-art.ps1`
 from the repository root. The retained source, recipe and working PNG live
-under `game/art/`; only `painter.dds` and its frame JSON enter runtime content.
+under `game/art/`; only `painter.png` (a copy of the working PNG, a DDS before
+[`PIN#3`](review/engine-reports.md#png-atlases-and-texconv-pin3)) and its frame
+JSON enter runtime content.
 Normal builds stage the reviewed outputs without invoking the art recipe.
 
 Run `scripts/check-painter.ps1 -Preset x64-debug` from an x64 Visual Studio
