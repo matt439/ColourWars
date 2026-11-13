@@ -213,9 +213,9 @@ try {
     else {
         $result.staged_content_hashes = @(
             'manifest.json', 'tuning.json', 'presentation.json', 'levels/movement_course.json',
-            'textures/painter.dds', 'textures/painter.json',
-            'textures/weapon_paint.dds', 'textures/weapon_paint.json',
-            'textures/paint_fx.dds', 'textures/paint_fx.json' |
+            'textures/painter.png', 'textures/painter.json',
+            'textures/weapon_paint.png', 'textures/weapon_paint.json',
+            'textures/paint_fx.png', 'textures/paint_fx.json' |
             ForEach-Object {
                 [ordered]@{ path = $_; sha256 = (Get-FileHash -LiteralPath (Join-Path $gameDirectory $_)).Hash }
             }

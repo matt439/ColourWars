@@ -13,7 +13,7 @@
 #include "game/objects/fixed_slab_shadow.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/render/camera.h"
-#include "engine/render/dds_file.h"
+#include "engine/render/png_file.h"
 #include "engine/render/visual.h"
 #include "engine/math/triangle.h"
 #include "scripts/acceptance/support/probe.h"

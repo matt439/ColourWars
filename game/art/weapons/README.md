@@ -12,8 +12,9 @@ Run `powershell -ExecutionPolicy Bypass -File scripts/build-weapon-art.ps1`
 from the repository root. Windows System.Drawing rasterises integer world-unit
 vectors without antialiasing, then expands each pixel to an exact 4x4 source
 block. The script writes the working `../sources/textures/weapon_paint.png`,
-runtime `../../content/textures/weapon_paint.json` and `.dds`, and the authoring
-[`lineup.png`](lineup.png). Ordinary builds stage only the runtime DDS/JSON.
+runtime `../../content/textures/weapon_paint.json` and `.png` (a copy of the
+working PNG), and the authoring [`lineup.png`](lineup.png). Ordinary builds
+stage only the runtime PNG/JSON.
 Python and image generation are not needed to edit or reproduce the artwork.
 
 The source draws each pose's `underlays`, then `body`, then `overlays` in order.
@@ -65,9 +66,10 @@ coverage or ammunition values are part of the art recipe.
 The 2560x1280 atlas packs all 40 material frames and both supply strips with
 four transparent texels around each packed rectangle. Supply frames retain
 the body's transparent canvas borders. The `random`, `error`, `pixel` and `nozzle` utility frames
-are exact copies from the historical player/projectile source. The DDS is
-premultiplied RGBA8, one mip; PNG colour-space metadata is omitted so texconv
-preserves authored UNORM bytes. Atlas packing and JSON frame ordering are stable.
+are exact copies from the historical player/projectile source. The PNG has
+straight alpha, which the engine's PNG loader premultiplies into RGBA8 with one
+mip as it loads; colour-space metadata is omitted so the loader reads authored
+UNORM bytes. Atlas packing and JSON frame ordering are stable.
 
 `lineup.png` shows all four poses enlarged at two pixels per world unit, followed
 by neutral and all five supported team hues on grey. Its smaller samples use

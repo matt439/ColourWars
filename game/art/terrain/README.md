@@ -12,9 +12,9 @@ from the repository root. Windows System.Drawing fills the integer-cell shapes
 without antialiasing and draws lines cell by cell. Each cell expands to exactly
 4x4 texels, producing the 2048x920 working atlas
 `../sources/textures/terrain.png`, runtime
-`../../content/textures/terrain.json` and `.dds`, and the review
-[`lineup.png`](lineup.png). Ordinary builds need neither System.Drawing nor
-Python; they stage only the DDS and JSON.
+`../../content/textures/terrain.json` and `.png` (a copy of the working PNG),
+and the review [`lineup.png`](lineup.png). Ordinary builds need neither
+System.Drawing nor Python; they stage only the PNG and JSON.
 
 A prop draws `fill`, outlines the union one cell thick (`edges: top` for the
 hills, whose sides and bottom run under their neighbours), then draws `detail`
@@ -48,8 +48,9 @@ The build checks the role list and order against that table.
 
 `lineup.png` shows every frame at three pixels per cell, the four shadow tiles
 abutted in two orders to check the seams, every frame again at one pixel per
-cell, and the swatches, all on the paper colour. The DDS is premultiplied RGBA8
-UNORM with one mip. Frame order and coordinates are fixed, and rebuilding the
-same source produces byte-identical PNG, JSON, DDS and lineup. The two landmarks
+cell, and the swatches, all on the paper colour. The PNG has straight alpha; the
+engine's PNG loader premultiplies it into RGBA8 UNORM with one mip as it loads.
+Frame order and coordinates are fixed, and rebuilding the same source produces
+byte-identical PNG, JSON and lineup. The two landmarks
 occupy a new shelf after the original frames and swatches; all original frame
 coordinates and the original 2048x596 texel region remain unchanged.

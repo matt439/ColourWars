@@ -3166,20 +3166,73 @@ Report 38 has no shipped exhibit, so it is
 
 ## PNG atlases and texconv (`PIN#3`)
 
-**Ready since the 2026-11-13 bump**, which brought the PNG loader. All six runtime textures under
-`game/content/textures/` are `.dds`. Four build scripts shell out to the
-vendored `texconv.exe` only to premultiply a PNG they have already written
-(`scripts/build-weapon-art.ps1:340`, `build-painter-art.ps1:584`,
-`build-terrain-art.ps1:328`, `build-paint-fx-art.ps1:224`; the reason is in
-[game/art/README.md](../../game/art/README.md)). Master reads `name.png` when
-there is no `name.dds` and premultiplies it itself, and refuses a name with
-both.
+**Done 2026-11-13.** Five of the six runtime textures now ship as the PNG the
+art builds already wrote, and the engine premultiplies them on load;
+`sprite_sheet_1` keeps its DDS.
 
-- **First step, after the bump:** decode each shipped PNG through the engine's
-  `decode_png` and compare it byte for byte with the texconv DDS.
-- **Acceptance:** an atlas moves to PNG only if it matches or the painter pins
-  still pass; any that differs keeps its DDS. The painter and paint-fx scripts,
-  which stage the `.dds` by name, follow.
+Before, all six runtime textures under `game/content/textures/` were `.dds`, and
+four build scripts shelled out to the vendored `texconv.exe` only to premultiply
+a PNG they had already written. Master reads `name.png` when there is no
+`name.dds`, premultiplies it as `(c*a+127)/255`, and refuses a name with both.
+
+**The comparison.** A throwaway program (not kept) read each
+`game/art/sources/textures/<name>.png` with `labrador::read_png_file` and the
+shipped `<name>.dds` with `read_dds_file`, and compared size, format, levels
+and every pixel byte:
+
+| atlas | size | DDS format | PNG | result |
+|---|---|---|---|---|
+| `painter` | 1024x2048 | `r8g8b8a8_unorm`, 1 mip | RGBA8, metadata-free | identical bytes |
+| `weapon_paint` | 2560x1280 | `r8g8b8a8_unorm`, 1 mip | RGBA8, metadata-free (16 translucent texels) | identical bytes |
+| `terrain` | 2048x920 | `r8g8b8a8_unorm`, 1 mip | RGBA8, metadata-free | identical bytes |
+| `paint_fx` | 1024x2048 | `r8g8b8a8_unorm`, 1 mip | RGBA8, metadata-free | identical bytes |
+| `menu_paint` | 1672x941 | `b8g8r8a8_unorm`, 1 mip | opaque RGB with a C2PA chunk | identical texels; the DDS stores them blue first, which the GPU samples the same |
+| `sprite_sheet_1` | 1500x1512 | `bc3_unorm` (DXT4) | RGBA8 with an ICC profile | cannot match: block compression is lossy, and the PNG is four times the device memory |
+
+So the five uncompressed atlases moved (`git rm` the DDS, add the PNG as a
+copy of the working file, the same blob), and `sprite_sheet_1` stays a BC3
+DDS, as `png_file.h` advises for a large texture; moving it is the author's
+call and is not asked for. Nothing that samples them changes, so no probe pin
+moved.
+
+**What moved with them.**
+
+- **One texture, one of two files.** `cmake/manifest_asset_kinds.json` gives
+  `sprite_sheet` the alternative `"dds|png"`: exactly one must exist. The
+  three readers of that rule resolve it against the content on disk and refuse
+  none or both, as the engine does: `colourwars_manifest_resolve` in
+  `cmake/manifest_asset_kinds.cmake` (used by `release_assets.cmake`),
+  `runtime_file` in `editor/stage_registration.cpp`, and the registration
+  fixture in `scripts/acceptance/level_editor/registration_checks.cpp`.
+- **`cmake/runtime_assets.cmake`** lists the five `.png`; staging prunes the
+  old `.dds` from a build tree, so no stale pair reaches the engine.
+- **The four build scripts** copy their working PNG to `game/content/textures/`
+  and delete a stale DDS of the same name instead of calling texconv.
+  `texconv.exe` stays for `sprite_sheet_1`'s command
+  (`game/art/sources/textures/cmd.txt`) and in the credits.
+- **Probes and scripts that name the files:** `terrain`'s landmark check reads
+  `terrain.png` with `read_png_file`; `check-painter.ps1` and
+  `check-paint-fx.ps1` hash the staged `.png`.
+- **Docs:** [game/art/README.md](../../game/art/README.md) and the painter,
+  weapons, terrain and paint-fx READMEs, and `NOTICE` for `menu_paint`. The
+  polish records that name a DDS are records and are left as written.
+
+**Verification, on MattPC.** Debug and Release build; the staged
+`textures/` holds the five `.png`, `sprite_sheet_1.dds` and the six `.json`,
+with no stale DDS. Release default acceptance passed, 83 cases; Debug
+`terrain`, `level_format`, `menu_presentation`, `weapon_catalog`, `user_stages`
+and `paint` passed. `check-level-editor.ps1` and `check-stage-registration.ps1`
+(Debug), `check_runtime_staging.cmake`, and `check-startup.ps1` on both
+executables passed. A scratch configure of the resolver took one file, and
+refused both files and neither. On the GPU, `check-painter.ps1` Release with
+`-IdentityOnly`, `-LandmarkOnly`, `-MainMenuOnly` and `-MiniatureTerrainOnly`,
+and `check-paint-fx.ps1` Release, passed with their pins unchanged.
+Rebuilding the paint-fx and terrain art left the tree byte for byte as it
+was. The five decodes take about 110 ms in Release, at every load and device
+restore, and the release ZIP loses about 41 MB of DDS for 2.6 MB of PNG.
+
+Not run: the full painter sweep, which is nightly; anything needing a pad; and
+a look at the game on a real GPU beyond the painter's pins.
 
 # What the 2026-11-13 bump changed
 

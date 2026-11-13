@@ -16,9 +16,9 @@ namespace
 			sheet->sprite_frame(brush).origin() == Vector2F::zero && sheet->sprite_frame(tape).origin() == Vector2F::zero,
 			"Landmarks did not resolve to their distinct native-size, zero-origin atlas frames");
 
-		// Read the actual staged runtime DDS through the CPU asset reader; no
+		// Read the actual staged runtime PNG through the CPU asset reader; no
 		// texture device or unstaged working-image file is needed.
-		const TextureData image = read_dds_file((content / "textures/terrain.dds").string());
+		const TextureData image = read_png_file((content / "textures/terrain.png").string());
 		require(image.width == 2048 && image.height == 920 && image.format == TextureFormat::r8g8b8a8_unorm &&
 			!image.levels.empty() && image.levels.front().width == 2048 && image.levels.front().height == 920 && !image.pixels.empty(),
 			"The landmark frames require the complete staged 2048x920 RGBA terrain atlas");

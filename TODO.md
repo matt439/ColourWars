@@ -13,15 +13,11 @@ results go in their owners, and `git log` is the changelog.
 was published as a pre-release on 2026-11-13 ([record](docs/releasing.md#first-release-v010));
 `master` is now `0.1.1` (`REL#6`).
 
-The engine pin moved to master `1dc8533c` on 2026-11-13 (`ENG#36` and `PIN#2` done,
-[record](docs/review/engine-reports.md#what-the-2026-11-13-bump-changed)).
+The engine pin moved to master `1dc8533c` on 2026-11-13 (`ENG#36`, `PIN#2` and `PIN#3` done,
+[record](docs/review/engine-reports.md#what-the-2026-11-13-bump-changed)); five atlases now ship
+as PNG through the engine's loader ([`PIN#3`](docs/review/engine-reports.md#png-atlases-and-texconv-pin3)).
 
-Next actions:
-
-1. `PIN#3`: decode the shipped PNGs through the engine's loader and move each atlas that
-   matches its DDS.
-
-The other `OPEN` rows can follow in any order. The required `gate` and up-to-date `master` rule
+Next actions: the `OPEN` rows, in any order. The required `gate` and up-to-date `master` rule
 still apply. The author's calls of 2026-11-13 on the decision rows are recorded in
 [Project review calls](docs/feature-roadmap.md#project-review-calls-2026-11-13) and the owners;
 they opened `REV#1`, `REV#13`, `REV#14`, `REV#63` and `POL#49`.
@@ -100,12 +96,6 @@ and 37 withdrawn. A pin bump that answers one is when its workaround is deleted.
 | `ENG#PARKED` | DECISION | LOW | S | Asks waiting for a vehicle: window presence (was 38), `window_size_changed`, desktop size (exhibit for engine `REV#83`), atomic JSON write, registry forgetting, install facts, listener/voice cap, display-awake owner, non-XInput reader (`ROAD#23`), colour transforms (was `GAP#F10`), engine `GAP#6`/`REV#60` (leaves when `POL#49` lands), sound-group lookup (was `ENG#35`). Author: approve the drafted mouse-button comment for labrador#122, then post it. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#26`, `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed 2026-11-05 as [labrador#122](https://github.com/matt439/Labrador/issues/122) (27 with the 26 rider), #123, #124 and #125 (the Bug). Waits on the engine. When one is answered, spend it at the next pin bump; for 34, also settle what CI's strict gates accept. [Ledger](docs/review/engine-reports.md#live) |
 | `ENG#39` | DECISION | LOW | S | `FLT_MAX` written to JSON reads back one double step above it, so `gameplay_tuning` tests one float below. Drafted 2026-11-13, not filed. Author: issue route or engine fix. [Report](docs/review/engine-reports.md#39-a-float-written-as-flt_max-does-not-read-back---draft-not-filed) |
-
-**Pin follow-up (`PIN`)**
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `PIN#3` | OPEN | LOW | M | The pin has the engine's PNG loader since 2026-11-13: decode each shipped PNG through it, ship the atlases that match their DDS and retire the texconv premultiply step for them, keeping the DDS for any that does not. [Item](docs/review/engine-reports.md#png-atlases-and-texconv-pin3). |
 
 ## Developer console
 
@@ -242,6 +232,7 @@ A new row for one of these gets its section back.
 | Game gaps (gap audit Class 1) | [docs/review/gap-audit.md](docs/review/gap-audit.md) (frozen) | a new finding; `ROAD#5`, `ROAD#7`, `ROAD#9`, `ROAD#10`, `GAP#4.2`, `GAP#5.1`, `GAP#L9` and `GAP#L11` were accepted or waived 2026-11-05 (no translation language chosen) |
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Design process (`DES#1`-`DES#4`) | [design-process.md](docs/design-process.md) | a new story, persona or journey, or a check gap a later trace finds; `DES#4`, the code re-review, was the last (2026-11-03) |
+| Pin follow-up (`PIN`) | [engine-reports.md, PNG atlases](docs/review/engine-reports.md#png-atlases-and-texconv-pin3) | the next pin bump's preparation; `PIN#3` moved five atlases to PNG 2026-11-13 and `sprite_sheet_1` keeps its BC3 DDS |
 | Closed engine reports (1–25, 28, 29, 31, 32) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |

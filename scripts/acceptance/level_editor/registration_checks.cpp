@@ -59,10 +59,24 @@ namespace level_editor_acceptance
                 for (const rapidjson::Value& name : group["names"].GetArray())
                 {
                     if (kind == "level") { last_level_name = name.GetString(); }
-                    for (const std::string& extension : extensions.at(kind))
+                    for (const std::string& rule : extensions.at(kind))
                     {
-                        const fs::path relative = (fs::path(group["directory"].GetString()) /
-                            (std::string(name.GetString()) + "." + extension)).lexically_normal();
+                        // "dds|png" is whichever one the source content has
+                        // (cmake/manifest_asset_kinds.cmake); never both.
+                        const fs::path base = fs::path(group["directory"].GetString()) / name.GetString();
+                        std::vector<std::string> present;
+                        std::size_t start = 0;
+                        while (start <= rule.size())
+                        {
+                            const std::size_t end = std::min(rule.find('|', start), rule.size());
+                            const std::string extension = rule.substr(start, end - start);
+                            if (rule.find('|') == std::string::npos ||
+                                fs::exists(source_content / fs::path(base).concat("." + extension)))
+                                present.push_back(extension);
+                            start = end + 1;
+                        }
+                        require(present.size() == 1, "A runtime asset has none or more than one of " + rule);
+                        const fs::path relative = fs::path(base).concat("." + present.front()).lexically_normal();
                         require(!relative.is_absolute() && !relative.empty() &&
                             std::none_of(relative.begin(), relative.end(), [](const fs::path& part) { return part == ".."; }),
                             "A runtime fixture path must stay inside its private content directory");
