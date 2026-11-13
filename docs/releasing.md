@@ -1,8 +1,9 @@
 # Preparing a release
 
 The Release ZIP is the player download. Its version comes from
-`project(VERSION)` in [CMakeLists.txt](../CMakeLists.txt); the current first-release
-target is `v0.1.0`. [The development guide](development.md#release-zip) describes
+`project(VERSION)` in [CMakeLists.txt](../CMakeLists.txt). The first release,
+`v0.1.0`, is [published](#first-release-v010); `master` is now `0.1.1`, the
+next patch under the [versioning rule](#versioning-rule-rel6). [The development guide](development.md#release-zip) describes
 what it contains. [AGENTS.md](../AGENTS.md#commits-and-pull-requests) owns the
 branch, required `gate` and publication rules.
 
@@ -43,9 +44,27 @@ The author's calls for this release aim (2026-11-13):
 - **Versioning (`REL#6`):** the [rule below](#versioning-rule-rel6).
 - **Engine pin (`ENG#36`):** the next pin bump lands **after** `v0.1.0`, so the
   first release ships the pin the candidate checks ran on.
-- **First tag (`FTR#1`):** authorized. After publication, replace the README's
-  artifact fallback with a link to the release's tag page; every `0.x` release
-  is a pre-release, which GitHub's `/releases/latest` does not return.
+- **First tag (`FTR#1`):** authorized, and [done](#first-release-v010). The
+  README's step 1 links the release's tag page; every `0.x` release is a
+  pre-release, which GitHub's `/releases/latest` does not return.
+
+## First release (`v0.1.0`)
+
+**Published 2026-11-13.** Pull request #82 merged on a green `gate` as
+`9e7dbaa`, and the annotated tag `v0.1.0` on that commit ran full CI. Every
+Windows leg passed, and `publish` created
+[ColourWars v0.1.0](https://github.com/matt439/ColourWars/releases/tag/v0.1.0)
+as a pre-release with two assets: `ColourWars-0.1.0-windows-x64.zip`
+(21,986,443 bytes, SHA256
+`fa3f8244277cebd2660509b4a447d2ac87982d88f8b5565fae06aeabf2c50896`) and
+`ColourWars.pdb`. The downloaded ZIP's `build-info.txt` names version `0.1.0`,
+`ColourWars: 9e7dbaaf128b…`, `Labrador: e7fc50e3…` and `Release`, with no
+`-dirty`. That was the first end-to-end run of the publish job (`REL#4`).
+The tree matches the candidate checked under `REL#1` and `REL#2`, apart from the
+record of those checks. The ZIP differs from the candidate's by a few bytes
+because the build line names a different commit.
+
+The next commit moved `project(VERSION)` to `0.1.1`, as `REL#6` says.
 
 Other design calls stay indexed in [TODO.md](../TODO.md), including `REV#1`'s
 out-of-bounds handling. They have not been accepted by selecting this

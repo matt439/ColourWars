@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.26)
 
-project(ColourWars VERSION 0.1.0 LANGUAGES CXX RC)
+project(ColourWars VERSION 0.1.1 LANGUAGES CXX RC)
 
 # REL#7: Release keeps symbols, so a crash in a published build can be read.
 # Every target, the engine's included, compiles with /Zi as Debug already does;
