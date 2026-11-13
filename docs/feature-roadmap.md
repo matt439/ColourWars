@@ -4976,8 +4976,10 @@ whether and where the shot stops changes. The engine has no swept circle, so
 [projectile_contacts.cpp](../game/objects/projectile_contacts.cpp)): the
 centre's path against the obstacle box rounded by the radius, in double
 precision, with the same entry inset, tie rules and breakable order as the
-box sweep. A disc that only grazes a corner in float arithmetic flies on to
-the end of its step. Cover and players on flat stages are swept as discs;
+box sweep. A disc whose double-precision graze of a corner the float narrow
+phase cannot confirm, even at the graze's deepest point, is not stopped there:
+the rest of its step is swept without that corner, so cover behind it still
+stops it (`round_shots` pins both). Cover and players on flat stages are swept as discs;
 two things stay boxes: the launch exemption (`launch_leaves_overlap`, which
 only ever skips), and the fixed slabs and movers, whose own sweeps are box
 sweeps (`FixedSlabGeometry::sweep`, the mover's relative segments). Those
@@ -4989,11 +4991,14 @@ its square, as it paints everything.
 ([shot_retirements.h](../game/objects/shot_retirements.h)) count how round
 shots leave play: on cover, on a player, on a planted sub, by running out of
 time, or out of bounds; in flight, or stopped at the muzzle by launch
-obstruction. Grenade bodies count apart from the balls. Nothing in a match
+obstruction. Grenade bodies count apart from the balls; the planted subs
+(sprinkler and paint wall), balls by kind, are no round shots and are left
+out. Nothing in a match
 reads it back. The balance runner prints it as four `shot-contacts` lines per
 match, never as CSV columns, so both CSV schemas are unchanged.
 
-**Measurement (2026-11-14).** Debug runner, this commit's tree on engine pin
+**Measurement (2026-11-14).** Debug runner, run again on the tree with the
+review fixes (planted subs out of the tally, the graze fallback), engine pin
 `1dc8533c`, four stages (`crossfeed`, `close_quarters`, `press_tower`,
 `turbulence_slab_trial`) x 32 seeds (1000-1031) = 128 1v1 matches per run,
 both seats the shipping bot at Hard, 60 s each:
@@ -5010,14 +5015,14 @@ has no bucket, so every ball is a grenade drop.
 
 | Bucket balls, 128 matches | rectangle | circle | change |
 |---|---|---|---|
-| Shots retired in flight | 9,829 | 10,356 | +5.4% |
-| on cover / on a player | 8,558 / 978 | 8,974 / 1,123 | +4.9% / +14.8% |
-| ran out of time / on a planted wall | 249 / 44 | 211 / 48 | -15.3% / +9.1% |
-| Player share of flight retirements | 9.95% | 10.84% | +0.89 pt |
-| Stopped at launch (cover / player) | 13,695 / 1,042 | 13,230 / 1,066 | -3.4% / +2.3% |
-| Player contacts per shot, launch and flight | 8.22% | 8.88% | +0.66 pt |
-| Hit ticks dealt (hit-view) / eliminations | 1,988 / 168 | 2,162 / 196 | +8.8% / +16.7% |
-| Painted area, all matches | 8,026,039 | 8,172,652 | +1.8% |
+| Shots retired in flight | 9,649 | 10,178 | +5.5% |
+| on cover / on a player | 8,558 / 978 | 8,984 / 1,124 | +5.0% / +14.9% |
+| ran out of time / on a planted wall | 70 / 43 | 22 / 48 | -69% / +11.6% |
+| Player share of flight retirements | 10.14% | 11.04% | +0.91 pt |
+| Stopped at launch (cover / player) | 13,695 / 1,042 | 13,222 / 1,066 | -3.5% / +2.3% |
+| Player contacts per shot, launch and flight | 8.28% | 8.95% | +0.67 pt |
+| Hit ticks dealt (hit-view) / eliminations | 1,988 / 168 | 2,163 / 196 | +8.8% / +16.7% |
+| Painted area, all matches | 8,026,039 | 8,178,171 | +1.9% |
 | Final fingerprints that differ | | 121 of 128 | |
 
 | Grenades (sprayer seats), 128 matches | rectangle | circle | change |
@@ -5031,7 +5036,7 @@ has no bucket, so every ball is a grenade drop.
 | Final fingerprints that differ | | 42 of 128 | |
 
 Per stage, bucket balls on players in flight went 255 -> 274 (Close Quarters),
-327 -> 337 (Crossfeed), 237 -> 347 (Press Tower) and 159 -> 165 (Turbulence
+327 -> 337 (Crossfeed), 237 -> 347 (Press Tower) and 159 -> 166 (Turbulence
 Slab Trial).
 
 **Reading it.** The bots react to what happens, so a match diverges at its
@@ -5039,7 +5044,7 @@ first different contact and these are counts over different matches, not
 the same shots twice; read the shares and the direction, not single digits.
 The shape matters to almost every bucket match (121 of 128 end differently)
 and to a third of grenade matches. It does not make the ball harder to land:
-the bucket's share of player contacts went up slightly (8.2% -> 8.9% of shots,
+the bucket's share of player contacts went up slightly (8.3% -> 9.0% of shots,
 eliminations +17%), because a disc that clears a ledge or a doorway corner
 keeps flying instead of dying on the corner, and some of those reach the
 enemy. Fewer shots die at the muzzle (-3% bucket, -32% grenade drops), for the

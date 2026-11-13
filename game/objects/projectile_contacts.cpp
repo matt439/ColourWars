@@ -608,8 +608,25 @@ void Projectile::resolve_sweep(const RectangleF& start,
     else if (radius)
     {
         // A disc that only grazed a corner in float arithmetic has no contact
-        // to answer; it flies on to where its travel ends rather than stall.
+        // to answer there. Its deepest point along the travel is asked first;
+        // failing that, the graze is no contact, and the rest of the travel
+        // is swept without it, so cover behind the corner still stops it.
+        this->set_rectangle(rectangle_between(start, finish,
+            (closest.first + closest.second) / 2.0f));
+        if (const auto deepest = narrow_phase(*obstruction->shape(), *this->shape()))
+        {
+            obstruction->on_contact(*this, deepest->normal, deepest->penetration);
+            this->on_contact(*obstruction, -deepest->normal, deepest->penetration);
+            return;
+        }
         this->set_rectangle(finish);
+        std::vector<CollisionObject*> rest;
+        rest.reserve(objects.size());
+        for (CollisionObject* object : objects)
+        {
+            if (object != obstruction) { rest.push_back(object); }
+        }
+        this->resolve_sweep(start, finish, rest, launch, false, breakables);
     }
 }
 

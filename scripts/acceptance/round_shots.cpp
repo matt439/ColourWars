@@ -4,6 +4,7 @@
 #include "game/objects/player.h"
 #include "game/objects/projectile_ball.h"
 #include "game/objects/projectile_grenade.h"
+#include "game/objects/projectile_wall.h"
 #include "game/objects/round_shot_shape.h"
 #include "game/objects/shot_retirements.h"
 #include "game/objects/structure.h"
@@ -212,6 +213,55 @@ namespace
             "past cover and past a player\n";
     }
 
+    // Paths that just miss or only just reach a wall's corner, far from the origin where
+    // float steps are coarse, with a thin second wall further along: however
+    // the corner graze resolves, the disc never ends its step past the second
+    // wall. One the narrow phase cannot confirm at the corner is still swept
+    // against the rest of the step.
+    void check_graze_then_wall(World& world)
+    {
+        const float r = 20.0f;
+        const Vector2F corner(5000.0f, 5000.0f);
+        const Vector2F along = Vector2F(1.0f, -1.0f) / std::sqrt(2.0f);
+        const Vector2F away = Vector2F(-1.0f, -1.0f) / std::sqrt(2.0f);
+        int stopped_on_corner = 0;
+        for (int k = 0; k < 400; ++k)
+        {
+            // From a clear miss to a 1e-3 overlap, through the float step there.
+            const float depth = 5.0e-5f * static_cast<float>(k % 40 - 20);
+            const Vector2F closest = corner + away * (r - depth) + along * (0.01f * static_cast<float>(k / 40));
+            const Vector2F start = closest - along * 60.0f;
+            const Vector2F finish = closest + along * 150.0f;
+            auto first = world.cover(RectangleF(5000.0f, 5000.0f, 200.0f, 200.0f));
+            auto second = world.cover(RectangleF(5020.0f, 4800.0f, 2.0f, 175.0f));
+            auto ball = world.shot(start, finish - start, RoundShotShape::circle);
+            fly(*ball, { first.get(), second.get() });
+            require(ball->for_deletion() && ball->retire_cause() == ShotRetireCause::cover &&
+                ball->bounds().center().x < 5020.0f,
+                "A circle ball that grazed a corner flew on through the wall behind it");
+            if (ball->bounds().center().x < 4995.0f) { ++stopped_on_corner; }
+        }
+        std::cout << "PASS graze: 400 paths just past or into a far corner stop on it or on the wall behind it ("
+            << stopped_on_corner << " on the corner)\n";
+    }
+
+    // A planted sub is a ball by kind but not a round shot, so the tally
+    // leaves it out however it retires.
+    void check_planted_not_tallied(World& world)
+    {
+        const SubTuning& sub = world.tuning.sub(SubType::wall);
+        auto wall = std::make_unique<ProjectileWall>(RectangleF(Vector2F::zero, sub.body.details.col_rect_size),
+            Vector2F::zero, PlayerTeam::a, 0, Colour::blue, &world.render,
+            resolve_projectile_strip(sub.body, world.render), resolve_projectile_strip(sub.burst, world.render), &sub);
+        wall->set_for_deletion(true);
+        ShotRetirements tally;
+        tally.count(*wall, false);
+        tally.count(*wall, true);
+        require(tally.ball.total() == 0 && tally.grenade.total() == 0,
+            "A planted sub was tallied as a round shot");
+        std::cout << "PASS planted: a paint wall is not tallied as a round shot\n";
+    }
+
     void check_grenade(World& world)
     {
         const SubTuning& sub = world.tuning.sub(SubType::grenade);
@@ -266,6 +316,8 @@ int main(int argc, char** argv)
         check_default_and_shape(world);
         check_face_hit(world);
         check_corner_graze(world);
+        check_graze_then_wall(world);
+        check_planted_not_tallied(world);
         check_grenade(world);
         check_slab(world);
         require(round_shot_shape() == RoundShotShape::rectangle, "The probe left the circle setting on");

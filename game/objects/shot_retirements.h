@@ -4,8 +4,8 @@
 
 class Projectile;
 
-// ROAD#44's contact tally: how round shots (every ProjectileType::ball) left
-// play. A grenade body counts apart from the balls, which are the bucket's
+// ROAD#44's contact tally: how round shots (every ProjectileType::ball but
+// the planted subs, the sprinkler and the paint wall) left play. A grenade body counts apart from the balls, which are the bucket's
 // shots and every sub's drops. Read only; nothing in a match reads it back.
 struct ShotRetirementCounts
 {

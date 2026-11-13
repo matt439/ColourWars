@@ -62,7 +62,7 @@ or above (2026-10-27). The owner records the gaps left out by choice and the exc
 | `ROAD#41` | UNSCOPED | LOW | M | Grey, non-scoring practice targets in the workshop that pop and redraw with no damage readout; needs a scope section first. [Item](docs/feature-roadmap.md#practice-targets-in-the-workshop-road41). |
 | `ROAD#42` | UNSCOPED | LOW | M | Weapon Select could show each tool's shot shape, drawn from its tuning, beside the text (story A6). No problem has been observed; it may wait on `POL#16`. [Item](docs/feature-roadmap.md#shot-shapes-on-weapon-select-road42). |
 | `ROAD#43` | UNSCOPED | LOW | L | Flood-fill paint object that fills one authored region for the team holding its trigger. Needs a contract draft on the lift precedent before an author call on the territory swing. [Item](docs/feature-roadmap.md#flood-fill-paint-object-road43). |
-| `ROAD#44` | DECISION | LOW | M | Circle round shots landed behind Debug `shots.round` and runner `--round-shots`, default rectangle (unchanged). 128 seeded 1v1s: bucket player contacts 8.2% -> 8.9% of shots, muzzle stops -3%; grenade drops stopped at launch -32%. Author: keep circles (flip the default, rebaseline) or drop the switch. [Item](docs/feature-roadmap.md#circle-shapes-for-round-projectiles-road44). |
+| `ROAD#44` | DECISION | LOW | M | Circle round shots landed behind Debug `shots.round` and runner `--round-shots`, default rectangle (unchanged). 128 seeded 1v1s: bucket player contacts 8.3% -> 9.0% of shots, muzzle stops -3%; grenade drops stopped at launch -32%. Author: keep circles (flip the default, rebaseline) or drop the switch. [Item](docs/feature-roadmap.md#circle-shapes-for-round-projectiles-road44). |
 
 ## Engine demonstration
 
