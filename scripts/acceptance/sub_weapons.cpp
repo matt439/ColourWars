@@ -922,8 +922,18 @@ namespace
         ProjectileSprinkler* sprinkler = drop_sprinkler(feet, PlayerTeam::a);
         require(bots_list(*level, nullptr, PlayerTeam::a, SubType::sprinkler),
             "The bots' world listed a sprinkler still in flight");
-        int steps = 0;
-        while (!sprinkler->planted() && steps < 120) { step(); ++steps; }
+        // Just after the drop it is still pending; once admitted, it must stay
+        // off the list while it falls, until it plants.
+        int steps = 0, admitted_in_flight = 0;
+        while (!sprinkler->planted() && steps < 120)
+        {
+            step(); ++steps;
+            if (sprinkler->planted()) { break; }
+            ++admitted_in_flight;
+            require(bots_list(*level, nullptr, PlayerTeam::a, SubType::sprinkler),
+                "The bots' world listed a sprinkler still in flight");
+        }
+        require(admitted_in_flight > 0, "The sprinkler planted before its in-flight listing was checked");
         require(sprinkler->planted() && sprinkler->mask() == 0 && sprinkler->player_damage() == 0.0f &&
             sprinkler->takes_hits(), "A dropped sprinkler did not stick to the floor, or still touches players");
         require(bots_list(*level, sprinkler, PlayerTeam::a, SubType::sprinkler),
