@@ -40,7 +40,7 @@ namespace
 			{"movement_course", {1088.0f, 680.0f}, {5040.0f, 840.0f}, 15, 22, "hill_6"},
 			{"king_of_the_hill", {2376.0f, 4356.0f}, {3368.0f, 4516.0f}, 20, 22, "castle_background"},
 			{"turbulence", {1488.0f, 5016.0f}, {4256.0f, 5176.0f}, 17, 24, "hill_7"},
-			{"close_quarters", {1792.0f, 4652.0f}, {3952.0f, 4812.0f}, 17, 24, "hill_7"},
+			{"close_quarters", {1792.0f, 4652.0f}, {3952.0f, 4812.0f}, 22, 24, "workbench"},
 			{"crossfeed", {1672.0f, 564.0f}, {2260.0f, 892.0f}, 6, 8, "hill_b"},
 			{"press_tower", {132.0f, 644.0f}, {3212.0f, 812.0f}, 23, 25, "sign_b"}
 		};

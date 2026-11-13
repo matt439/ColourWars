@@ -596,6 +596,94 @@
                                            "w":  512,
                                            "h":  112
                                        }
+                          },
+                          {
+                              "name":  "cq_window",
+                              "position":  {
+                                               "x":  1492,
+                                               "y":  1668
+                                           },
+                              "size":  {
+                                           "w":  256,
+                                           "h":  160
+                                       }
+                          },
+                          {
+                              "name":  "cq_door",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  2536
+                                           },
+                              "size":  {
+                                           "w":  384,
+                                           "h":  400
+                                       }
+                          },
+                          {
+                              "name":  "cq_rack",
+                              "position":  {
+                                               "x":  392,
+                                               "y":  2536
+                                           },
+                              "size":  {
+                                           "w":  288,
+                                           "h":  384
+                                       }
+                          },
+                          {
+                              "name":  "cq_tank",
+                              "position":  {
+                                               "x":  684,
+                                               "y":  2536
+                                           },
+                              "size":  {
+                                           "w":  256,
+                                           "h":  320
+                                       }
+                          },
+                          {
+                              "name":  "cq_pipes",
+                              "position":  {
+                                               "x":  944,
+                                               "y":  2536
+                                           },
+                              "size":  {
+                                           "w":  640,
+                                           "h":  192
+                                       }
+                          },
+                          {
+                              "name":  "cq_bench",
+                              "position":  {
+                                               "x":  1588,
+                                               "y":  2536
+                                           },
+                              "size":  {
+                                           "w":  384,
+                                           "h":  128
+                                       }
+                          },
+                          {
+                              "name":  "cq_timber",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  2940
+                                           },
+                              "size":  {
+                                           "w":  224,
+                                           "h":  160
+                                       }
+                          },
+                          {
+                              "name":  "cq_drums",
+                              "position":  {
+                                               "x":  232,
+                                               "y":  2940
+                                           },
+                              "size":  {
+                                           "w":  256,
+                                           "h":  176
+                                       }
                           }
                       ]
 }
