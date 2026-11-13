@@ -1627,6 +1627,15 @@ as the game. In Release:
   F10 does nothing either; like a lone Alt, it no longer enters the system
   menu loop, because the engine treats both as plain keys
   ([engine report 11](review/engine-reports.md#11-f10-and-a-lone-alt-belong-to-the-system-menu-with-no-opt-out--accepted-narrowed-0f3b283)).
+- The per-player F1/Back text still ships today. `REV#13`, taken by the author
+  on 2026-11-13 and not yet landed
+  ([record](review/2026-11-10-project-review.md#developer-text-panel-ships-in-release-rev13)),
+  compiles it out of Release by binding `GameAction::debug` only under
+  `COLOURWARS_DEV_TOOLS`; the draw path and its members stay, so no class
+  layout depends on the gate, and F1 stays reserved in rebinding in both
+  builds. The player help, `presentation.json`'s two "Debug" entries and the
+  README's Controls row then go, and this page becomes the panel's only
+  documentation.
 - What does ship, by design, so no class layout depends on `_DEBUG`: the
   `DebugPageTarget` interface and `DebugMatchTarget` with its three bases,
   `DebugMatchView`, `DebugMatchControl` and `DebugMatchEdits` (their RTTI names
@@ -1833,6 +1842,8 @@ none.
   and inserting keys in `tune.save`: the fifty-eight listed colour fields above are
   implemented; see [the remaining scope](debug-console-record.md#remaining-live-tuning-work-dbg1) (`DBG#1`).
 - **Replays across builds or machines**, and across step sizes (`DBG#2`).
+- **The F1/Back panel out of Release** (`REV#13`, planned): see
+  [Release behaviour](#release-behaviour).
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
   this machine has no pad; both are covered on the CPU side only (`DBG#7`).
   The physical-pad check was waived by the author on 2026-11-05 and was not

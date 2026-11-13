@@ -526,7 +526,9 @@ findings to go into TODO the same way as the architecture review's. The
 findings are recorded, frozen, in
 [the review](review/2026-11-05-code-hygiene-review.md); this section owns their
 status. 500 verified findings are grouped into the rows below. The one engine-side
-finding is ledger draft `ENG#35` in [engine-reports.md](review/engine-reports.md).
+finding was ledger draft `ENG#35`; on 2026-11-13 the author parked it to ride
+with the next audio report
+([engine-reports.md](review/engine-reports.md#what-is-deliberately-not-here)).
 
 The rows keep the rules the [architecture rows](#architecture-review-2026-10-30)
 work under. They may rename, add a small shared helper and move code between

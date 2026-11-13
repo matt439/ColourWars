@@ -21,9 +21,13 @@ and issue guidance (`REV#15`). The README links to the source-build and
 maintainer material in [development.md](development.md). The packaged
 [HOW-TO-PLAY.txt](HOW-TO-PLAY.txt) now explains the existing paint-underfoot rule,
 and the Movement Course's refill lesson says it too (2026-11-12): own paint
-refills faster, enemy paint stops it. A live cue for standing on enemy paint, on
-the paint meter or the step sound, remains `REV#10` and is the author's
-presentation call.
+refills faster, enemy paint stops it. A live cue for standing on enemy paint
+([`REV#10`](review/2026-11-10-project-review.md#paint-underfoot-has-no-player-cue-rev10))
+is deferred (2026-11-13): that text and lesson stand as the explanation. If
+attended play or a player report shows people cannot tell why they slowed or
+stopped refilling, the author chooses between a cue and milder amounts (or
+none) under `POL#30`'s reopen rule; a cue would start with the visual tank
+state, since a step sound is a new cue hook.
 
 The author's calls for this release aim (2026-11-13):
 
@@ -67,8 +71,9 @@ because the build line names a different commit.
 The next commit moved `project(VERSION)` to `0.1.1`, as `REL#6` says.
 
 Other design calls stay indexed in [TODO.md](../TODO.md), including `REV#1`'s
-out-of-bounds handling. They have not been accepted by selecting this
-documentation/package pass. Arena artwork (`POL#16`) remains deferred.
+out-of-bounds handling, which the author took on 2026-11-13 (leaving the arena
+becomes an elimination) and which has not landed. Selecting this
+documentation/package pass did not accept them. Arena artwork (`POL#16`) remains deferred.
 
 ## Build a clean candidate
 
@@ -189,8 +194,21 @@ fits only the executable it was linked with.
 
 After publication, point the README's download step at the release, verify the
 asset name and player instructions, and close `FTR#1` in the same commit that
-finishes the remaining documentation work. Additional channels (`REV#67`) and
-remote-streaming guidance (`REV#69`) remain separate choices.
+finishes the remaining documentation work.
+
+The author's distribution calls (2026-11-13):
+
+- **Signing and channels
+  ([`REV#67`](review/2026-11-10-project-review.md#distribution-is-one-unsigned-github-zip-rev67)):
+  deferred.** The GitHub ZIP stays unsigned, with no separate checksum file;
+  the release page and its run are the record. itch.io waits for the first
+  non-pre-release tag, or for the author to want a public store page. Steam
+  ([`REV#68`](review/2026-11-10-project-review.md#steam-release-is-not-scoped-rev68))
+  stays deferred behind it.
+- **Remote streaming
+  ([`REV#69`](review/2026-11-10-project-review.md#stream-based-online-play-is-undocumented-rev69)):
+  declined.** No Parsec paragraph. Reopen when someone has played a streamed
+  session with a remote pad.
 
 ## Release work items (`REL`)
 
@@ -343,5 +361,8 @@ path. The ZIP still installs only the executable;
 reads the executable's debug directory and requires exactly that name. CI's
 Release leg uploads the PDB as `ColourWars-symbols-<commit>`, and `publish`
 attaches it to the GitHub Release. [The development guide](development.md#release-zip)
-says where the symbols are. The crash-dump half, which is the privacy
-question, stays `REV#63` and the author's call.
+says where the symbols are. The crash half of `REV#63` was decided on
+2026-11-13: no minidump. The planned slice writes a controlled-fields crash
+record to `last-error.log` instead, symbolicated against this PDB; the
+[failure-reporting guide](failure-reporting.md#crash-record-plan-rev63) holds
+the plan.

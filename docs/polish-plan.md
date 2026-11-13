@@ -1826,9 +1826,9 @@ marker's cross, recovery the team bead, sniper readiness the aim marker's
 chevron, low paint the blinking tag and tank (`POL#38`), the closing seconds the
 closing-clock card, a lost pad the **Controller lost** pause, and the countdown
 and count-in their cards. Time up rests on the camera's pull back and the clock
-running out, which is `REV#41`; the shooter's side of a hit is `REV#37`. Both
-are cited there, not filed again, and the declined `player.hit_confirm`
-(`POL#23`) is not reopened.
+running out, and the author declined a time-up banner (`REV#41`, 2026-11-13);
+the shooter's side of a hit is `REV#37`. Both are cited there, not filed again,
+and the declined `player.hit_confirm` (`POL#23`) is not reopened.
 
 Two cases have no counterpart, and the audit files neither: sniper readiness
 for a seat that has turned **Aim marker** Off, which removes the one readiness
@@ -1883,19 +1883,28 @@ one has looked at the game with this question in mind.
 
 ### Reduce effects default from Windows (`POL#49`)
 
-**Decision for the author (2026-11-12).** Should a fresh save start with Reduce
-effects On when Windows' **Animation effects** setting is off? Today the shared
-default is fixed: `bool reduce_effects = false;`
+**Taken, 2026-11-13; planned, not built.** The author said yes: a fresh save
+starts with Reduce effects On when Windows' **Animation effects** setting is
+off. Today the shared default is still fixed: `bool reduce_effects = false;`
 ([play_settings.h](../game/config/play_settings.h) line 95), and nothing in
-`game/` or `editor/` reads the Windows setting (`SystemParametersInfo` with
-`SPI_GETCLIENTAREAANIMATION`). Engine `REV#60` on Labrador's `master` proposes
-a read-only reduced-motion fact and notes that no native client reads the
-setting today; a read here would also be the client exhibit that row lacks.
+`game/` or `editor/` reads the Windows setting.
 
-If yes: read the setting only where `Save` writes its own defaults on first run,
-so an existing save keeps its value and nothing seeds a save. The per-seat
-comfort switch keeps following the shared value. Add a check to the save case.
-If no, record the answer here and close the row.
+The next step: when `Save::first_run()` is true, read
+`SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, ...)`, and if client-area
+animation is off, write the shared `reduce_effects` as `true` into the new
+save's defaults. This follows the `fit_initial_window` precedent
+([initial_display.cpp](../game/config/initial_display.cpp)), which reads a
+Windows fact only on a first run to choose a starting value. Existing and legacy saves keep their
+value, nothing seeds a save, and the per-seat comfort switches keep following
+Shared. Add an acceptance check for both settings of the Windows value. Probes
+that assert the default Off must allow for a runner whose animations are off.
+Size S.
+
+Once the read lands it is the client exhibit for engine `REV#60` on Labrador's
+`master`, which proposes a read-only reduced-motion fact and notes that no
+native client reads the setting today. The `SystemParametersInfoW` call goes to
+the engine as a note on that row
+([engine reports](review/engine-reports.md)).
 
 ### Help players read the tool and the fight
 
@@ -2070,6 +2079,17 @@ paint underfoot was answered "yes".
     ignore enemy paint;
   - towards a recheck of Press Tower or the Turbulence slab trial if their
     crossings, chosen with underfoot off, stop working with it on.
+
+  **No live enemy-paint cue (`REV#10`, deferred 2026-11-13).** The
+  [2026-11-10 review](review/2026-11-10-project-review.md#paint-underfoot-has-no-player-cue-rev10)
+  asked for a cue when enemy paint slows a player or stops their refill. The
+  author deferred it; the HOW-TO-PLAY line and the Movement Course refill lesson
+  stand as the explanation. Trigger: attended play or a player report shows
+  people cannot tell why they slowed or stopped refilling. That is the first
+  reopen condition above, and it reopens one choice under it: a cue, or milder
+  amounts (or "no"). If a cue is chosen, the visual tank state comes first,
+  because a step sound would be a new cue hook and so new work under the audio
+  rule.
 - **A special charged by painting. Answered 2026-11-03: no special.** There are
   five primaries and nothing else, and that absence is deliberate. Splatoon uses
   a special to answer "why keep painting when nobody is here"; here the arenas
@@ -2091,6 +2111,28 @@ paint underfoot was answered "yes".
 
 The decision may be "no" for any of them. Record it here either way, so a later
 gap list reads the absence as intended.
+
+**Further Splatoon borrowings declined, 2026-11-13.** The 2026-11-10 review
+named three more. The author declined each; they are recorded beside the
+answers above for the same reason.
+
+- **No burst of the attacker's paint on elimination (`REV#50`).** An
+  elimination keeps its team-coloured fragments
+  ([combat feedback](polish-combat-feedback.md)) and paints nothing
+  ([record](review/2026-11-10-project-review.md#elimination-leaves-a-burst-of-attacker-paint-rev50)).
+  Reopen if attended play shows kills feel unrewarded.
+- **No own-colour wall slide or wall jump (`REV#51`).** Walls stay paintable
+  surface, not a traversal mechanic
+  ([record](review/2026-11-10-project-review.md#own-colour-wall-climb-or-wall-jump-rev51)).
+  Reopen if a new arena is themed on vertical traversal, and then only as a
+  default-off trial on that arena.
+- **No Sniper charge (`REV#57`).** The Sniper stays as accepted on 2026-11-05:
+  a 1.0 s interval, a 2000 jet and the shooter-only `sniper.ready` cue. No
+  problem with it has been observed, and the attended play that could show one
+  was waived
+  ([record](review/2026-11-10-project-review.md#sniper-charge-or-readable-warning-rev57)).
+  This also removes the splatling option from `ROAD#13`'s Q1. Reopen if attended
+  play shows Sniper eliminations reading as unfair.
 
 **Paint-underfoot prototype (`POL#36`, implemented 2026-10-26; shipped on
 2026-11-05).** It was built as a default-off trial for an isolated Debug match

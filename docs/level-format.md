@@ -139,8 +139,9 @@ progress and any unfinished series are lost
 Neither the loader nor the user-stage scan checks that an arena is enclosed, so
 a gap in the walls, floor or ceiling shows up only in play. Surround everything a
 player can reach with solid structures, and test every reachable edge,
-including those a mover, gate or drop-through platform opens. This note goes
-when `REV#1` is decided.
+including those a mover, gate or drop-through platform opens. The author took
+`REV#1` on 2026-11-13: leaving the arena will be an elimination, with the
+normal respawn. This note goes when that change lands.
 
 Spawn entries are `{ "x": 100, "y": 1075 }`, the character's **top-left**, not its
 feet or centre. Character size comes from `tuning.player.size`; the template

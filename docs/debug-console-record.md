@@ -2100,10 +2100,11 @@ acceptance. `DBG#1` remains open; this audit adds no new tunable fields.
 
 ## Foreground checks (`CI#1`)
 
-**UNSCOPED.** `scripts/check-debug-console.ps1` remains an opt-in local check:
-its real key events and focus-sensitive scripts need a reliable foreground
-desktop, which the current hosted CI workflow does not establish. First assess
-an attended/dedicated runner model with explicit focus ownership and retained
-failure evidence. Scope CI integration only after that model is demonstrated;
-a hidden launch or synthetic CPU input check does not qualify the foreground
-workflow. Existing CPU acceptance and startup/editor CI checks remain in place.
+**DECLINED 2026-11-13.** The author chose no trial push to a hosted runner.
+`scripts/check-debug-console.ps1` stays a local, opt-in human check: its real
+key events and focus-sensitive scripts need a reliable foreground desktop,
+which hosted CI does not establish, and a hidden launch or synthetic CPU input
+check does not qualify the foreground workflow. The CPU-side `debug_console`
+acceptance case and the startup/editor CI checks remain in place. *Reopen* if
+a self-hosted or dedicated runner appears, or if a debug-console regression
+reaches `master` that the `debug_console` case missed.

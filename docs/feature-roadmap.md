@@ -1467,9 +1467,12 @@ fixture (`scripts/acceptance/paint_underfoot/fixtures.h`):
 Validation: `handicap` and `paint_underfoot` pass in Debug and Release. No
 tuning, content or game source changed in this slice; the 2026-11-05 switch to
 shipping underfoot on (`POL#30`) moved the case's off half to a disabled copy.
-It does not decide whether the bot's refill estimate should count
-paint underfoot; the observation still carries the handicap's `paint_refill`
-alone, as `MatchBotObservation` documents.
+The observation still carries the handicap's `paint_refill` alone, as
+`MatchBotObservation` documents, and the author kept it so on 2026-11-13
+(`REV#23`, closed) in the code's own words (`game/ai/match_bot.cpp`): at the
+base rate with the seat's handicap, "own paint underfoot only shortens the real
+refill, and the bot paints over any enemy paint on the top it holds, so the
+window stays a sufficient minimum."
 
 ## First increment: explicit joining and reconnect pause
 
@@ -2008,6 +2011,14 @@ qualifies the colours on screen: the opt-in visual cases that capture palettes
 (`paint_fx_visual`, `painter_visual`, the console's opening art check) still
 name the original three.
 
+**Random will skip the two legacy pairs (`REV#14`, taken 2026-11-13; not yet
+built).** A per-pair `in_random` flag, false on `pink_green` and `blue_yellow`,
+leaves them as fixed Options choices and draws Random uniformly over the
+passing pairs. This revisits the author's earlier answer here and to gap audit
+2.1, fixed choices plus three new passing pairs rather than a roll filter,
+while keeping the random-pair model. Seeded colour pins move; see
+[Project review calls](#project-review-calls-2026-11-13) for the first step.
+
 ### Controller rumble (`ROAD#9`)
 
 **Local implementation qualified, 2026-10-26; accepted 2026-11-05 without a
@@ -2180,12 +2191,11 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
   painter or a shield tool would differ most. Each new tool needs art, audio
   and bot ballistics. It waited for `POL#27`, which the author settled on
   2026-11-05, so it is no longer blocked. A new subclass suits the OOP rule.
-  **Proposal recorded (2026-11-12):** the
-  [umbrella tool proposal](#umbrella-tool-proposal-road13) recommends a
-  Splatoon brella, with the brush second. It changed no code, tuning or
-  content, and nothing is built until the author answers its questions Q1-Q7.
-  Its first slice is `REV#3`'s fix. `REV#57`'s sniper charge, if taken, argues
-  for a splatling instead (Q1).
+  **Proposal recorded (2026-11-12), answered (2026-11-13):** the
+  [umbrella tool proposal](#umbrella-tool-proposal-road13) recommended a
+  Splatoon brella, and the author took it and answered Q1-Q7. Its first slice
+  is `REV#3`'s fix, open either way. Building slices 2-4 is a separate call
+  after `PIN#2`.
 - **Map pickups (`ROAD#14`).** TowerFall chests, Paint Rumble power-ups and
   Smash items. Needs a match toggle and bot awareness. It waited for
   `POL#27`, which the author settled on 2026-11-05, so it is no longer blocked.
@@ -2644,11 +2654,11 @@ plants the sprinkler and wall as often as before. Endless paint is untouched.
 
 ### Umbrella tool proposal (`ROAD#13`)
 
-**Proposed 2026-11-12; nothing is built.** This is the first step the
-2026-11-12 audit set for `ROAD#13`: a scope proposal for one new tool
-archetype, written in the shape [Sub weapons](#sub-weapons-road11) used. No
-code, tuning or content changed. No slice starts until the author answers the
-questions at the end.
+**Proposed 2026-11-12; questions answered 2026-11-13; nothing is built.** This
+is the first step the 2026-11-12 audit set for `ROAD#13`: a scope proposal for
+one new tool archetype, written in the shape [Sub weapons](#sub-weapons-road11)
+used. No code, tuning or content changed. The author's answers are at the end;
+whether to build slices 2-4 is a separate call, below them.
 
 **The archetype: an umbrella (Splatoon's brella).** It fires a short fan of
 paint pellets. While Shoot is held, a canopy opens in front of the player and
@@ -2676,9 +2686,9 @@ paint wall's `takes_hits`/`take_hit` path through `Level::strike_breakables`
 - *Dualies.* Their dodge roll is a new movement verb. It has the brush's speed
   ripple, plus a new player state and a dodge policy for bots.
 - *Splatling.* It charges, then fires a stream. The stream is the Sprayer's and
-  only the charge is new. The charge is also the mechanism `REV#57` proposes
-  for the Sniper. If the author takes `REV#57`, a splatling would share its
-  hold-to-charge rule, which is the case for choosing it instead (Q1).
+  only the charge is new. Its case was sharing the hold-to-charge rule `REV#57`
+  proposed for the Sniper; the author declined `REV#57` on 2026-11-13, so the
+  splatling left Q1 with it.
 - *Blaster.* Its shot bursts in the air near the target. The burst is the paint
   grenade's (`ProjectileGrenade`) and the lob is the Bucket's, so this
   archetype adds the least.
@@ -2789,25 +2799,27 @@ umbrella against each tool, against the five-tool balance accepted on
 Then comes the author's attended play review, which implementation does not
 close.
 
-**Questions for the author.**
-- **Q1, the archetype.** The umbrella (recommended), the brush (best fit with
-  the fiction, but it changes player speed), or the splatling if `REV#57` is
-  taken?
-- **Q2, `REV#3`.** Moot since 2026-11-13: `ROAD#11`'s play review was waived,
-  so `REV#3` is open work and can be slice 1's first step.
-- **Q3, the canopy input.** Open whenever Shoot is held (Splatoon's rule,
-  recommended), or only after a short hold without firing?
-- **Q4, speed.** Does an open canopy slow its holder? The recommendation is no
-  for the first slice: a slowdown would be the first tool-dependent speed, and
-  it carries the brush's ripple.
-- **Q5, the canopy's shape.** Upright on the aim side (recommended), or turned
-  with the aim? The strike test has no rotated check, and the fixed slab's rigid
-  frame is the nearest precedent.
-- **Q6, the name** players read. "Umbrella" is the working name; the copy lives
-  in `presentation.json`.
-- **Q7, two shields.** May an umbrella carry the paint wall sub? The
-  recommendation is yes: the loadout stays free, as decided for `ROAD#11`, and
-  is revisited at the play review.
+**The author's answers (2026-11-13).**
+- **Q1, the archetype: the umbrella.** The brush was not taken. The splatling
+  left the list when `REV#57`'s Sniper charge was declined.
+- **Q2, `REV#3`.** Moot: `ROAD#11`'s play review was waived, so `REV#3` is
+  open work and slice 1, whichever way the build call goes.
+- **Q3, the canopy input: open while Shoot is held** (Splatoon's rule).
+- **Q4, speed: no slowdown.** An open canopy does not slow its holder, so no
+  tool-dependent speed arrives with it.
+- **Q5, the canopy's shape: upright on the aim side.**
+- **Q6, the name: "Umbrella"** as the working name until the art pass; the copy
+  lives in `presentation.json`.
+- **Q7, two shields: yes.** An umbrella may carry the paint wall sub; the
+  loadout stays free, as decided for `ROAD#11`.
+
+**Still open: whether to build slices 2-4.** That call is separate and comes
+after `PIN#2` ([engine ledger](review/engine-reports.md#qualify-masters-behaviour-changes-pin2)).
+Building reopens the five-tool balance accepted on 2026-11-05 (`POL#27`) and
+adds four cues nobody will hear before they ship, which are the reasons
+`REV#50` and `REV#43` were declined
+([review calls](#project-review-calls-2026-11-13)). The row stays DECISION,
+narrowed to that call.
 
 ### Input
 
@@ -2842,7 +2854,9 @@ way!"), a lifetime stats screen, and cosmetics or unlocks. New modes
 (Splatoon's objective modes, Tricolor and Salmon Run, free-for-all painting,
 TowerFall's elimination and co-op modes, INVERSUS arcade, Smash stock
 battles) stay excluded by the [match scope decisions](#match-scope-decisions-2026-10-15).
-A later gap list should read these absences as intended.
+A later gap list should read these absences as intended, together with the
+2026-11-10 review's rows the author declined on 2026-11-13
+([Project review calls](#project-review-calls-2026-11-13)).
 
 A live overview map (`ROAD#17`) was declined by the author on 2026-11-03.
 ColourWars withholds the whole picture along with the percentage, because the
@@ -3165,7 +3179,7 @@ are controlled inspection states; attended clarity/preference remains
 **UNSCOPED (2026-10-28); `ROAD#28`'s first slice was promoted on 2026-11-03,
 below, and its paint-driven second slice built the same day. Regraded
 2026-11-12: `ROAD#28`'s remainder is deferred, and `ROAD#29`'s contract draft
-is recorded and awaits the author, both below.** These are the remaining capabilities from
+is recorded, both below. `ROAD#29` was parked behind `REV#27` on 2026-11-13.** These are the remaining capabilities from
 `ROAD#15`, not ready implementations or prerequisites of the three slices
 above:
 
@@ -3192,8 +3206,10 @@ above:
   [growing-sponge contract draft](#growing-sponge-contract-draft-road29)
   resolves the fixed-area sites against `220d4809`, answers each one
   (E1-E12), and leaves the gameplay sets G1-G7 to the author. It changed no
-  code, tuning or content and chose no trial. Nothing is promoted until the
-  author picks.
+  code, tuning or content and chose no trial. **Deferred behind `REV#27`
+  (2026-11-13):** the author picked none of G1-G7; they are picked from the
+  draft's recommendations when `REV#27` sets a Random arena that wants a
+  sponge.
 
 Promote a bounded slice only once its owner records those choices and its
 acceptance. Neither adds a new physics/scoring requirement to an accepted
@@ -3580,7 +3596,11 @@ it reads there, or should be a fixed indicator above the shaft instead, is a
 
 #### Growing-sponge contract draft (`ROAD#29`)
 
-**Draft recorded 2026-11-12; awaiting the author.** This is the written step
+**Draft recorded 2026-11-12; parked behind `REV#27` (2026-11-13).** The
+author picked none of G1-G7. No Random arena wants a sponge, so nothing would
+consume one; when `REV#27` sets a Random arena that does, G1-G7 are picked
+starting from this draft's recommendations, and the draft is the resume point.
+This is the written step
 the 2026-11-12 audit set, on the
 [vertical-lift precedent](#vertical-lift-contract-draft-road28). It changes no
 code, tuning or content, chooses no trial, and leaves every accepted arena
@@ -3748,8 +3768,8 @@ reference points only, and none of these gates the engineering.
   slice. *Recommended:* (a). Routing waits on a consumer, as lift routing waits
   on `REV#27`.
 
-Once the author has chosen, a bounded first slice is promoted with
-`moving_structure`, `level_format`, `paint_ferry`-style scoring checks and
+Once `REV#27` sets a consumer and the author has chosen, a bounded first slice
+is promoted with `moving_structure`, `level_format`, `paint_ferry`-style scoring checks and
 editor acceptance on its trial, as the lift's was.
 
 ### Paint-object trial play (`ROAD#30`)
@@ -3873,7 +3893,9 @@ The End paper was resized for six rows (above), and `POL#15` wanted fewer
 steps between rounds. Then it needs the row's copy in `presentation.json`, the
 End menu's validation and painter updates, and a play check, since the payoff
 is unproven without play. It runs after the reveal, so the `ROAD#17` decline
-does not apply.
+does not apply. The author declined `REV#54`'s coverage-over-time strip on
+Results on 2026-11-13 in favour of this row; the strip is reopened only if this
+End row is rejected and the author still wants the round's arc shown.
 
 ### Menu cards stay on the paper face (`ROAD#25`)
 
@@ -4581,17 +4603,160 @@ the HUD panels at the top corners, pointer legibility, whether the fade helps)
 was part of the pad sessions the author waived on 2026-11-05 (`ROAD#2`); it was
 not performed.
 
+## Project review calls (2026-11-13)
+
+The author's calls, on 2026-11-13, on the DECISION rows the
+[2026-11-10 project review](review/2026-11-10-project-review.md) raised. That
+review is a frozen record, so its rulings live here. A later gap list checks
+this section first: a declined row below is an intended absence, and each
+names what would reopen it. Detail stays with the row's owner, linked.
+
+**Taken.** Each row is open work with a first step; none is built yet.
+- **Out of bounds is an elimination (`REV#1`, M).** A live player who leaves
+  the bounds is killed through `Player::kill()` in place of the throw in
+  `Level::update` (`game/objects/level.cpp`): no owner, no splat credit for the
+  [awards](#results-awards-road12), otherwise a normal death and redraw. A player
+  already dead outside the bounds is placed back at respawn and not killed
+  again. The fixed `player_out_of_bounds` reason
+  ([failure reporting](failure-reporting.md#phase-and-original-cause)) and its
+  checks are removed or marked unreachable; the "seal the arena" warnings in
+  [level format](level-format.md) and [the editor guide](level-editor.md) go
+  when the change lands.
+  ([Record](review/2026-11-10-project-review.md#a-player-leaving-the-arena-ends-the-process-rev1).)
+- **Developer panel out of Release (`REV#13`, S).** `GameAction::debug` is
+  bound only under `COLOURWARS_DEV_TOOLS` (`action_bindings.cpp`); the draw path
+  and members stay, so no layout depends on the gate, and F1 stays reserved in
+  rebinding in both builds. The Debug help entries leave `presentation.json` and
+  `qps-ploc.json`, and the README's "Debug overlay" Controls row goes. The
+  controls-help pins are rebaselined and the `ControlsMenuOnly` painter leaf is
+  re-qualified on MattPC. [The developer console](debug-console.md) is then the
+  only place the panel is documented.
+  ([Record](review/2026-11-10-project-review.md#developer-text-panel-ships-in-release-rev13).)
+- **A crash record, not a minidump (`REV#63`, S-M).** Unhandled-exception and
+  terminate handlers write the existing `last-error.log` fields: a crash phase,
+  the exception code, the faulting module (`ColourWars.exe`, engine, system or
+  "other", so injected modules go unnamed) and its RVA, which the published
+  [PDB](releasing.md#release-symbols-rel7) symbolicates. It rewrites
+  [failure reporting's Boundary](failure-reporting.md#boundary). A stack
+  overflow, or an exception swallowed in a Win32 callback, may not reach it.
+  ([Record](review/2026-11-10-project-review.md#no-crash-dump-and-no-release-symbols-rev63).)
+- **Reduce effects from Windows on first run (`POL#49`, S).** Yes; the
+  [polish item](polish-plan.md#reduce-effects-default-from-windows-pol49) owns
+  it. Once the read lands it is the client exhibit for the engine's `REV#60`
+  ([ledger](review/engine-reports.md#what-is-deliberately-not-here)).
+- **Random skips the exempt pairs (`REV#14`, S).** A per-pair `in_random` flag
+  in `team_palette`, false on `pink_green` and `blue_yellow`; both stay fixed
+  Options choices. This revisits the author's earlier answer to
+  [gap audit 2.1](review/gap-audit.md#21-the-discrete-random-pair-is-the-design-the-missing-piece-is-a-route-around-it)
+  and [`ROAD#8`](#more-team-palette-pairs-road8), and keeps the random-pair
+  model. First step: list every seeded colour pin and cross-build Debug tape
+  before the roll changes.
+  ([Record](review/2026-11-10-project-review.md#random-palette-draws-the-exempt-pairs-rev14).)
+
+**Partly decided.**
+- **Umbrella questions answered (`ROAD#13`).** Q1-Q7 are recorded in the
+  [umbrella proposal](#umbrella-tool-proposal-road13). Building slices 2-4 is a
+  separate call after `PIN#2`; slice 1 is `REV#3`, open either way.
+
+**Deferred, each with its trigger.**
+- **Bot takeover of a missing seat (`REV#28`).** Trigger: a series actually
+  lost to a pad that cannot return, seen or reported. Then only the
+  between-rounds End menu version, never a mid-round takeover.
+  ([Record](review/2026-11-10-project-review.md#bot-takeover-for-a-missing-seat-rev28).)
+- **HUD text floor (`REV#29`).** Trigger: a player reports split-pane text
+  unreadable, or `POL#16`'s UI pass rebaselines the HUD fixtures. Then an
+  opt-in Options "HUD text: Normal / Large" row (default Normal), not a global
+  floor. [Measurements](polish-hud.md#split-pane-text-size-rev29-2026-11-12).
+- **Reveal strips as drawn (`REV#38`).** Trigger: `POL#16`'s art pass changes
+  how paint is drawn, or someone watching a real reveal at couch distance cannot
+  tell where the paint is.
+  ([Record](review/2026-11-10-project-review.md#paint-strips-are-hairline-thin-in-the-reveal-rev38).)
+- **Crossfeed's own music (`REV#42`).** Deferred with `POL#16`; the shared
+  track stays. Under the default Rotate the two arenas never meet, but a Random
+  first pick or Loser's pick can put them back to back.
+  ([Record](review/2026-11-10-project-review.md#crossfeed-shares-the-close-quarters-music-rev42).)
+- **Live enemy-paint cue (`REV#10`).** Trigger: attended play or a report shows
+  people cannot tell why they slowed or stopped refilling. That reopens one
+  choice under `POL#30`'s reopen rule: a cue, milder amounts, or no. A cue
+  starts with the visual tank state, since a step sound is a new cue hook. The
+  HOW-TO-PLAY line and the Movement Course lesson stand as the explanation.
+  ([Record](review/2026-11-10-project-review.md#paint-underfoot-has-no-player-cue-rev10).)
+- **Growing sponges (`ROAD#29`).** Parked behind `REV#27`; see the
+  [draft](#growing-sponge-contract-draft-road29).
+- **Distribution channels (`REV#67`).** No code signing and no separate
+  checksum. itch.io waits for the first non-pre-release tag, or until the
+  author wants a public store page; `REV#68` (Steam) stays deferred behind it.
+  [Releasing](releasing.md).
+  ([Record](review/2026-11-10-project-review.md#distribution-is-one-unsigned-github-zip-rev67).)
+
+**Declined.**
+- **No containment around the match or replay step (`REV#4`).** Declined once
+  `REV#1` lands, which removes the only throw players can reach. Reopen if a
+  released build writes a `run_loop` failure report `REV#1` does not explain.
+  ([Record](review/2026-11-10-project-review.md#no-containment-around-the-match-or-replay-step-rev4).)
+- **No Title/Home save notice (`REV#5`).** `HOW-TO-PLAY.txt` names the copies
+  kept aside instead ([save layout](#stage-records-and-the-sectioned-save-gap62)).
+  Reopen if a player reports lost settings or records.
+- **Bot finish window kept (`REV#23`).** Closed in the code's own wording; see
+  the [`ROAD#39` note](#boost-on-paint-underfoot-road39).
+- **No time-up banner (`REV#41`).** The round ends on sound and the camera
+  move. ([Record](review/2026-11-10-project-review.md#no-on-screen-time-up-signal-rev41).)
+- **No roster strip (`REV#46`),** teammates-only or full; the full roster was
+  already ruled out under [`ROAD#18`](#teammate-markers-road18).
+- **No attacker or tool on the respawn wait (`REV#47`).**
+  ([Record](review/2026-11-10-project-review.md#tell-a-splatted-player-who-got-them-rev47).)
+- **No attacker-paint burst on elimination (`REV#50`).** Recorded beside
+  [`POL#30`'s answers](polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30).
+  Reopen if attended play shows kills feel unrewarded.
+- **No own-colour wall slide or wall jump (`REV#51`).** Recorded beside
+  `POL#30`. Reopen if a new arena is themed on vertical traversal, and then only
+  as a default-off trial on that arena.
+- **No Sniper charge (`REV#57`).** The Sniper accepted on 2026-11-05 (1.0 s
+  interval, 2000 jet, shooter-only `sniper.ready` cue) stands: no problem has
+  been observed and attended play was waived. Reopen if attended play shows
+  Sniper eliminations reading as unfair. It removes the splatling from
+  `ROAD#13`'s Q1.
+- **Player cues stay centred at their authored pitch (`REV#43`).** The
+  per-seat `ui.ready` pitch idea in
+  [audio inventory 4.5](audio-inventory.md#45-menus-and-between-rounds) goes
+  too. Reopen if an attended 3P/4P session finds players cannot tell their own
+  sounds apart, which would be a mix defect.
+- **No coverage-over-time strip (`REV#54`).** The
+  [time-lapse](#whole-round-time-lapse-rev48) is the round's arc. Reopen if its
+  End row is rejected and the author still wants the arc shown.
+- **No graded solo goals (`REV#25`).** Stage-only record keys are now a ruling
+  ([stage records](#stage-records-and-the-sectioned-save-gap62)). Reopen if the
+  author decides solo against bots should have goals.
+- **Series sides never swap (`ROAD#40`).** See
+  [Series side swap](#series-side-swap-road40).
+- **No exploration mode and no solo practice on any stage (`REV#55`).** Reopen
+  when `REV#64` is taken.
+- **The editor stays source-only (`REV#64`), and `REV#65` (Play Stage, Open My
+  Stages) closes with it.** Reopen both when players other than the author ask
+  to make stages, or when the author sets the editor as a release aim.
+  ([Record](review/2026-11-10-project-review.md#level-editor-is-not-shipped-to-players-rev64).)
+- **No passive game-code observer (`TOOL#5`).** It closes on the
+  [diagnostics already measured](gameplay-tuning.md#bot-diagnostics-tool5).
+  Reopen when `REV#20`'s per-tool bot roles are scoped and need exact shot or
+  sub-use rates.
+- **No Parsec paragraph (`REV#69`).** Reopen when someone has played a streamed
+  session with a remote pad.
+- **No trial push for foreground checks (`CI#1`).** `check-debug-console` stays
+  a local, opt-in human check ([constraint](debug-console-record.md#foreground-checks-ci1)).
+  Reopen if a self-hosted or dedicated runner appears, or a debug-console
+  regression reaches `master` that the CPU-side `debug_console` case missed.
+
 ## Backlog audit additions (2026-11-12)
 
 A 2026-11-12 audit of the open-work index looked for work no row carried and
 checked each candidate against the existing rows, the declines under
 [Not tracked, by choice](#not-tracked-by-choice) and the 2026-11-10 review.
-These five survived. None is engineer-ready: the first needs the author's
-call, and the rest need a written scope or the next engine pin first.
+These five survived. None is engineer-ready: the first was answered no on
+2026-11-13, and the rest need a written scope or the next engine pin first.
 
 ### Series side swap (`ROAD#40`)
 
-**DECISION, LOW, M.** A team keeps the same half in every round of a series.
+**Decided 2026-11-13: never.** A team keeps the same half in every round of a series.
 Team A spawns must sit strictly left of the arena's midpoint and Team B's at or
 right of it ([level format](level-format.md#coordinates-bounds-and-spawns)),
 because the opening previews each team's colour over its own half
@@ -4605,11 +4770,12 @@ trial's lopsided paint is recorded as "not yet a geometry finding"
 ([Turbulence](polish-turbulence.md)). Splatoon, which this game follows, does
 not swap, because its maps are mirrored.
 
-**Question for the author:** no swap (today), swap every round, or swap only
-when the stage repeats? If one is taken it is a value on the existing Mode row,
-a match option inside the 2026-11-03 options ruling, and its design note
-covers the opening preview, what the A/B labels then mean, the remembered-setup
-key and the replay format.
+**The author's ruling:** series sides never swap, as today and as in
+Splatoon. Reopen if a non-mirrored arena enters Random, or a balance run shows
+a side advantage beyond noise. A swap would then be a value on the existing
+Mode row, a match option inside the 2026-11-03 options ruling, and its design
+note would cover the opening preview, what the A/B labels then mean, the
+remembered-setup key and the replay format.
 
 ### Practice targets in the workshop (`ROAD#41`)
 
@@ -4627,8 +4793,9 @@ respawn, with no HUD element or number, avoids that objection.
 First step: a scope section for a new station kind that places such a figure,
 which takes hits through the existing `Collider` path, in untimed solo practice
 only, with the `practice_workshop` checks it adds. It is a new subclass beside
-the existing ones and flattens nothing. Related: `REV#55` (solo practice on any
-stage) and `REV#56` (the Sub lesson).
+the existing ones and flattens nothing. Related: `REV#56` (the Sub lesson);
+solo practice on any stage (`REV#55`) was declined on 2026-11-13, so the
+figure stays in the workshop.
 
 ### Shot shapes on Weapon Select (`ROAD#42`)
 
@@ -4743,8 +4910,10 @@ folder if it is missing (`FTR#14`), silently and best effort; looking the
 folder up still creates nothing. `match_records`' `check_newer_save` covers
 both writers (`save_to_file` and `remember_match_setup_and_save`), the byte-identical copy,
 the second load's second copy, no copy on a later write and the folder, and
-`check-startup.ps1` requires the folder in its isolated profile. The in-game
-notice for these stderr lines stays the author's call (`REV#5`). New sections use nested keys: `"records"`, the last-match
+`check-startup.ps1` requires the folder in its isolated profile. These stderr
+lines get no in-game notice: the author declined one on 2026-11-13 (`REV#5`),
+and `HOW-TO-PLAY.txt` names the two copies kept aside in the same folder
+instead. Reopen if a player reports lost settings or records. New sections use nested keys: `"records"`, the last-match
 setup's `"last_match"` (`GAP#6.1`), `"input_bindings"` (`GAP#4.2`) and
 the player profiles' `"profiles"` (`ROAD#21`).
 
@@ -4756,12 +4925,16 @@ coverage. Malformed entries are skipped one by one, counts are kept at 0 or
 more, percentages are clamped to 0-100, and a repeated stage keeps its first
 entry. Records for stages the manifest no longer lists are kept.
 
-Defaults chosen without an author call, recorded here so they can be revisited:
+Defaults chosen without an author call, recorded here so they can be revisited,
+except stage-only keying, which the author ruled on:
 - **Metric:** the winning team's share of painted surface
   (`LevelEndInfo::team_*_percentage`), the number the results bar shows. Solo
   practice (one team) keeps a separate best coverage of the arena.
 - **Records are keyed by stage only, not by match duration.** A shorter custom
-  duration can set a best.
+  duration can set a best. This is the author's ruling of 2026-11-13, made
+  when graded solo goals were declined (`REV#25`): records are a stage's tally,
+  not a target. Reopen if the author decides solo against bots should have
+  goals ([review calls](#project-review-calls-2026-11-13)).
 - A best moves only when the new value is higher **at the results' one-decimal
   display** (`percentage_tenths`), so an invisible gain is never called a new
   best. The first result on a stage is a new best. An unpainted practice run

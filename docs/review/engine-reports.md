@@ -12,20 +12,19 @@
 > rider, 30 as [#123](https://github.com/matt439/Labrador/issues/123), 33 as
 > [#124](https://github.com/matt439/Labrador/issues/124) and 34 as the Bug
 > [#125](https://github.com/matt439/Labrador/issues/125). Each waits on the
-> engine's answer. A sixth, **35**, is a draft from the 2026-11-05 hygiene
-> review and is not filed. A seventh, **36**, was answered on engine master
-> before it was drafted (2026-11-10) and was never filed; it stays live only
-> until a pin bump brings the answer here.
-> An eighth, **37**, is the unfiled long-checkout-path draft from the first-run
-> review, reproduced against upstream master `3fe88f64` on 2026-11-10. A ninth,
-> **38**, is the unfiled window-presence draft from the 2026-11-12 TODO audit,
-> checked against the same master.
-> **Twenty-nine are closed** (1–25, 28, 29, 31 and 32) and kept below as one paragraph
+> engine's answer. A sixth, **36**, was answered on engine master before it
+> was drafted (2026-11-10) and was never filed; it stays live only until a pin
+> bump brings the answer here. A seventh, **38**, is the unfiled
+> window-presence draft from the 2026-11-12 TODO audit, blocked on `PIN#2`
+> since 2026-11-13. On 2026-11-13 the author moved **35** to the
+> [parked list](#what-is-deliberately-not-here), to ride with the next audio
+> report, and withdrew **37**.
+> **Thirty are closed** (1–25, 28, 29, 31, 32 and 37) and kept below as one paragraph
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
 > on, if anything. A report is closed when it is answered, whether or not the
 > answer was the one asked for, or when this repository withdraws it with a
-> reason, as it did 29.
+> reason, as it did 29 and 37.
 >
 > They are drafted here rather than in the submodule on purpose. AGENTS.md puts
 > engine *changes* in the Labrador repository; a report is a thing this client
@@ -151,6 +150,15 @@ or 34. Report 38 is drafted against it, the parked list below is amended, and
 the next bump's preparation is under
 [Preparing the next pin bump (2026-11-12)](#preparing-the-next-pin-bump-2026-11-12).
 
+**Decided 2026-11-13, against upstream master `1dc8533`** (confirmed with
+`ls-remote` and `gh api`; still no tag since `v0.3.0`). The author accepted
+every recommendation put to it: 35 is parked to ride with the next audio
+report, 37 is withdrawn and [closed](#closed), 38 waits on `PIN#2`, the
+mouse-button ask under [What is deliberately not here](#what-is-deliberately-not-here)
+is drafted as a comment on labrador#122 and waits for the author's approval
+of its text, and `REV#60` leaves the parked list once the game's `POL#49`
+first-run read lands. Labrador#122 had no comments that day.
+
 ## The rule that governs this file
 
 **Check the engine's master before filing, not the pin.** `external/labrador`
@@ -249,12 +257,10 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 | 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/config/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | narrowed 2026-10-30 to reclaiming memory (`HYG#47`); filed 2026-11-05 as the rider on [labrador#122](https://github.com/matt439/Labrador/issues/122); awaiting an answer |
 | 27, 30, 33 | Three still live from the 2026-10-30 architecture review (28 declined, 29 withdrawn; 31 and 32 answered in `v0.3.0`) | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | filed 2026-11-05 as [#122](https://github.com/matt439/Labrador/issues/122), [#123](https://github.com/matt439/Labrador/issues/123) and [#124](https://github.com/matt439/Labrador/issues/124); awaiting answers |
 | 34 | `RenderDeviceKind::hardware` describes a software rasteriser | [the hosted runner's Basic Render Driver](#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit) logged as `kind=hardware`, which the strict painter, paint-fx and frame-pacing gates rely on | filed 2026-11-05 as the Bug [#125](https://github.com/matt439/Labrador/issues/125), saying this client will adapt its gates to the engine's answer; what those gates accept is settled when it lands |
-| 35 | `AudioResources` has no non-throwing sound-group lookup | [`sound_groups.cpp`](../../game/config/sound_groups.cpp)'s find-or-add catches `std::out_of_range` as control flow | drafted 2026-11-05 from the [hygiene review](2026-11-05-code-hygiene-review.md#engine-report-owed), checked against master `5cbc6b3`; not filed, the author decides |
 | 36 | JSON parsing recurses once per nesting level | the [`save_max_nesting`](../../scripts/acceptance/reader_mutations.cpp) bound in the `reader_mutations` case | found 2026-11-10; already answered on master by `8362e2d` (iterative parse), which the pin `e7fc50e` predates; never filed; spent at the pin bump that includes it, which [`PIN#1`](#rehearse-against-engine-master-pin1) rehearses |
-| 37 | Long render golden filenames break ordinary Windows clones | the short-checkout warning in the README and `build.ps1` | drafted 2026-11-10 against master `3fe88f64`; not filed, the author decides |
-| 38 | Presence reaches the game as one bool | [`debug_background.cpp`](../../game/debug/input/debug_background.cpp) subclasses the engine's window to tell minimised, hidden and power-suspended apart | drafted 2026-11-12 against master `3fe88f64`; not filed, the author decides |
+| 38 | Presence reaches the game as one bool | [`debug_background.cpp`](../../game/debug/input/debug_background.cpp) subclasses the engine's window to tell minimised, hidden and power-suspended apart | drafted 2026-11-12 against master `3fe88f64`; blocked on [`PIN#2`](#qualify-masters-behaviour-changes-pin2) (2026-11-13): filed only if shipped code must tell minimised or hidden from inactive, otherwise parked |
 
-Nothing else is outstanding, on either side, beyond reports 26 and 34 to 38 below, the three still live
+Nothing else is outstanding, on either side, beyond reports 26, 34, 36 and 38 below, the three still live
 [from the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
@@ -683,59 +689,6 @@ comment on or open anything upstream.
 
 ---
 
-## 35. `AudioResources` has no non-throwing sound-group lookup - **draft with find-or-add exhibit**
-
-**Drafted 2026-11-05** from the [2026-11-05 hygiene review](2026-11-05-code-hygiene-review.md#engine-report-owed).
-Checked the same day against Labrador master `5cbc6b3`: `engine/audio/audio_resources.h:75-79`
-still offers only `add_sound_group`, which throws `std::invalid_argument` if the
-name exists, and `resolve_sound_group`, which throws `std::out_of_range` if it
-does not. There is no `find`, `has` or `try_resolve`. Not filed; the author
-decides whether it is worth filing. The pin `e7fc50e` has the same two calls.
-
-### Exhibit
-
-[`game/config/sound_groups.cpp`](../../game/config/sound_groups.cpp), the
-anonymous `group` helper at `:21-31`:
-
-```cpp
-SoundGroupHandle group(AudioResources& audio, const char* name)
-{
-    try
-    {
-        return audio.resolve_sound_group(name);
-    }
-    catch (const std::out_of_range&)
-    {
-        return audio.add_sound_group(name);
-    }
-}
-```
-
-`assign_sound_groups` calls it for `music`, `sfx` and, when the mute switch is
-on, `muted` (`:107-112`). It runs at startup and again after a Debug `reload`,
-so the second call must find the groups the first one added.
-
-### What happens
-
-Telling "absent" from "present" needs an exception. The client either catches
-`std::out_of_range` as control flow, as here, or keeps its own record of which
-names it has added, a second copy of state the engine already holds. A debugger
-set to break on first-chance exceptions stops in this helper on every startup.
-
-### The ask
-
-A non-throwing way to ask whether a group exists, or to get its handle if it does:
-a `has_sound_group(name)`, an optional-returning `find_sound_group(name)`, or a
-find-or-add. Which one is the engine's call. The engine may decline under T1,
-because the game decides which groups exist; a decline closes this report, and
-the client then keeps its own added-groups flag instead of the `catch`.
-
-### What an answer lets this repository delete
-
-The `try`/`catch` in `sound_groups.cpp`'s `group` helper, which becomes one call.
-
----
-
 ## 36. JSON parsing recurses once per nesting level - **answered on master before it was drafted**
 
 **Found 2026-11-10** by the `reader_mutations` acceptance case
@@ -793,47 +746,23 @@ refused, and none crashed.
 
 ---
 
-## 37. Long render golden filenames break ordinary Windows clones - **draft with checkout exhibit**
-
-**Drafted 2026-11-10 for first-run review `FTR#4`, not filed.** Rechecked
-against upstream master `3fe88f640332b97a25643aabc0c4ff9878096a4f`, fetched
-from origin that day. Its longest tracked golden path is still 148 characters:
-`tests/render/golden/contract-the-position-is-the-top-left-of-the-text-and-y-runs-down--every-pixel-of-it-is-inside-the-box-measure-text-promised.png`.
-With this game's `external/labrador/` prefix, a clone root around 93 characters
-reaches the ordinary Windows path limit before any build begins.
-
-**Exhibit.** The [Easy build instructions](../../README.md#easy-build) and
-[`build.ps1`](../../scripts/build.ps1) must tell newcomers to use a short
-checkout path even though these test images are not needed by a client build.
-The frozen [first-run review](2026-11-10-first-run-review.md#long-engine-test-filenames-break-deep-clones-ftr4)
-records seven checkout failures in a real recursive clone. The focused recheck
-uses a local shared, no-checkout clone of the engine under a 104-character
-client root, then runs `git -c core.longpaths=false checkout <master> -- <path>`.
-It exits 255 with `Filename too long` for the 271-character full filename.
-The checkout does not change the game's pin or engine files. Logs, exact paths
-and revision are retained in
-`out/validation/overnight-20261110/ftr4-long-path/result.json` and `checkout.log`.
-
-**The ask.** Shorten tracked golden filenames while retaining a readable map
-to their test cases, so a normal recursive Windows clone has useful path
-headroom without requiring global Git or Windows configuration. Naming and
-the test-to-image mapping are engine decisions.
-
-**What an answer lets this repository delete.** The engine-test-file reason
-for the short-clone warning. vcpkg/compiler paths also grow under a deep root,
-so shortening images alone does not remove all build-path guidance.
-Publication stays with the author; no issue has been sent.
-
----
-
-## 38. Presence reaches the game as one bool - **draft with window-subclass exhibit**
+## 38. Presence reaches the game as one bool - **blocked on `PIN#2`**
 
 **Drafted 2026-11-12 from the TODO audit, not filed.** Checked the same day
 against upstream master `3fe88f64` (confirmed with `ls-remote`). The pin
 `e7fc50e` has the same shape. A read-only `gh` search of Labrador's issues for
 minimised, minimized and presence returned nothing. The exhibit is Debug-only
-tooling, which makes it weaker than a shipped workaround; the author decides
-whether to file it, attach it to another report or leave it here.
+tooling, which makes it weaker than a shipped workaround.
+
+**Author's decision 2026-11-13: blocked on
+[`PIN#2`](#qualify-masters-behaviour-changes-pin2).** Master suspends the pad
+reader whenever the window is not in the foreground and shown, and draws
+nothing while minimised, so `PIN#2` decides whether shipped code here has to
+react to those states. File this report if `PIN#2` leaves shipped code that
+must tell minimised or hidden apart from inactive; that code is then the
+exhibit, and a stronger one than the Debug subclass. Otherwise move it to
+[What is deliberately not here](#what-is-deliberately-not-here) and strike it
+from the live table.
 
 ### Exhibit
 
@@ -900,14 +829,15 @@ include. `DebugBackgroundWindow::state` becomes calls to the engine's query.
 
 # Closed
 
-Twenty-nine reports: twenty-seven answered, one declined by this repository's author and one withdrawn. Twenty were
+Thirty reports: twenty-seven answered, one declined by this repository's author and two withdrawn. Twenty were
 spent here in code: 23 and 32 at the 2026-11-03 bump, and 31 and 25 on
 2026-11-05. Seven spent nothing in code: 1 was fixed before it was
 filed; 9 and 10 were answered as document only, and those two changed only
 comments and docs; 15 was answered as document only, 17 changed only a
 manifest comment, 19 needs more evidence and 21 was declined — an answer that
 leaves the workaround where it is still closes the report. 29 was withdrawn by
-this repository, because its exhibit was the game's own choice, and 28 was
+this repository, because its exhibit was the game's own choice, 37 because the
+engine never promised what it asked for, and 28 was
 declined by the author once `v0.3.0` shipped without its fix. Kept as outcomes rather than as
 reports: what was asked, what the engine answered, what this repository did
 with it. The original bodies are in git — see
@@ -918,7 +848,8 @@ for 7 and 8, the parent of `487b8d2` for 13 and 21, `d9f1656` for 11, 16,
 `1553ba5` for 6, 12 and 15, the parent of the commit that moved the pin
 to `1e60fb2` for 24, `8bfa00f7` for 29, and the parent of the commit that
 moved the pin to `v0.3.0` for 23, 25, 31 and 32, and the parent of the commit
-that closed it (2026-11-05) for 28.
+that closed it (2026-11-05) for 28, and the parent of the commit that closed it
+(2026-11-13) for 37.
 
 ## 1. ~~`StateContext` never empties its stack~~
 
@@ -2090,6 +2021,24 @@ The draft missed the last three. Client code still wraps by width in one place:
 `stage_scan_diagnostics::pages` breaks inside over-long tokens and paginates,
 which `Font::wrap` does not do, so it stays.
 
+---
+
+## 37. ~~Long render golden filenames break ordinary Windows clones~~ — withdrawn by the author, 2026-11-13
+
+Drafted 2026-11-10 from the first-run review's
+[`FTR#4`](2026-11-10-first-run-review.md#long-engine-test-filenames-break-deep-clones-ftr4)
+and reproduced against master `3fe88f64`: the engine's longest tracked golden
+path is 148 characters, so with the `external/labrador/` prefix a clone root
+of about 93 characters reaches the ordinary Windows path limit, and a recursive
+clone under a deep root fails to check those images out. The ask was shorter
+golden filenames. **Withdrawn unfiled by the author on 2026-11-13:** the
+engine does not promise that a deep checkout builds, and vcpkg and compiler
+paths grow under a deep root too, so shorter images alone would not remove
+the guidance. The client keeps its answer: the short-checkout line in the
+README's [If something goes wrong](../../README.md#if-something-goes-wrong) section and
+[`build.ps1`](../../scripts/build.ps1)'s warning for a root of 80 characters or
+more. **Reopen** only if the engine ever says a deep checkout should build.
+
 # What is deliberately not here
 
 Re-checked 2026-08-15 against `6b5c0bd`; citations re-pointed 2026-09-17 at
@@ -2160,15 +2109,27 @@ still only reads.
   prefixed so that a bare engine spelling
   (`left`, `x1`) cannot collide with a key name in the same field; an answer
   would replace the table's name column and keep the prefix as the client's.
-  Parked as `ENG#PARKED`.
+  Parked as `ENG#PARKED`. The table is now at
+  `game/input/input_bindings.cpp:91-99`, with its two lookups at `:104-108`
+  and `:179`.
 
   **The ride was missed (noted 2026-11-12).** This entry said it would ride
   with the next input report. That report was report 27, filed on 2026-11-05 as
   [labrador#122](https://github.com/matt439/Labrador/issues/122), and it went
   without this ask. The new vehicle is a comment on #122, which is still open
   and is the engine's one input thread; posting it is the author's call, under
-  the [publication gate](#publication-gate-engpublish). Until then it waits
-  here. It is separate from the "XInput is the only pad reader" entry below
+  the [publication gate](#publication-gate-engpublish).
+
+  **Drafted to ride on #122 (2026-11-13).** The author chose the comment on
+  #122 as the vehicle. Rechecked that day against upstream master `1dc8533`
+  (confirmed with `ls-remote`): `engine/input/mouse.h` and `mouse.cpp` still
+  declare no name function, and the only `MouseButton` mapping in the tree is
+  the web backend's `mouse_button_from_dom`, which maps DOM button numbers, not
+  tokens. #122 had no comments. The comment is drafted to the gate's rules,
+  with a synthetic five-row table and engine paths only, and is not posted: it
+  waits for the author to approve its exact text, and for a fresh master
+  recheck before it goes. Until then it stays here.
+  It is separate from the "XInput is the only pad reader" entry below
   and from `ROAD#23`, which are about which pads are read, not how a binding is
   spelled.
 
@@ -2212,6 +2173,26 @@ still only reads.
   Other persistent loops are outside that scope. **Pinned 2026-11-03** in
   `v0.3.0`: the recovery and the music handling are live in play.
 
+- **`AudioResources` has no non-throwing sound-group lookup** (was report 35,
+  parked 2026-11-13). Drafted 2026-11-05 from the
+  [hygiene review](2026-11-05-code-hygiene-review.md#engine-report-owed) and
+  checked that day against master `5cbc6b3`:
+  `engine/audio/audio_resources.h:75-79` offers only `add_sound_group`, which
+  throws `std::invalid_argument` if the name exists, and
+  `resolve_sound_group`, which throws `std::out_of_range` if it does not. The
+  exhibit is the anonymous `group` helper in
+  [`sound_groups.cpp`](../../game/config/sound_groups.cpp) (`:21-31`), which
+  tries `resolve_sound_group` and catches `std::out_of_range` to call
+  `add_sound_group`; it runs at startup and again after a Debug `reload`, so a
+  debugger that breaks on first-chance exceptions stops there every startup.
+  The ask is a `has_sound_group`, an optional-returning `find_sound_group` or
+  a find-or-add, the engine's choice; the engine may decline under T1. **The
+  author's call, 2026-11-13: not filed alone.** It is a small ask that rides
+  with the next audio report, and the `try`/`catch` stays in
+  `sound_groups.cpp` until an answer replaces it with one call. Parked as
+  `ENG#PARKED`; the full draft is in git, in the parent of the commit that
+  parked it.
+
 - **The display-idle owner is client-side** (added 2026-10-24).
   `ROAD#6` now supplies the [client exhibit](../../game/display_awake.cpp):
   one `GameLevel` owner attempts `ES_CONTINUOUS | ES_DISPLAY_REQUIRED` on
@@ -2245,7 +2226,7 @@ still only reads.
   rows in Labrador's own `TODO.md` at master `3fe88f64` ask for a client, and
   this one has something to say to each. None is filed; whether to add this
   evidence to an engine row, file it alone or let it wait for a carrier report
-  is the author's call.
+  is the author's call, already made for `REV#60` below.
   - **`REV#83`** (`TODO.md:226`): no option for a window's size, position,
     monitor or maximised start, "and no monitor query is exposed; no client
     asks for any". This client does, by hand:
@@ -2265,8 +2246,14 @@ still only reads.
     browser or Windows' client-area animation setting. The game has a Reduce
     effects switch whose default is a constant
     (`game/config/play_settings.h:95`), and nothing here reads the system
-    setting. It becomes an exhibit only if the author decides a fresh save
-    should take its default from Windows.
+    setting yet. **The author took `POL#49` on 2026-11-13:** when
+    `Save::first_run()` is true and Windows' client-area animation is off, a
+    fresh save starts with the shared Reduce effects on. That read,
+    `SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, ...)` on the native
+    side, is this client's exhibit. Once it lands, this item leaves the parked
+    list and goes to Labrador as a note on its `REV#60`, with that call as the
+    exhibit; the note follows the
+    [publication gate](#publication-gate-engpublish) like any filing.
 
 - **The write side of `json.h`.** Still absent, still correct (the engine's
   OCA-53 plans a guide, not an API, and declines a save facility under T1):
