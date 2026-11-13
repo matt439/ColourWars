@@ -55,9 +55,11 @@ public:
 	static constexpr int version = 10;
 
 	Save() = default;
-	// Only a missing save without a legacy file uses these first-run display
-	// defaults. The shell chooses them from the monitor before loading.
-	Save(labrador::ScreenResolution initial_resolution, bool initial_fullscreen);
+	// Only a missing save without a legacy file uses these first-run defaults.
+	// The shell chooses the display from the monitor and the shared Reduce
+	// effects from Windows' Animation effects (POL#49) before loading.
+	Save(labrador::ScreenResolution initial_resolution, bool initial_fullscreen,
+		bool initial_reduce_effects = false);
 	// Reads the file, or a legacy one, or keeps the defaults. A SettingsSession
 	// borrowing this Save rereads through its own load_save_file instead.
 	void load_save_file();

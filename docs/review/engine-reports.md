@@ -154,8 +154,10 @@ every recommendation put to it: 35 is parked to ride with the next audio
 report, 37 is withdrawn and [closed](#closed), 38 waits on `PIN#2`, the
 mouse-button ask under [What is deliberately not here](#what-is-deliberately-not-here)
 is drafted as a comment on labrador#122 and waits for the author's approval
-of its text, and `REV#60` leaves the parked list once the game's `POL#49`
-first-run read lands. Labrador#122 had no comments that day.
+of its text, and engine `REV#60` leaves the parked list once the game's
+`POL#49` first-run read lands. That read landed the same day, so engine
+`REV#60` has left the parked list and its note is drafted below. Labrador#122
+had no comments that day.
 
 **Moved 2026-11-13 to upstream master `1dc8533c`**, 129 commits past
 `e7fc50e`, still untagged since `v0.3.0`, with a green `build and test` push
@@ -2177,17 +2179,27 @@ still only reads.
     drawn as its box. That is a client defect first, not yet an exhibit: the
     exhibit is whatever code drawing the rotated shape turns out to need.
   - **`REV#60`** (`TODO.md:203`): a read-only reduced-motion fact from the
-    browser or Windows' client-area animation setting. The game has a Reduce
-    effects switch whose default is a constant
-    (`game/config/play_settings.h:95`), and nothing here reads the system
-    setting yet. **The author took `POL#49` on 2026-11-13:** when
-    `Save::first_run()` is true and Windows' client-area animation is off, a
-    fresh save starts with the shared Reduce effects on. That read,
-    `SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, ...)` on the native
-    side, is this client's exhibit. Once it lands, this item leaves the parked
-    list and goes to Labrador as a note on its `REV#60`, with that call as the
-    exhibit; the note follows the
-    [publication gate](#publication-gate-engpublish) like any filing.
+    browser or Windows' client-area animation setting. **No longer parked:
+    the game's `POL#49` landed on 2026-11-13.** A fresh save now starts with
+    the shared Reduce effects on when Windows' Animation effects is off, read
+    by `initial_reduce_effects_from_system()`
+    (`game/config/initial_display.cpp:93-102`) before the save loads. That one
+    `SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, ...)` call is this
+    client's exhibit. The note below goes to Labrador as a comment on its
+    `REV#60` under the [publication gate](#publication-gate-engpublish).
+    **Drafted, not posted:** it waits for the author to approve its text and
+    for a fresh master recheck of the engine row.
+
+    > A native client reads this fact by hand today. To choose a fresh save's
+    > reduced-motion default, it calls
+    > `SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &animation, 0)`
+    > before the window opens and treats a failed query as "animations on".
+    > That one call is the whole workaround. A read-only fact from the engine
+    > would replace it, for example `bool prefers_reduced_motion()` backed by
+    > that call on Win32 and by `matchMedia("(prefers-reduced-motion: reduce)")`
+    > on the web. The read needs no window, so it can be available before the
+    > window exists. The client reads the fact only once, for a first-run
+    > default, so a change notification is not needed.
 
 - **The write side of `json.h`.** Still absent, still correct (the engine's
   OCA-53 plans a guide, not an API, and declines a save facility under T1):

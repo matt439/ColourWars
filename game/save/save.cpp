@@ -437,7 +437,8 @@ SaveData Save::load_from_json(const char* json_path, int& saved_version) const
     }
     return data;
 }
-Save::Save(ScreenResolution initial_resolution, bool initial_fullscreen)
+Save::Save(ScreenResolution initial_resolution, bool initial_fullscreen,
+    bool initial_reduce_effects)
 {
     if (convert_resolution_to_ivec(initial_resolution).x <= 0)
     {
@@ -445,6 +446,7 @@ Save::Save(ScreenResolution initial_resolution, bool initial_fullscreen)
     }
     this->save_data_.resolution = initial_resolution;
     this->save_data_.fullscreen = initial_fullscreen;
+    this->save_data_.play.reduce_effects = initial_reduce_effects;
 }
 
 // Only a file that is not there is missing. One that is there but will not

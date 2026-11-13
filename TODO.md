@@ -25,7 +25,7 @@ they opened `REV#1`, `REV#13`, `REV#14`, `REV#63` and `POL#49`.
 **Author calls** (every `DECISION` row):
 
 - `ROAD#13`: whether to build umbrella slices 2-4 (`PIN#2` is done).
-- `ENG#PARKED`: approve the drafted mouse-button comment for labrador#122.
+- `ENG#PARKED`: approve the drafted mouse-button comment for labrador#122 and the engine `REV#60` note.
 - `ENG#39`: file the `FLT_MAX` round-trip draft as an issue, or fix it in the engine.
 
 The hardware, participant and listening checks waived on 2026-11-05 were not performed. Arena
@@ -51,7 +51,6 @@ questions in the polish sub-docs are superseded, not open.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#49` | OPEN | LOW | S | Taken 2026-11-13: a fresh save starts with Reduce effects On when Windows' Animation effects is off (a first-run read beside `fit_initial_window`), with an acceptance check; the read is then the client exhibit for engine `REV#60`. [Item](docs/polish-plan.md#reduce-effects-default-from-windows-pol49). |
 
 ## Comparable-game gaps
 
@@ -93,7 +92,7 @@ and 37 withdrawn. A pin bump that answers one is when its workaround is deleted.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#PARKED` | DECISION | LOW | S | Asks waiting for a vehicle: window presence (was 38), `window_size_changed`, desktop size (exhibit for engine `REV#83`), atomic JSON write, registry forgetting, install facts, listener/voice cap, display-awake owner, non-XInput reader (`ROAD#23`), colour transforms (was `GAP#F10`), engine `GAP#6`/`REV#60` (leaves when `POL#49` lands), sound-group lookup (was `ENG#35`). Author: approve the drafted mouse-button comment for labrador#122, then post it. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
+| `ENG#PARKED` | DECISION | LOW | S | Asks waiting for a vehicle: window presence (was 38), `window_size_changed`, desktop size (exhibit for engine `REV#83`), atomic JSON write, registry forgetting, install facts, listener/voice cap, display-awake owner, non-XInput reader (`ROAD#23`), colour transforms (was `GAP#F10`), engine `GAP#6`, sound-group lookup (was `ENG#35`). Author: approve the drafted mouse-button comment for labrador#122 and the engine `REV#60` note, then post them. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#26`, `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed 2026-11-05 as [labrador#122](https://github.com/matt439/Labrador/issues/122) (27 with the 26 rider), #123, #124 and #125 (the Bug). Waits on the engine. When one is answered, spend it at the next pin bump; for 34, also settle what CI's strict gates accept. [Ledger](docs/review/engine-reports.md#live) |
 | `ENG#39` | DECISION | LOW | S | `FLT_MAX` written to JSON reads back one double step above it, so `gameplay_tuning` tests one float below. Drafted 2026-11-13, not filed. Author: issue route or engine fix. [Report](docs/review/engine-reports.md#39-a-float-written-as-flt_max-does-not-read-back---draft-not-filed) |
 

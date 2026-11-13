@@ -4658,9 +4658,10 @@ names what would reopen it. Detail stays with the row's owner, linked.
   [failure reporting's Boundary](failure-reporting.md#boundary). A stack
   overflow, or an exception swallowed in a Win32 callback, may not reach it.
   ([Record](review/2026-11-10-project-review.md#no-crash-dump-and-no-release-symbols-rev63).)
-- **Reduce effects from Windows on first run (`POL#49`, S).** Yes; the
+- **Reduce effects from Windows on first run (`POL#49`, S; built
+  2026-11-13).** Yes; the
   [polish item](polish-plan.md#reduce-effects-default-from-windows-pol49) owns
-  it. Once the read lands it is the client exhibit for the engine's `REV#60`
+  it. The read is the client exhibit for the engine's `REV#60`
   ([ledger](review/engine-reports.md#what-is-deliberately-not-here)).
 - **Random skips the exempt pairs (`REV#14`, S; built 2026-11-13, see
   [`ROAD#8`](#more-team-palette-pairs-road8)).** A per-pair `in_random` flag

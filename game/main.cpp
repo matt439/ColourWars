@@ -52,7 +52,9 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
 		const InitialDisplay initial_display = initial_display_for_primary_monitor();
-		Save save(initial_display.resolution, initial_display.fullscreen);
+		// Reduce effects from Windows applies only to a fresh save (POL#49).
+		Save save(initial_display.resolution, initial_display.fullscreen,
+			initial_reduce_effects_from_system());
 		save.load_save_file();
 		// This run's settings: the save's, with any worn profiles laid over them.
 		SettingsSession settings_session(save);

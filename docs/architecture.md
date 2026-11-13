@@ -63,7 +63,10 @@ window in its work area. Save writes that preference; later launches and
 legacy imports keep the saved choice. The `initial_display` CPU probe checks
 the thresholds and save behavior, and `check-startup.ps1` checks the actual
 fresh-save window rectangle. This completes first-run review `FTR#12`;
-mixed-monitor/DPI hardware combinations are not exhaustively exercised.
+mixed-monitor/DPI hardware combinations are not exhaustively exercised. The
+same file chooses a fresh save's shared Reduce effects from Windows' Animation
+effects, read before the save loads (`POL#49`); `initial_display` covers it and
+`check-startup.ps1` checks the fresh save's value.
 
 [game/CMakeLists.txt](../game/CMakeLists.txt) builds every game source except
 `main.cpp` and the two platform adapters into the `colourwars_game` static

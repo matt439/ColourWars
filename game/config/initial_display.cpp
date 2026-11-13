@@ -84,3 +84,20 @@ void fit_initial_window(labrador::Application& app, Save& save)
         save.set_display_settings_and_save(display.resolution, display.fullscreen, save.team_palette());
     }
 }
+
+bool choose_initial_reduce_effects(bool client_area_animation)
+{
+    return !client_area_animation;
+}
+
+bool initial_reduce_effects_from_system()
+{
+    // The one system reduced-motion read in this client, and its exhibit for
+    // the engine's REV#60 (a read-only reduced-motion fact). It needs no window.
+    BOOL animation = TRUE;
+    if (SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &animation, 0) == FALSE)
+    {
+        return false;
+    }
+    return choose_initial_reduce_effects(animation != FALSE);
+}
