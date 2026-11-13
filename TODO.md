@@ -25,13 +25,14 @@ the rows they opened (`REV#1`, `REV#13`, `REV#14`, `REV#63`, `POL#49`) were buil
 
 **Author calls** (every `DECISION` row):
 
+- `POL#16`: review the four arena backdrops on a real GPU and in play; rule on Close Quarters' centre cover material.
 - `ROAD#13`: whether to build umbrella slices 2-4 (`PIN#2` is done).
 - `ENG#PARKED`: approve the drafted mouse-button comment for labrador#122 and the engine `REV#60` note.
 - `ENG#39`: file the `FLT_MAX` round-trip draft as an issue, or fix it in the engine.
 - `ROAD#44`: whether the ball and grenade keep circle collision shapes (hit feel; numbers in the item).
 
 The hardware, participant and listening checks waived on 2026-11-05 were not performed. Arena
-art (`POL#16`) stays deferred; bot lift routing, non-XInput pads and growing sponges are
+backdrops (`POL#16`) were built 2026-11-14 and wait on the author's look; bot lift routing, non-XInput pads and growing sponges are
 deferred.
 
 ## Art direction, characters and the UI
@@ -42,7 +43,7 @@ questions in the polish sub-docs are superseded, not open.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through the accepted arenas (selected 2026-11-05); remaining UI art is a later polish pass. Waits on the author setting it as the next aim. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
+| `POL#16` | DECISION | MED | S | Backdrops for the four Random arenas built 2026-11-14. Author: look at them on a real GPU and in play (any prop reading as a platform), and rule on Close Quarters' centre cover moving from eraser to paint tin; the remaining UI art stays a later pass. [Backdrops](docs/polish-terrain.md#per-arena-backdrops-pol16-2026-11-14). |
 | `POL#35` | DEFERRED | LOW | S | Signage and captioned Paint-artefact jokes need the author's wording; with `POL#16`. [Terrain](docs/polish-terrain.md#stage-approval-and-remaining-environment-work-2026-10-20). |
 
 ## Comparable-game gaps

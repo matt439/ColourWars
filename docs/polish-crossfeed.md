@@ -925,8 +925,8 @@ accepted order after the new props.
 **Checks.** The `terrain` case now requires the three props by name, frame,
 order (between `cloud_b` and `hill_a`), native size, zero origin, untinted and
 static, with the brush pot and tape roll moved to decorations 10 and 11 of 11.
-The terrain atlas stays 2048x920: the three frames pack on the landmark shelf
-beside the brush pot and tape roll. Run on 2026-11-14 in Debug: `terrain`,
+On this branch alone the terrain atlas stayed 2048x920, with the three frames packed on the landmark shelf
+beside the brush pot and tape roll; merged with the other three arenas' props it is 2048x3232. Run on 2026-11-14 in Debug: `terrain`,
 `level_format`, `stage_selection`, `paint`, `paint_surfaces`,
 `balance_regions`, `ammo`, `user_stages`, `level_heap` and `crossfeed`, plus
 `check-level-editor.ps1` (editor round trip, mirror pairs, symmetry report)

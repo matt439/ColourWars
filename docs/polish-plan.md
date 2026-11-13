@@ -1509,8 +1509,13 @@ pass, including extracted Release with its published bank and optional-bank
 fallback under a system-only PATH. The 53-file ZIP contains all 26 reviewed
 runtime assets byte for byte and excludes source, debug and private audio.
 
-Accepted-arena artwork remains `POL#16`: the arenas were settled on 2026-11-05,
-so it no longer waits on selection, but it stays deferred as a later art pass.
+Accepted-arena artwork is `POL#16`. On 2026-11-14 each of the four Random arenas
+was given its own backdrop in the approved kit
+([per-arena backdrops](polish-terrain.md#per-arena-backdrops-pol16-2026-11-14)):
+a printworks for Press Tower, a loading yard for Slab Yard, a paint warehouse
+for Close Quarters and painter's-kit landmarks for Crossfeed. What remains is
+the author's look at them on a real GPU and in play; the later UI art pass
+stays deferred.
 The human presentation/readability review it would have folded in (`POL#24`)
 was waived on 2026-11-05 and not performed. The current material/prop kit is
 approved for this development stage.

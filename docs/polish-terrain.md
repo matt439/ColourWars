@@ -657,3 +657,25 @@ Captioned jokes need the author's wording and do not gate non-text landmarks.
 Close Quarters' own composition and fitting the kit to revised geometry stay
 with `POL#17`, with readability rechecked in `POL#24`; further per-arena production
 stays with `POL#16`/`POL#21`.
+
+## Per-arena backdrops (`POL#16`, 2026-11-14)
+
+The four Random arenas now have backdrops of their own, drawn in the same kit:
+24 arena props (`press_*`, `yard_*`, `cq_*`, `cf_*`) follow the original eleven
+in the [recipe](../game/art/terrain/terrain.json), and the build packs them on the
+landmark shelves, growing the atlas to 2048x3232 while every original frame keeps
+its coordinates. Each arena's brief, prop list, layering and checks are in its
+own doc: [Press Tower](polish-press-tower.md), [Slab Yard](polish-turbulence.md),
+[Close Quarters](polish-close-quarters.md) and [Crossfeed](polish-crossfeed.md).
+
+- The palette is unchanged. Props draw only with the five backdrop roles, so
+  each arena's identity is its composition, its props and its mix of structure
+  materials; per-arena hues would change the accepted 26-role contract and
+  remain the author's call.
+- Close Quarters is now a paint warehouse interior. It no longer uses the
+  countryside kit or drifting clouds, so the cloud-drift crops above are a
+  dated record of the old composition; Movement Course, King of the Hill and
+  Turbulence keep the drifting clouds.
+- No arena carries lettering: signs and labels are blank boards (`POL#35`).
+- What only a person can judge stays open: how the art looks on a real GPU,
+  and whether any prop reads as a platform or cover in play.
