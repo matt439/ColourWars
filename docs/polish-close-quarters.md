@@ -239,3 +239,95 @@ Physical-pad acceptance (`ROAD#2`) and the reference-match finish review and
 fresh-player observations (`POL#24`) were waived by the author on 2026-11-05
 and not performed. The other arenas followed Crossfeed's acceptance under
 `POL#21`, which the author closed on 2026-11-05.
+
+## Arena art (`POL#16`, 2026-11-14)
+
+### Brief
+
+**Play identity.** A compact loop of connected rooms: two sheltered home bays,
+a long main deck with a low central cover, an upper crossing and a lower bypass.
+It is in Random, so it needs a place of its own rather than the generic
+countryside it borrowed from the kit, which said nothing about rooms.
+
+**Environment.** The paint workshop and supply warehouse of the
+[initial brief](polish-plan.md#initial-arena-briefs), drawn as an interior:
+a back wall under a roof, the sky seen only through high windows. Each home
+room becomes a loading bay with a roller door; the central contest happens in
+front of a paint tank fed by a pipe run; racks of tins stand where the
+approach bridges meet the deck; the lower bypass is the workshop floor, with a
+bench, leaning timber and drums.
+
+**Props** (all new, all `cq_*`, in the recipe after the shared kit):
+`cq_window`, `cq_door`, `cq_rack`, `cq_tank`, `cq_pipes`, `cq_bench`,
+`cq_timber` and `cq_drums`. Each is a crude flat drawing on the cell grid in
+the backdrop roles only (bg_far, bg_mid, bg_line, bg_detail, paper), outlined
+in bg_line. Tins and drums carry blank bg_detail labels: no text, and no team
+hue anywhere.
+
+**Layering, far to near.** Paper; the works wall (`swatch_bg_far`) with a
+bg_mid roof beam edged in bg_line above the camera's top; the six high
+windows; the pipe run, then the tank in front of its drop; the two loading
+doors; the two racks; the two timber stacks and two drum groups; the bench;
+then the shared brush pot and tape roll, still last, at their accepted
+footings.
+
+**Material palette.** The Muted Day roles are unchanged. The arena's own mix
+is its props plus one structure material: the centre cover changes from
+`eraser` to `paint_tin` (legal for a paintable solid, already drawn on Press
+Tower's 320x80 press head), so the central contest is fought over a paint tin.
+The pencils, rulers and ground stay. Paintability comes from the faces, not
+the material, so the scored area is unchanged.
+
+**What stays from the shared kit.** The paper backing, the brush pot and the
+tape roll (same rectangles), the airbrush shadows and the terrain materials.
+The sun, six drifting clouds, two bird pairs, seven hills, the house and four
+trees leave: an interior has no horizon. The window panes reuse their
+language instead: a cloud, a gull and a hill line in miniature.
+
+### What was built
+
+Eight props in [the terrain recipe](../game/art/terrain/terrain.json),
+described in the [kit's README](../game/art/terrain/README.md); the build
+packs them on the landmark shelves and the atlas grows to 2048x1228 on this
+branch. Close Quarters now has 24 decorations: paper, the works wall and roof
+beam (three swatches), six windows at Y=4332, the pipe run (2388, 4300), the
+tank on the upper deck (2872, 4370), the loading doors behind the home rooms
+(420 and 5196, 4600), the racks standing on the approach bridges (1200 and
+4512, 4546), timber in the left bay (960, 5026) and the right of the lower lane
+(3740, 5026), drums under each home floor (40 and 5704, 5074), the bench in the
+lower lane (1900, 5122), then the brush pot and tape roll. The `_a`/`_b` pairs
+are exact mirrors. No collision geometry, spawn, station or bound moved.
+
+Composition was iterated in 1P, 4P and the whole-arena time-lapse view at
+seeds 7, 0 and 3. Shelf boards are kept off the heights of the real steps
+beside them and crowded so no shelf top reads clean; the bench is low and
+cluttered; nothing is lined in black. The roof beam sits above the camera's
+top, so only the overview and time-lapse show it, as the edge of the building.
+
+### Checks
+
+The tests describe the new intended state rather than being loosened. The
+terrain probe pins the new layering (landmarks at index 22 of 24 after the
+bench) and the 2048x1228 atlas, and counts Close Quarters as an interior
+alongside Press Tower: no clouds, no drift. The editor's drift-phase mirror
+example moved to the Movement Course's identical `cloud_4`. The painter's
+parallax prototype keeps its exact matrix and counts, with Close Quarters as a
+zero-displacement interior control. Its cloud-drift contexts drop Close
+Quarters and the 4P sky composition built around its `cloud_4`.
+
+Debug acceptance passed for `terrain`, `cq_blockout`, `stage_selection`,
+`level_format`, `paint`, `user_stages`, `debug_console`, `instant_replay`,
+`match_records`, `team_selection`, `story_audio` and `menu_text`. Runtime
+exposed paint stays **136,320**, as before the change. `check-level-editor.ps1`
+and `check-painter.ps1 -CompileOnly` passed, as did the whitespace lint and
+`check_doc_links.py`. The editor run's first attempt failed one native
+keyboard-state check while game windows were open on the same desktop; it
+passed on a rerun with no game running.
+
+### Human checks still open
+
+How it looks on a real GPU (the painter's landmark, parallax and drift
+matrices were compiled, not run), how it plays (whether a rack shelf or the
+bench ever reads as a step in a fight) and the author's view of the interior
+direction and the paint-tin centre cover. The atlas height will change again
+when the other arenas' props merge.

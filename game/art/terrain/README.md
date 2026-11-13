@@ -39,6 +39,14 @@ gutter.
 | `birds` | 96x32 | two bg_line gull strokes |
 | `brush_pot` | 256x320 | quiet stationery pot with three differently shaped brushes, flat fills and a plain rim with no highlights; bg_line outlines distinguish it from walkable terrain |
 | `tape_roll` | 256x160 | flat roll with a paper core and short peeled end, no shading inside the core or on the end; the same backdrop roles, without team colours or text |
+| `cq_window` | 256x160 | Close Quarters' high window: a bg_mid frame of six paper panes holding a sliver of the sky kit (a cloud, one gull, a hill line that crosses the mullion) and a sill |
+| `cq_door` | 384x400 | a roller loading door half raised: housing with two end caps, bg_far slats, a bottom bar and blank handle, crates and a sack in the bg_mid gap beneath |
+| `cq_rack` | 288x384 | shelving of two uprights and three boards crowded with tins, a bucket, a roller, cartons and a sack, so no shelf top reads clean; blank bg_detail labels, never text |
+| `cq_tank` | 256x320 | a paint tank on three legs: domed top with a hatch, two staircase seams, a sight glass half full, a dial with a needle and a side outlet |
+| `cq_pipes` | 640x192 | a pipe run hung from the ceiling: a main pipe with flanges and a valve wheel ending in a drop, and a second pipe rising back into the roof |
+| `cq_bench` | 384x128 | a low workbench with a vice, a tin of brushes, a roller lying down, a rag and a drawer, cluttered along its top |
+| `cq_timber` | 224x224 | three planks leaning on the wall with end grain, offcuts on the floor beside them |
+| `cq_drums` | 256x176 | two paint drums with hoops, a blank label and a grey drip, and a third on its side showing its end |
 | `shadow_0`..`shadow_3` | 64x32 | shadow_deep specks dense in the top two rows, shadow specks thinning to none in the last; columns 0 and 15 empty so tiles abut in any order |
 | `swatch_<role>` | 4x4 | one opaque block per palette role |
 
