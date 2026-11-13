@@ -157,26 +157,19 @@
       ]
     },
     {
-      "name": "cf_water_jar", "cells": [64, 80], "outline": { "role": "bg_line", "edges": "all" },
+      "name": "cf_paint_tube", "cells": [32, 64], "outline": { "role": "bg_line", "edges": "all" },
       "fill": [
-        ["poly", "bg_mid", 12, 2, 17, 1, 27, 23, 22, 24],
-        ["rect", "bg_far", 30, 9, 4, 15],
-        ["poly", "bg_mid", 46, 5, 51, 7, 41, 24, 36, 23],
-        ["rect", "bg_mid", 9, 23, 46, 6],
-        ["poly", "bg_detail", 10, 29, 54, 29, 54, 41, 10, 41],
-        ["poly", "bg_far", 10, 40, 54, 40, 54, 74, 50, 79, 14, 79, 10, 74]
+        ["poly", "bg_mid", 3, 5, 27, 1, 29, 8, 5, 12],
+        ["poly", "bg_mid", 6, 11, 27, 8, 26, 22, 29, 38, 27, 50, 5, 50, 3, 38, 6, 22],
+        ["poly", "bg_mid", 5, 49, 27, 49, 21, 55, 11, 55],
+        ["rect", "bg_far", 11, 54, 10, 10]
       ],
       "detail": [
-        ["line", "bg_line", 13, 4, 16, 3], ["line", "bg_line", 30, 12, 33, 12], ["line", "bg_line", 47, 8, 50, 9],
-        ["line", "bg_line", 10, 26, 54, 26],
-        ["line", "bg_line", 24, 29, 27, 39], ["line", "bg_line", 32, 29, 32, 39], ["line", "bg_line", 38, 29, 35, 39],
-        ["path", "bg_line", 11, 40, 18, 39, 26, 41, 34, 39, 42, 41, 53, 40],
-        ["line", "bg_mid", 31, 43, 33, 58], ["ellipse", "bg_line", 29, 57, 9, 13], ["ellipse", "bg_mid", 30, 58, 7, 11],
-        ["line", "bg_mid", 36, 43, 36, 50], ["rect", "bg_line", 34, 50, 5, 9], ["rect", "bg_detail", 35, 51, 3, 7],
-        ["line", "bg_mid", 41, 43, 46, 60], ["poly", "bg_line", 43, 59, 50, 58, 50, 70, 46, 72],
-        ["path", "bg_mid", 14, 50, 18, 48, 22, 51, 25, 49],
-        ["path", "bg_mid", 13, 66, 17, 64, 21, 67, 24, 65],
-        ["path", "bg_line", 14, 76, 18, 77, 46, 77, 50, 76]
+        ["line", "bg_line", 9, 4, 10, 10], ["line", "bg_line", 16, 3, 17, 9], ["line", "bg_line", 23, 2, 24, 8],
+        ["path", "bg_line", 6, 16, 11, 14, 16, 17, 21, 14, 26, 16],
+        ["path", "bg_line", 6, 22, 12, 24, 18, 21, 25, 23],
+        ["line", "bg_line", 5, 30, 28, 30], ["rect", "bg_far", 6, 31, 21, 8], ["line", "bg_line", 5, 39, 28, 39],
+        ["line", "bg_line", 14, 56, 14, 62], ["line", "bg_line", 18, 56, 18, 62]
       ]
     },
     {
@@ -192,7 +185,7 @@
         ["ellipse", "bg_line", 45, 6, 13, 10], ["ellipse", "bg_detail", 46, 7, 11, 8],
         ["ellipse", "bg_line", 62, 9, 13, 10], ["ellipse", "bg_mid", 63, 10, 11, 8],
         ["ellipse", "bg_line", 76, 20, 13, 10], ["ellipse", "bg_detail", 77, 21, 11, 8],
-        ["ellipse", "bg_line", 74, 35, 13, 10], ["ellipse", "paper", 75, 36, 11, 8],
+        ["ellipse", "bg_line", 74, 35, 13, 10], ["ellipse", "bg_far", 75, 36, 11, 8],
         ["ellipse", "bg_line", 57, 42, 13, 10], ["ellipse", "bg_mid", 58, 43, 11, 8],
         ["path", "bg_mid", 36, 30, 41, 26, 47, 31, 52, 27, 58, 32, 63, 29],
         ["path", "bg_mid", 39, 40, 44, 37, 50, 41, 55, 38]

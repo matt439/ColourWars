@@ -455,20 +455,20 @@
                                        }
                           },
                           {
-                              "name":  "cf_water_jar",
+                              "name":  "cf_paint_tube",
                               "position":  {
                                                "x":  524,
                                                "y":  596
                                            },
                               "size":  {
-                                           "w":  256,
-                                           "h":  320
+                                           "w":  128,
+                                           "h":  256
                                        }
                           },
                           {
                               "name":  "cf_palette",
                               "position":  {
-                                               "x":  784,
+                                               "x":  656,
                                                "y":  596
                                            },
                               "size":  {
@@ -479,7 +479,7 @@
                           {
                               "name":  "cf_pencil_cup",
                               "position":  {
-                                               "x":  1172,
+                                               "x":  1044,
                                                "y":  596
                                            },
                               "size":  {

@@ -26,7 +26,7 @@ namespace
 	}
 
 	// Crossfeed's own landmarks (POL#16): a pencil cup on the left home roof,
-	// a water jar on the left baffle and an empty-welled palette on the right
+	// a squeezed-out paint tube on the left baffle and an empty-welled palette on the right
 	// home roof. They are far layers, after the clouds and before the hills,
 	// at native atlas size with each visible foot on its support, and as
 	// static as the shared kit.
@@ -39,7 +39,7 @@ namespace
 		};
 		const Prop props[]{
 			{"cf_pencil_cup", RectangleF(136.0f, 680.0f, 160.0f, 288.0f)},
-			{"cf_water_jar", RectangleF(792.0f, 624.0f, 256.0f, 320.0f)},
+			{"cf_paint_tube", RectangleF(856.0f, 688.0f, 128.0f, 256.0f)},
 			{"cf_palette", RectangleF(3136.0f, 712.0f, 384.0f, 256.0f)}
 		};
 		const SpriteSheet* sheet = world.render.sprite_sheet("terrain");

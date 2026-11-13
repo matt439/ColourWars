@@ -650,15 +650,15 @@
             "colour": "WHITE"
         },
         {
-            "name": "cf_water_jar",
+            "name": "cf_paint_tube",
             "type": "Visual",
             "sheet_name": "terrain",
-            "frame_name": "cf_water_jar",
+            "frame_name": "cf_paint_tube",
             "rectangle": {
-                "x": 792,
-                "y": 624,
-                "width": 256,
-                "height": 320
+                "x": 856,
+                "y": 688,
+                "width": 128,
+                "height": 256
             },
             "colour": "WHITE"
         },
