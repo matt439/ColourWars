@@ -17,10 +17,11 @@ The engine pin moved to master `1dc8533c` on 2026-11-13 (`ENG#36`, `PIN#2` and `
 [record](docs/review/engine-reports.md#what-the-2026-11-13-bump-changed)); five atlases now ship
 as PNG through the engine's loader ([`PIN#3`](docs/review/engine-reports.md#png-atlases-and-texconv-pin3)).
 
-Next actions: the `OPEN` rows, in any order. The required `gate` and up-to-date `master` rule
-still apply. The author's calls of 2026-11-13 on the decision rows are recorded in
+Next actions: the two `OPEN` rows, `HYG#95` and `HYG#96`, each owe one hosted nightly run once
+this work is pushed. The required `gate` and up-to-date `master` rule still apply. The author's
+calls of 2026-11-13 on the decision rows are recorded in
 [Project review calls](docs/feature-roadmap.md#project-review-calls-2026-11-13) and the owners;
-they opened `REV#1`, `REV#13`, `REV#14`, `REV#63` and `POL#49`.
+the rows they opened (`REV#1`, `REV#13`, `REV#14`, `REV#63`, `POL#49`) were built 2026-11-13.
 
 **Author calls** (every `DECISION` row):
 
