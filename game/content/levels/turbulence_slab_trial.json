@@ -639,6 +639,286 @@
                 "width": 4200.0,
                 "height": 1900.0
             }
+        },
+        {
+            "name": "sun",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "sun",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 3260.0,
+                "y": 384.0,
+                "width": 224.0,
+                "height": 224.0
+            }
+        },
+        {
+            "name": "cloud_1",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cloud_big",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 280.0,
+                "y": 440.0,
+                "width": 256.0,
+                "height": 96.0
+            },
+            "drift": {
+                "distance": 32,
+                "period": 48,
+                "phase": 0.0
+            }
+        },
+        {
+            "name": "cloud_2",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cloud_small",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 1240.0,
+                "y": 400.0,
+                "width": 160.0,
+                "height": 64.0
+            },
+            "drift": {
+                "distance": 32,
+                "period": 60,
+                "phase": 0.21
+            }
+        },
+        {
+            "name": "cloud_3",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cloud_big",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 2560.0,
+                "y": 452.0,
+                "width": 256.0,
+                "height": 96.0
+            },
+            "drift": {
+                "distance": 48,
+                "period": 72,
+                "phase": 0.47
+            }
+        },
+        {
+            "name": "cloud_4",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cloud_small",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 3640.0,
+                "y": 560.0,
+                "width": 160.0,
+                "height": 64.0
+            },
+            "drift": {
+                "distance": 32,
+                "period": 54,
+                "phase": 0.72
+            }
+        },
+        {
+            "name": "birds_1",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "birds",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 960.0,
+                "y": 520.0,
+                "width": 96.0,
+                "height": 32.0
+            }
+        },
+        {
+            "name": "tank_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_tank",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 1520.0,
+                "y": 1000.0,
+                "width": 192.0,
+                "height": 384.0
+            }
+        },
+        {
+            "name": "tank_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_tank",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 2288.0,
+                "y": 1000.0,
+                "width": 192.0,
+                "height": 384.0
+            }
+        },
+        {
+            "name": "skyline_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_skyline",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": -40.0,
+                "y": 1056.0,
+                "width": 1024.0,
+                "height": 224.0
+            }
+        },
+        {
+            "name": "hill_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "hill_small",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 860.0,
+                "y": 1088.0,
+                "width": 768.0,
+                "height": 192.0
+            }
+        },
+        {
+            "name": "skyline_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_skyline",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 1488.0,
+                "y": 1056.0,
+                "width": 1024.0,
+                "height": 224.0
+            }
+        },
+        {
+            "name": "hill_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "hill_small",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 2420.0,
+                "y": 1088.0,
+                "width": 768.0,
+                "height": 192.0
+            }
+        },
+        {
+            "name": "skyline_c",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_skyline",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 3040.0,
+                "y": 1056.0,
+                "width": 1024.0,
+                "height": 224.0
+            }
+        },
+        {
+            "name": "crane",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_crane",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 1744.0,
+                "y": 416.0,
+                "width": 512.0,
+                "height": 864.0
+            }
+        },
+        {
+            "name": "stack_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_stack",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 300.0,
+                "y": 832.0,
+                "width": 160.0,
+                "height": 448.0
+            }
+        },
+        {
+            "name": "stack_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_stack",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 3540.0,
+                "y": 832.0,
+                "width": 160.0,
+                "height": 448.0
+            }
+        },
+        {
+            "name": "crates",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_crates",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 1856.0,
+                "y": 1056.0,
+                "width": 288.0,
+                "height": 224.0
+            }
+        },
+        {
+            "name": "fence_1",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_fence",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 640.0,
+                "y": 1168.0,
+                "width": 512.0,
+                "height": 112.0
+            }
+        },
+        {
+            "name": "fence_2",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_fence",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 1748.0,
+                "y": 1168.0,
+                "width": 512.0,
+                "height": 112.0
+            }
+        },
+        {
+            "name": "fence_3",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_fence",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 2852.0,
+                "y": 1168.0,
+                "width": 512.0,
+                "height": 112.0
+            }
         }
     ],
     "format": 1,

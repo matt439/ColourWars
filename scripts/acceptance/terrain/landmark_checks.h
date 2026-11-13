@@ -19,9 +19,9 @@ namespace
 		// Read the actual staged runtime PNG through the CPU asset reader; no
 		// texture device or unstaged working-image file is needed.
 		const TextureData image = read_png_file((content / "textures/terrain.png").string());
-		require(image.width == 2048 && image.height == 1604 && image.format == TextureFormat::r8g8b8a8_unorm &&
-			!image.levels.empty() && image.levels.front().width == 2048 && image.levels.front().height == 1604 && !image.pixels.empty(),
-			"The landmark frames require the complete staged 2048x1604 RGBA terrain atlas");
+		require(image.width == 2048 && image.height == 2536 && image.format == TextureFormat::r8g8b8a8_unorm &&
+			!image.levels.empty() && image.levels.front().width == 2048 && image.levels.front().height == 2536 && !image.pixels.empty(),
+			"The landmark frames require the complete staged 2048x2536 RGBA terrain atlas");
 	}
 
 	void check_shipped_landmarks(World& world, const LevelObjectBuilder& builder,

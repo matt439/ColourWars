@@ -10,7 +10,7 @@ grid. Every hue lives in these texels; runtime draws the sheet with a WHITE tint
 Run `powershell -ExecutionPolicy Bypass -File scripts/build-terrain-art.ps1`
 from the repository root. Windows System.Drawing fills the integer-cell shapes
 without antialiasing and draws lines cell by cell. Each cell expands to exactly
-4x4 texels, producing the 2048x1604 working atlas
+4x4 texels, producing the 2048x2536 working atlas
 `../sources/textures/terrain.png`, runtime
 `../../content/textures/terrain.json` and `.png` (a copy of the working PNG),
 and the review [`lineup.png`](lineup.png). Ordinary builds need neither
@@ -46,6 +46,12 @@ gutter.
 | `press_sign` | 160x256 | Press Tower: a blank bg_mid board a little out of true on two bg_line rods; mid-tone so it never reads as a HUD panel, and no lettering |
 | `press_hook` | 96x288 | Press Tower: a crane trolley, a bg_line chain and a hook block |
 | `press_rolls` | 160x120 | Press Tower: three bg_far paper rolls stacked end-on with paper cores |
+| `yard_skyline` | 1024x224 | Slab Yard's distant works in bg_far: a sawtooth hall with one tooth dragged a cell low, two chimneys, a parapet block, a gable shed, two silos and a curved-roof warehouse with a thin stack; bg_mid windows and a shuttered door, no lettering |
+| `yard_tank` | 192x384 | bg_far water tank with a leaning cone roof, porthole, ladder and band on three stilts with one crooked cross brace |
+| `yard_crane` | 512x864 | bg_far gantry crane: open lattice girder (two thin chords, zigzag between, sky through), A-frame legs with X braces and bogies, a cab by the right leg and the trolley parked left with a short hook, well above the play band |
+| `yard_stack` | 160x448 | bg_far exhaust stack: coolie hat, flanged duct with a branch elbowing down, plant box with a bg_mid louvre panel; nothing blows |
+| `yard_crates` | 288x224 | three bg_far crates on a pallet, one X-braced, one planked with a bg_mid sack slumped on it, one dropped on top a little skew |
+| `yard_fence` | 512x112 | chain-link panel: three bg_mid posts, sagging bg_line top wires and a quiet bg_far diamond mesh; posts sit on the ends so panels overlap one post |
 | `shadow_0`..`shadow_3` | 64x32 | shadow_deep specks dense in the top two rows, shadow specks thinning to none in the last; columns 0 and 15 empty so tiles abut in any order |
 | `swatch_<role>` | 4x4 | one opaque block per palette role |
 

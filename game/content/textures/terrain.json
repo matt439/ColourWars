@@ -530,6 +530,72 @@
                                            "w":  160,
                                            "h":  120
                                        }
+                          },
+                          {
+                              "name":  "yard_skyline",
+                              "position":  {
+                                               "x":  580,
+                                               "y":  1280
+                                           },
+                              "size":  {
+                                           "w":  1024,
+                                           "h":  224
+                                       }
+                          },
+                          {
+                              "name":  "yard_tank",
+                              "position":  {
+                                               "x":  1608,
+                                               "y":  1280
+                                           },
+                              "size":  {
+                                           "w":  192,
+                                           "h":  384
+                                       }
+                          },
+                          {
+                              "name":  "yard_crane",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  1668
+                                           },
+                              "size":  {
+                                           "w":  512,
+                                           "h":  864
+                                       }
+                          },
+                          {
+                              "name":  "yard_stack",
+                              "position":  {
+                                               "x":  520,
+                                               "y":  1668
+                                           },
+                              "size":  {
+                                           "w":  160,
+                                           "h":  448
+                                       }
+                          },
+                          {
+                              "name":  "yard_crates",
+                              "position":  {
+                                               "x":  684,
+                                               "y":  1668
+                                           },
+                              "size":  {
+                                           "w":  288,
+                                           "h":  224
+                                       }
+                          },
+                          {
+                              "name":  "yard_fence",
+                              "position":  {
+                                               "x":  976,
+                                               "y":  1668
+                                           },
+                              "size":  {
+                                           "w":  512,
+                                           "h":  112
+                                       }
                           }
                       ]
 }
