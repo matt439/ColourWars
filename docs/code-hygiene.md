@@ -4187,8 +4187,9 @@ which are never targets; the idle drips and the Debug station labels are not
 collision objects; and no game code removes a scene object. A planted
 sprinkler or paint wall is a `ProjectilePlanted`, passed to the sweep as
 Level's per-tick breakables list (`Level::breakables_`), never a projectile
-target, so a sub appearing or breaking does not touch the list. A replay or restart builds a new `Level` and admits again. Both answers
-are fixed per object: `mover()` is decided by class and a structure's tag by
+target, so a sub appearing or breaking does not touch the list. A replay or
+restart builds a new `Level` and admits again. Both answers are fixed per
+object: `mover()` is decided by class and a structure's tag by
 its constructor argument. So there is no invalidation hook, and none should be
 added. `check_projectiles()` enforces it in Debug after every scene tick: once
 the targets are admitted they must be the scene's non-projectile collision

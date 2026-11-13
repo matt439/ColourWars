@@ -334,8 +334,9 @@ private:
 	std::vector<Projectile*> projectiles_;
 	std::vector<Projectile*> pending_projectiles_;
 	// The admitted shots that took hits (takes_hits) as this tick's travel
-	// began, in scene order: what each swept shot can be spent on. Refilled by
-	// resolve_projectile_movement() each tick; kept only to reuse its storage.
+	// began, in scene order: what each swept shot can be spent on. Filled and
+	// emptied within resolve_projectile_movement(), so it never holds a shot
+	// past that walk; a member only to reuse its storage.
 	std::vector<Projectile*> breakables_;
 
 	// What overlay.stations names: the authored stations, then the spawns.

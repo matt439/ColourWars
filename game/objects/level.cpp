@@ -578,6 +578,8 @@ void Level::resolve_projectile_movement()
 		projectile->resolve_movement_contacts(this->structures_.projectile_targets(), flags,
 			this->breakables_);
 	}
+	// Emptied (its capacity kept) so it never holds a shot the scene frees.
+	this->breakables_.clear();
 }
 
 void Level::end_scene_tick()

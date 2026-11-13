@@ -968,6 +968,37 @@ namespace
         step();
         require(wall->hits_left() == tuning.hits - 1 && level->player(0).health() < health,
             "A player in front of a wall was not hit before it");
+
+        // The same corner pair through each of the sweep's three forms: the
+        // plain rectangle sweep, the fixed-slab selection and the moving-
+        // structure frame, chosen by the target flags Level would pass. The
+        // shots stand outside the scene, so they are read back here.
+        for (const ProjectileTargetFlags flags : { ProjectileTargetFlags{ false, false },
+            ProjectileTargetFlags{ false, true }, ProjectileTargetFlags{ true, false } })
+        {
+            wall = stand_wall();
+            face = wall->bounds();
+            const std::array<Projectile*, 1> breakables{ wall };
+            const auto sweep = [&](float x, float y)
+            {
+                auto flying = std::make_unique<ProjectileBall>(
+                    RectangleF(Vector2F(x - size.x / 2.0f, y - size.y / 2.0f), size),
+                    Vector2F(speed, -speed), PlayerTeam::b, 1, Colour::white, &world.assets.render,
+                    strip(jet), &jet);
+                flying->update(dt);
+                flying->resolve_movement_contacts(std::span<CollisionObject* const>{}, flags, breakables);
+                return flying;
+            };
+            const auto passed = sweep(face.left() - 0.6f * reach, face.top() + 0.25f * reach);
+            require(!passed->for_deletion() && wall->hits_left() == tuning.hits,
+                "A sweep form spent a shot on the box its travel spans past a wall's corner");
+            const auto struck = sweep(face.left() - 0.25f * reach, face.top() + 0.6f * reach);
+            const RectangleF stopped = struck->bounds();
+            require(struck->for_deletion() && wall->hits_left() == tuning.hits - 1,
+                "A sweep form let a shot whose path entered a wall's corner pass it");
+            require(stopped.right() > face.left() && stopped.right() < face.left() + 1.0f,
+                "A sweep form did not stop a shot just inside the wall face it entered");
+        }
         std::cout << "PASS wall: set down " << tuning.reach << " to either side at the player's feet; it stands, "
             "stops enemy shots and not its own team's, paints beneath, goes after its lifetime and on its "
             << tuning.hits << "th hit; a shot meets it along its path, not by its travel's box, and before "
