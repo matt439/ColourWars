@@ -51,8 +51,8 @@ draws per second is sample count divided by summed intervals, never `1 / fixed d
 The per-player F1/Back readout (`GAP#5.4`, 2026-10-15) now labels simulation
 `dt` separately and displays the current rendered interval's reciprocal. It
 uses one main-thread snapshot shared by every pane, with no clock read or
-mutation in worker drawing. Unavailable timing is `render fps: n/a`, including
-Release's inert developer timing service. This diagnostic fix does not qualify
+mutation in worker drawing. Unavailable timing is `render fps: n/a`; the
+readout is Debug-only since `REV#13`. This diagnostic fix does not qualify
 the visible, uncontended baseline that POL#25 waived (2026-11-05, not performed).
 
 Validation (2026-10-15): Debug and Release builds and both full consumer suites

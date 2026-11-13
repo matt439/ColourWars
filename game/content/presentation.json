@@ -12,7 +12,7 @@
   ],
 
   "team_palette": {
-    "_comment": "Fixed preference keys are stable save identifiers. Additional pairs join the Random draw. Every pair except pink_green and blue_yellow must pass the team_palette colour-vision check.",
+    "_comment": "Fixed preference keys are stable save identifiers. Additional pairs join the Random draw unless in_random is false. pink_green and blue_yellow fail the team_palette colour-vision check, so they stay fixed Options choices out of Random (REV#14); every other pair must pass.",
     "colours": [
       { "name": "blue", "colour": "0634CC" },
       { "name": "yellow", "colour": "FFFF00" },
@@ -28,8 +28,8 @@
     ],
     "pairs": [
       { "key": "blue_orange", "label": "A: Blue / B: Orange", "team_a": "blue", "team_b": "orange" },
-      { "key": "pink_green", "label": "A: Pink / B: Green", "team_a": "pink", "team_b": "green" },
-      { "key": "blue_yellow", "label": "A: Blue / B: Yellow", "team_a": "blue", "team_b": "yellow" },
+      { "key": "pink_green", "label": "A: Pink / B: Green", "team_a": "pink", "team_b": "green", "in_random": false },
+      { "key": "blue_yellow", "label": "A: Blue / B: Yellow", "team_a": "blue", "team_b": "yellow", "in_random": false },
       { "key": "purple_gold", "label": "A: Purple / B: Gold", "team_a": "purple", "team_b": "gold" },
       { "key": "red_azure", "label": "A: Red / B: Azure", "team_a": "red", "team_b": "azure" },
       { "key": "magenta_forest", "label": "A: Magenta / B: Forest", "team_a": "magenta", "team_b": "forest" }
@@ -120,7 +120,7 @@
     "home_subtitle": "Paint the arena. Claim the win.",
     "display_trial_countdown": "Reverting in {seconds}s",
     "help": {
-      "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: {pad_shoot}\nJump: {pad_jump} (hold for height)\nPause: {pad_pause}    Sub: {pad_sub}\nDebug: Back / View\nKEYBOARD + MOUSE\nMove: {left} / {right}    Drop: {drop} / Down\nAim: mouse cursor    Shoot: {shoot}\nJump: {jump} (hold for height)\nPause: {pause}    Sub: {sub}\nDebug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
+      "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: {pad_shoot}\nJump: {pad_jump} (hold for height)\nPause: {pad_pause}    Sub: {pad_sub}\nKEYBOARD + MOUSE\nMove: {left} / {right}    Drop: {drop} / Down\nAim: mouse cursor    Shoot: {shoot}\nJump: {jump} (hold for height)\nPause: {pause}    Sub: {sub}\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
       "pad_association": "Profiles follow Pad 1-4 slots,\nnot the player number or device.\nAfter reconnecting, check the slot.\nKeyboard/mouse is unchanged.",
       "aim_cutoff": "Right stick: radial cutoff"
     },

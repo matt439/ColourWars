@@ -22,7 +22,7 @@
       "home_subtitle": "[Paint the arena. Claim the win.]",
       "display_trial_countdown": "[Reverting in {seconds}s]",
       "help": {
-        "controls": "[CONTROLLER]\n[Move / drop: left stick]\n[Aim: right stick    Shoot: {pad_shoot}]\n[Jump: {pad_jump} (hold for height)]\n[Pause: {pad_pause}    Sub: {pad_sub}]\n[Debug: Back / View]\n[KEYBOARD + MOUSE]\n[Move: {left} / {right}    Drop: {drop} / Down]\n[Aim: mouse cursor    Shoot: {shoot}]\n[Jump: {jump} (hold for height)]\n[Pause: {pause}    Sub: {sub}]\n[Debug: F1]\n[MENUS]\n[Navigate: stick / D-pad / arrows]\n[Select: A / Enter    Back: B / Esc]\n[AIM / READINESS]\n[Direction only; roller aim is fixed.]\n[Ready: chevron / Cooldown: bars]\n[No paint: cross]\n[Pad sticks: movement / aim deadzones.]\n[REDUCE EFFECTS]\n[Less shake, flashes and idle detail.]",
+        "controls": "[CONTROLLER]\n[Move / drop: left stick]\n[Aim: right stick    Shoot: {pad_shoot}]\n[Jump: {pad_jump} (hold for height)]\n[Pause: {pad_pause}    Sub: {pad_sub}]\n[KEYBOARD + MOUSE]\n[Move: {left} / {right}    Drop: {drop} / Down]\n[Aim: mouse cursor    Shoot: {shoot}]\n[Jump: {jump} (hold for height)]\n[Pause: {pause}    Sub: {sub}]\n[MENUS]\n[Navigate: stick / D-pad / arrows]\n[Select: A / Enter    Back: B / Esc]\n[AIM / READINESS]\n[Direction only; roller aim is fixed.]\n[Ready: chevron / Cooldown: bars]\n[No paint: cross]\n[Pad sticks: movement / aim deadzones.]\n[REDUCE EFFECTS]\n[Less shake, flashes and idle detail.]",
         "pad_association": "[Profiles follow Pad 1-4 slots,]\n[not the player number or device.]\n[After reconnecting, check the slot.]\n[Keyboard/mouse is unchanged.]",
         "aim_cutoff": "[Right stick: radial cutoff]"
       },

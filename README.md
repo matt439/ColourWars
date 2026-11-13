@@ -40,7 +40,8 @@ into an Easy, Normal or Hard bot with **Left/Right**. Choose **1 Player** for
 solo practice.
 
 New? Select **Single Match > 1 Player > Movement Course** for lesson cards on
-moving, jumping, dropping through platforms and refilling your paint.
+moving, jumping, dropping through platforms, refilling your paint and using
+your sub.
 
 Choose teams, a tool and a sub weapon for each player, then an arena. Random
 uses Crossfeed, Press Tower, Close Quarters and Slab Yard, which Stage Select
@@ -77,7 +78,6 @@ rebinding pages.
 | Sub | Right bumper (RB) | Right mouse button |
 | Drop through a platform | Left stick down | S or Down |
 | Pause/resume | Start | Escape |
-| Debug overlay | Back/View | F1 |
 | Menu navigation | Left stick or D-pad | Arrow keys or WASD |
 | Menu confirm | A | Enter, Space or left click |
 | Menu back | B | Escape, Backspace or right click |
@@ -155,7 +155,9 @@ back to player count to choose a new roster.
   `build-info.txt` from beside the executable and, if it was saved,
   `%LOCALAPPDATA%\ColourWars\last-error.log`. That short report records build
   and failure categories; it does not contain the message, so include the
-  copied dialog too. For a build failure, attach the build log instead.
+  copied dialog too. If the game closes with no dialog at all, the same file
+  may hold a short crash report; attach it. For a build failure, attach the
+  build log instead.
 
 The [player guide](docs/HOW-TO-PLAY.txt), included beside the executable,
 covers starting the game, controls, where settings are saved and removing it.
@@ -177,9 +179,9 @@ creates beside its save the first time it saves, or use the editor's
 **File > Save to My Stages**. They appear after the built-in stages, marked
 "Built by you." The game rereads the folder when Stage Select opens from the
 main menu. A refused file does not stop the others loading: press **Down**
-while browsing arenas to read scan issues. Enclose a stage with solid walls,
-floor and ceiling: a player who leaves the arena currently closes the game
-([Seal the arena](docs/level-format.md#coordinates-bounds-and-spawns)).
+while browsing arenas to read scan issues. A player who leaves a stage's
+bounds is eliminated and respawns, so a gap in the walls or floor is a pit
+([Leaving the arena](docs/level-format.md#coordinates-bounds-and-spawns)).
 
 The editor needs a source build and is not included in the game ZIP.
 See [the editor guide](docs/level-editor.md#play-the-level) for naming,

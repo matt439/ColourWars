@@ -12,16 +12,29 @@
 #include "game/objects/collider.h"
 #include "game/objects/collision_object_type.h"
 #include "engine/render/colour.h"
+#include <cstdint>
 #include <memory>
 #include <span>
 #include <optional>
 #include <vector>
 
 class PaintAudio;
+class ProjectilePlanted;
 
 // The tuning's sheet and animation strip as one resolved pair. Load-time.
 labrador::RenderResources::SheetStrip resolve_projectile_strip(
 	const ProjectileTuning& tuning, const labrador::RenderResources& render_resources);
+
+// Why a flying shot left play, as far as the shot knows it (ROAD#44's
+// contact tally, Level::shot_retirements): none until a contact retires it,
+// so a shot retired with none ran out its time.
+enum class ShotRetireCause : std::uint8_t
+{
+	none,
+	cover,
+	player,
+	breakable
+};
 
 // Abstract paint projectile: shared lifetime, team filtering and swept contacts;
 // concrete subclasses supply their shape, movement update and drawing, and
@@ -74,18 +87,27 @@ public:
 	// The painting team; layer() follows it.
 	PlayerTeam team() const;
 	ProjectileType projectile_type() const { return this->type_; }
+	// The first contact that retired it; never changes once set.
+	ShotRetireCause retire_cause() const { return this->retire_cause_; }
 	// Health a hit removes, from this projectile's own record: its kind's,
 	// or a sub's for the grenade and its drops, which share the ball's kind.
 	// A planted sprinkler touches no one, so it overrides this to zero.
 	virtual float player_damage() const { return this->tuning_->details.player_damage; }
 	// What this tick's travel covered: last tick's shape to this one's. What
-	// Level tests against the objects shots can break (takes_hits).
+	// Level tests the roller's unswept volume against, after the tick's
+	// contacts, for the objects shots can break (takes_hits).
 	labrador::RectangleF travel_bounds() const;
-	// Whether enemy shots break this one now: a planted sprinkler. Level
-	// tests every enemy shot's travel against its bounds after the tick's
-	// contacts, consumes each that reaches it and calls take_hit.
+	// Whether enemy shots break this one now: a planted sprinkler or wall.
+	// Level passes each one to every shot's swept travel as a breakable
+	// (resolve_movement_contacts), so an enemy shot whose path reaches it
+	// before cover or a player is spent there and calls take_hit. A roller's
+	// volume, which is not swept, is struck by its travel_bounds after the
+	// tick's contacts instead (Level::strike_breakables).
 	virtual bool takes_hits() const { return false; }
 	virtual void take_hit() {}
+	// This shot as a planted sub that stands and takes hits now (takes_hits),
+	// or null: what the bots' planted-sub query lists (REV#21).
+	virtual const ProjectilePlanted* planted_sub() const { return nullptr; }
 
 	// Where a launch from an owner centred at owner_centre is swept from:
 	// the owner's centre, for every shot and sub but the wall, which is set
@@ -102,9 +124,15 @@ public:
 		std::optional<ProjectileTargetFlags> known = std::nullopt);
 	// Resolve this tick's travel (resolve_travel) before the scene dispatches
 	// endpoint contacts in object-list order, once per actual update.
+	// breakables are the projectiles enemy shots can break (takes_hits, asked
+	// again for each as the sweep reaches it). A swept shot stops at the first
+	// of them its path enters before cover or a player, spends itself there
+	// and hands it one hit. Cover wins a tied entry and a breakable beats a
+	// player on one; an empty list leaves the sweep exactly as it was.
 	void resolve_movement_contacts(
 		std::span<labrador::CollisionObject* const> objects,
-		std::optional<ProjectileTargetFlags> known = std::nullopt);
+		std::optional<ProjectileTargetFlags> known = std::nullopt,
+		std::span<Projectile* const> breakables = {});
 	// Completed moving Roller contacts suppress only duplicate endpoint paint.
 	// IDs are Level-local values, never borrowed collision-object pointers.
 	bool moving_paint_completed(HorizontalMotionId id) const;
@@ -137,12 +165,18 @@ protected:
 
 	// A flying shot stops at its first impact along this tick's travel, if
 	// its kind is swept (is_swept). Rollers keep their one-step volume.
-	// known is resolve_movement_contacts' argument, passed through.
+	// known and breakables are resolve_movement_contacts' arguments, passed
+	// through.
 	virtual void resolve_travel(std::span<labrador::CollisionObject* const> objects,
-		std::optional<ProjectileTargetFlags> known);
+		std::optional<ProjectileTargetFlags> known,
+		std::span<Projectile* const> breakables);
 	// Whether a launch volume crossing an enemy between owner and muzzle hits
 	// them, as it hits cover there.
 	virtual bool launch_hits_players() const { return true; }
+	// The radius a round shot built as a circle (ROAD#44, RoundShotShape)
+	// sweeps with: resolve_sweep then moves that disc, not the bounding box,
+	// against each candidate. Empty, the shipped default, keeps the box sweep.
+	virtual std::optional<float> sweep_radius() const { return std::nullopt; }
 	// Whether retiring after touching only bare cover sounds a dud.
 	virtual bool duds_on_bare_cover() const { return true; }
 
@@ -191,24 +225,36 @@ private:
 
 
 	// fixed_slabs is whether objects holds a fixed slab, when the caller knows
-	// it for this exact list; the one-target calls inside the sweeps pass none.
+	// it for this exact list; the one-target calls inside the sweeps pass none,
+	// and no breakables, which have already lost to that target.
 	void resolve_sweep(const labrador::RectangleF& start,
 		const labrador::RectangleF& finish,
 		std::span<labrador::CollisionObject* const> objects, bool launch,
-		std::optional<bool> fixed_slabs = std::nullopt);
+		std::optional<bool> fixed_slabs = std::nullopt,
+		std::span<Projectile* const> breakables = {});
 	void resolve_fixed_slab_sweep(const labrador::RectangleF& start,
 		const labrador::RectangleF& finish,
-		std::span<labrador::CollisionObject* const> objects, bool launch);
+		std::span<labrador::CollisionObject* const> objects, bool launch,
+		std::span<Projectile* const> breakables = {});
 
     void resolve_translating_contacts(const labrador::RectangleF& start,
         const labrador::RectangleF& finish,
-        std::span<labrador::CollisionObject* const> objects, bool moving_ready);
+        std::span<labrador::CollisionObject* const> objects, bool moving_ready,
+        std::span<Projectile* const> breakables);
+	// Spend this shot on target, which its travel from start to finish enters
+	// over interval (a breakable that won the sweep): stop it just inside the
+	// face it entered, as cover stops a shot, retire it and hand target a hit.
+	void strike_breakable(const labrador::RectangleF& start,
+		const labrador::RectangleF& finish, Projectile& target,
+		const std::pair<float, float>& interval);
 	int player_num_ = -1;
 	labrador::Colour team_colour_ = labrador::Colour::gray;
 	ProjectileType type_ = ProjectileType::spray;
 
 	PlayerTeam team_ = PlayerTeam::none;
 	bool for_deletion_ = false;
+	ShotRetireCause retire_cause_ = ShotRetireCause::none;
+	void note_retire_cause(ShotRetireCause cause);
 
 };
 

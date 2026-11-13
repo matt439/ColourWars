@@ -22,6 +22,7 @@ namespace player_input_consts
 	constexpr labrador::Key drop_key = labrador::Key::s;
 	constexpr labrador::Key drop_key_alternate = labrador::Key::down;
 	constexpr labrador::Key pause_key = labrador::Key::escape;
+	// Debug builds only (REV#13); Release leaves F1 unbound but still reserved.
 	constexpr labrador::Key debug_key = labrador::Key::f1;
 	constexpr labrador::Key confirm_key = labrador::Key::enter;
 	constexpr labrador::MouseButton shoot_button = labrador::MouseButton::left;
@@ -98,7 +99,7 @@ struct ActionBindings
 	std::array<MenuDirectionBinding, menu_direction_count> directions;
 };
 
-// Only the controls no save changes: F1 / Back debug, the intro skip, the
+// Only the controls no save changes: F1 / Back debug (Debug builds only), the intro skip, the
 // menus, Escape pause and Down drop. The rebindable game actions (desktop
 // move, jump, shoot, drop, pause and sub; pad jump, shoot, pause and sub)
 // are empty.

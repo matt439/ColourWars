@@ -10,6 +10,8 @@ class ProjectileSprinkler final : public ProjectilePlanted
 public:
 	using ProjectilePlanted::ProjectilePlanted;
 
+	SubType sub_type() const override { return SubType::sprinkler; }
+
 protected:
 	// burst_count drops spread evenly from straight left to straight right
 	// across the top, and every other release turned so its drops fill the

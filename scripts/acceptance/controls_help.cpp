@@ -137,7 +137,8 @@ namespace
 
     void add_pad(std::vector<Expectation>& out, const std::string& action, PadAction pad_action)
     {
-        const PadActionChoice& choice = PadProfile()[pad_action];
+        const PadProfile profile;
+        const PadActionChoice& choice = profile[pad_action];
         out.push_back({ action, Column::pad, std::string(pad_control_name(choice.primary)) });
         if (choice.alternate != PadControl::none)
         {

@@ -221,7 +221,10 @@ try {
     $atlas.Dispose()
 }
 
-& (Join-Path $repo 'game/art/tools/texconv.exe') (Join-Path $working 'paint_fx.png') `
-    -pmalpha -m 1 -f R8G8B8A8_UNORM -y -o $textures
-if($LASTEXITCODE -ne 0){throw "texconv failed with exit code $LASTEXITCODE"}
-Write-Output 'Built five looping shots, five liquid impact strips, three sub bodies, DDS and 720p team-colour lineup.'
+# The runtime atlas is this PNG itself: straight alpha and metadata-free, so
+# the engine's PNG loader premultiplies exactly what was authored (PIN#3).
+# A DDS of the same name beside it would make the engine refuse the texture.
+Copy-Item -LiteralPath (Join-Path $working 'paint_fx.png') -Destination (Join-Path $textures 'paint_fx.png') -Force
+$staleDds = Join-Path $textures 'paint_fx.dds'
+if (Test-Path -LiteralPath $staleDds) { Remove-Item -LiteralPath $staleDds }
+Write-Output 'Built five looping shots, five liquid impact strips, three sub bodies, runtime PNG and 720p team-colour lineup.'

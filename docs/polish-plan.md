@@ -1883,28 +1883,40 @@ one has looked at the game with this question in mind.
 
 ### Reduce effects default from Windows (`POL#49`)
 
-**Taken, 2026-11-13; planned, not built.** The author said yes: a fresh save
-starts with Reduce effects On when Windows' **Animation effects** setting is
-off. Today the shared default is still fixed: `bool reduce_effects = false;`
-([play_settings.h](../game/config/play_settings.h) line 95), and nothing in
-`game/` or `editor/` reads the Windows setting.
+**Done 2026-11-13.** The author said yes: a fresh save starts with Reduce
+effects On when Windows' **Animation effects** setting is off. The authored
+default is still `bool reduce_effects = false;`
+([play_settings.h](../game/config/play_settings.h)).
 
-The next step: when `Save::first_run()` is true, read
-`SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, ...)`, and if client-area
-animation is off, write the shared `reduce_effects` as `true` into the new
-save's defaults. This follows the `fit_initial_window` precedent
-([initial_display.cpp](../game/config/initial_display.cpp)), which reads a
-Windows fact only on a first run to choose a starting value. Existing and legacy saves keep their
-value, nothing seeds a save, and the per-seat comfort switches keep following
-Shared. Add an acceptance check for both settings of the Windows value. Probes
-that assert the default Off must allow for a runner whose animations are off.
-Size S.
+`initial_reduce_effects_from_system()` in
+[initial_display.cpp](../game/config/initial_display.cpp) reads
+`SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, ...)` beside the
+monitor-fit read, before the save loads, and [main.cpp](../game/main.cpp)
+passes the answer to `Save`'s first-run constructor with the display defaults.
+Only a missing save without a legacy file uses it, so the first-run write
+records it and `SettingsSession` sees it at once. Existing, legacy-imported and
+unreadable saves keep their own value or the authored default, and a failed
+query keeps Off. Nothing seeds a save, and the per-seat comfort switches keep
+following Shared. This was done before the save loads, not in
+`fit_initial_window`, because the read needs no window and a second write would
+add nothing.
 
-Once the read lands it is the client exhibit for engine `REV#60` on Labrador's
-`master`, which proposes a read-only reduced-motion fact and notes that no
-native client reads the setting today. The `SystemParametersInfoW` call goes to
-the engine as a note on that row
-([engine reports](review/engine-reports.md)).
+The `initial_display` acceptance case checks both Windows values, a fresh save
+written and reread with each, the seats following Shared, an existing save and
+an unreadable one keeping their value, and the live read against the probe's
+own query. It never sets the system value. `check-startup.ps1` checks that the
+real executable's fresh save holds the negation of the runner's setting, in
+both presets, whichever way the setting is. No probe that pins the default Off
+calls the read, so a runner with animations off moves no pin. The startup-check
+scripts that launch the real executable with a fresh save would start it with
+Reduce effects On on such a runner. That changes presentation only, never the
+simulation or a seeded replay.
+
+The read is the client exhibit for engine `REV#60` on Labrador's `master`,
+which proposes a read-only reduced-motion fact and notes that no native client
+reads the setting. The note for that row, citing this call, is drafted in the
+[engine reports](review/engine-reports.md#what-is-deliberately-not-here) and
+waits for the author to post it.
 
 ### Help players read the tool and the fight
 

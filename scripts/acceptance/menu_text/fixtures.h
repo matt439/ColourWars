@@ -97,9 +97,9 @@ namespace menu_text_acceptance
     struct HelpText { const char* key; const wchar_t* text; std::wstring MenuHelpText::* field; bool multiline; };
     constexpr HelpText help_text[]{
         { "controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: {pad_shoot}\n"
-            L"Jump: {pad_jump} (hold for height)\nPause: {pad_pause}    Sub: {pad_sub}\nDebug: Back / View\nKEYBOARD + MOUSE\n"
+            L"Jump: {pad_jump} (hold for height)\nPause: {pad_pause}    Sub: {pad_sub}\nKEYBOARD + MOUSE\n"
             L"Move: {left} / {right}    Drop: {drop} / Down\nAim: mouse cursor    Shoot: {shoot}\n"
-            L"Jump: {jump} (hold for height)\nPause: {pause}    Sub: {sub}\nDebug: F1\nMENUS\n"
+            L"Jump: {jump} (hold for height)\nPause: {pause}    Sub: {sub}\nMENUS\n"
             L"Navigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
             L"Direction only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\n"
             L"Pad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",

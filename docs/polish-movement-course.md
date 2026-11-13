@@ -29,7 +29,7 @@ respawn and the opening countdown are the ordinary rules. Leave from the pause
 menu (Quit). A bot in the roster, a second human or a developer start
 (`+stage movement_course`) gets the ordinary timed course instead.
 
-**Lessons.** Each of the course's ten stations carries a `lesson`: a title, two
+**Lessons.** Each of the course's eleven stations carries a `lesson`: a title, two
 to four short lines and an `area` rectangle in world units. While the player's
 centre is in an area, a paper card at the bottom of the window shows that
 lesson. It uses the same look as the controls reminder. The areas tile the main
@@ -48,6 +48,7 @@ lesson. The lessons follow the proposal's tasks:
 | `steps` | Tap for the low step, hold for the taller ones |
 | `high_step` | Paint the faces around you, then try the same face with another tool |
 | `refill` (right runway) | Shoot dry (the aim marker shows a cross), stop, and the tank refills; faster on your own paint, and enemy paint stops it |
+| `sub` (right runway's far end) | Press Sub to use the chosen sub (grenade, sprinkler or paint wall); the tick on the PAINT meter shows its cost and the square after PAINT is solid when it is ready |
 | `recovery_lane` (lower floor) | No pits: walk to the nearest pale steps and jump back up |
 
 Lesson text is level content, read and checked at startup. A lesson's area must
@@ -57,6 +58,17 @@ author accepted the wording on 2026-11-05 (`POL#19`). On 2026-11-12 the
 refill lesson gained the paint-underfoot rule (`REV#10`): own paint refills
 the tank faster and enemy paint stops it, as `tuning.json`'s
 `player.paint_underfoot` has it; `practice_workshop` pins those two phrases.
+On 2026-11-13 the course gained the `sub` station and its lesson (`REV#56`),
+at the far end of the right runway: the refill lesson's area now ends at
+x 5240, where the sub lesson's begins. The lesson names no cost, since sub
+costs are tuning, and describes the HUD's sub mark as `presentation.json`'s
+`sub_mark` does. To change sub the player leaves for Weapon Select; the
+practice Tool row changes only the tool, so the lesson promises nothing there.
+The author has not seen this wording (`ROAD#11`'s play review was waived on
+2026-11-13); `practice_workshop` pins its two phrases and checks that each sub
+works at the station. Like every lesson it is level copy, not
+`presentation.json`, so `qps-ploc` does not reach it
+([localisation](localisation.md)).
 
 **Tool and clean paint.** The practice pause menu adds a fifth row,
 **Tool: < Sprayer >**, under Resume. Left and right choose among the five
@@ -74,6 +86,9 @@ through `LevelBuilder` and checks the following:
 - Every station has a lesson that contains it, and the areas cover the route
   without overlapping.
 - The refill lesson names own paint refilling faster and enemy paint stopping it.
+- The sub lesson names the Sub press and the ready mark, and a player at the
+  `sub` station with the grenade, the sprinkler or the paint wall pays that
+  sub's cost on a Sub press (`REV#56`).
 - Solo practice outlasts a one-second duration.
 - `goto` at each station shows that station's lesson, and the card fits a
   1920x1080 window.

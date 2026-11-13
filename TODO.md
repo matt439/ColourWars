@@ -13,24 +13,22 @@ results go in their owners, and `git log` is the changelog.
 was published as a pre-release on 2026-11-13 ([record](docs/releasing.md#first-release-v010));
 `master` is now `0.1.1` (`REL#6`).
 
-The engine pin moved to master `1dc8533c` on 2026-11-13 (`ENG#36` and `PIN#2` done,
-[record](docs/review/engine-reports.md#what-the-2026-11-13-bump-changed)).
+The engine pin moved to master `1dc8533c` on 2026-11-13 (`ENG#36`, `PIN#2` and `PIN#3` done,
+[record](docs/review/engine-reports.md#what-the-2026-11-13-bump-changed)); five atlases now ship
+as PNG through the engine's loader ([`PIN#3`](docs/review/engine-reports.md#png-atlases-and-texconv-pin3)).
 
-Next actions:
-
-1. `PIN#3`: decode the shipped PNGs through the engine's loader and move each atlas that
-   matches its DDS.
-
-The other `OPEN` rows can follow in any order. The required `gate` and up-to-date `master` rule
-still apply. The author's calls of 2026-11-13 on the decision rows are recorded in
+Next actions: none open. `HYG#96` waits on the first green scheduled nightly after the
+2026-11-13 ASan link fix reaches `master`; that night should close issue #72 itself. The required `gate` and up-to-date `master` rule still apply. The author's
+calls of 2026-11-13 on the decision rows are recorded in
 [Project review calls](docs/feature-roadmap.md#project-review-calls-2026-11-13) and the owners;
-they opened `REV#1`, `REV#13`, `REV#14`, `REV#63` and `POL#49`.
+the rows they opened (`REV#1`, `REV#13`, `REV#14`, `REV#63`, `POL#49`) were built 2026-11-13.
 
 **Author calls** (every `DECISION` row):
 
 - `ROAD#13`: whether to build umbrella slices 2-4 (`PIN#2` is done).
-- `ENG#PARKED`: approve the drafted mouse-button comment for labrador#122.
+- `ENG#PARKED`: approve the drafted mouse-button comment for labrador#122 and the engine `REV#60` note.
 - `ENG#39`: file the `FLT_MAX` round-trip draft as an issue, or fix it in the engine.
+- `ROAD#44`: whether the ball and grenade keep circle collision shapes (hit feel; numbers in the item).
 
 The hardware, participant and listening checks waived on 2026-11-05 were not performed. Arena
 art (`POL#16`) stays deferred; bot lift routing, non-XInput pads and growing sponges are
@@ -47,16 +45,6 @@ questions in the polish sub-docs are superseded, not open.
 | `POL#16` | DEFERRED | MED | XL | Extend the approved treatment through the accepted arenas (selected 2026-11-05); remaining UI art is a later polish pass. Waits on the author setting it as the next aim. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 | `POL#35` | DEFERRED | LOW | S | Signage and captioned Paint-artefact jokes need the author's wording; with `POL#16`. [Terrain](docs/polish-terrain.md#stage-approval-and-remaining-environment-work-2026-10-20). |
 
-## Feel and feedback
-
-**Owner:** [docs/polish-plan.md §8](docs/polish-plan.md#8-further-improvements-to-prototype);
-[Movement Course](docs/polish-movement-course.md). `POL#3`, `POL#18`, `POL#19`, `POL#38`,
-`POL#39` and `POL#45` were accepted or waived 2026-11-05.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `POL#49` | OPEN | LOW | S | Taken 2026-11-13: a fresh save starts with Reduce effects On when Windows' Animation effects is off (a first-run read beside `fit_initial_window`), with an acceptance check; the read is then the client exhibit for engine `REV#60`. [Item](docs/polish-plan.md#reduce-effects-default-from-windows-pol49). |
-
 ## Comparable-game gaps
 
 **Owner:** [docs/feature-roadmap.md, Comparable-game gaps](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27)
@@ -66,16 +54,16 @@ or above (2026-10-27). The owner records the gaps left out by choice and the exc
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ROAD#13` | DECISION | LOW | M | Umbrella answers recorded 2026-11-13 (Q1 umbrella, Q3-Q7 as recommended). Left: the author's call, now that `PIN#2` is done, whether to build slices 2-4, which reopens the five-tool balance and adds four unheard cues. Slice 1 is `REV#3`. [Proposal](docs/feature-roadmap.md#umbrella-tool-proposal-road13). |
+| `ROAD#13` | DECISION | LOW | M | Umbrella answers recorded 2026-11-13 (Q1 umbrella, Q3-Q7 as recommended). Left: the author's call, now that `PIN#2` is done, whether to build slices 2-4, which reopens the five-tool balance and adds four unheard cues. Slice 1 (`REV#3`) is done. [Proposal](docs/feature-roadmap.md#umbrella-tool-proposal-road13). |
 | `ROAD#14` | UNSCOPED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#28` | DEFERRED | LOW | L | Cycling and paint-driven lifts are done. Left: deliberate bot lift routing. Deferred behind `REV#27`, because lifts stand only on the two trials that are out of Random, so routing has no consumer yet. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
 | `ROAD#29` | DEFERRED | LOW | M | Growing sponges parked 2026-11-13 behind `REV#27`: no G1-G7 picks until a Random arena wants a sponge, then resume from the [contract draft](docs/feature-roadmap.md#growing-sponge-contract-draft-road29)'s recommendations. |
 | `ROAD#23` | DEFERRED | MED | L | Non-XInput pads (PlayStation, Switch Pro). The engine ask is parked in `ENG#PARKED` and there is no client exhibit; resumes when such a pad is in hand or a store release is chosen (`REV#68`). [Input](docs/feature-roadmap.md#input). |
 | `ROAD#24` | DEFERRED | LOW | M | Pad aim assist against the one mouse seat. Deferred until attended play shows pad seats consistently losing to the mouse seat (story B8); relates to `POL#3`, `POL#18` and `ROAD#5`. [Input](docs/feature-roadmap.md#input). |
-| `ROAD#41` | UNSCOPED | LOW | M | Grey, non-scoring practice targets in the workshop that pop and redraw with no damage readout; needs a scope section first. Related to `REV#56`. [Item](docs/feature-roadmap.md#practice-targets-in-the-workshop-road41). |
+| `ROAD#41` | UNSCOPED | LOW | M | Grey, non-scoring practice targets in the workshop that pop and redraw with no damage readout; needs a scope section first. [Item](docs/feature-roadmap.md#practice-targets-in-the-workshop-road41). |
 | `ROAD#42` | UNSCOPED | LOW | M | Weapon Select could show each tool's shot shape, drawn from its tuning, beside the text (story A6). No problem has been observed; it may wait on `POL#16`. [Item](docs/feature-roadmap.md#shot-shapes-on-weapon-select-road42). |
 | `ROAD#43` | UNSCOPED | LOW | L | Flood-fill paint object that fills one authored region for the team holding its trigger. Needs a contract draft on the lift precedent before an author call on the territory swing. [Item](docs/feature-roadmap.md#flood-fill-paint-object-road43). |
-| `ROAD#44` | OPEN | LOW | M | Circle collision shapes for the ball and grenade; the pin has the circle narrow phase (`f6752ca7`) since 2026-11-13. Measure the contact changes in a seeded replay, then the author decides on hit feel. [Item](docs/feature-roadmap.md#circle-shapes-for-round-projectiles-road44). |
+| `ROAD#44` | DECISION | LOW | M | Circle round shots landed behind Debug `shots.round` and runner `--round-shots`, default rectangle (unchanged). 128 seeded 1v1s: bucket player contacts 8.3% -> 9.0% of shots, muzzle stops -3%; grenade drops stopped at launch -32%. Author: keep circles (flip the default, rebaseline) or drop the switch. [Item](docs/feature-roadmap.md#circle-shapes-for-round-projectiles-road44). |
 
 ## Engine demonstration
 
@@ -97,15 +85,9 @@ and 37 withdrawn. A pin bump that answers one is when its workaround is deleted.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#PARKED` | DECISION | LOW | S | Asks waiting for a vehicle: window presence (was 38), `window_size_changed`, desktop size (exhibit for engine `REV#83`), atomic JSON write, registry forgetting, install facts, listener/voice cap, display-awake owner, non-XInput reader (`ROAD#23`), colour transforms (was `GAP#F10`), engine `GAP#6`/`REV#60` (leaves when `POL#49` lands), sound-group lookup (was `ENG#35`). Author: approve the drafted mouse-button comment for labrador#122, then post it. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
+| `ENG#PARKED` | DECISION | LOW | S | Asks waiting for a vehicle: window presence (was 38), `window_size_changed`, desktop size (exhibit for engine `REV#83`), atomic JSON write, registry forgetting, install facts, listener/voice cap, display-awake owner, non-XInput reader (`ROAD#23`), colour transforms (was `GAP#F10`), engine `GAP#6`, sound-group lookup (was `ENG#35`). Author: approve the drafted mouse-button comment for labrador#122 and the engine `REV#60` note, then post them. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#26`, `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed 2026-11-05 as [labrador#122](https://github.com/matt439/Labrador/issues/122) (27 with the 26 rider), #123, #124 and #125 (the Bug). Waits on the engine. When one is answered, spend it at the next pin bump; for 34, also settle what CI's strict gates accept. [Ledger](docs/review/engine-reports.md#live) |
 | `ENG#39` | DECISION | LOW | S | `FLT_MAX` written to JSON reads back one double step above it, so `gameplay_tuning` tests one float below. Drafted 2026-11-13, not filed. Author: issue route or engine fix. [Report](docs/review/engine-reports.md#39-a-float-written-as-flt_max-does-not-read-back---draft-not-filed) |
-
-**Pin follow-up (`PIN`)**
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `PIN#3` | OPEN | LOW | M | The pin has the engine's PNG loader since 2026-11-13: decode each shipped PNG through it, ship the atlases that match their DDS and retire the texconv premultiply step for them, keeping the DDS for any that does not. [Item](docs/review/engine-reports.md#png-atlases-and-texconv-pin3). |
 
 ## Developer console
 
@@ -126,8 +108,7 @@ queue closed 2026-11-07.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#95` | OPEN | LOW | S | Baseline comparison landed (`report-analyze.ps1 -Baseline`, nightly passes it, keeps continue-on-error); still to see the hosted nightly job summary show the comparison, on the pull request's nightly trial or the first night after merge. [Item](docs/code-hygiene.md#read-the-nightly-analyze-count-against-a-baseline-hyg95). |
-| `HYG#96` | OPEN | LOW | S | `close` job landed in nightly.yml (closes `Nightly sweep failed` on a green scheduled night; `workflow_dispatch` input `close_trial` runs only that path). Owed after a push: a dispatched trial closing a test issue (open #72 has the same title and would close too). [Item](docs/code-hygiene.md#close-the-nightly-issue-on-a-green-night-hyg96). |
+| `HYG#96` | BLOCKED | LOW | S | Waits on a green scheduled nightly. The 2026-11-13 night failed at the ASan link (fixed on the same day), and its `report` job commented on #72 as designed. The next green night must close #72 through the `close` job; a dispatched trial would wrongly close #72 while it tracks a real failure. [Item](docs/code-hygiene.md#close-the-nightly-issue-on-a-green-night-hyg96). |
 
 ## Tooling, CI and docs
 
@@ -147,20 +128,11 @@ decisions, and nothing was built or played. Its
 [last section](docs/review/2026-11-10-project-review.md#proposed-and-not-given-rows) lists what
 was proposed and given no row. Here `UNSCOPED` means examined by the review but never designed.
 
-**Code and robustness**
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `REV#1` | OPEN | MED | M | Taken 2026-11-13: leaving the bounds becomes an uncredited elimination (`Player::kill` replaces the `PlayerOutOfBounds` throw); the `player_out_of_bounds` reason and seal-the-arena warnings go with it. [Calls](docs/feature-roadmap.md#project-review-calls-2026-11-13), [record](docs/review/2026-11-10-project-review.md#a-player-leaving-the-arena-ends-the-process-rev1). |
-| `REV#3` | OPEN | LOW | M | Planted sprinklers and walls take hits by a shot's travel bounding box, tested after the tick's contacts: diagonal shots hit up to about 17 units wide, and a player inside the wall is hit before it. First step: sweep breakables in `Projectile::resolve_sweep` before player contacts ([roadmap](docs/feature-roadmap.md#umbrella-tool-proposal-road13)). [Record](docs/review/2026-11-10-project-review.md#breakable-subs-are-struck-by-travel-bounding-box-rev3). |
-
 **Release, README and repository**
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `REV#10` | DEFERRED | MED | S | No live enemy-paint cue (2026-11-13); the HOW-TO-PLAY line and the refill lesson explain it. Reopens if players cannot tell why they slowed, as one choice between a cue (tank state first) and milder `POL#30` amounts. [Item](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
-| `REV#13` | OPEN | LOW | S | Taken 2026-11-13: compile the F1/Back panel out of Release (bind `GameAction::debug` only under the dev-tools gate, keep F1 reserved) and drop its Controls help and README rows; rebaseline the controls-help pins and re-qualify ControlsMenuOnly on MattPC. [Plan](docs/debug-console.md#release-behaviour). |
-| `REV#14` | OPEN | MED | S | Taken 2026-11-13: a per-pair `in_random` flag keeps pink_green and blue_yellow out of Random (still Options choices), revisiting gap audit 2.1 and `ROAD#8`. First step: list every seeded colour pin and Debug tape that moves. [Item](docs/feature-roadmap.md#more-team-palette-pairs-road8). |
 | `REV#16` | DEFERRED | LOW | S | Actions are pinned by major tag with no Dependabot, and the nightly's legs each rebuild. Each Dependabot pull request would need the owner to merge it and run the full gate; per-leg builds are a recorded choice. [Record](docs/review/2026-11-10-project-review.md#ci-action-pins-and-nightly-rebuilds-rev16). |
 | `REV#18` | UNSCOPED | LOW | M | Level-editor manual/record split done 2026-11-12 ([record](docs/level-editor-record.md)). Left: moving closed rows out of feature-roadmap.md and code-hygiene.md (L, cosmetic). [Record](docs/review/2026-11-10-project-review.md#large-docs-mix-manual-and-records-rev18). |
 
@@ -170,7 +142,6 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 |---|---|---|---|---|
 | `REV#19` | UNSCOPED | LOW | M | Bots chase any sighted enemy and ignore the clock, health and score. The sight ladder (2026-11-12) found that shorter sight cuts fights but does not raise paint, so there is no paint case for the four behaviour slices; they stay undesigned. [Record](docs/gameplay-tuning.md#sight-distance-ladder-rev19-2026-11-12) |
 | `REV#20` | UNSCOPED | MED | L | One bot policy plays all five tools. Aim/reaction sensitivity is measured (`TOOL#5`, closed 2026-11-13); exact event counters reopen only with per-tool roles, which remain unscoped. Sniper's low paint is intended. [Record](docs/review/2026-11-10-project-review.md#one-bot-policy-plays-all-five-tools-rev20). |
-| `REV#21` | OPEN | LOW | M | Bots never target an enemy sprinkler and fire into an enemy paint wall, since BotWorld has no planted-sub query and bot sight ignores the wall. Bounded to 4-8 s per use. Released 2026-11-13 by ROAD#11's waived review. [Record](docs/review/2026-11-10-project-review.md#bots-do-not-answer-enemy-sprinklers-or-walls-rev21). |
 | `REV#27` | DEFERRED | MED | XL | The gate, ferry and lifts appear only on single-purpose Yard trial blockouts; Random is four stages. A finished gate or ferry arena in Random is a candidate aim, the author's to set; deferred with `POL#16`. Bot lift routing is `ROAD#28`. [Record](docs/review/2026-11-10-project-review.md#no-random-arena-uses-the-gate-ferry-or-lifts-rev27). |
 
 **Player-facing UX**
@@ -203,7 +174,6 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 | `REV#49` | UNSCOPED | MED | M | Save the finished arena as a PNG from an explicit End or Results action. Capture and WIC writer exist only in Debug; needs a Release home, the reveal frame, a folder, copy and a check. Never designed. [Record](docs/review/2026-11-10-project-review.md#save-the-finished-picture-as-a-png-rev49). |
 | `REV#52` | DEFERRED | LOW | L | Paint-keyed bounce pad as a paint object beside ROAD#28 and ROAD#29: static, launches the team holding its top paint. New class, format kind, art, cue and trial stage. Deferred behind `ROAD#28`'s bot routing. [Record](docs/review/2026-11-10-project-review.md#paint-keyed-bounce-pad-object-rev52). |
 | `REV#53` | UNSCOPED | LOW | L | Eraser stage object that returns tiles to neutral (Splasher water, de Blob). Breaks the paint-only-arrives invariant that wet strips, paint objects, bot finishing, underfoot and awards assume. Never designed. [Record](docs/review/2026-11-10-project-review.md#eraser-stage-object-that-clears-paint-rev53). |
-| `REV#56` | OPEN | LOW | S | Movement Course has no lesson station for the Sub action: add one JSON lesson with its checks and text fit. ROAD#11's review was waived 2026-11-13, so the subs stand as shipped. Practice targets are `ROAD#41`. [Record](docs/review/2026-11-10-project-review.md#sub-lesson-station-in-movement-course-rev56). |
 | `REV#58` | UNSCOPED | LOW | L | Rotation for five to eight people (Nidhogg 2 tournaments): profile names, who sits out, per-person standings. Needs a second ledger beside the team-win Session and a per-person winner rule. Never designed. [Record](docs/review/2026-11-10-project-review.md#party-rotation-for-more-than-four-people-rev58). |
 | `REV#59` | DEFERRED | LOW | L | Bots-only attract match behind the title. Level and LevelBuilder refuse a setup with no human view, so it needs a spectator view and a new stack shape. Deferred with `POL#16`, which owns the colourless front end. [Record](docs/review/2026-11-10-project-review.md#attract-match-behind-the-title-rev59). |
 | `REV#60` | DEFERRED | LOW | M | Fill the spare quadrant of three-human matches with territory-free content (clock, rosters), the row the ROAD#17 decline invited. Must repeat what panes show; needs a draw region and 3P painter cover. With POL#16. [Record](docs/review/2026-11-10-project-review.md#territory-free-use-of-the-spare-3p-quadrant-rev60). |
@@ -212,7 +182,6 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `REV#63` | OPEN | MED | M | Taken 2026-11-13 without a dump: unhandled-exception and terminate handlers write `last-error.log` with a crash phase, exception code, module (game, engine, system or other) and RVA for the shipped PDB; amends failure-reporting's Boundary. [Plan](docs/failure-reporting.md#crash-record-plan-rev63). |
 | `REV#66` | UNSCOPED | LOW | L | Editor has no multi-select, recent files, drag-and-drop open or autosave. Group move is the one with authoring value; a textured canvas contradicts the schematic scope. Scope with the next editor slice. [Record](docs/review/2026-11-10-project-review.md#editor-lacks-multi-select-and-recent-files-rev66). |
 | `REV#67` | DEFERRED | LOW | M | No signing or separate checksum (2026-11-13). An itch.io page with a butler publish step waits for the first non-pre-release tag or a wanted store page. [Calls](docs/feature-roadmap.md#project-review-calls-2026-11-13), [record](docs/review/2026-11-10-project-review.md#distribution-is-one-unsigned-github-zip-rev67). |
 | `REV#68` | DEFERRED | LOW | L | No document scopes a Steam release (store page, Remote Play Together, prompts, Deck pass); a note beside `ROAD#23`. Deferred behind `REV#67`'s itch.io trigger. [Record](docs/review/2026-11-10-project-review.md#steam-release-is-not-scoped-rev68). |
@@ -242,14 +211,16 @@ A new row for one of these gets its section back.
 | Game gaps (gap audit Class 1) | [docs/review/gap-audit.md](docs/review/gap-audit.md) (frozen) | a new finding; `ROAD#5`, `ROAD#7`, `ROAD#9`, `ROAD#10`, `GAP#4.2`, `GAP#5.1`, `GAP#L9` and `GAP#L11` were accepted or waived 2026-11-05 (no translation language chosen) |
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Design process (`DES#1`-`DES#4`) | [design-process.md](docs/design-process.md) | a new story, persona or journey, or a check gap a later trace finds; `DES#4`, the code re-review, was the last (2026-11-03) |
+| Pin follow-up (`PIN`) | [engine-reports.md, PNG atlases](docs/review/engine-reports.md#png-atlases-and-texconv-pin3) | the next pin bump's preparation; `PIN#3` moved five atlases to PNG 2026-11-13 and `sprite_sheet_1` keeps its BC3 DDS |
 | Closed engine reports (1–25, 28, 29, 31, 32) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |
-| Splatoon borrowings (no live score, random pairs) | gap audit 1.1, 2.1 | only the author reversing the decision |
+| Splatoon borrowings (no live score, random pairs) | gap audit 1.1, 2.1; [`ROAD#8`](docs/feature-roadmap.md#more-team-palette-pairs-road8) | only the author reversing the decision; `REV#14` (2026-11-13) took the two exempt pairs out of the roll and kept the random-pair model |
 | Startup content validation | gap audit 8.1, `game/config/content_validation.cpp` | a content kind added without validation |
 | Content pipeline | [Text scope](docs/menu-presentation.md#remaining-text-slices-gap84), [art/content policy](game/art/README.md#runtime-content-separation-gap86) | a new authored text role or accepted runtime-content requirement; the scoped `GAP#8.4` extraction is complete |
 | Code TODO/FIXME markers | `game/`, `editor/`, `scripts/`, `cmake/` | a new marker, which should be a row here instead |
 | OOP showcase (`OOP#1`) | [oop-guide.md](docs/oop-guide.md) | a new hierarchy, extension point or registration the guide no longer describes; never a request to flatten one. Sub weapons and [Add a sub weapon](docs/oop-guide.md#add-a-sub-weapon) were added 2026-11-12 |
+| Feel and feedback (`POL`) | [polish-plan.md §8](docs/polish-plan.md#8-further-improvements-to-prototype); [Movement Course](docs/polish-movement-course.md) | a new feel or feedback defect; `POL#3`, `POL#18`, `POL#19`, `POL#38`, `POL#39` and `POL#45` were accepted or waived 2026-11-05, and `POL#49` (Reduce effects from Windows on a fresh save) was built 2026-11-13 |
 | Movement Course icon (`ED#6`, retired) | [level-editor.md](docs/level-editor.md#movement-course-icon-ed6-retired) | an accepted screen actually displays stage icons; current Stage Select uses a live preview |
 
 ---

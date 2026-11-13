@@ -121,7 +121,7 @@ Each `level_bounds` member uses the following encoding:
 
 | Bounds key | Purpose |
 |---|---|
-| `out_of_bounds` | Scene retirement boundary. Leaving it retires projectiles; players leaving it are an error. |
+| `out_of_bounds` | Scene retirement boundary. Leaving it retires projectiles; a player whose box leaves it is eliminated, credited to nobody, and respawns. |
 | `camera_bounds` | Limits the player-follow camera. |
 | `zoom_out_start_bounds` | Authored start framing for the ending camera transition. |
 | `zoom_out_finish_bounds` | Authored end/overview framing; also the editor's initial arena view. |
@@ -132,16 +132,16 @@ within 1,048,576 units of the origin and neither side longer than that
 rectangles: the loader does not require them to nest or enforce an aspect ratio.
 Only object rectangles, not these bounds, accept `rectangle_tlbr`.
 
-**Seal the arena.** A player whose box lies wholly outside `out_of_bounds` is
-not eliminated: the game closes with its failure report, and the round in
-progress and any unfinished series are lost
+**Leaving the arena is an elimination.** A player whose box lies wholly
+outside `out_of_bounds` is eliminated at the end of that tick, as a fatal hit
+would be, with nobody credited for it, and respawns at its spawn after the
+normal delay
 ([`REV#1`](review/2026-11-10-project-review.md#a-player-leaving-the-arena-ends-the-process-rev1)).
-Neither the loader nor the user-stage scan checks that an arena is enclosed, so
-a gap in the walls, floor or ceiling shows up only in play. Surround everything a
-player can reach with solid structures, and test every reachable edge,
-including those a mover, gate or drop-through platform opens. The author took
-`REV#1` on 2026-11-13: leaving the arena will be an elimination, with the
-normal respawn. This note goes when that change lands.
+A gap in the walls, floor or ceiling is therefore a pit, not an error, and the
+loader does not check that an arena is enclosed. Put `out_of_bounds` where a
+fall should end: a player keeps falling until its whole box is past the edge.
+Spawns must stay inside it (below), or a player would be eliminated on every
+respawn.
 
 Spawn entries are `{ "x": 100, "y": 1075 }`, the character's **top-left**, not its
 feet or centre. Character size comes from `tuning.player.size`; the template

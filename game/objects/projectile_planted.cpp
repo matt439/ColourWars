@@ -77,9 +77,10 @@ void ProjectilePlanted::set_rectangle(const RectangleF& rectangle)
 }
 
 void ProjectilePlanted::resolve_travel(std::span<CollisionObject* const> objects,
-	std::optional<ProjectileTargetFlags> known)
+	std::optional<ProjectileTargetFlags> known, std::span<Projectile* const> breakables)
 {
-	if (!this->planted_) { Projectile::resolve_travel(objects, known); }
+	// In flight it is a shot like any other, so an enemy planted sub stops it.
+	if (!this->planted_) { Projectile::resolve_travel(objects, known, breakables); }
 }
 
 void ProjectilePlanted::on_structure_contact(const Structure& /*other*/,
@@ -101,6 +102,11 @@ float ProjectilePlanted::player_damage() const
 bool ProjectilePlanted::takes_hits() const
 {
 	return this->planted_ && !this->for_deletion();
+}
+
+const ProjectilePlanted* ProjectilePlanted::planted_sub() const
+{
+	return this->takes_hits() ? this : nullptr;
 }
 
 void ProjectilePlanted::take_hit()

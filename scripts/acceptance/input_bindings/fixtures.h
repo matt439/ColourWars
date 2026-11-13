@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/input/input_bindings.h"
+#include "game/debug/dev_tools.h"
 #include "game/input/input_slots.h"
 #include "game/save/save.h"
 #include "game/config/settings_session.h"

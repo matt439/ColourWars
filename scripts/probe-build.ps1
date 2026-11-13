@@ -42,11 +42,13 @@ function Get-ProbeBuild {
     # with every translation unit of this tree instrumented.
     $asan = $Preset -eq 'x64-asan'
     $configuration = if ($debug) { 'Debug' } elseif ($asan) { 'RelWithDebInfo' } else { 'Release' }
+    # x64-asan's overlay triplet builds its static vcpkg ports with the sanitizer.
+    $triplet = if ($asan) { 'x64-windows-asan' } else { 'x64-windows' }
     if (-not [StringComparer]::OrdinalIgnoreCase.Equals([IO.Path]::GetFullPath($cache.CMAKE_HOME_DIRECTORY), $Repo) -or
         $cache.CMAKE_BUILD_TYPE -ne $configuration -or $cache.LABRADOR_RENDER_BACKEND -ne 'd3d11' -or
         $cache.LABRADOR_AUDIO_BACKEND -ne 'xaudio2' -or $cache.LABRADOR_INPUT_BACKEND -ne 'xinput' -or
-        $cache.VCPKG_TARGET_TRIPLET -ne 'x64-windows') {
-        throw 'The probe requires this checkout and the selected d3d11/xaudio2/xinput x64-windows preset.'
+        $cache.VCPKG_TARGET_TRIPLET -ne $triplet) {
+        throw "The probe requires this checkout and the selected d3d11/xaudio2/xinput $triplet preset."
     }
     $sanitizerRuntimeDirectory = $null
     if ($asan) {

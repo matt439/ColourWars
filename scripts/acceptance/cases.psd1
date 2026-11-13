@@ -62,6 +62,7 @@ Cases = @(
     @{ Name = 'aim_marker' }
     @{ Name = 'player_identity' }
     @{ Name = 'blocked_shot' }
+    @{ Name = 'round_shots' }
     @{ Name = 'idle_drip' }
     @{ Name = 'quiet_character' }
     @{ Name = 'figure_slips' }
@@ -115,6 +116,7 @@ Cases = @(
         Arguments = @('game', 'repo')
     }
     @{ Name = 'fatal_report' }
+    @{ Name = 'crash_record' }
     @{ Name = 'gameplay_tuning' }
     @{
         Name = 'menu_presentation'
@@ -136,6 +138,7 @@ Cases = @(
     @{ Name = 'text_wrap' }
     @{ Name = 'terrain' }
     @{ Name = 'lethal_provenance' }
+    @{ Name = 'out_of_bounds' }
     @{ Name = 'skirmish_bot' }
     @{ Name = 'paint_surfaces' }
     @{ Name = 'balance_regions' }

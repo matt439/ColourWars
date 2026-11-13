@@ -6,12 +6,11 @@ Pause. It defaults to Off, preserving the authored presentation. Changes take
 effect on Apply; Back discards pending changes. Older saves and missing or
 invalid values use the default independently of other preferences.
 
-**Planned, not built (`POL#49`, taken 2026-11-13).** The default stays Off
-except on a fresh save when Windows' **Animation effects** setting is off
-(`SPI_GETCLIENTAREAANIMATION`): then the first-run save starts with the shared
-Reduce effects On. Existing and legacy saves keep their value, and per-seat
-comfort switches keep following Shared. Until that read lands, the default is
-Off on every save. The plan is in the
+**Fresh saves follow Windows (`POL#49`, 2026-11-13).** The default is Off,
+except that a fresh save starts with the shared Reduce effects On when Windows'
+**Animation effects** setting is off (`SPI_GETCLIENTAREAANIMATION`). Existing,
+legacy and unreadable saves keep their value or the default, and per-seat
+comfort switches follow Shared. The detail is in the
 [polish plan](polish-plan.md#reduce-effects-default-from-windows-pol49).
 
 ## Presentation policy

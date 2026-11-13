@@ -71,7 +71,7 @@ namespace
         const LevelLoadedInfo& course() const { return *this->levels.get("movement_course"); }
 
         std::unique_ptr<Level> build(bool practice, int humans = 1, float duration = 1.0f,
-            WeaponType tool = WeaponType::sprayer)
+            WeaponType tool = WeaponType::sprayer, SubType sub = SubType::grenade)
         {
             MatchSetup settings;
             settings.set_stage("movement_course");
@@ -87,6 +87,7 @@ namespace
             {
                 settings.set_player_team(index, PlayerTeam::a);
                 settings.set_player_weapon(index, tool);
+                settings.set_player_sub(index, sub);
             }
             this->viewports.set_layout(settings.screen_layout());
             return this->builder->build_level(settings, TeamColourPair::blue_orange,
@@ -119,8 +120,8 @@ namespace
         const LevelLoadedInfo& course = world.course();
         const std::vector<LevelLesson> lessons = course.lessons();
         const std::vector<LevelStation> stations = course.stations();
-        require(lessons.size() == 10 && stations.size() == 12,
-            "The course's ten stations each carry a lesson; the spawns do not");
+        require(lessons.size() == 11 && stations.size() == 13,
+            "The course's eleven stations each carry a lesson; the spawns do not");
         const RectangleF camera = course.camera_bounds_rectangle();
         for (size_t index = 0; index < lessons.size(); ++index)
         {
@@ -164,12 +165,20 @@ namespace
         require(refill.find("faster on your own paint") != std::string::npos &&
             refill.find("enemy paint stops it") != std::string::npos,
             "The refill lesson says own paint refills faster and enemy paint stops it");
+        // REV#56: the sub lesson names the Sub control and the HUD's readiness mark.
+        const auto sub_lesson = std::find_if(lessons.begin(), lessons.end(),
+            [](const LevelLesson& lesson) { return lesson.station == "sub"; });
+        require(sub_lesson != lessons.end(), "The course has a sub lesson");
+        const std::string& sub = sub_lesson->text;
+        require(sub.find("Press Sub") != std::string::npos &&
+            sub.find("solid when it is ready") != std::string::npos,
+            "The sub lesson names the Sub press and the ready mark");
     }
 
     void check_practice_level(World& world)
     {
         std::unique_ptr<Level> level = world.build(true);
-        require(level->practice() && level->lesson_count() == 10, "Solo practice gets the lessons");
+        require(level->practice() && level->lesson_count() == 11, "Solo practice gets the lessons");
         require(level->active_lesson() == -1, "No lesson before play");
         step(*level, world.tuning.match().countdown + 0.1f);
         require(level->state() == LevelState::active, "Practice starts after the ordinary countdown");
@@ -201,6 +210,37 @@ namespace
         step(*level, dt);
         require(level->active_lesson() == -1 && level->lesson_card_bounds().width == 0.0f,
             "A dead player sees no lesson");
+    }
+
+    // REV#56: the sub lesson's station is a place where every sub works. A
+    // player stood there in its lesson presses Sub aimed along the runway and
+    // pays the sub's cost, whichever of the three they chose.
+    void check_sub_station(World& world)
+    {
+        const std::vector<LevelStation> stations = world.course().stations();
+        const auto station = std::find_if(stations.begin(), stations.end(),
+            [](const LevelStation& candidate) { return candidate.name == "sub"; });
+        require(station != stations.end(), "The course has a sub station");
+        const Vector2F position = station->position;
+        for (const SubType sub : { SubType::grenade, SubType::sprinkler, SubType::wall })
+        {
+            std::unique_ptr<Level> level = world.build(true, 1, 1.0f, WeaponType::sprayer, sub);
+            step(*level, world.tuning.match().countdown + 0.1f);
+            const int participant = level->participant_for_view(0);
+            require(level->place_player(participant, position), "goto sub");
+            step(*level, dt);
+            require(level->active_lesson() == lesson_index(*level, "sub"), "At the sub station its lesson shows");
+            const float full = level->player(participant).weapon_ammo();
+            std::vector<PlayerInputData> inputs(input_slots::count, input());
+            inputs[0].sub_pressed = true;
+            inputs[0].shoot_direction_requested = true;
+            inputs[0].shoot_direction = Vector2F::direction_right;
+            inputs[0].shoot_angle = Vector2F::direction_right.angle();
+            level->update(inputs, dt);
+            const float spent = full - level->player(participant).weapon_ammo();
+            require(std::abs(spent - world.tuning.sub(sub).cost) < 0.5f,
+                "A Sub press at the sub station did not use the chosen sub for its cost");
+        }
     }
 
     void check_who_gets_practice(World& world)
@@ -350,6 +390,7 @@ int main(int argc, char** argv)
         World world(content);
         check_authored_lessons(world);
         check_practice_level(world);
+        check_sub_station(world);
         check_who_gets_practice(world);
         check_tool_change_start(world);
         check_tool_row_wraps();

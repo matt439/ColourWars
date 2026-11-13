@@ -118,11 +118,10 @@ them with software. They are not ColourWars' to license under MIT.
 Three images in this repository are original artwork generated for ColourWars
 using OpenAI image generation; each carries a C2PA provenance record saying so.
 
-- `game/art/sources/textures/menu_paint.png` - the menu artwork. The matching
-  `.dds` is a lossless RGBA conversion used at runtime in
-  `game/content/textures/`, and `menu_paint.json` defines its sprite frame.
-  The release includes the DDS and frame definition, while the PNG is retained
-  as the source artwork.
+- `game/art/sources/textures/menu_paint.png` - the menu artwork. An identical
+  copy is the runtime texture in `game/content/textures/`, and
+  `menu_paint.json` defines its sprite frame. The release includes that PNG,
+  with its provenance record, and the frame definition.
 - `game/art/weapon_paint_source.png` - the first weapon drawing, retained as
   historical authoring material with `weapon_paint_prompt.txt`. The runtime
   weapon sheet is built from the hand-authored vector source instead

@@ -5,6 +5,8 @@
 #include "game/objects/player_team.h"
 #include "game/objects/weapon_type.h"
 #include "game/objects/sub_type.h"
+#include "game/objects/round_shot_shape.h"
+#include "game/objects/shot_retirements.h"
 #include "game/match/player_control.h"
 #include "scripts/acceptance/balance_regions/metrics.h"
 #include <array>
@@ -34,6 +36,9 @@ namespace balance_runner
         std::vector<BotDifficulty> difficulties;
         std::vector<SubType> subs; // Empty preserves the shipped default grenade.
         std::filesystem::path tuning_patch;
+        // ROAD#44: the shape every round shot in the sweep is built with,
+        // set before each match is built and put back to rectangle after.
+        RoundShotShape round_shots = RoundShotShape::rectangle;
         std::filesystem::path csv;
         std::filesystem::path paint_csv;
     };
@@ -93,6 +98,11 @@ namespace balance_runner
         std::array<SeatResult, 4> seats{};
         std::uint64_t credited_enemy_eliminations = 0;
         std::uint64_t uncredited_projectile_lethals = 0;
+        // ROAD#44: the round-shot shape and how the match's round shots left
+        // play. Never CSV fields: main prints them as shot-contacts lines.
+        RoundShotShape round_shots = RoundShotShape::rectangle;
+        ShotRetirements flight_retirements;
+        ShotRetirements launch_retirements;
         // Owned final snapshot metrics; never drive gameplay or the main CSV fields.
         std::optional<balance_regions::Measurement> paint_report;
     };
@@ -112,6 +122,11 @@ namespace balance_runner
     std::string paint_csv_text(const std::vector<Result>& results);
     // REV#37: one line per seat of a 1v1 result, empty otherwise.
     std::string hit_view_lines(const Result& result);
+    std::string round_shots_name(RoundShotShape shape);
+    // ROAD#44: four lines per result, flight and launch for the balls and the
+    // grenade bodies, each with its cover, player, breakable, expired and
+    // out-of-bounds counts.
+    std::string shot_contacts_lines(const Result& result);
     // Reserves two exclusive sibling stage files before simulation. Both are
     // complete/closed before publication. Companion moves first; main moves
     // last as a completion-marker convention, not a two-file atomic transaction.

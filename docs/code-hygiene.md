@@ -137,7 +137,7 @@ date.
 
 ### Read the nightly `/analyze` count against a baseline (`HYG#95`)
 
-**Landed 2026-11-12; the hosted job summary is still to be seen.** The
+**Done 2026-11-13: the first hosted night ran the comparison.** The
 `REV#61` verdicts end: "a number other than nine on a later run is the thing to
 read." Nothing read it. The nightly `analyze` leg runs with `continue-on-error`,
 `report-analyze.ps1` fails only when the build does, and the `report` job opens
@@ -179,9 +179,17 @@ yet: the hosted nightly's job summary, which the pull request's own nightly
 trial (the workflow's `pull_request` paths include the script and the
 baseline) or the first night after merge will show.
 
+Seen on 2026-11-13. The first scheduled night after the merge was
+[run 43462006681](https://github.com/matt439/ColourWars/actions/runs/43462006681).
+Its `analyze` leg ran with `-Baseline` and logged "/analyze client: 9 warning(s): C6011 x1, C6262 x8",
+"engine: 2" and "/analyze baseline: all 9 match the 9 accepted". The step-summary
+block is written on that same path whatever the verdict, so the job page carries the
+"/analyze against the baseline" heading and that verdict. The page itself was not read through the API:
+`gh` exposes neither job summaries nor a check-run summary for this job.
+
 ### Close the nightly issue on a green night (`HYG#96`)
 
-**Landed 2026-11-12; the dispatched trial is owed.** The `report` job opens or
+**Landed 2026-11-12; waits on a green scheduled night.** The `report` job opens or
 comments on `Nightly sweep failed` when a scheduled night fails, and its body
 said "Close this once a night passes". Nothing acted on a green night, so the
 issue stayed open until someone noticed: issue #72, opened by the failure on
@@ -212,6 +220,16 @@ two green nights already earned. Then a scheduled failure still opening one is
 seen on the next red night; the `report` job did not change but for its body
 text.
 
+
+The 2026-11-13 scheduled night
+([run 43462006681](https://github.com/matt439/ColourWars/actions/runs/43462006681))
+failed in its `asan` leg. lodepng is a static library that came in with that day's
+engine pin bump, and it broke the ASan link. The fix is under the `x64-asan` preset
+below. The `report` job then commented "Failed again" on #72 and `close` was skipped,
+as designed, so the failure path is seen. No dispatched trial was run, because a trial
+closes every issue with that title, and #72 now tracks a real failure. Still owed: the
+next green scheduled night after the fix reaches `master` should close #72 through the
+`close` job.
 ### Editor undo without copying its history (`HYG#97`)
 
 **Done 2026-11-12; nothing the user can do changed.** `Impl::mutate` now
@@ -888,8 +906,7 @@ same nine painter switches passed again in Debug and Release.
 **Done 2026-11-05; behaviour change.** The failure dialog names the real record
 path, and two impossible menu states throw instead of drawing `ERROR`/`Error`.
 
-- `Level::update` throws `PlayerOutOfBounds`
-  ([player_out_of_bounds.h](../game/objects/player_out_of_bounds.h)), a
+- `Level::update` throws `PlayerOutOfBounds` (`player_out_of_bounds.h`), a
   `std::runtime_error` with the same message, and `FatalReport::capture`
   records `player_out_of_bounds` by type. A plain `runtime_error` with those
   words no longer gets the reason. The engine's device-failure `strcmp` stays
@@ -902,6 +919,10 @@ path, and two impossible menu states throw instead of drawing `ERROR`/`Error`.
   `station_contract.h` (the editor's words) and its comment say the same. The
   paintable-role error says a `structure_paintable` collision object has no
   paintable role.
+- Superseded by `REV#1` (2026-11-14): leaving the arena is now an elimination,
+  so the throw, `PlayerOutOfBounds`, its header and the `player_out_of_bounds`
+  reason are gone, and the two diagnostics say a player built there is
+  eliminated on its first tick.
 - The seven `std::exception("...")` throws (`level_end_info.cpp`,
   `player_figure.cpp`, `player.cpp`, three in `projectile.cpp`,
   `team_colour.cpp`) are `std::logic_error`, or `std::invalid_argument` for
@@ -4182,10 +4203,11 @@ constructor. After that the only collision objects `Level` adds to its scene
 are projectiles (`update_players`, `burst_projectiles`, `admit_projectile`),
 which are never targets; the idle drips and the Debug station labels are not
 collision objects; and no game code removes a scene object. A planted
-sprinkler or paint wall is a `ProjectilePlanted`, struck through
-`Level::strike_breakables`, so a sub appearing or breaking does not touch the
-list. A replay or restart builds a new `Level` and admits again. Both answers
-are fixed per object: `mover()` is decided by class and a structure's tag by
+sprinkler or paint wall is a `ProjectilePlanted`, passed to the sweep as
+Level's per-tick breakables list (`Level::breakables_`), never a projectile
+target, so a sub appearing or breaking does not touch the list. A replay or
+restart builds a new `Level` and admits again. Both answers are fixed per
+object: `mover()` is decided by class and a structure's tag by
 its constructor argument. So there is no invalidation hook, and none should be
 added. `check_projectiles()` enforces it in Debug after every scene tick: once
 the targets are admitted they must be the scene's non-projectile collision
@@ -4350,13 +4372,18 @@ CMake's own defaults (`/DWIN32 /D_WINDOWS /EHsc`). That reaches every target,
 the engine's included, without touching `labrador_settings`, and it does not
 reach `rc.exe` as a directory compile option would.
 
-vcpkg stays on the stock `x64-windows` triplet. DirectXTK and XAudio2 are
-DLLs, so only their import libraries are linked, and every static library and
-object (engine, math, game, adapters, editor, probes) is compiled here with
-the flag. The STL's container annotations therefore agree across the link and
-no `_DISABLE_VECTOR_ANNOTATION` or overlay triplet is needed; the vcpkg binary
-cache key is unchanged. The cost is that nothing inside those two DLLs is
-checked.
+vcpkg uses an overlay triplet, [`x64-windows-asan`](../cmake/triplets/x64-windows-asan.cmake),
+which is stock `x64-windows` except that lodepng is compiled with
+`/fsanitize=address`. DirectXTK and XAudio2 are DLLs, so only their import
+libraries are linked and they keep the stock flags. lodepng, which came in with
+the engine's PNG loader at the 2026-11-13 pin bump, is a static library, so its
+objects join the link. On the stock triplet the 2026-11-13 scheduled night
+failed with LNK2038 (`annotate_string`, `annotate_vector` and `annotate_optional`
+`0` against `1`). Building it with the flag keeps the STL's container annotations
+in agreement across the link without `_DISABLE_VECTOR_ANNOTATION`, so
+container-overflow checks stay on. A new static vcpkg port joins the triplet's
+`PORT` list. The cost is that nothing inside the two DLLs is checked, and that
+the asan leg's packages are keyed apart from the other presets'.
 
 `run-acceptance.ps1 -Preset x64-asan` runs Release's default list. Through
 `probe-build.ps1` the probes compile with `/fsanitize=address /Z7` (`/Z7` so

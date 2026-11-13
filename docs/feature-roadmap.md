@@ -1555,7 +1555,9 @@ The fixed-preference enum and its three save keys remain stable. Every file must
 include those keys once; changing array order does not change saved selections.
 Extra keyed pairs join Random through a content edit, without a rebuild. Making
 one of those extra pairs a fixed Options choice still requires adding its enum
-and save-key mapping. The random roll uses the array length. A random weapon
+and save-key mapping. The random roll uses the array length, and since `REV#14`
+redraws when it lands on a pair whose `in_random` is false
+([`ROAD#8`](#more-team-palette-pairs-road8)). A random weapon
 preview stays neutral and consumes no draw.
 
 Startup rejects duplicate colour names or pair keys, empty identifiers/labels,
@@ -2004,20 +2006,34 @@ under tritan) and `blue_yellow` (yellow is 10.3 from white). The exemption
 list fails if either one starts passing, so a recolour has to take it off.
 `blue_orange` passes (58.1, 22.9).
 
-A content-only extra pair still joins Random without a rebuild, and now has to
-pass the same bar. [The preview sheet](images/road8/team-pairs-colour-vision.png)
+A content-only extra pair still joins Random without a rebuild unless it says
+`in_random: false`, and now has to pass the same bar. [The preview sheet](images/road8/team-pairs-colour-vision.png)
 shows every pair on a Gainsboro surface under each simulation. Nothing here
 qualifies the colours on screen: the opt-in visual cases that capture palettes
 (`paint_fx_visual`, `painter_visual`, the console's opening art check) still
 name the original three.
 
-**Random will skip the two legacy pairs (`REV#14`, taken 2026-11-13; not yet
-built).** A per-pair `in_random` flag, false on `pink_green` and `blue_yellow`,
-leaves them as fixed Options choices and draws Random uniformly over the
-passing pairs. This revisits the author's earlier answer here and to gap audit
-2.1, fixed choices plus three new passing pairs rather than a roll filter,
-while keeping the random-pair model. Seeded colour pins move; see
-[Project review calls](#project-review-calls-2026-11-13) for the first step.
+**Random skips the two legacy pairs (`REV#14`, taken and built 2026-11-13).**
+Each pair in `team_palette` takes an optional `in_random`, true by default.
+`pink_green` and `blue_yellow` say false, so they stay fixed Options choices and
+Random never lands on them. The roll redraws from the same palette stream until
+it lands on a pair in Random, rather than taking the draw modulo the filtered
+count: both are uniform over the four passing pairs, but the redraw moves only
+a seed whose first draw was exempt. Of the pinned seeds, 0 moved from
+`blue_yellow` to `purple_gold`, and 211 and 4242 from `pink_green` to
+`blue_orange`; seeds 1-8, and so seed 7 that the review scripts use, kept their
+pairs (filter-then-modulo would also have moved 3, 5, 6 and 7). No Debug tape
+is tracked; a local one still replays bit for bit, because the match fingerprint
+hashes team indices rather than colours and the palette stream feeds nothing
+else, though `play` warns that `presentation.json` differs and a tape whose
+seed first drew an exempt pair shows the new pair. Startup refuses a file with
+no pair in Random, and a pair out of Random that is not a fixed Options choice
+(it would be unreachable). `team_palette` ties `in_random` to the exemption
+list, checks that 1,000 seeds never draw an exempt pair and reach every other,
+and pins the [`+seed` table](debug-console.md#seed-record-and-play); `locales`
+checks that a locale cannot set the flag. This revisits the author's earlier
+answer here and to gap audit 2.1, fixed choices plus three new passing pairs
+rather than a roll filter, while keeping the random-pair model.
 
 ### Controller rumble (`ROAD#9`)
 
@@ -2193,8 +2209,8 @@ painting was `POL#30` (answered no on 2026-11-03), and more arenas are the curre
   2026-11-05, so it is no longer blocked. A new subclass suits the OOP rule.
   **Proposal recorded (2026-11-12), answered (2026-11-13):** the
   [umbrella tool proposal](#umbrella-tool-proposal-road13) recommended a
-  Splatoon brella, and the author took it and answered Q1-Q7. Its first slice
-  is `REV#3`'s fix, open either way. Building slices 2-4 is a separate call
+  Splatoon brella, and the author took it and answered Q1-Q7. Its first slice,
+  `REV#3`'s fix, was done on 2026-11-13. Building slices 2-4 is a separate call
   after `PIN#2`.
 - **Map pickups (`ROAD#14`).** TowerFall chests, Paint Rumble power-ups and
   Smash items. Needs a match toggle and bot awareness. It waited for
@@ -2439,7 +2455,9 @@ to fill the last one's gaps. An enemy player met first, or the body's
 shot. Enemy shots break it: `Level::strike_breakables` runs after the tick's
 contacts, spends each enemy shot whose travel this tick
 (`Projectile::travel_bounds`) reaches a projectile that `takes_hits`, and
-the `hits`th (3) retires it; its own team's shots leave it be.
+the `hits`th (3) retires it; its own team's shots leave it be. (Since
+umbrella slice 1, `REV#3`, swept shots meet it along their path instead; see
+the [umbrella proposal's slice record](#umbrella-tool-proposal-road13).)
 `Projectile::take_burst` is now asked every tick, which is how the planted
 sprinkler sprays. It costs half the tank, with a 4 s cooldown. Each seat's
 `SeatSetup::sub` chooses its sub, defaulting to the grenade, which
@@ -2569,8 +2587,12 @@ tools'. The author's attended play review was waived on 2026-11-13.
 **Player documents, 2026-11-10.** `HOW-TO-PLAY.txt` and the README gained the
 Sub control row and a loadout paragraph, and the README's Pad Buttons and
 Keyboard Keys sentences now name Sub (`REV#9`). The `SeatSetup::sub` comment
-says what slice 5 made true (`REV#8`). The Movement Course still has no sub
+says what slice 5 made true (`REV#8`). The Movement Course still had no sub
 station (`REV#56`).
+
+**Sub lesson, 2026-11-13.** The Movement Course gained a `sub` station and
+lesson at the right runway's far end (`REV#56`,
+[polish-movement-course.md](polish-movement-course.md#practice-workshop)).
 
 **Nightly follow-up, 2026-11-10.** No scheduled nightly ran between the
 slices. The first after them failed eight Release painter leaves, one Debug
@@ -2652,6 +2674,44 @@ sniper's rounds are unchanged, since its throws are always within its reach. A
 bot throws its grenade about 40% less often (1.53 a round against 2.56) and
 plants the sprinkler and wall as often as before. Endless paint is untouched.
 
+**Bots answer enemy planted subs (`REV#21`, done 2026-11-13).** Until now a
+bot never shot an enemy sprinkler and fired straight into an enemy paint wall,
+because `BotWorld` had no query for a planted sub and bot sight ignored the
+wall. `BotWorld::planted_subs` now lists every standing planted sub, either
+team's, by bounds, team and type (`LevelBotWorld` reads Level's admitted shots
+through `Projectile::planted_sub`, which a sprinkler or wall answers only while
+enemy shots still break it). Two rules use it, both in the shipping driver:
+
+- *An enemy wall blocks sight.* `MatchBotDriver::clear_sight` is the world's
+  line of sight, also stopped by an enemy paint wall whose bounds cross the
+  line; a bot's own team's wall never blocks it, since only enemy shots are
+  spent on a wall. Every sight test in `drive` uses it: an enemy behind the
+  wall is not observed (the wall is cover, as it would be for a player),
+  support paint behind it is not aimed at, and a territory sample behind it
+  becomes a route destination where the stage has team gates, or is dropped.
+  Bodies still walk through walls, so obstacles and supports are unchanged.
+- *An enemy sprinkler in reach is a target.* A standing enemy sprinkler in
+  sight is observed by its centre, and while no enemy is engaged the bot aims
+  its tool at the nearest one within its own engagement distance and fires.
+  The aim order is an engaged enemy, then that sprinkler, then support paint,
+  then the paint goal.
+
+Not taught, deliberately: a bot does not walk to a sprinkler out of its reach,
+does not shoot at an enemy wall to break it, and does not pursue an enemy it
+lost behind one. Each of these subs stands 4-8 s, so the bounded answer is
+the one above; whether bots should do more is a play-feel call for later. No
+random draw moved (the aim error is drawn every decision already, and territory
+samples are drawn before their sight test), so a match with no enemy planted
+sub in sight is step-identical to before. The balance tables above were
+measured with the old policy and were not re-measured; the half-tank cost
+stands. `sub_weapons` checks that the bots' world lists a sprinkler and a wall
+exactly while each stands (not in flight, after breaking or past its lifetime)
+and, through `MatchBotDriver` at every difficulty with the Sprayer and the
+Sniper, that a bot aims past its own wall but never through an enemy's, shoots
+an enemy sprinkler in reach and in sight but not its own team's, one beyond
+reach or one behind an enemy wall, and fights an engaged enemy first. The
+balance runner's `engaged_ticks` uses the same sight.
+
 ### Umbrella tool proposal (`ROAD#13`)
 
 **Proposed 2026-11-12; questions answered 2026-11-13; nothing is built.** This
@@ -2668,9 +2728,10 @@ because each of those is a way of placing paint: a stream (Sprayer), a jet
 (Bucket). None of them answers a shot, while the umbrella makes Shoot a defence
 as well. A Sniper facing one has to break the canopy or go round it, and a
 Roller can walk through it. Much of the mechanism is already qualified: the
-paint wall's `takes_hits`/`take_hit` path through `Level::strike_breakables`
-(`game/objects/level.cpp:505-521`) and the sprinkler's fan of drops
-(`ProjectilePlanted::spray`).
+paint wall's `takes_hits`/`take_hit` path, which since slice 1 stops a shot
+along its swept path (`Projectile::resolve_movement_contacts`, given
+`Level::resolve_projectile_movement`'s breakables), and the sprinkler's fan of
+drops (`ProjectilePlanted::spray`).
 
 **Considered instead.**
 - *Brush* (the fast painter). The player runs faster while Shoot is held,
@@ -2714,19 +2775,21 @@ how much.
   the tool keeps firing. Blocking a shot costs no paint. Releasing Shoot shuts
   the canopy, and the canopy does not slow its holder (Q4).
 - *Where Level asks.* A virtual `Weapon::canopy()`, empty by default, gives
-  `strike_breakables` the canopy's rectangle and team, and
-  `Weapon::take_canopy_hit()` spends a hit. The weapons join the projectile walk
-  that already exists, and the canopy is never a Scene object, so nothing
+  Level the canopy's rectangle and team, and `Weapon::take_canopy_hit()` spends
+  a hit. The canopy joins the swept breakables that
+  `Level::resolve_projectile_movement` hands each shot (slice 1), which then
+  carry a rectangle, a team and a hit to spend rather than only planted
+  projectiles; it does not go through `strike_breakables`, which is left to the
+  roller's unswept volume. The canopy is never a Scene object, so nothing
   outlives the weapon that owns it.
-- *Prerequisite: `REV#3`.* A canopy stands in front of its holder, which is the
-  case `REV#3` records for a player standing inside the paint wall.
-  `strike_breakables` runs after `scene_->resolve()` (`level.cpp:388-401`) on
-  travel bounding boxes. So when a shot reaches the holder and the canopy in the
-  same tick, it hits the holder, and the canopy never counts it. The canopy
-  therefore needs `REV#3`'s fix: breakables swept as participants in
-  `Projectile::resolve_sweep` (`game/objects/projectile_contacts.cpp:403`),
-  before player contacts. `REV#3` was blocked on `ROAD#11`'s play review,
-  which was waived on 2026-11-13, so it is open work and Q2 is moot.
+- *Prerequisite: `REV#3`, satisfied 2026-11-13 by slice 1.* A canopy stands in
+  front of its holder, which is the case `REV#3` recorded for a player standing
+  inside the paint wall. Planted subs used to be struck by
+  `strike_breakables` after `scene_->resolve()`, on travel bounding boxes, so a
+  shot that reached the holder and the canopy in the same tick would have hit
+  the holder and never counted against the canopy. Slice 1 sweeps breakables
+  as participants in `Projectile::resolve_sweep` and its translating and slab
+  forms, before player contacts, so the canopy has the order it needs.
 
 **Numbers in `tuning.json`.** `weapons.umbrella` holds a tool's usual record
 (offset, size, nozzle offset, `shoot_interval`, `starting_vel_length`,
@@ -2779,11 +2842,12 @@ umbrella against each tool, against the five-tool balance accepted on
   `HOW-TO-PLAY.txt` name the tool.
 
 **Slices.** Each slice is a pull request with its own acceptance case.
-1. **Breakables before player contacts** (`REV#3`'s fix). Breakables are swept
-   before player contacts, and `sub_weapons` gains a diagonal near-miss check
-   and a check with a player inside the wall. This closes `REV#3`.
+1. **Breakables before player contacts** (`REV#3`'s fix), *done 2026-11-13*.
+   Breakables are swept before player contacts, and `sub_weapons` gains a
+   diagonal near-miss check and a check with a player inside the wall. This
+   closes `REV#3`.
 2. **Umbrella end to end.** The `WeaponType`, the class, the tuning, the pellet
-   projectile and the canopy through `strike_breakables`, with placeholder art
+   projectile and the canopy among the swept breakables, with placeholder art
    (the Bucket's frames and the wall's strip) and existing waves. It is
    selectable on Weapon Select and through Random, and carried by the save, the
    match plan, replay format 12 and the copy. A new `umbrella` case checks the
@@ -2799,11 +2863,39 @@ umbrella against each tool, against the five-tool balance accepted on
 Then comes the author's attended play review, which implementation does not
 close.
 
+**Slice 1, done 2026-11-13 (`REV#3`).** A planted sub (a projectile that
+`takes_hits`) is now a participant in the shot's sweep rather than a box test
+after it. `Level::resolve_projectile_movement` snapshots the admitted
+projectiles that take hits, in scene order, into `Level::breakables_` before
+its walk, and hands that list to every `Projectile::resolve_movement_contacts`.
+`Projectile::resolve_sweep`, its slab form (`resolve_fixed_slab_sweep`) and its
+moving-structure form (`resolve_translating_contacts`) each find the earliest
+enemy breakable the shot's path enters (`sweep_interval` against its bounds,
+the earlier in the list on a tie) and compare it with the obstruction they
+chose: an earlier breakable wins, cover keeps a tied entry, and a breakable
+takes a tie from a player. A shot that loses to a breakable stops just inside
+the face it entered, with the same inset cover gives it (so a struck grenade
+bursts at the face, not past it), retires, and hands the sub one hit; it
+paints, damages and cues nothing, as before. `takes_hits` is asked again as
+the sweep reaches each breakable, so one broken earlier in the walk stops
+nothing more; one planted during the walk takes hits from the next tick, in
+any scene order. An empty list skips every new comparison, so a match without
+a planted sub runs exactly the arithmetic it did. `Level::strike_breakables`
+remains only for the roller, whose one-step volume is not swept, so no swept
+shot can be counted twice. The launch sweep (`resolve_launch_obstruction`)
+takes no breakables, deliberately: a muzzle that spans an enemy wall is still
+caught by the next tick's sweep, as before. `sub_weapons` gains a Sniper jet
+rising past the wall's top corner, whose travel box overlaps it but whose path
+does not (the wall keeps its hits), the mirrored corner shot that does reach
+the face (one hit), a host standing ten units inside the wall's face, shielded
+by it, and a host just in front of the face, hit first. No seeded pin moved.
+
 **The author's answers (2026-11-13).**
 - **Q1, the archetype: the umbrella.** The brush was not taken. The splatling
   left the list when `REV#57`'s Sniper charge was declined.
-- **Q2, `REV#3`.** Moot: `ROAD#11`'s play review was waived, so `REV#3` is
-  open work and slice 1, whichever way the build call goes.
+- **Q2, `REV#3`.** Moot: `ROAD#11`'s play review was waived, so `REV#3` was
+  open work and slice 1, whichever way the build call goes. It was done on
+  2026-11-13.
 - **Q3, the canopy input: open while Shoot is held** (Splatoon's rule).
 - **Q4, speed: no slowdown.** An open canopy does not slow its holder, so no
   tool-dependent speed arrives with it.
@@ -4612,19 +4704,28 @@ review is a frozen record, so its rulings live here. A later gap list checks
 this section first: a declined row below is an intended absence, and each
 names what would reopen it. Detail stays with the row's owner, linked.
 
-**Taken.** Each row is open work with a first step; none is built yet.
-- **Out of bounds is an elimination (`REV#1`, M).** A live player who leaves
-  the bounds is killed through `Player::kill()` in place of the throw in
-  `Level::update` (`game/objects/level.cpp`): no owner, no splat credit for the
-  [awards](#results-awards-road12), otherwise a normal death and redraw. A player
-  already dead outside the bounds is placed back at respawn and not killed
-  again. The fixed `player_out_of_bounds` reason
-  ([failure reporting](failure-reporting.md#phase-and-original-cause)) and its
-  checks are removed or marked unreachable; the "seal the arena" warnings in
-  [level format](level-format.md) and [the editor guide](level-editor.md) go
-  when the change lands.
+**Taken.** Each row was taken as open work with a first step; a row that has
+been built says so and when.
+- **Out of bounds is an elimination (`REV#1`, M; built 2026-11-14).** A live
+  player whose box leaves the bounds is killed through `Player::kill()` in
+  place of the throw at the end of `Level::update` (`game/objects/level.cpp`),
+  at the same point in the tick, so every in-bounds match and tape is
+  unchanged: no owner, no splat credit for the
+  [awards](#results-awards-road12), otherwise a normal death and redraw. A
+  player already dead outside the bounds is not killed again: it stays where it
+  fell and the normal respawn places it back at its spawn, rather than being
+  moved mid-elimination. `PlayerOutOfBounds` and the fixed
+  `player_out_of_bounds` reason
+  ([failure reporting](failure-reporting.md#phase-and-original-cause)) are
+  removed, the spawn and station diagnostics say a player built outside the
+  bounds is eliminated, and the "seal the arena" warnings in
+  [level format](level-format.md#coordinates-bounds-and-spawns),
+  [the editor guide](level-editor.md) and the README are gone, so a stage may
+  have pits. The `out_of_bounds` acceptance case pins the elimination, the
+  missing credit, the respawn, the edge and a repeat run.
   ([Record](review/2026-11-10-project-review.md#a-player-leaving-the-arena-ends-the-process-rev1).)
-- **Developer panel out of Release (`REV#13`, S).** `GameAction::debug` is
+- **Developer panel out of Release (`REV#13`, S; done 2026-11-13, see
+  [Release behaviour](debug-console.md#release-behaviour)).** `GameAction::debug` is
   bound only under `COLOURWARS_DEV_TOOLS` (`action_bindings.cpp`); the draw path
   and members stay, so no layout depends on the gate, and F1 stays reserved in
   rebinding in both builds. The Debug help entries leave `presentation.json` and
@@ -4641,11 +4742,14 @@ names what would reopen it. Detail stays with the row's owner, linked.
   [failure reporting's Boundary](failure-reporting.md#boundary). A stack
   overflow, or an exception swallowed in a Win32 callback, may not reach it.
   ([Record](review/2026-11-10-project-review.md#no-crash-dump-and-no-release-symbols-rev63).)
-- **Reduce effects from Windows on first run (`POL#49`, S).** Yes; the
+  Done 2026-11-14 ([crash record](failure-reporting.md#crash-record-rev63)).
+- **Reduce effects from Windows on first run (`POL#49`, S; built
+  2026-11-13).** Yes; the
   [polish item](polish-plan.md#reduce-effects-default-from-windows-pol49) owns
-  it. Once the read lands it is the client exhibit for the engine's `REV#60`
+  it. The read is the client exhibit for the engine's `REV#60`
   ([ledger](review/engine-reports.md#what-is-deliberately-not-here)).
-- **Random skips the exempt pairs (`REV#14`, S).** A per-pair `in_random` flag
+- **Random skips the exempt pairs (`REV#14`, S; built 2026-11-13, see
+  [`ROAD#8`](#more-team-palette-pairs-road8)).** A per-pair `in_random` flag
   in `team_palette`, false on `pink_green` and `blue_yellow`; both stay fixed
   Options choices. This revisits the author's earlier answer to
   [gap audit 2.1](review/gap-audit.md#21-the-discrete-random-pair-is-the-design-the-missing-piece-is-a-route-around-it)
@@ -4657,7 +4761,7 @@ names what would reopen it. Detail stays with the row's owner, linked.
 **Partly decided.**
 - **Umbrella questions answered (`ROAD#13`).** Q1-Q7 are recorded in the
   [umbrella proposal](#umbrella-tool-proposal-road13). Building slices 2-4 is a
-  separate call after `PIN#2`; slice 1 is `REV#3`, open either way.
+  separate call after `PIN#2`; slice 1 (`REV#3`) was done on 2026-11-13.
 
 **Deferred, each with its trigger.**
 - **Bot takeover of a missing seat (`REV#28`).** Trigger: a series actually
@@ -4691,8 +4795,8 @@ names what would reopen it. Detail stays with the row's owner, linked.
   ([Record](review/2026-11-10-project-review.md#distribution-is-one-unsigned-github-zip-rev67).)
 
 **Declined.**
-- **No containment around the match or replay step (`REV#4`).** Declined once
-  `REV#1` lands, which removes the only throw players can reach. Reopen if a
+- **No containment around the match or replay step (`REV#4`).** Declined;
+  `REV#1` has landed and removed the only throw players could reach. Reopen if a
   released build writes a `run_loop` failure report `REV#1` does not explain.
   ([Record](review/2026-11-10-project-review.md#no-containment-around-the-match-or-replay-step-rev4).)
 - **No Title/Home save notice (`REV#5`).** `HOW-TO-PLAY.txt` names the copies
@@ -4794,7 +4898,7 @@ respawn, with no HUD element or number, avoids that objection.
 First step: a scope section for a new station kind that places such a figure,
 which takes hits through the existing `Collider` path, in untimed solo practice
 only, with the `practice_workshop` checks it adds. It is a new subclass beside
-the existing ones and flattens nothing. Related: `REV#56` (the Sub lesson);
+the existing ones and flattens nothing. Related: `REV#56` (the Sub lesson, done 2026-11-13);
 solo practice on any stage (`REV#55`) was declined on 2026-11-13, so the
 figure stays in the workshop.
 
@@ -4836,21 +4940,135 @@ bulk territory swing fits the balance accepted on 2026-11-05.
 
 ### Circle shapes for round projectiles (`ROAD#44`)
 
-**OPEN, LOW, M; the pin has the narrow phase since the 2026-11-13 bump.** Every projectile collides as a
-`RectangleF`, the round ones included (`ProjectileBall::shape` and
-`ProjectileGrenade::shape` return their rectangle), and `game/` names no
-`Circle`. The engine pinned until 2026-11-13 threw from `Scene::resolve` for a
-circle; the pin now collides circles in the narrow phase (Labrador `f6752ca7`,
-"Collide circles in the narrow phase", 2026-11-04). `GAP#D5`
-added rotated slabs and horizontal movers only. As the engine's real client,
-this game would be the first to drive the circle-against-polygon paths. It adds
-a shape and keeps the hierarchy.
+**DECISION, LOW, M: the author decides on hit feel; measured 2026-11-14.**
+Every projectile used to collide as a `RectangleF`, the round ones included.
+The engine pinned since 2026-11-13 collides circles in the narrow phase
+(Labrador `f6752ca7`, "Collide circles in the narrow phase", 2026-11-04), so
+the round shots can now be circles. The circle code is in, behind a switch
+that defaults to the shipped rectangle, and the contacts are measured below.
+Whether shots keep the circle is the author's call on hit feel.
 
-First step: measure how a ball's and a
-grenade's contacts change under a `Circle` in a seeded replay and the
-projectile acceptance cases. `Projectile::resolve_sweep` takes rectangles, so
-the sweep is part of the measurement. The change in hit feel is then the
-author's call.
+**The switch.** `RoundShotShape` ([round_shot_shape.h](../game/objects/round_shot_shape.h))
+is `rectangle` (shipped) or `circle`. It covers every `ProjectileBall` (the
+bucket's ball, the grenade's drops and the sprinkler's drops) and the
+`ProjectileGrenade` body. A shot reads it once, when it is built, and keeps
+that shape for life; a grenade's drops take the grenade's shape. Only two
+things set it: the Debug console's `shots.round rectangle|circle`
+([debug-console.md](debug-console.md#commands)) and the Debug balance runner's
+`--round-shots` (`scripts/run-balance.ps1 -RoundShots`). With the default,
+nothing a player sees changes and no pin or fingerprint moves:
+`instant_replay`, `balance_runner`'s seeded byte identity and the other
+projectile cases pass unchanged. The shape is how a shot collides, not a
+number, so it is code and never a `tuning.json` leaf (AGENTS.md: data says
+*which* and *how much*, never *how*). It is one process-wide value rather than
+a `Level` option because weapons, subs and other shots build shots and none of
+them holds the `Level`; threading a setting through `LevelBuilder`, `Player`,
+`Weapon` and `SubWeapon` would be the larger change for a switch that is
+meant to go once the author decides. A seeded tape therefore replays bit for
+bit only under the setting it was recorded with.
+
+**What circle changes.** The circle is the disc inscribed in the shot's
+collision square (ball 100, drop 36, grenade 40 units), so it is the same size
+face on and smaller only at the corners. `bounds()`, drawing and every paint
+footprint stay the square, so the painted area of a hit is unchanged; only
+whether and where the shot stops changes. The engine has no swept circle, so
+`Projectile::resolve_sweep` sweeps one itself (`circle_sweep_interval` in
+[projectile_contacts.cpp](../game/objects/projectile_contacts.cpp)): the
+centre's path against the obstacle box rounded by the radius, in double
+precision, with the same entry inset, tie rules and breakable order as the
+box sweep. A disc whose double-precision graze of a corner the float narrow
+phase cannot confirm, even at the graze's deepest point, is not stopped there:
+the rest of its step is swept without that corner, so cover behind it still
+stops it (`round_shots` pins both). Cover and players on flat stages are swept as discs;
+two things stay boxes: the launch exemption (`launch_leaves_overlap`, which
+only ever skips), and the fixed slabs and movers, whose own sweeps are box
+sweeps (`FixedSlabGeometry::sweep`, the mover's relative segments). Those
+stand only on the Yard trials and `turbulence_slab_trial`, so that stage's
+numbers below are partly box-shaped. A circle shot paints a fixed slab with
+its square, as it paints everything.
+
+**The tally.** `Level::flight_retirements()` and `launch_retirements()`
+([shot_retirements.h](../game/objects/shot_retirements.h)) count how round
+shots leave play: on cover, on a player, on a planted sub, by running out of
+time, or out of bounds; in flight, or stopped at the muzzle by launch
+obstruction. Grenade bodies count apart from the balls; the planted subs
+(sprinkler and paint wall), balls by kind, are no round shots and are left
+out. Nothing in a match
+reads it back. The balance runner prints it as four `shot-contacts` lines per
+match, never as CSV columns, so both CSV schemas are unchanged.
+
+**Measurement (2026-11-14).** Debug runner, run again on the tree with the
+review fixes (planted subs out of the tally, the graze fallback), engine pin
+`1dc8533c`, four stages (`crossfeed`, `close_quarters`, `press_tower`,
+`turbulence_slab_trial`) x 32 seeds (1000-1031) = 128 1v1 matches per run,
+both seats the shipping bot at Hard, 60 s each:
+
+```
+scripts/run-balance.ps1 -SkipBuild -Stage crossfeed,close_quarters,press_tower,turbulence_slab_trial `
+    -Seed (1000..1031) -Players 2 -Bot match -Difficulty hard,hard -Duration 60 `
+    -Tools bucket,bucket -Subs wall,wall -RoundShots rectangle   # then circle
+# the same with -Tools sprayer,sprayer -Subs grenade,grenade
+```
+
+The first pair has no grenades, so every ball is a bucket shot; the second
+has no bucket, so every ball is a grenade drop.
+
+| Bucket balls, 128 matches | rectangle | circle | change |
+|---|---|---|---|
+| Shots retired in flight | 9,649 | 10,178 | +5.5% |
+| on cover / on a player | 8,558 / 978 | 8,984 / 1,124 | +5.0% / +14.9% |
+| ran out of time / on a planted wall | 70 / 43 | 22 / 48 | -69% / +11.6% |
+| Player share of flight retirements | 10.14% | 11.04% | +0.91 pt |
+| Stopped at launch (cover / player) | 13,695 / 1,042 | 13,222 / 1,066 | -3.5% / +2.3% |
+| Player contacts per shot, launch and flight | 8.28% | 8.95% | +0.67 pt |
+| Hit ticks dealt (hit-view) / eliminations | 1,988 / 168 | 2,163 / 196 | +8.8% / +16.7% |
+| Painted area, all matches | 8,026,039 | 8,178,171 | +1.9% |
+| Final fingerprints that differ | | 121 of 128 | |
+
+| Grenades (sprayer seats), 128 matches | rectangle | circle | change |
+|---|---|---|---|
+| Drops retired in flight (cover / player / time) | 1,750 / 1,060 / 668 | 1,807 / 1,082 / 663 | +3.3% / +2.1% / -0.7% |
+| Player share of drops in flight | 30.48% | 30.46% | flat |
+| Drops stopped at launch (of all drops) | 300 (7.9%) | 204 (5.4%) | -32% |
+| Grenade bodies (cover / player / at launch) | 146 / 153 / 16 | 150 / 154 / 9 | flat |
+| Hit ticks dealt / eliminations | 18,379 / 205 | 18,867 / 204 | +2.7% / flat |
+| Painted area, all matches | 10,003,601 | 9,946,954 | -0.6% |
+| Final fingerprints that differ | | 42 of 128 | |
+
+Per stage, bucket balls on players in flight went 255 -> 274 (Close Quarters),
+327 -> 337 (Crossfeed), 237 -> 347 (Press Tower) and 159 -> 166 (Turbulence
+Slab Trial).
+
+**Reading it.** The bots react to what happens, so a match diverges at its
+first different contact and these are counts over different matches, not
+the same shots twice; read the shares and the direction, not single digits.
+The shape matters to almost every bucket match (121 of 128 end differently)
+and to a third of grenade matches. It does not make the ball harder to land:
+the bucket's share of player contacts went up slightly (8.3% -> 9.0% of shots,
+eliminations +17%), because a disc that clears a ledge or a doorway corner
+keeps flying instead of dying on the corner, and some of those reach the
+enemy. Fewer shots die at the muzzle (-3% bucket, -32% grenade drops), for the
+same reason: a drop burst against a wall or floor no longer catches the
+corner it is born beside. Face-on contacts are identical in both shapes
+(`round_shots` pins this), so what changes is only the corner case: in
+circle mode a ball can visibly brush a corner and pass, where today the
+square stops on it. Painted area moves under 2% either way.
+
+**The author's question.** Keep circles for the ball and the grenade, or not?
+`shots.round circle` in a Debug build (then `restart`) plays it before
+deciding.
+
+- **Keep:** make `circle` the default, rebaseline anything that moves (the
+  seeded tapes and fingerprints that fire round shots, `bot_ballistics` and
+  `bot_combat_trials`, whose aim is still worked out with rectangles), retire
+  the switch and its console and runner options, and file the engine's lack
+  of a swept circle in [engine-reports.md](review/engine-reports.md), with
+  `circle_sweep_interval` as the exhibit. Slabs and movers would want disc
+  sweeps too.
+- **Decline:** delete the switch, the circle members of `ProjectileBall` and
+  `ProjectileGrenade`, the circle branch of the sweep and the slab's circle
+  footprint, and the `round_shots` case; keep the tally and the runner's
+  `shot-contacts` lines if they stay useful.
 
 ## Menu navigation follow-up (GAP#4.4)
 

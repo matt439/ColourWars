@@ -20,12 +20,13 @@ A builder cell is one canvas cell, one column and one row in: the builder's
 15x29 composite plus a gutter column each side and a blank top row.
 
 Run `powershell -ExecutionPolicy Bypass -File scripts/build-painter-art.ps1`
-from the repository root. Windows System.Drawing and the retained texconv build
+from the repository root. Windows System.Drawing builds
 `../sources/textures/painter.png`, `../../content/textures/painter.json` and
-`../../content/textures/painter.dds`, plus the authoring previews `lineup.png`
-and `slips.png`.
-The DDS is premultiplied RGBA8 with one mip. PNG colour-space metadata is omitted
-to preserve authored UNORM channel values. Runtime stages only DDS and JSON.
+the runtime copy `../../content/textures/painter.png`, plus the authoring
+previews `lineup.png` and `slips.png`.
+The PNG has straight alpha; the engine's PNG loader premultiplies it into RGBA8
+with one mip as it loads. PNG colour-space metadata is omitted to preserve
+authored UNORM channel values. Runtime stages only the PNG and JSON.
 Before writing outputs, the build checks that `presentation.json`'s 4x4 respawn
 pen paths reproduce every black texel of idle with the rest arms drawn over it.
 A source edit that changes this outline must update the presentation recipe

@@ -37,6 +37,7 @@ namespace bot_refill_acceptance
             ++this->footing_queries;
             return PlayerTeam::a;
         }
+        std::vector<BotPlantedSub> planted_subs() const override { return {}; }
         bool line_of_sight(labrador::Vector2F, labrador::Vector2F) const override { return true; }
         bool traversal_line_of_sight(labrador::Vector2F, labrador::Vector2F, PlayerTeam) const override
         { return true; }

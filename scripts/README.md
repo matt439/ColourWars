@@ -81,7 +81,7 @@ to `cases.psd1`.
 
 | Script | What |
 |---|---|
-| [check-startup.ps1](check-startup.ps1) | starts a hidden game process and checks DPI awareness, an isolated save and its `stages` folder, diagnostics and graceful shutdown; `-Locale` starts it in a locale |
+| [check-startup.ps1](check-startup.ps1) | starts a hidden game process and checks DPI awareness, an isolated fresh save (its window fit and Reduce effects from Windows' Animation effects) and its `stages` folder, diagnostics and graceful shutdown; `-Locale` starts it in a locale |
 | [check-failure-reporting.ps1](check-failure-reporting.ps1) | the caught-failure report ([failure-reporting.md](../docs/failure-reporting.md)) |
 | [check-display-awake.ps1](check-display-awake.ps1) | `GameLevel`'s display-idle request over a match's lifetime, with a recording adapter |
 | [check-debug-console.ps1](check-debug-console.ps1), [check-debug-console/](check-debug-console/) | drives the Debug console with real key events; phase 3 compiles a CPU menu-navigation probe against the game's model (`-CompileOnly` builds/queries it without a GUI); the full driver needs a foreground desktop, so it is local only (`CI#1`) |
@@ -93,7 +93,7 @@ to `cases.psd1`.
 | [check-painter-selection.ps1](check-painter-selection.ps1) | checks the painter probe's selectors and routing without a compiler or GPU |
 | [check-painter-evidence.ps1](check-painter-evidence.ps1) | checks the shared painter PPM, finite-number, key-set, CSV, save and PNG evidence helpers without the game or a GPU |
 | [check-frame-pacing.ps1](check-frame-pacing.ps1) | frame-pacing capture ([polish-frame-pacing.md](../docs/polish-frame-pacing.md)); analysed by [perf/](perf/) |
-| [run-balance.ps1](run-balance.ps1) | headless seeded bot matches, per-seat subs and an in-memory numeric/boolean tuning patch, with bot counters ([gameplay-tuning.md](../docs/gameplay-tuning.md)) |
+| [run-balance.ps1](run-balance.ps1) | headless seeded bot matches, per-seat subs, an in-memory numeric/boolean tuning patch and the `ROAD#44` round-shot shape (`-RoundShots`), with bot counters ([gameplay-tuning.md](../docs/gameplay-tuning.md)) |
 | [run-balance-matrix.ps1](run-balance-matrix.ps1) | one compile, bounded parallel jobs, hashed resume and byte-identity repeat; `balance/shipped.psd1`, `balance/bot-ladder.psd1` and `balance/sight-ladder.psd1` designs (`-PlanOnly` previews the count) |
 
 ## Editor checks

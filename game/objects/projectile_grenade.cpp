@@ -16,10 +16,12 @@ ProjectileGrenade::ProjectileGrenade(const RectangleF& rectangle,
 	RenderResources::SheetStrip burst_strip,
 	const ProjectileTuning* burst,
 	int burst_count,
-	float burst_speed) :
+	float burst_speed,
+	RoundShotShape shape) :
 	Projectile(velocity, team, player_num, team_colour,
 		ProjectileType::ball, render_resources, body_strip, body, team_colour),
 	rectangle_(rectangle),
+	shape_mode_(shape),
 	render_resources_(render_resources),
 	burst_strip_(burst_strip),
 	burst_tuning_(burst),
@@ -32,6 +34,7 @@ ProjectileGrenade::ProjectileGrenade(const RectangleF& rectangle,
 	}
 	const Vector2F size = this->details().col_rect_size;
 	this->rectangle_.offset(-size.x / 2.0f, -size.y / 2.0f);
+	this->sync_circle();
 }
 
 void ProjectileGrenade::update(float dt)
@@ -40,6 +43,7 @@ void ProjectileGrenade::update(float dt)
 	const Vector2F displacement = Projectile::update_movement(
 		details.gravity, details.wind_resistance, dt);
 	this->rectangle_.offset(displacement.x, displacement.y);
+	this->sync_circle();
 	colourwars::AnimationObject::update(dt);
 }
 
@@ -55,12 +59,26 @@ RectangleF ProjectileGrenade::bounds() const
 
 const Shape* ProjectileGrenade::shape() const
 {
+	if (this->shape_mode_ == RoundShotShape::circle) { return &this->circle_; }
 	return &this->rectangle_;
+}
+
+std::optional<float> ProjectileGrenade::sweep_radius() const
+{
+	if (this->shape_mode_ != RoundShotShape::circle) { return std::nullopt; }
+	return this->circle_.radius();
+}
+
+void ProjectileGrenade::sync_circle()
+{
+	this->circle_ = Circle(this->rectangle_.center(),
+		0.5f * std::min(this->rectangle_.width, this->rectangle_.height));
 }
 
 void ProjectileGrenade::set_rectangle(const RectangleF& rectangle)
 {
 	this->rectangle_ = rectangle;
+	this->sync_circle();
 }
 
 std::vector<std::unique_ptr<Projectile>> ProjectileGrenade::take_burst()
@@ -83,7 +101,8 @@ std::vector<std::unique_ptr<Projectile>> ProjectileGrenade::take_burst()
 		drops.push_back(std::make_unique<ProjectileBall>(start,
 			Vector2F::unit_vec_from_angle(angle) * this->burst_speed_,
 			this->team(), this->player_num(), this->team_colour(),
-			this->render_resources_, this->burst_strip_, this->burst_tuning_));
+			this->render_resources_, this->burst_strip_, this->burst_tuning_,
+			0.0f, Vector2F::zero, SpriteFlip::none, 0.0f, this->shape_mode_));
 	}
 	return drops;
 }

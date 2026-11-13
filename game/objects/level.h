@@ -297,6 +297,12 @@ public:
 	// The overview camera framed for the current window.
 	const labrador::Camera& overview_camera() const;
 
+	// ROAD#44's contact tally: how the round shots retired so far left play,
+	// in flight (counted as end_tick retires them) and at launch (stopped by
+	// cover at the muzzle: each player's, and grenade drops' here).
+	const ShotRetirements& flight_retirements() const { return this->flight_retirements_; }
+	ShotRetirements launch_retirements() const;
+
 	// Counts for the perf overlay, as of the last update.
 	int projectile_count() const;
 	int collision_object_count() const;
@@ -323,7 +329,7 @@ private:
 	std::vector<SeatSetup> roster_;
 	std::vector<int> view_participants_;
 	std::vector<int> participant_views_;
-	// Borrows scene_, players_ and structures_; never null after construction.
+	// Borrows scene_, players_, structures_ and projectiles_; never null after construction.
 	std::unique_ptr<LevelBotWorld> bot_world_;
 	std::unique_ptr<MatchBotDriver> bot_driver_;
 	// Scene-owned cosmetics, advanced after final player contacts and muzzle repair.
@@ -333,6 +339,13 @@ private:
 	// what the coming end_tick() retires, so neither holds a dead pointer.
 	std::vector<Projectile*> projectiles_;
 	std::vector<Projectile*> pending_projectiles_;
+	ShotRetirements flight_retirements_;
+	ShotRetirements drop_launch_retirements_;
+	// The admitted shots that took hits (takes_hits) as this tick's travel
+	// began, in scene order: what each swept shot can be spent on. Filled and
+	// emptied within resolve_projectile_movement(), so it never holds a shot
+	// past that walk; a member only to reuse its storage.
+	std::vector<Projectile*> breakables_;
 
 	// What overlay.stations names: the authored stations, then the spawns.
 	std::vector<LevelStation> stations_;
@@ -452,9 +465,11 @@ private:
 	// Admits the drops of every grenade (Projectile::take_burst) that retired
 	// this tick, after contacts settle and before the shot list follows the scene.
 	void burst_projectiles();
-	// Each enemy shot in flight whose travel this tick reaches a projectile
-	// that takes hits (a planted sprinkler) is spent on it.
+	// Each enemy roller whose one-step volume this tick reaches a projectile
+	// that takes hits (a planted sprinkler or wall) is spent on it. Swept shots
+	// met those in resolve_projectile_movement(), along their path.
 	void strike_breakables();
+	// Each shot's swept travel against the targets and this tick's breakables_.
 	void resolve_projectile_movement();
 	// Every scene end_tick() in Level goes through end_scene_tick(), which keeps
 	// projectiles_ in step: retire_projectiles() first prunes it to the shots

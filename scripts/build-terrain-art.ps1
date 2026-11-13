@@ -325,7 +325,10 @@ try {
     if ($atlas) {$atlas.Dispose()}
 }
 
-& (Join-Path $repo 'game/art/tools/texconv.exe') (Join-Path $working 'terrain.png') `
-    -pmalpha -m 1 -f R8G8B8A8_UNORM -y -o $textures
-if($LASTEXITCODE -ne 0){throw "texconv failed with exit code $LASTEXITCODE"}
-Write-Output "Built eleven backdrop props, four shadow tiles and 26 swatches into a ${width}x$height terrain DDS and lineup."
+# The runtime atlas is this PNG itself: straight alpha and metadata-free, so
+# the engine's PNG loader premultiplies exactly what was authored (PIN#3).
+# A DDS of the same name beside it would make the engine refuse the texture.
+Copy-Item -LiteralPath (Join-Path $working 'terrain.png') -Destination (Join-Path $textures 'terrain.png') -Force
+$staleDds = Join-Path $textures 'terrain.dds'
+if (Test-Path -LiteralPath $staleDds) { Remove-Item -LiteralPath $staleDds }
+Write-Output "Built eleven backdrop props, four shadow tiles and 26 swatches into a ${width}x$height terrain PNG and lineup."

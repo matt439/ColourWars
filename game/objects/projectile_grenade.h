@@ -1,6 +1,8 @@
 #pragma once
 
 #include "game/objects/projectile.h"
+#include "game/objects/round_shot_shape.h"
+#include "engine/math/circle.h"
 #include "engine/render/colour.h"
 
 // A sub's paint grenade (ROAD#11): a paint ball that flies like the bucket's
@@ -25,7 +27,8 @@ public:
 		labrador::RenderResources::SheetStrip burst_strip,
 		const ProjectileTuning* burst,
 		int burst_count,
-		float burst_speed);
+		float burst_speed,
+		RoundShotShape shape = round_shot_shape());
 
 	void update(float dt) override;
 	void draw(labrador::DrawList& draw_list) const override;
@@ -36,15 +39,22 @@ public:
 	// around the circle, the first straight up, each at burst_speed.
 	std::vector<std::unique_ptr<Projectile>> take_burst() override;
 	bool burst() const { return this->burst_; }
+	// What it was built with (ROAD#44), which its drops are built with too.
+	RoundShotShape round_shape() const { return this->shape_mode_; }
 
 protected:
 	// The burst is the grenade's answer to bare cover, so it never duds.
 	bool duds_on_bare_cover() const override { return false; }
+	std::optional<float> sweep_radius() const override;
 
 private:
 	void set_rectangle(const labrador::RectangleF& rectangle) override;
+	// The disc inscribed in rectangle_, kept with it; shape() only in circle mode.
+	void sync_circle();
 
 	labrador::RectangleF rectangle_ = labrador::RectangleF::zero;
+	labrador::Circle circle_;
+	RoundShotShape shape_mode_ = RoundShotShape::rectangle;
 	labrador::RenderResources* render_resources_ = nullptr;
 	labrador::RenderResources::SheetStrip burst_strip_;
 	const ProjectileTuning* burst_tuning_ = nullptr;

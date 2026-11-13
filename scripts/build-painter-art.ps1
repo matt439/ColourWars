@@ -580,8 +580,10 @@ finally {
     $brush.Dispose(); $font.Dispose(); $graphics.Dispose(); $preview.Dispose()
 }
 
-# Labrador uses premultiplied alpha. RGBA8 and one mip retain the authored grid.
-& (Join-Path $repo 'game/art/tools/texconv.exe') (Join-Path $working 'painter.png') `
-    -pmalpha -m 1 -f R8G8B8A8_UNORM -y -o $textures
-if ($LASTEXITCODE -ne 0) { throw "texconv failed with exit code $LASTEXITCODE" }
-Write-Output 'Built painter.png, painter.json, premultiplied painter.dds and source lineup.png and slips.png.'
+# The runtime atlas is this PNG itself: straight alpha and metadata-free, so
+# the engine's PNG loader premultiplies exactly what was authored (PIN#3).
+# A DDS of the same name beside it would make the engine refuse the texture.
+Copy-Item -LiteralPath (Join-Path $working 'painter.png') -Destination (Join-Path $textures 'painter.png') -Force
+$staleDds = Join-Path $textures 'painter.dds'
+if (Test-Path -LiteralPath $staleDds) { Remove-Item -LiteralPath $staleDds }
+Write-Output 'Built painter.png (working and runtime copies), painter.json and source lineup.png and slips.png.'

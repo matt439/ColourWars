@@ -154,8 +154,10 @@ every recommendation put to it: 35 is parked to ride with the next audio
 report, 37 is withdrawn and [closed](#closed), 38 waits on `PIN#2`, the
 mouse-button ask under [What is deliberately not here](#what-is-deliberately-not-here)
 is drafted as a comment on labrador#122 and waits for the author's approval
-of its text, and `REV#60` leaves the parked list once the game's `POL#49`
-first-run read lands. Labrador#122 had no comments that day.
+of its text, and engine `REV#60` leaves the parked list once the game's
+`POL#49` first-run read lands. That read landed the same day, so engine
+`REV#60` has left the parked list and its note is drafted below. Labrador#122
+had no comments that day.
 
 **Moved 2026-11-13 to upstream master `1dc8533c`**, 129 commits past
 `e7fc50e`, still untagged since `v0.3.0`, with a green `build and test` push
@@ -297,7 +299,7 @@ shipped without the fix, so on 2026-11-05 the author closed it as declined
 | 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp`, `painter_visual.cpp` and, since report 25 was spent (2026-11-05), `rumble_adapter.cpp`, and since `REV#31` (2026-11-12) `toggle_fire.cpp`; a test seam, separate from the pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which stays |
 | 28 | Public types and members removed with an engine-only caller count, against the rule from report 7 as extended by `c369e8b`; the deprecation-release ask is declined by policy | `game/carried/` and the `HYG#25` removed-member list |
 | 29 | ~~`Scene` gives no typed access to short-lived objects and no retirement notice~~ withdrawn 2026-11-03, see [Closed](#closed) | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
-| 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:117` and the exact-text checks at `scripts/sandbox/logon.ps1:218` and `:248`; `scripts/check-startup.ps1:225` and `:248` held the same match until 2026-11-04 |
+| 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:115` and the exact-text checks at `scripts/sandbox/logon.ps1:218` and `:248`; `scripts/check-startup.ps1:225` and `:248` held the same match until 2026-11-04 |
 | 31 | ~~`JsonValue` cannot report keys nobody read, so a misspelled optional key is silent~~ answered in `v0.3.0` and spent 2026-11-05, see [Closed](#closed) | the optional `has()` reads in `game/config/tuning.cpp` (`:461`, `:477`, `:484` and others) |
 | 32 | ~~Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false~~ answered and spent in `v0.3.0`, see [Closed](#closed) | `game/config/text_wrap.h` and its caller `WrappedTextDropShadow` |
 | 33 | `CollisionObject::on_contact` hands the other party over `const` (unchanged on master `8e91aab`), so a response that changes both parties has no route back to the other one | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h), the one `const_cast` in `game/`: a painted surface's answer reaches the projectile through it, where it used to reach `mutable` flags through a `const` method (`HYG#49`, 2026-10-30) |
@@ -542,7 +544,7 @@ authorization.
 **Exhibit** (client at `f5303302`). This repository has to tell one startup
 failure apart from the rest, in two places:
 
-- [`FatalReport::capture`](../../game/fatal_report.cpp) at `:117-120` compares
+- [`FatalReport::capture`](../../game/fatal_report.cpp) at `:115-118` compares
   `what()` with `std::strcmp` against `"No Direct3D hardware device found"`. On
   a match it records `cause_0_reason=no_hardware_device` in `last-error.log`.
   `scripts/acceptance/fatal_report.cpp:108-112` pins that match.
@@ -568,7 +570,7 @@ The spelling, and whether a missing audio device shares the same type, are
 engine decisions.
 
 **What an answer lets this repository delete.** The `strcmp` at
-`game/fatal_report.cpp:117` goes, and a type or code test replaces it. The
+`game/fatal_report.cpp:115` goes, and a type or code test replaces it. The
 exact-text checks at `scripts/sandbox/logon.ps1:218` and `:248` also go. In
 their place the script would read the `cause_0_reason` that `last-error.log`
 already records, which it does not check today. (`check-startup.ps1` held the
@@ -2177,17 +2179,27 @@ still only reads.
     drawn as its box. That is a client defect first, not yet an exhibit: the
     exhibit is whatever code drawing the rotated shape turns out to need.
   - **`REV#60`** (`TODO.md:203`): a read-only reduced-motion fact from the
-    browser or Windows' client-area animation setting. The game has a Reduce
-    effects switch whose default is a constant
-    (`game/config/play_settings.h:95`), and nothing here reads the system
-    setting yet. **The author took `POL#49` on 2026-11-13:** when
-    `Save::first_run()` is true and Windows' client-area animation is off, a
-    fresh save starts with the shared Reduce effects on. That read,
-    `SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, ...)` on the native
-    side, is this client's exhibit. Once it lands, this item leaves the parked
-    list and goes to Labrador as a note on its `REV#60`, with that call as the
-    exhibit; the note follows the
-    [publication gate](#publication-gate-engpublish) like any filing.
+    browser or Windows' client-area animation setting. **No longer parked:
+    the game's `POL#49` landed on 2026-11-13.** A fresh save now starts with
+    the shared Reduce effects on when Windows' Animation effects is off, read
+    by `initial_reduce_effects_from_system()`
+    (`game/config/initial_display.cpp:93-102`) before the save loads. That one
+    `SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, ...)` call is this
+    client's exhibit. The note below goes to Labrador as a comment on its
+    `REV#60` under the [publication gate](#publication-gate-engpublish).
+    **Drafted, not posted:** it waits for the author to approve its text and
+    for a fresh master recheck of the engine row.
+
+    > A native client reads this fact by hand today. To choose a fresh save's
+    > reduced-motion default, it calls
+    > `SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &animation, 0)`
+    > before the window opens and treats a failed query as "animations on".
+    > That one call is the whole workaround. A read-only fact from the engine
+    > would replace it, for example `bool prefers_reduced_motion()` backed by
+    > that call on Win32 and by `matchMedia("(prefers-reduced-motion: reduce)")`
+    > on the web. The read needs no window, so it can be available before the
+    > window exists. The client reads the fact only once, for a first-run
+    > default, so a change notification is not needed.
 
 - **The write side of `json.h`.** Still absent, still correct (the engine's
   OCA-53 plans a guide, not an API, and declines a save facility under T1):
@@ -3166,20 +3178,75 @@ Report 38 has no shipped exhibit, so it is
 
 ## PNG atlases and texconv (`PIN#3`)
 
-**Ready since the 2026-11-13 bump**, which brought the PNG loader. All six runtime textures under
-`game/content/textures/` are `.dds`. Four build scripts shell out to the
-vendored `texconv.exe` only to premultiply a PNG they have already written
-(`scripts/build-weapon-art.ps1:340`, `build-painter-art.ps1:584`,
-`build-terrain-art.ps1:328`, `build-paint-fx-art.ps1:224`; the reason is in
-[game/art/README.md](../../game/art/README.md)). Master reads `name.png` when
-there is no `name.dds` and premultiplies it itself, and refuses a name with
-both.
+**Done 2026-11-13.** Five of the six runtime textures now ship as the PNG the
+art builds already wrote, and the engine premultiplies them on load;
+`sprite_sheet_1` keeps its DDS.
 
-- **First step, after the bump:** decode each shipped PNG through the engine's
-  `decode_png` and compare it byte for byte with the texconv DDS.
-- **Acceptance:** an atlas moves to PNG only if it matches or the painter pins
-  still pass; any that differs keeps its DDS. The painter and paint-fx scripts,
-  which stage the `.dds` by name, follow.
+Before, all six runtime textures under `game/content/textures/` were `.dds`, and
+four build scripts shelled out to the vendored `texconv.exe` only to premultiply
+a PNG they had already written. Master reads `name.png` when there is no
+`name.dds`, premultiplies it as `(c*a+127)/255`, and refuses a name with both.
+
+**The comparison.** A throwaway program (not kept) read each
+`game/art/sources/textures/<name>.png` with `labrador::read_png_file` and the
+shipped `<name>.dds` with `read_dds_file`, and compared size, format, levels
+and every pixel byte:
+
+| atlas | size | DDS format | PNG | result |
+|---|---|---|---|---|
+| `painter` | 1024x2048 | `r8g8b8a8_unorm`, 1 mip | RGBA8, metadata-free | identical bytes |
+| `weapon_paint` | 2560x1280 | `r8g8b8a8_unorm`, 1 mip | RGBA8, metadata-free (16 translucent texels) | identical bytes |
+| `terrain` | 2048x920 | `r8g8b8a8_unorm`, 1 mip | RGBA8, metadata-free | identical bytes |
+| `paint_fx` | 1024x2048 | `r8g8b8a8_unorm`, 1 mip | RGBA8, metadata-free | identical bytes |
+| `menu_paint` | 1672x941 | `b8g8r8a8_unorm`, 1 mip | opaque RGB with a C2PA chunk | identical texels; the DDS stores them blue first, which the GPU samples the same |
+| `sprite_sheet_1` | 1500x1512 | `bc3_unorm` (DXT4) | RGBA8 with an ICC profile | cannot match: block compression is lossy, and the PNG is four times the device memory |
+
+So the five uncompressed atlases moved (`git rm` the DDS, add the PNG as a
+copy of the working file, the same blob), and `sprite_sheet_1` stays a BC3
+DDS, as `png_file.h` advises for a large texture; moving it is the author's
+call and is not asked for. Nothing that samples them changes, so no probe pin
+moved.
+
+**What moved with them.**
+
+- **One texture, one of two files.** `cmake/manifest_asset_kinds.json` gives
+  `sprite_sheet` the alternative `"dds|png"`: exactly one must exist. The
+  three readers of that rule resolve it against the content on disk and refuse
+  none or both, as the engine does: `colourwars_manifest_resolve` in
+  `cmake/manifest_asset_kinds.cmake` (used by `release_assets.cmake`),
+  `runtime_file` in `editor/stage_registration.cpp`, and the registration
+  fixture in `scripts/acceptance/level_editor/registration_checks.cpp`.
+- **`cmake/runtime_assets.cmake`** lists the five `.png`; staging prunes the
+  old `.dds` from a build tree, so no stale pair reaches the engine.
+- **The four build scripts** copy their working PNG to `game/content/textures/`
+  and delete a stale DDS of the same name instead of calling texconv.
+  `texconv.exe` stays for `sprite_sheet_1`'s command
+  (`game/art/sources/textures/cmd.txt`) and in the credits.
+- **Probes and scripts that name the files:** `terrain`'s landmark check reads
+  `terrain.png` with `read_png_file`; `check-painter.ps1` and
+  `check-paint-fx.ps1` hash the staged `.png`.
+- **Docs:** [game/art/README.md](../../game/art/README.md) and the painter,
+  weapons, terrain and paint-fx READMEs, and `NOTICE` for `menu_paint`. The
+  present-tense staging sentences in the painter, tools and paint-effects
+  polish docs name the PNG; their dated validation records still say DDS, as
+  written.
+
+**Verification, on MattPC.** Debug and Release build; the staged
+`textures/` holds the five `.png`, `sprite_sheet_1.dds` and the six `.json`,
+with no stale DDS. Release default acceptance passed, 83 cases; Debug
+`terrain`, `level_format`, `menu_presentation`, `weapon_catalog`, `user_stages`
+and `paint` passed. `check-level-editor.ps1` and `check-stage-registration.ps1`
+(Debug), `check_runtime_staging.cmake`, and `check-startup.ps1` on both
+executables passed. A scratch configure of the resolver took one file, and
+refused both files and neither. On the GPU, `check-painter.ps1` Release with
+`-IdentityOnly`, `-LandmarkOnly`, `-MainMenuOnly` and `-MiniatureTerrainOnly`,
+and `check-paint-fx.ps1` Release, passed with their pins unchanged.
+Rebuilding the paint-fx and terrain art left the tree byte for byte as it
+was. The five decodes take about 110 ms in Release, at every load and device
+restore, and the release ZIP loses about 41 MB of DDS for 2.6 MB of PNG.
+
+Not run: the full painter sweep, which is nightly; anything needing a pad; and
+a look at the game on a real GPU beyond the painter's pins.
 
 # What the 2026-11-13 bump changed
 

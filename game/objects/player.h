@@ -2,6 +2,7 @@
 
 #include "game/objects/horizontal_motion.h"
 #include "game/objects/projectile_target_flags.h"
+#include "game/objects/shot_retirements.h"
 
 #include "game/config/play_settings.h"
 #include "game/contracts/match_variant.h"
@@ -257,6 +258,9 @@ public:
     float health() const;
     // Fatal projectile contacts, before the later dead-state transition.
     const PlayerLethalProjectiles& lethal_projectiles() const;
+    // This player's round shots that cover stopped at launch, before any
+    // flight (ROAD#44's tally; Level::launch_retirements sums them).
+    const ShotRetirements& launch_retirements() const { return this->launch_retirements_; }
     // The longest flight that ended in a landing this match, in seconds.
     // Passive like the lethal counts: a fall to elimination never lands.
     float longest_airtime() const;
@@ -581,6 +585,7 @@ private:
     // Alive with health left: the body still moves, paints and takes contacts.
     bool can_act() const;
     PlayerLethalProjectiles lethal_projectiles_{};
+    ShotRetirements launch_retirements_;
     float flight_time_ = 0.0f;
     float longest_flight_ = 0.0f;
     void update_flight(float dt);
