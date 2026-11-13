@@ -1323,19 +1323,27 @@ away from the centre baffle. No lettering and no team hue.
 | Frame | Texels | Placed |
 |---|---|---|
 | `yard_skyline` | 1024x224 | three times along the ground line, with two `hill_small` between |
-| `yard_tank` | 192x384 | once a side, stilts behind the skyline under each upper approach |
-| `yard_crane` | 512x864 | once, spanning the centre; girder at 456-496, above every walk surface |
+| `yard_tank` | 192x384 | once a side of the centre, roof clear of the crossovers, stilts hidden by the skyline |
+| `yard_crane` | 512x864 | once, spanning the centre; an open truss girder at 456-496, above every walk surface |
 | `yard_stack` | 160x448 | once a side, behind each home, its hat just over the home roof |
-| `yard_crates` | 288x224 | once a side, under each side step |
+| `yard_crates` | 288x224 | once, between the crane's legs, beyond the middle fence |
 | `yard_fence` | 512x112 | three panels along the back of the ground |
 
 **Layering**, far to near, in array order: the original `paper_sky`, the
 sun, four drifting clouds and one pair of gulls in the open sky; the two tanks;
-the skyline and hills; the crane; the stacks; the fences; the crates. The
-farther and larger a piece is, the paler it is drawn: the crane, tanks,
-stacks and skyline fill in `bg_far`, and only the small near pieces (crates,
-fence posts) use `bg_mid`. Each sits behind play, so terrain, paint and
-players always draw over it.
+the skyline and hills; the crane; the stacks; the crates; the fences. Every
+large fill is `bg_far`; `bg_mid` is kept to small accents (windows, louvres,
+the sack, fence posts). Each sits behind play, so terrain, paint and players
+always draw over it.
+
+**Kept clear of play.** No prop's top edge meets a platform's underside, so
+nothing reads as a support: the tanks stand between the crossovers and the
+beds with about 120 units of sky above their roofs, and nothing fills the
+160-unit walk gap under the side steps but the see-through fence. The crane's
+girder is two thin chords with a zigzag between them and sky showing through,
+so the one long horizontal over the play band reads as a lattice rather than a
+ledge. The crate stack, the only solid ground-level prop, stands in the centre
+beyond the fence, drawn as pale as the skyline so it does not read as cover.
 
 **Material palette.** The 22 structures inherited from the mover trial and
 the two slabs already carry explicit materials: `ground` floor and boundary

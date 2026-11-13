@@ -745,8 +745,8 @@
             "frame_name": "yard_tank",
             "colour": "WHITE",
             "rectangle": {
-                "x": 1100.0,
-                "y": 896.0,
+                "x": 1520.0,
+                "y": 1000.0,
                 "width": 192.0,
                 "height": 384.0
             }
@@ -758,8 +758,8 @@
             "frame_name": "yard_tank",
             "colour": "WHITE",
             "rectangle": {
-                "x": 2708.0,
-                "y": 896.0,
+                "x": 2288.0,
+                "y": 1000.0,
                 "width": 192.0,
                 "height": 384.0
             }
@@ -869,6 +869,19 @@
             }
         },
         {
+            "name": "crates",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "yard_crates",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 1856.0,
+                "y": 1056.0,
+                "width": 288.0,
+                "height": 224.0
+            }
+        },
+        {
             "name": "fence_1",
             "type": "Visual",
             "sheet_name": "terrain",
@@ -905,32 +918,6 @@
                 "y": 1168.0,
                 "width": 512.0,
                 "height": 112.0
-            }
-        },
-        {
-            "name": "crates_a",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "yard_crates",
-            "colour": "WHITE",
-            "rectangle": {
-                "x": 640.0,
-                "y": 1056.0,
-                "width": 288.0,
-                "height": 224.0
-            }
-        },
-        {
-            "name": "crates_b",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "yard_crates",
-            "colour": "WHITE",
-            "rectangle": {
-                "x": 3072.0,
-                "y": 1056.0,
-                "width": 288.0,
-                "height": 224.0
             }
         }
     ],
