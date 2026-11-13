@@ -349,7 +349,7 @@ int main(int argc, char** argv)
             if (pair.HasMember("in_random")) { pair["in_random"].SetBool(false); }
             else { pair.AddMember("in_random", false, document.GetAllocator()); }
         }
-        fixture.reject(document, "Random");
+        fixture.reject(document, "no team pair is in Random");
         std::cout << "PASS team palette: authored values, colour-vision bar, Random skips the exempt pairs, reordered fixed preferences, data-only random expansion, startup rejection.\n";
         return 0;
     });
