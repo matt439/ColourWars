@@ -215,7 +215,8 @@ int main(int argc, char** argv)
         // Colour vision. The two legacy pairs predate the check and are kept as
         // they shipped (pink/green falls to 27 under deutan; yellow sits 10 from
         // white). They stay listed only while they still fail, so a recolour that
-        // fixes one has to take it off this list.
+        // fixes one has to take it off this list. A pair below the bar stays
+        // out of Random, and a passing pair stays in it (REV#14).
         std::vector<labrador::Colour> surroundings;
         for (const auto& level : std::filesystem::directory_iterator(std::filesystem::path(argv[1]) / "levels"))
         {
@@ -246,6 +247,8 @@ int main(int argc, char** argv)
             {
                 require(passes, "A team pair fails the colour-vision check (see the line above)");
             }
+            require(entry.in_random == !exempt,
+                "A pair below the colour-vision bar must be out of Random, and a passing pair in it");
         }
         std::ifstream input(source);
         const std::string text((std::istreambuf_iterator<char>(input)), {});
@@ -284,13 +287,16 @@ int main(int argc, char** argv)
         // The round seed's Random pair against the shipped list (HYG#39). This
         // is plain splitmix64 arithmetic, so it holds on any standard library;
         // docs/debug-console.md ("seed") records the same table for +seed.
-        // Adding or reordering a pair moves it: update both together.
+        // A draw landing on a pair out of Random redraws from the same stream
+        // (REV#14), so only seeds whose first draw was exempt moved. Adding or
+        // reordering a pair, or changing an in_random flag, moves it: update
+        // both together.
         const struct { unsigned int seed; TeamColourPair pair; } pinned[] = {
-            { 0, TeamColourPair::blue_yellow }, { 1, TeamColourPair::blue_orange },
+            { 0, TeamColourPair::purple_gold }, { 1, TeamColourPair::blue_orange },
             { 2, TeamColourPair::magenta_forest }, { 3, TeamColourPair::red_azure },
             { 4, TeamColourPair::purple_gold }, { 5, TeamColourPair::magenta_forest },
             { 6, TeamColourPair::blue_orange }, { 7, TeamColourPair::purple_gold },
-            { 211, TeamColourPair::pink_green }, { 4242, TeamColourPair::pink_green } };
+            { 211, TeamColourPair::blue_orange }, { 4242, TeamColourPair::blue_orange } };
         for (const auto& pin : pinned)
         {
             const TeamColour drawn = TeamColourTools::team_colours(TeamColourPair::random, palette,
@@ -300,6 +306,30 @@ int main(int argc, char** argv)
                 "Round seed " + std::to_string(pin.seed) + " no longer draws " +
                 TeamColourTools::palette_key(pin.pair) + "; update the +seed table in docs/debug-console.md");
         }
+        // Random never lands on an exempt pair and reaches every other one.
+        const std::vector<TeamColourPair> in_random = { TeamColourPair::blue_orange, TeamColourPair::purple_gold,
+            TeamColourPair::red_azure, TeamColourPair::magenta_forest };
+        std::vector<int> drawn_counts(in_random.size(), 0);
+        for (unsigned int seed = 0; seed < 1000; ++seed)
+        {
+            const TeamColour drawn = TeamColourTools::team_colours(TeamColourPair::random, palette, MatchRandom(seed));
+            require(!(drawn.team_a == pink.team_a && drawn.team_b == pink.team_b) &&
+                !(drawn.team_a == yellow.team_a && drawn.team_b == yellow.team_b),
+                "Random drew a pair that is out of Random (seed " + std::to_string(seed) + ")");
+            for (size_t index = 0; index < in_random.size(); ++index)
+            {
+                const TeamColour expected = TeamColourTools::team_colours(in_random[index], palette);
+                if (drawn.team_a == expected.team_a && drawn.team_b == expected.team_b) { ++drawn_counts[index]; }
+            }
+        }
+        for (size_t index = 0; index < in_random.size(); ++index)
+        {
+            require(drawn_counts[index] > 0, std::string("Random never drew ") +
+                TeamColourTools::palette_key(in_random[index]) + " over 1000 seeds");
+        }
+        // An extra pair out of Random is no Options choice either, so it is refused.
+        document["team_palette"]["pairs"][6].AddMember("in_random", false, document.GetAllocator());
+        fixture.reject(document, "neither Random nor Options");
         const auto reset = [&] { document.CopyFrom(baseline, document.GetAllocator()); };
         reset(); document["team_palette"]["pairs"].Clear(); fixture.reject(document, "missing fixed team pair");
         reset(); document["team_palette"]["pairs"][0]["team_a"].SetString("missing"); fixture.reject(document, "unknown team colour");
@@ -311,7 +341,16 @@ int main(int argc, char** argv)
         reset(); document["team_palette"]["colours"][0]["name"].SetString(""); fixture.reject(document, "name");
         reset(); document["team_palette"]["pairs"][0]["key"].SetString(""); fixture.reject(document, "key");
         reset(); document.RemoveMember("team_palette"); fixture.reject(document, "team_palette");
-        std::cout << "PASS team palette: authored values, colour-vision bar, reordered fixed preferences, data-only random expansion, startup rejection.\n";
+        reset(); document["team_palette"]["pairs"][0].AddMember("in_random", "false", document.GetAllocator());
+        fixture.reject(document, "true or false");
+        reset();
+        for (auto& pair : document["team_palette"]["pairs"].GetArray())
+        {
+            if (pair.HasMember("in_random")) { pair["in_random"].SetBool(false); }
+            else { pair.AddMember("in_random", false, document.GetAllocator()); }
+        }
+        fixture.reject(document, "Random");
+        std::cout << "PASS team palette: authored values, colour-vision bar, Random skips the exempt pairs, reordered fixed preferences, data-only random expansion, startup rejection.\n";
         return 0;
     });
 }

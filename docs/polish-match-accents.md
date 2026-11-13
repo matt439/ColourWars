@@ -102,6 +102,10 @@ almost no paint in it. These are the first heavily painted four-player reveals:
 a full 240-second round, Debug build, D3D11 on MattPC's RTX 5080, on Crossfeed
 and on Close Quarters (the widest Random arena), each with seed 7
 (`purple_gold`) and seed 0 (`blue_yellow`), at 1280x720 and 1920x1080.
+These captures predate `REV#14`: Random now skips `blue_yellow`, and seed 0
+draws `purple_gold` under a Random save, so reproducing the `blue_yellow` runs
+needs the save's palette set to `blue_yellow` in Options. Their checksums are
+unchanged, because the match fingerprint hashes team indices, not colours.
 
 There is no window-size launch argument; the size came from the `resolution`
 of a save in an isolated profile (`LOCALAPPDATA` set for the game process

@@ -28,11 +28,22 @@ const Colour& TeamColour::team_colour(PlayerTeam team) const
 TeamColour TeamColourTools::generate_random_team_colour(const TeamPalettePresentation& palette,
 	const MatchRandom& random)
 {
-	if (palette.pairs.empty()) { throw std::invalid_argument("No team palette pairs to draw"); }
+	if (std::none_of(palette.pairs.begin(), palette.pairs.end(),
+		[](const TeamPaletteEntry& entry) { return entry.in_random; }))
+	{
+		throw std::invalid_argument("No team palette pair is in Random");
+	}
 	BotRandom draw = random.palette();
 	// Reduced in 64 bits before narrowing, so a 32-bit size_t draws the same.
 	const std::uint64_t pairs = static_cast<std::uint64_t>(palette.pairs.size());
-	return palette.random_pair(static_cast<size_t>(draw.next() % pairs)).colours;
+	// A draw landing on a pair out of Random redraws from the same stream, so
+	// the roll is uniform over the in_random pairs and a seed whose first draw
+	// was already in Random keeps its pair (REV#14).
+	for (;;)
+	{
+		const TeamPaletteEntry& entry = palette.random_pair(static_cast<size_t>(draw.next() % pairs));
+		if (entry.in_random) { return entry.colours; }
+	}
 }
 
 TeamColour TeamColourTools::team_colours(TeamColourPair team_colour,

@@ -715,15 +715,21 @@ struct TeamPaletteEntry
 	std::string key;
 	std::wstring label;
 	TeamColour colours;
+	// False keeps a pair out of the Random draw; it stays a fixed Options
+	// choice (REV#14).
+	bool in_random = true;
 };
 
 // Fixed preference keys remain save-compatible. Extra authored entries join
-// Random without adding an enum or a fixed Options choice.
+// Random without adding an enum or a fixed Options choice, unless they say
+// in_random false; a pair with in_random false must be a fixed Options choice.
 struct TeamPalettePresentation
 {
 	std::vector<NamedTeamColour> colours;
 	std::vector<TeamPaletteEntry> pairs;
 
 	const TeamPaletteEntry& fixed_pair(TeamColourPair pair) const;
+	// The pair at `draw` wrapped over every pair; the Random draw redraws when
+	// it lands on one whose in_random is false (REV#14).
 	const TeamPaletteEntry& random_pair(size_t draw) const;
 };

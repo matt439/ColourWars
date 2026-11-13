@@ -130,15 +130,35 @@ namespace presentation_read
 			{
 				throw std::runtime_error(entry.where() + ": team pair label must not be empty.");
 			}
-			palette.pairs.push_back({ key, label, { resolve("team_a"), resolve("team_b") } });
+			const bool in_random = entry.has("in_random") ? entry.boolean("in_random") : true;
+			palette.pairs.push_back({ key, label, { resolve("team_a"), resolve("team_b") }, in_random });
 		}
 		// Saved fixed preferences must always resolve, regardless of array order.
+		std::vector<std::string> fixed_keys;
 		for (int value = 0; value < static_cast<int>(TeamColourPair::count); ++value)
 		{
 			const char* key = TeamColourTools::palette_key(static_cast<TeamColourPair>(value));
 			bool found = false;
 			for (const TeamPaletteEntry& pair : palette.pairs) { found |= pair.key == key; }
 			if (!found) { throw std::runtime_error(pairs.where() + ": missing fixed team pair '" + key + "'."); }
+			fixed_keys.emplace_back(key);
+		}
+		// Random needs a pair to land on, and a pair out of Random must still be
+		// reachable as a fixed Options choice (REV#14).
+		bool any_random = false;
+		for (const TeamPaletteEntry& pair : palette.pairs)
+		{
+			any_random |= pair.in_random;
+			if (!pair.in_random &&
+				std::find(fixed_keys.begin(), fixed_keys.end(), pair.key) == fixed_keys.end())
+			{
+				throw std::runtime_error(pairs.where() + ": team pair '" + pair.key +
+					"' is in neither Random nor Options.");
+			}
+		}
+		if (!any_random)
+		{
+			throw std::runtime_error(pairs.where() + ": no team pair is in Random; at least one needs in_random true.");
 		}
 		return palette;
 	}

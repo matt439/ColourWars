@@ -1052,11 +1052,13 @@ it, and `status` shows the running round's seed (`round seed n`): `seed n` then
 
 With the save's palette on Random, the round seed picks the pair. Against the
 shipped `presentation.json` list (`blue_orange`, `pink_green`, `blue_yellow`,
-`purple_gold`, `red_azure`, `magenta_forest`):
+`purple_gold`, `red_azure`, `magenta_forest`), whose Random pool is
+`blue_orange`, `purple_gold`, `red_azure` and `magenta_forest` (`pink_green` and
+`blue_yellow` say `in_random: false`, `REV#14`):
 
 | `+seed` | Team pair |
 |---|---|
-| 0 | `blue_yellow` |
+| 0 | `purple_gold` |
 | 1 | `blue_orange` |
 | 2 | `magenta_forest` |
 | 3 | `red_azure` |
@@ -1064,12 +1066,13 @@ shipped `presentation.json` list (`blue_orange`, `pink_green`, `blue_yellow`,
 | 5 | `magenta_forest` |
 | 6 | `blue_orange` |
 | 7 | `purple_gold` |
-| 211 | `pink_green` |
-| 4242 | `pink_green` |
+| 211 | `blue_orange` |
+| 4242 | `blue_orange` |
 
 The draw is plain integer arithmetic, so the table holds on any build, and the
-`team_palette` acceptance case pins it. Adding or reordering a pair moves it:
-update this table and that pin together.
+`team_palette` acceptance case pins it. A draw that lands on a pair out of
+Random redraws from the same stream, so adding or reordering a pair, or changing
+an `in_random` flag, moves it: update this table and that pin together.
 
 **`record [name] [updates]`** records every seat's input on every logic step,
 from a fresh build: in a match it restarts the match (and closes the console),

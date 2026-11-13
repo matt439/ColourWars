@@ -1555,7 +1555,9 @@ The fixed-preference enum and its three save keys remain stable. Every file must
 include those keys once; changing array order does not change saved selections.
 Extra keyed pairs join Random through a content edit, without a rebuild. Making
 one of those extra pairs a fixed Options choice still requires adding its enum
-and save-key mapping. The random roll uses the array length. A random weapon
+and save-key mapping. The random roll uses the array length, and since `REV#14`
+redraws when it lands on a pair whose `in_random` is false
+([`ROAD#8`](#more-team-palette-pairs-road8)). A random weapon
 preview stays neutral and consumes no draw.
 
 Startup rejects duplicate colour names or pair keys, empty identifiers/labels,
@@ -2004,20 +2006,34 @@ under tritan) and `blue_yellow` (yellow is 10.3 from white). The exemption
 list fails if either one starts passing, so a recolour has to take it off.
 `blue_orange` passes (58.1, 22.9).
 
-A content-only extra pair still joins Random without a rebuild, and now has to
-pass the same bar. [The preview sheet](images/road8/team-pairs-colour-vision.png)
+A content-only extra pair still joins Random without a rebuild unless it says
+`in_random: false`, and now has to pass the same bar. [The preview sheet](images/road8/team-pairs-colour-vision.png)
 shows every pair on a Gainsboro surface under each simulation. Nothing here
 qualifies the colours on screen: the opt-in visual cases that capture palettes
 (`paint_fx_visual`, `painter_visual`, the console's opening art check) still
 name the original three.
 
-**Random will skip the two legacy pairs (`REV#14`, taken 2026-11-13; not yet
-built).** A per-pair `in_random` flag, false on `pink_green` and `blue_yellow`,
-leaves them as fixed Options choices and draws Random uniformly over the
-passing pairs. This revisits the author's earlier answer here and to gap audit
-2.1, fixed choices plus three new passing pairs rather than a roll filter,
-while keeping the random-pair model. Seeded colour pins move; see
-[Project review calls](#project-review-calls-2026-11-13) for the first step.
+**Random skips the two legacy pairs (`REV#14`, taken and built 2026-11-13).**
+Each pair in `team_palette` takes an optional `in_random`, true by default.
+`pink_green` and `blue_yellow` say false, so they stay fixed Options choices and
+Random never lands on them. The roll redraws from the same palette stream until
+it lands on a pair in Random, rather than taking the draw modulo the filtered
+count: both are uniform over the four passing pairs, but the redraw moves only
+a seed whose first draw was exempt. Of the pinned seeds, 0 moved from
+`blue_yellow` to `purple_gold`, and 211 and 4242 from `pink_green` to
+`blue_orange`; seeds 1-8, and so seed 7 that the review scripts use, kept their
+pairs (filter-then-modulo would also have moved 3, 5, 6 and 7). No Debug tape
+is tracked; a local one still replays bit for bit, because the match fingerprint
+hashes team indices rather than colours and the palette stream feeds nothing
+else, though `play` warns that `presentation.json` differs and a tape whose
+seed first drew an exempt pair shows the new pair. Startup refuses a file with
+no pair in Random, and a pair out of Random that is not a fixed Options choice
+(it would be unreachable). `team_palette` ties `in_random` to the exemption
+list, checks that 1,000 seeds never draw an exempt pair and reach every other,
+and pins the [`+seed` table](debug-console.md#seed-record-and-play); `locales`
+checks that a locale cannot set the flag. This revisits the author's earlier
+answer here and to gap audit 2.1, fixed choices plus three new passing pairs
+rather than a roll filter, while keeping the random-pair model.
 
 ### Controller rumble (`ROAD#9`)
 
@@ -4645,7 +4661,8 @@ names what would reopen it. Detail stays with the row's owner, linked.
   [polish item](polish-plan.md#reduce-effects-default-from-windows-pol49) owns
   it. Once the read lands it is the client exhibit for the engine's `REV#60`
   ([ledger](review/engine-reports.md#what-is-deliberately-not-here)).
-- **Random skips the exempt pairs (`REV#14`, S).** A per-pair `in_random` flag
+- **Random skips the exempt pairs (`REV#14`, S; built 2026-11-13, see
+  [`ROAD#8`](#more-team-palette-pairs-road8)).** A per-pair `in_random` flag
   in `team_palette`, false on `pink_green` and `blue_yellow`; both stay fixed
   Options choices. This revisits the author's earlier answer to
   [gap audit 2.1](review/gap-audit.md#21-the-discrete-random-pair-is-the-design-the-missing-piece-is-a-route-around-it)

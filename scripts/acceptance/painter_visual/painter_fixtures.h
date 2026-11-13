@@ -634,7 +634,8 @@
         {
             if (a.pairs[i].key != b.pairs[i].key || a.pairs[i].label != b.pairs[i].label ||
                 a.pairs[i].colours.team_a != b.pairs[i].colours.team_a ||
-                a.pairs[i].colours.team_b != b.pairs[i].colours.team_b) { return false; }
+                a.pairs[i].colours.team_b != b.pairs[i].colours.team_b ||
+                a.pairs[i].in_random != b.pairs[i].in_random) { return false; }
         }
         return true;
     }
