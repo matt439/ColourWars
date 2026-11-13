@@ -39,6 +39,9 @@ gutter.
 | `birds` | 96x32 | two bg_line gull strokes |
 | `brush_pot` | 256x320 | quiet stationery pot with three differently shaped brushes, flat fills and a plain rim with no highlights; bg_line outlines distinguish it from walkable terrain |
 | `tape_roll` | 256x160 | flat roll with a paper core and short peeled end, no shading inside the core or on the end; the same backdrop roles, without team colours or text |
+| `cf_water_jar` | 256x320 | Crossfeed: screw-lid jar, three handles out of it, pale glass above a wavy water line, bristles knocked sideways below it, two murky swirls |
+| `cf_pencil_cup` | 160x288 | Crossfeed: plain banded cup with two sharpened pencils, one upside down on its eraser and a leaning stub |
+| `cf_palette` | 384x256 | Crossfeed: kidney palette propped on a stick, thumb hole and notch, grey wells and one empty |
 | `shadow_0`..`shadow_3` | 64x32 | shadow_deep specks dense in the top two rows, shadow specks thinning to none in the last; columns 0 and 15 empty so tiles abut in any order |
 | `swatch_<role>` | 4x4 | one opaque block per palette role |
 

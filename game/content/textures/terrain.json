@@ -453,6 +453,39 @@
                                            "w":  256,
                                            "h":  160
                                        }
+                          },
+                          {
+                              "name":  "cf_water_jar",
+                              "position":  {
+                                               "x":  524,
+                                               "y":  596
+                                           },
+                              "size":  {
+                                           "w":  256,
+                                           "h":  320
+                                       }
+                          },
+                          {
+                              "name":  "cf_palette",
+                              "position":  {
+                                               "x":  784,
+                                               "y":  596
+                                           },
+                              "size":  {
+                                           "w":  384,
+                                           "h":  256
+                                       }
+                          },
+                          {
+                              "name":  "cf_pencil_cup",
+                              "position":  {
+                                               "x":  1172,
+                                               "y":  596
+                                           },
+                              "size":  {
+                                           "w":  160,
+                                           "h":  288
+                                       }
                           }
                       ]
 }

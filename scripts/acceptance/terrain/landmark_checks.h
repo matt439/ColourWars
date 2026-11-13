@@ -1,7 +1,8 @@
 #pragma once
 
 // The landmark checks: the brush pot and tape roll atlas frames and their
-// static placement on every shipped arena. Included by terrain.cpp after
+// static placement on every shipped arena, and Crossfeed's own arena props.
+// Included by terrain.cpp after
 // its shared helpers (ordinary_projection among them).
 namespace
 {
@@ -24,6 +25,52 @@ namespace
 			"The landmark frames require the complete staged 2048x920 RGBA terrain atlas");
 	}
 
+	// Crossfeed's own landmarks (POL#16): a pencil cup on the left home roof,
+	// a water jar on the left baffle and an empty-welled palette on the right
+	// home roof. They are far layers, after the clouds and before the hills,
+	// at native atlas size with each visible foot on its support, and as
+	// static as the shared kit.
+	void check_crossfeed_arena_props(World& world, const LevelObjectBuilder& builder, const JsonValue& decorations)
+	{
+		struct Prop
+		{
+			const char* name;
+			RectangleF rectangle;
+		};
+		const Prop props[]{
+			{"cf_pencil_cup", RectangleF(136.0f, 680.0f, 160.0f, 288.0f)},
+			{"cf_water_jar", RectangleF(792.0f, 624.0f, 256.0f, 320.0f)},
+			{"cf_palette", RectangleF(3136.0f, 712.0f, 384.0f, 256.0f)}
+		};
+		const SpriteSheet* sheet = world.render.sprite_sheet("terrain");
+		require(sheet != nullptr, "crossfeed: the terrain sheet was not loaded for its arena props");
+		require(decorations.at(3).string("name") == "cloud_b" && decorations.at(7).string("name") == "hill_a",
+			"crossfeed: arena props must sit between the clouds and the hills");
+		const auto objects = builder.build_non_collision_objects(decorations);
+		for (size_t offset = 0; offset < std::size(props); ++offset)
+		{
+			const Prop& prop = props[offset];
+			const size_t index = 4 + offset;
+			const JsonValue json = decorations.at(index);
+			const std::string where = std::string("crossfeed ") + prop.name;
+			require(json.string("name") == prop.name && json.string("frame_name") == prop.name &&
+				json.string("type") == "Visual" && json.string("sheet_name") == "terrain" &&
+				json.string("colour") == "WHITE" && !json.has("drift"),
+				where + ": arena prop name, frame, order, tint or motion changed");
+			const auto frame = sheet->resolve_sprite_frame(prop.name);
+			const auto source = sheet->sprite_frame(frame).source_rectangle();
+			require(source.width == static_cast<int>(prop.rectangle.width) &&
+				source.height == static_cast<int>(prop.rectangle.height) &&
+				sheet->sprite_frame(frame).origin() == Vector2F::zero,
+				where + ": the atlas frame is not the native-size, zero-origin drawing");
+			same_rectangle(authored_rectangle(json), prop.rectangle, where + ": native-size placement changed");
+			auto* visual = dynamic_cast<Visual*>(objects[index].get());
+			require(visual != nullptr && dynamic_cast<DriftingVisual*>(objects[index].get()) == nullptr,
+				where + ": the builder did not retain an ordinary static Visual");
+			same_rectangle(visual->bounds(), prop.rectangle, where + ": frame origin, scale or initial pose changed");
+		}
+	}
+
 	void check_shipped_landmarks(World& world, const LevelObjectBuilder& builder,
 		const JsonValue& decorations, const std::string& stage)
 	{
@@ -41,12 +88,13 @@ namespace
 			{"king_of_the_hill", {2376.0f, 4356.0f}, {3368.0f, 4516.0f}, 20, 22, "castle_background"},
 			{"turbulence", {1488.0f, 5016.0f}, {4256.0f, 5176.0f}, 17, 24, "hill_7"},
 			{"close_quarters", {1792.0f, 4652.0f}, {3952.0f, 4812.0f}, 17, 24, "hill_7"},
-			{"crossfeed", {1672.0f, 564.0f}, {2260.0f, 892.0f}, 6, 8, "hill_b"},
+			{"crossfeed", {1672.0f, 564.0f}, {2260.0f, 892.0f}, 9, 11, "hill_b"},
 			{"press_tower", {132.0f, 644.0f}, {1672.0f, 652.0f}, 15, 17, "hanger_b2"}
 		};
 		const auto found = std::find_if(std::begin(expected), std::end(expected),
 			[&](const Expected& entry) { return stage == entry.stage; });
 		if (found == std::end(expected)) { return; }
+		if (stage == "crossfeed") { check_crossfeed_arena_props(world, builder, decorations); }
 		require(decorations.size() == found->count, stage + ": missing, duplicate or unexpected backdrop decorations");
 		require(decorations.at(found->index - 1).string("name") == found->previous,
 			stage + ": landmarks lost their preceding backdrop layer");
