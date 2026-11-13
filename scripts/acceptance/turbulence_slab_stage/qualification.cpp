@@ -58,7 +58,7 @@ namespace turbulence_slab_stage_acceptance
                 require(stage.HasMember(field->name) && stage[field->name] == field->value,
                     "Registered slab stage changed original spawns/non-display metadata");
             }
-            require(std::string(stage["display_name"].GetString()) == "Turbulence Yard - Slab Trial" &&
+            require(std::string(stage["display_name"].GetString()) == "Slab Yard" &&
                 stage.HasMember("include_in_random") && stage["include_in_random"].IsBool() && stage["include_in_random"].GetBool(),
                 "Registered slab stage must keep its display identity and its accepted place in Random");
             for (rapidjson::SizeType index = 22; index < 24; ++index)
@@ -126,7 +126,7 @@ namespace turbulence_slab_stage_acceptance
                 }
                 if (result[index].name != stage_name) { continue; }
                 require(!found && result[index].include_in_random &&
-                    result[index].display_name == "Turbulence Yard - Slab Trial" &&
+                    result[index].display_name == "Slab Yard" &&
                     std::find(random.begin(), random.end(), index) != random.end(),
                     "Registered slab stage left Random or lost its explicit selection");
                 found = true;

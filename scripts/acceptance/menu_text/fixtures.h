@@ -333,7 +333,7 @@ namespace menu_text_acceptance
         { "crossfeed", L"Crossfeed" }, { "press_tower", L"Press Tower" },
         { "turbulence_blockout", L"Turbulence Yard" },
         { "turbulence_mover_trial", L"Turbulence Yard - Mover Trial" },
-        { "turbulence_slab_trial", L"Turbulence Yard - Slab Trial" },
+        { "turbulence_slab_trial", L"Slab Yard" },
         { "turbulence_ferry_trial", L"Turbulence Yard - Ferry Trial" },
         { "turbulence_gate_trial", L"Turbulence Yard - Gate Trial" },
         { "turbulence_lift_trial", L"Turbulence Yard - Lift Trial" },

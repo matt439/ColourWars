@@ -9,25 +9,24 @@ thread starts here: read **NOW**, then the owner of the row it picks up.
 **The only ordering in this file.** Keep this block to the current aim and the next few actions;
 results go in their owners, and `git log` is the changelog.
 
-**Aim: release preparation (the author, 2026-11-11), docs and packaging first.**
-The [release guide](docs/releasing.md) owns this pass and the candidate checks.
+**Aim: release `v0.1.0` (the author, 2026-11-13).** The [release guide](docs/releasing.md#current-preparation-scope)
+records the author's calls: `ROAD#11`'s play review waived, the versioning rule, the README
+image, Stage Select's order, and the pin bump after the tag.
 
-Next actions that need no author call:
+Next actions (publication authorized 2026-11-13):
 
-1. `PIN#2`: qualify engine master's behaviour changes on the trial build `PIN#1` rehearsed; the
-   real pin stays.
+1. `FTR#1`: rerun the candidate and sandbox checks on the committed release branch (this branch
+   changed code and content after `REL#1`), merge it on a green `gate`, tag `v0.1.0` on
+   `master`, check the published pre-release, then point the README at its tag page (`0.x`
+   releases are pre-releases, which `/releases/latest` skips) and move to `0.1.1` (`REL#6`).
+2. `ENG#36` and `PIN#2`: after the tag, qualify engine master on the `PIN#1` trial build and bump
+   the pin.
 
-The release candidate (`REL#1`) and its sandbox run (`REL#2`) passed on 2026-11-12
-([evidence](docs/releasing.md#release-candidate-evidence-rel1)); the first tag is `FTR#1`.
+The other `OPEN` rows can follow in any order. The required `gate` and up-to-date `master` rule
+still apply.
 
-The other `OPEN` rows can follow in any order. A push, pull request and publication need their
-own instructions; the required `gate` and up-to-date `master` rule still apply.
+**Author calls** (every `DECISION` row):
 
-**Author calls** (every `DECISION` row; the first group gates the release aim):
-
-- Release: `FTR#1` first tag, `REL#6` versioning rule, `REV#12` hero image, `REV#26` stage order
-  and fresh-save default (was `FTR#13`), `ROAD#11` play review (unblocks `REV#3`, `REV#21`,
-  `REV#36`, `REV#56`), `ENG#36` pin bump before or after `v0.1.0`.
 - Halves left by split rows: `REV#5` in-game notice, `REV#10` live paint-underfoot cue, `REV#63`
   crash dump; also `REV#13` (hide the panel from help or compile it out), `CI#1` trial push.
 - Gameplay and presentation: `REV#1`, `REV#4`, `REV#14`, `REV#23`, `REV#25`, `REV#28`, `REV#38`,
@@ -39,15 +38,6 @@ own instructions; the required `gate` and up-to-date `master` rule still apply.
 The hardware, participant and listening checks waived on 2026-11-05 were not performed. Arena
 art (`POL#16`) stays deferred; bot lift routing and non-XInput pads are deferred, and sponges
 have an `OPEN` draft step.
-
-## Release preparation
-
-**Owner:** [docs/releasing.md, Release work items](docs/releasing.md#release-work-items-rel). The
-release checks `ROAD#1`, `ROAD#2`, `POL#24` and `POL#25` were waived 2026-11-05, not performed.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `REL#6` | DECISION | LOW | S | No versioning rule: when the version moves after a tag, what minor and patch mean, and whether 0.x releases are marked pre-release. [Item](docs/releasing.md#versioning-rule-rel6). |
 
 ## Art direction, characters and the UI
 
@@ -79,8 +69,7 @@ or above (2026-10-27). The owner records the gaps left out by choice and the exc
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ROAD#11` | DECISION | MED | S | Sub weapons: all seven slices are done (2026-11-09), and the home-band gate is green again (2026-11-10). What remains is the author's attended play review. [Plan](docs/feature-roadmap.md#sub-weapons-road11). |
-| `ROAD#13` | DECISION | LOW | M | More tool archetypes: [umbrella proposal](docs/feature-roadmap.md#umbrella-tool-proposal-road13) recorded. Author's call on Q1-Q7: umbrella vs brush (or splatling if REV#57 is taken), unblock REV#3 as slice 1, canopy input, slowdown, shape, name, umbrella with wall sub. Nothing is built before. |
+| `ROAD#13` | DECISION | LOW | M | More tool archetypes: [umbrella proposal](docs/feature-roadmap.md#umbrella-tool-proposal-road13) recorded. Author's call on Q1 and Q3-Q7 (Q2 is moot): umbrella vs brush (or splatling if REV#57 is taken), canopy input, slowdown, shape, name, umbrella with wall sub. Nothing is built before. |
 | `ROAD#14` | UNSCOPED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#28` | DEFERRED | LOW | L | Cycling and paint-driven lifts are done. Left: deliberate bot lift routing. Deferred behind `REV#27`, because lifts stand only on the two trials that are out of Random, so routing has no consumer yet. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
 | `ROAD#29` | DECISION | MED | M | Growing sponges: [contract draft](docs/feature-roadmap.md#growing-sponge-contract-draft-road29) recorded (E1-E12 against 220d4809). Author's call on G1-G7: what grows it, two poses or proportional, what growth scores (rest area / grown / shown tiles), direction, occupancy, trial, bot routing. |
@@ -115,7 +104,7 @@ workaround is deleted.
 | `ENG#PARKED` | DECISION | LOW | S | Asks waiting for a vehicle: `window_size_changed`, desktop size (exhibit for engine `REV#83`), atomic JSON write, registry forgetting, install facts, listener/voice cap, display-awake owner, non-XInput reader (`ROAD#23`), colour transforms (was `GAP#F10`), engine `GAP#6`/`REV#60`. Author: post mouse-button names on labrador#122? [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#26`, `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed 2026-11-05 as [labrador#122](https://github.com/matt439/Labrador/issues/122) (27 with the 26 rider), #123, #124 and #125 (the Bug). Waits on the engine. When one is answered, spend it at the next pin bump; for 34, also settle what CI's strict gates accept. [Ledger](docs/review/engine-reports.md#live) |
 | `ENG#35` | DECISION | LOW | S | Drafted 2026-11-05 from the hygiene review: `AudioResources` has no non-throwing sound-group lookup, so `sound_groups.cpp` catches `out_of_range`. Checked at master `5cbc6b3`. The author decides whether to file. [Report](docs/review/engine-reports.md#35-audioresources-has-no-non-throwing-sound-group-lookup---draft-with-find-or-add-exhibit) |
-| `ENG#36` | DECISION | LOW | M | Master `8362e2d` parses JSON iteratively; at the next pin bump (rehearsed by `PIN#1`) drop `save_max_nesting` from `reader_mutations`. Whether the bump lands before or after `v0.1.0` is the author's call. Never filed. [Bump](docs/review/engine-reports.md#preparing-the-next-pin-bump-2026-11-12) |
+| `ENG#36` | BLOCKED | LOW | M | Master `8362e2d` parses JSON iteratively; at the next pin bump (rehearsed by `PIN#1`) drop `save_max_nesting` from `reader_mutations`. Waits on `FTR#1`: the author chose 2026-11-13 to bump after `v0.1.0` is published. Never filed. [Bump](docs/review/engine-reports.md#preparing-the-next-pin-bump-2026-11-12) |
 | `ENG#37` | DECISION | LOW | S | Long golden-image filenames break ordinary deep Windows clones. Drafted from `FTR#4`, reproduced against current master; the author decides whether to file. [Report](docs/review/engine-reports.md#37-long-render-golden-filenames-break-ordinary-windows-clones---draft-with-checkout-exhibit). |
 | `ENG#38` | DECISION | LOW | S | Window presence reaches the game as one bool (activation edge, `StateContext::active()`), so Debug `debug_background.cpp` subclasses the HWND to tell minimised, hidden and power-suspended apart. Drafted against master `3fe88f64`; the author decides whether to file. [Report](docs/review/engine-reports.md#38-presence-reaches-the-game-as-one-bool---draft-with-window-subclass-exhibit) |
 
@@ -173,7 +162,7 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `REV#1` | DECISION | MED | M | A player wholly outside the bounds throws `PlayerOutOfBounds` and exits the game; user stages (`ROAD#16`) are never checked for enclosure. Author picks: out-of-bounds becomes an elimination (pits become authorable) or the scan refuses unsealed stages. [Record](docs/review/2026-11-10-project-review.md#a-player-leaving-the-arena-ends-the-process-rev1). |
-| `REV#3` | BLOCKED | LOW | M | Planted sprinklers and walls take hits by a shot's travel bounding box, tested after the tick's contacts: diagonal shots hit up to about 17 units wide, and a player inside the wall is hit before it. Waits on the `ROAD#11` play review. [Record](docs/review/2026-11-10-project-review.md#breakable-subs-are-struck-by-travel-bounding-box-rev3). |
+| `REV#3` | OPEN | LOW | M | Planted sprinklers and walls take hits by a shot's travel bounding box, tested after the tick's contacts: diagonal shots hit up to about 17 units wide, and a player inside the wall is hit before it. First step: sweep breakables in `Projectile::resolve_sweep` before player contacts ([roadmap](docs/feature-roadmap.md#umbrella-tool-proposal-road13)). [Record](docs/review/2026-11-10-project-review.md#breakable-subs-are-struck-by-travel-bounding-box-rev3). |
 | `REV#4` | DECISION | LOW | M | An exception in the live round or instant replay step exits the game; recovery was scoped out with `GAP#7.3` and the replay has no known Release cause. Author's call whether to contain it at `GameLevel`, after `REV#1` removes the reachable throw. [Record](docs/review/2026-11-10-project-review.md#no-containment-around-the-match-or-replay-step-rev4). |
 | `REV#5` | DECISION | LOW | S | Save trouble reaches only stderr; a newer save is now copied aside before a downgrade write ([Save layout](docs/feature-roadmap.md#stage-records-and-the-sectioned-save-gap62)). Author's call: whether a one-line Title/Home notice from `presentation.json` shows the load notices (moves menu painter fixtures). [Record](docs/review/2026-11-10-project-review.md#save-recovery-notices-reach-only-stderr-rev5). |
 
@@ -182,7 +171,6 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `REV#10` | DECISION | MED | S | Lesson half done 2026-11-12: the Movement Course refill lesson now says own paint refills faster and enemy paint stops it, pinned by `practice_workshop`. Left: the author's call on a live enemy-paint cue (paint meter or step sound), or no cue. [Scope](docs/releasing.md#current-preparation-scope), [record](docs/review/2026-11-10-project-review.md#paint-underfoot-has-no-player-cue-rev10). |
-| `REV#12` | DECISION | MED | S | The author still picks the README hero image and clip from the retained captures, given `POL#16`'s arena art is unfinished; `REV#48`'s time-lapse could supply candidates. [Record](docs/review/2026-11-10-project-review.md#readme-has-no-screenshot-or-clip-rev12). |
 | `REV#13` | DECISION | LOW | S | The F1/Back developer panel draws in Release and is listed in Controls help, but `frame_time_ms()` returns 0 there (`debug_director.h:212`), so it reads `render fps: n/a`. Author's call: hide it from help or compile it out of Release. [Record](docs/review/2026-11-10-project-review.md#developer-text-panel-ships-in-release-rev13). |
 | `REV#14` | DECISION | MED | S | Default Random palette still rolls pink_green and blue_yellow, the two pairs exempt from the colour-vision bar (one roll in three). A per-pair in-random flag would fix it but reopens ROAD#8's choice and changes seeded draws. [Record](docs/review/2026-11-10-project-review.md#random-palette-draws-the-exempt-pairs-rev14). |
 | `REV#16` | DEFERRED | LOW | S | Actions are pinned by major tag with no Dependabot, and the nightly's legs each rebuild. Each Dependabot pull request would need the owner to merge it and run the full gate; per-leg builds are a recorded choice. [Record](docs/review/2026-11-10-project-review.md#ci-action-pins-and-nightly-rebuilds-rev16). |
@@ -194,10 +182,9 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 |---|---|---|---|---|
 | `REV#19` | UNSCOPED | LOW | M | Bots chase any sighted enemy and ignore the clock, health and score. The sight ladder (2026-11-12) found that shorter sight cuts fights but does not raise paint, so there is no paint case for the four behaviour slices; they stay undesigned. [Record](docs/gameplay-tuning.md#sight-distance-ladder-rev19-2026-11-12) |
 | `REV#20` | UNSCOPED | MED | L | One bot policy plays all five tools. Aim/reaction sensitivity is measured in `TOOL#5`; exact event counters need a decision, and per-tool roles remain unscoped. Sniper's low paint is intended. [Record](docs/review/2026-11-10-project-review.md#one-bot-policy-plays-all-five-tools-rev20). |
-| `REV#21` | BLOCKED | LOW | M | Bots never target an enemy sprinkler and fire into an enemy paint wall, since BotWorld has no planted-sub query and bot sight ignores the wall. Bounded to 4-8 s per use. Waits on ROAD#11's attended play review. [Record](docs/review/2026-11-10-project-review.md#bots-do-not-answer-enemy-sprinklers-or-walls-rev21). |
+| `REV#21` | OPEN | LOW | M | Bots never target an enemy sprinkler and fire into an enemy paint wall, since BotWorld has no planted-sub query and bot sight ignores the wall. Bounded to 4-8 s per use. Released 2026-11-13 by ROAD#11's waived review. [Record](docs/review/2026-11-10-project-review.md#bots-do-not-answer-enemy-sprinklers-or-walls-rev21). |
 | `REV#23` | DECISION | LOW | S | The bot's finishing window on a support is sized at the handicap refill rate, not the 1.25x own-paint rate that POL#30 ships on; the code calls it a sufficient minimum and ROAD#39's note left it undecided. Author decides: keep the safe bound or tighten. [Record](docs/review/2026-11-10-project-review.md#bot-finish-window-sized-without-own-paint-refill-rev23). |
 | `REV#25` | DECISION | MED | M | Stage records are keyed by stage only, so solo has nothing graded to beat. Two shapes: per-stage Easy/Normal/Hard win marks or coverage medals at a fixed duration. Author's call: it sits beside no-stats, no-variant-leaderboard (ROAD#22) and solo-is-practice. [Record](docs/review/2026-11-10-project-review.md#solo-play-has-no-graded-stage-goal-rev25). |
-| `REV#26` | DECISION | MED | S | Stage Select lists 13 stages in manifest order, opens a fresh save on King of the Hill with Random last, and marks no accepted arena apart from the Yard trials. Author picks: reorder and rename, an In Random mark, or a sectioned page (M). `FTR#13` folded in 2026-11-12. [Record](docs/review/2026-11-10-project-review.md#stage-select-does-not-mark-arenas-from-trials-rev26). |
 | `REV#27` | DEFERRED | MED | XL | The gate, ferry and lifts appear only on single-purpose Yard trial blockouts; Random is four stages. A finished gate or ferry arena in Random is a candidate aim, the author's to set; deferred with `POL#16`. Bot lift routing is `ROAD#28`. [Record](docs/review/2026-11-10-project-review.md#no-random-arena-uses-the-gate-ferry-or-lifts-rev27). |
 
 **Player-facing UX**
@@ -206,9 +193,9 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 |---|---|---|---|---|
 | `REV#28` | DECISION | MED | L | A missing pad with no spare leaves only Quit, which discards a series. Author's call: may a bot take a missing seat (from the pause, or between series rounds)? That relaxes the `ROAD#20` roster lock and needs tape and record rules. [Record](docs/review/2026-11-10-project-review.md#bot-takeover-for-a-missing-seat-rev28). |
 | `REV#29` | DECISION | MED | M | Split-pane HUD text measured ([HUD](docs/polish-hud.md#split-pane-text-size-rev29-2026-11-12)): meter labels are 1.1% of window height (12 px at 1080p, 8 px at 720p), identity 1.6%, clock 2.1%, against a proposed 1.7% floor (16 arcmin, 55-inch at 2.5 m). Author picks: this floor, another, an Options size row, or none. A floor rebaselines painter HUD fixtures. |
-| `REV#30` | DEFERRED | MED | M | Narrowed 2026-11-12 to a Practice row on Home for Movement Course (README already points newcomers there; stage order is `REV#26`). Home is an authored six-aspect layout; waits on `REV#26`. [Record](docs/review/2026-11-10-project-review.md#direct-entry-to-the-practice-course-rev30). |
+| `REV#30` | DEFERRED | MED | M | Narrowed 2026-11-12 to a Practice row on Home for Movement Course (README already points newcomers there). `REV#26` put the course fifth, after the Random arenas (2026-11-13). Home is an authored six-aspect layout; deferred by priority. [Record](docs/review/2026-11-10-project-review.md#direct-entry-to-the-practice-course-rev30). |
 | `REV#32` | UNSCOPED | LOW | M | Home has no play-again shortcut. GAP#6.1 already pre-fills every setup page and Join cannot be skipped, so it saves about four confirm presses for a conditional Home row and a second route into Join and Stage. [Record](docs/review/2026-11-10-project-review.md#play-again-with-last-setup-rev32). |
-| `REV#36` | BLOCKED | LOW | M | Respawn grace is already a recorded POL#17 fallback, to add only on observed spawn pressure; the sprinkler is a reason to look for it. Blocked on ROAD#11's attended play review. Choosing among the team's spawns is new and undesigned. [Record](docs/review/2026-11-10-project-review.md#respawn-grace-and-spawn-choice-rev36). |
+| `REV#36` | DEFERRED | LOW | M | Respawn grace is already a recorded POL#17 fallback, to add only on observed spawn pressure; the sprinkler is a reason to look for it. ROAD#11's review was waived 2026-11-13, so it waits on pressure seen in play. Choosing among the team's spawns is new and undesigned. [Record](docs/review/2026-11-10-project-review.md#respawn-grace-and-spawn-choice-rev36). |
 
 **Presentation and feedback**
 
@@ -238,7 +225,7 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 | `REV#53` | UNSCOPED | LOW | L | Eraser stage object that returns tiles to neutral (Splasher water, de Blob). Breaks the paint-only-arrives invariant that wet strips, paint objects, bot finishing, underfoot and awards assume. Never designed. [Record](docs/review/2026-11-10-project-review.md#eraser-stage-object-that-clears-paint-rev53). |
 | `REV#54` | DECISION | LOW | M | Coverage-over-time strip on Results after the reveal (sample both totals each second, replay-neutral). It sits against `POL#15`'s quick Results, so the author rules on that first. [Record](docs/review/2026-11-10-project-review.md#coverage-over-time-strip-on-results-rev54). |
 | `REV#55` | DECISION | LOW | M | Author's call: untimed, unrecorded exploration of any arena for 1-4 players (Splatoon Recon)? A no-winner session is outside the 2026-11-03 options ruling; cheaper variant is solo practice on any stage. [Record](docs/review/2026-11-10-project-review.md#untimed-group-exploration-of-any-arena-rev55). |
-| `REV#56` | BLOCKED | LOW | S | Movement Course has no lesson station for the Sub action: add one JSON lesson with its checks and text fit. Waits on ROAD#11's play review so it is written once. Practice targets are `ROAD#41`. [Record](docs/review/2026-11-10-project-review.md#sub-lesson-station-in-movement-course-rev56). |
+| `REV#56` | OPEN | LOW | S | Movement Course has no lesson station for the Sub action: add one JSON lesson with its checks and text fit. ROAD#11's review was waived 2026-11-13, so the subs stand as shipped. Practice targets are `ROAD#41`. [Record](docs/review/2026-11-10-project-review.md#sub-lesson-station-in-movement-course-rev56). |
 | `REV#57` | DECISION | LOW | M | Author's call: give the sniper a hold-to-charge with a line opponents can see (Splatoon chargers)? Reopens a tool and bot ballistics accepted 2026-11-05, with no observed problem; if taken, rides with ROAD#13. [Record](docs/review/2026-11-10-project-review.md#sniper-charge-or-readable-warning-rev57). |
 | `REV#58` | UNSCOPED | LOW | L | Rotation for five to eight people (Nidhogg 2 tournaments): profile names, who sits out, per-person standings. Needs a second ledger beside the team-win Session and a per-person winner rule. Never designed. [Record](docs/review/2026-11-10-project-review.md#party-rotation-for-more-than-four-people-rev58). |
 | `REV#59` | DEFERRED | LOW | L | Bots-only attract match behind the title. Level and LevelBuilder refuse a setup with no human view, so it needs a spectator view and a new stack shape. Deferred with `POL#16`, which owns the colourless front end. [Record](docs/review/2026-11-10-project-review.md#attract-match-behind-the-title-rev59). |
@@ -262,11 +249,11 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 a frozen record, so this file holds each row's status. It walked a newcomer from the GitHub page
 to a first match, including a real build from a fresh clone; nothing was played on a pad. Its
 [last section](docs/review/2026-11-10-first-run-review.md#already-tracked) lists findings that
-already had rows. `FTR#13` was folded into `REV#26` on 2026-11-12; its id is retired.
+already had rows. `FTR#13` was folded into `REV#26` on 2026-11-12, which closed 2026-11-13; its id is retired.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `FTR#1` | DECISION | HIGH | S | No release or tag, so README's "no Git, Visual Studio or terminal" promise leads to an expiring CI artifact or a source build. The publish job and 0.1.0 are ready: tag `v0.1.0`, then make step 1 one link. The first tag is the author's. [Record](docs/review/2026-11-10-first-run-review.md#no-release-exists-ftr1). |
+| `FTR#1` | OPEN | HIGH | S | No release or tag, so README's "no Git, Visual Studio or terminal" promise leads to an expiring CI artifact or a source build. Authorized 2026-11-13: tag `v0.1.0` on `master` after the release branch merges, then make step 1 one link. [Record](docs/review/2026-11-10-first-run-review.md#no-release-exists-ftr1). |
 | `FTR#14` | UNSCOPED | LOW | S | The setup path is long and the save folder is never shown; `stages` is now made on the first save write ([User stages](docs/feature-roadmap.md#user-stages-road16)). Quick Play and an Open save folder item stay undesigned. [Record](docs/review/2026-11-10-first-run-review.md#the-setup-path-is-long-and-the-save-folder-is-hidden-ftr14). |
 
 ## Areas with no open rows
@@ -275,6 +262,7 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
+| Release preparation (`REL`) | [releasing.md, Release work items](docs/releasing.md#release-work-items-rel) | a new release-process gap; `REL#6`, the versioning rule, was decided 2026-11-13, and `ROAD#1`, `ROAD#2`, `POL#24` and `POL#25` were waived 2026-11-05 |
 | Levels and the editor | [polish-plan.md](docs/polish-plan.md) §3, §8; [level-editor.md](docs/level-editor.md) | a new arena or editor slice; `POL#21`, `POL#27`, `POL#30`, `POL#31` and `ED#5` were settled 2026-11-05 |
 | Audio replacement | [polish-plan.md §5](docs/polish-plan.md#5-replace-the-entire-audio-set) | a missing cue hook or a mix defect; `POL#23` was accepted and `ROAD#3` waived 2026-11-05 |
 | Game gaps (gap audit Class 1) | [docs/review/gap-audit.md](docs/review/gap-audit.md) (frozen) | a new finding; `ROAD#5`, `ROAD#7`, `ROAD#9`, `ROAD#10`, `GAP#4.2`, `GAP#5.1`, `GAP#L9` and `GAP#L11` were accepted or waived 2026-11-05 (no translation language chosen) |

@@ -97,7 +97,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     loaded->validate_content(builder, *app.render_resources(), *app.audio_resources());
     // The registered slab trial has joined Random; a private trial copy stays explicit-only.
     require(loaded->collision_objects_json().size() == 24 &&
-        (loaded->display_name() == "Turbulence Yard - Slab Trial" ||
+        (loaded->display_name() == "Slab Yard" ||
             (loaded->display_name() == "Turbulence Yard - Mover Trial" && !loaded->include_in_random())) &&
         loaded->camera_bounds_rectangle() == levels.get("turbulence_blockout")->camera_bounds_rectangle(),
         "Slab native source differs from the authored comparison");

@@ -7,8 +7,8 @@ import tempfile
 import unittest
 from unittest import mock
 
-from release import (check_tag, main, package_name, project_version, release_notes,
-                     SYMBOLS, SYMBOLS_LABEL)
+from release import (check_tag, is_prerelease, main, package_name, project_version,
+                     release_notes, SYMBOLS, SYMBOLS_LABEL)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -33,6 +33,14 @@ class ProjectVersion(unittest.TestCase):
         rule = (ROOT / "cmake/release_package.cmake").read_text(encoding="utf-8")
         self.assertIn("ColourWars-${PROJECT_VERSION}-windows-x64", rule)
         self.assertEqual(package_name("0.1.0"), "ColourWars-0.1.0-windows-x64.zip")
+
+
+class Prerelease(unittest.TestCase):
+    def test_zero_major_versions_are_prereleases(self) -> None:
+        self.assertTrue(is_prerelease("0.1.0"))
+        self.assertTrue(is_prerelease("0.12.3"))
+        self.assertFalse(is_prerelease("1.0.0"))
+        self.assertFalse(is_prerelease("10.0.0"))
 
 
 class Notes(unittest.TestCase):
@@ -133,7 +141,7 @@ class TagChecks(unittest.TestCase):
                                    "--master", "master"]), 0)
             self.assertEqual(output.read_text(encoding="utf-8").splitlines(), [
                 "version=0.1.0", "package=ColourWars-0.1.0-windows-x64.zip",
-                f"symbols_asset={SYMBOLS}#{SYMBOLS_LABEL}"])
+                f"symbols_asset={SYMBOLS}#{SYMBOLS_LABEL}", "prerelease=true"])
             output.unlink()
             self.assertEqual(main(["check", "--tag", "v9.9.9", "--commit", self.tagged,
                                    "--master", "master"]), 1)

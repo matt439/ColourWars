@@ -2369,6 +2369,13 @@ command. Debug replay and save formats move a version each where they change.
 
 Then the author's attended play review, which implementation does not close.
 
+**Play review waived (the author, 2026-11-13), not performed.** For the
+`v0.1.0` release the author waived the attended review, as the hardware,
+participant and listening checks were waived on 2026-11-05. The sub weapons
+ship as implemented, with the costs and bot use below. The rows that waited on
+the review are released: `REV#3`, `REV#21` and `REV#56` are ordinary work, and
+`REV#36`'s respawn grace keeps its own condition, observed spawn pressure.
+
 **Slice 1, done 2026-11-08.** `GameAction::sub` is a new action: pad RB (LB
 when a pad profile already uses RB) and, on the keyboard seat, whichever mouse
 button Shoot does not use. `PlayerInputData::sub_pressed` carries it, the
@@ -2531,7 +2538,8 @@ roller bot never sets a wall against another roller, whose reach is shorter
 than the wall's, and loses the most with either planted sub (0.30 to 0.33
 under Endless paint); a sniper bot rarely finds a grenade throw, so either
 planted sub beats its grenade (0.58 to 0.63). Those are bot policy and a
-human's play, not costs, and are left to the author's play review. The
+human's play, not costs, and were left to the author's play review (waived
+2026-11-13). The
 measuring probe was a scratch case and is not kept.
 
 **Slice 7, done 2026-11-09.** Each sub draws and sounds as itself. The
@@ -2546,7 +2554,7 @@ source or licence comes in: `sub.grenade.throw`, `sub.sprinkler.throw` and
 author accepted all six on 2026-11-09, recorded as an amendment in
 [acceptance.json](../game/audio/paint_exe/acceptance.json); the bank holds 106
 waves. The bursts and drops stay paint balls, and the empty click is the
-tools'. What remains is the author's attended play review.
+tools'. The author's attended play review was waived on 2026-11-13.
 
 **Player documents, 2026-11-10.** `HOW-TO-PLAY.txt` and the README gained the
 Sub control row and a loadout paragraph, and the README's Pad Buttons and
@@ -2707,7 +2715,8 @@ how much.
   same tick, it hits the holder, and the canopy never counts it. The canopy
   therefore needs `REV#3`'s fix: breakables swept as participants in
   `Projectile::resolve_sweep` (`game/objects/projectile_contacts.cpp:403`),
-  before player contacts. `REV#3` is blocked on `ROAD#11`'s play review (Q2).
+  before player contacts. `REV#3` was blocked on `ROAD#11`'s play review,
+  which was waived on 2026-11-13, so it is open work and Q2 is moot.
 
 **Numbers in `tuning.json`.** `weapons.umbrella` holds a tool's usual record
 (offset, size, nozzle offset, `shoot_interval`, `starting_vel_length`,
@@ -2784,8 +2793,8 @@ close.
 - **Q1, the archetype.** The umbrella (recommended), the brush (best fit with
   the fiction, but it changes player speed), or the splatling if `REV#57` is
   taken?
-- **Q2, `REV#3`.** Unblock `REV#3` for slice 1 now, ahead of `ROAD#11`'s play
-  review, or wait for that review?
+- **Q2, `REV#3`.** Moot since 2026-11-13: `ROAD#11`'s play review was waived,
+  so `REV#3` is open work and can be slice 1's first step.
 - **Q3, the canopy input.** Open whenever Shoot is held (Splatoon's rule,
   recommended), or only after a short hold without firing?
 - **Q4, speed.** Does an open canopy slow its holder? The recommendation is no

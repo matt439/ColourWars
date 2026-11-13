@@ -17,7 +17,8 @@ adds the qualified fixed pair to that mover layout. Core, routes, native
 composition, replay and the bounded four-geometry tool comparison are qualified.
 
 **Selected, 2026-11-05 (`POL#21`).** The author accepted the slab trial: Yard,
-movers and fixed scored slabs. **Turbulence Yard - Slab Trial** now sets
+movers and fixed scored slabs. **Slab Yard** (named *Turbulence Yard - Slab
+Trial* until 2026-11-13, `REV#26`; the id is still `turbulence_slab_trial`) sets
 `include_in_random: true` and is the Turbulence arena in Random. The original
 `turbulence.json` stays selectable but sets `include_in_random: false`. The
 static blockout, mover trial and the other Turbulence comparisons stay

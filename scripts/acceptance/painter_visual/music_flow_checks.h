@@ -156,7 +156,9 @@ void menu_music_flow_matrix(Application& app, GameData& data, const Presentation
     tap(Key::enter);
     page("stage", Key::enter, 2);
     // The shared fixture lists Movement Course first and Close Quarters next.
-    tap(Key::right);
+    // The save has no remembered stage, so Stage Select opens on Random (slot
+    // 2, REV#26); Left steps back to Close Quarters.
+    tap(Key::left);
     tap(Key::enter);
     tap(Key::enter);
     const Frame pending = stack_frame(app);

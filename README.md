@@ -3,6 +3,8 @@
 A local split-screen paint-shooter for up to four players. Two teams, one
 arena, and a scoreboard that counts painted surface rather than kills.
 
+![Four players late in a round on Crossfeed, the arena covered in both teams' paint](docs/images/polish-crossfeed/4p-heavy-advance-720p.png)
+
 ## Play
 
 1. Get `ColourWars-<version>-windows-x64.zip` from the
@@ -46,8 +48,8 @@ New? Select **Single Match > 1 Player > Movement Course** for lesson cards on
 moving, jumping, dropping through platforms and refilling your paint.
 
 Choose teams, a tool and a sub weapon for each player, then an arena. Random
-uses Close Quarters, Crossfeed, Press Tower and Turbulence Yard - Slab Trial;
-the other stages can be selected explicitly. Stage Select previews the arena
+uses Crossfeed, Press Tower, Close Quarters and Slab Yard, which Stage Select
+lists first; the other stages can be selected explicitly. Stage Select previews the arena
 before a separate confirmation starts the match.
 
 The arena is an unsaved picture in a paint program

@@ -283,15 +283,8 @@ std::wstring MainMenuStageSelect::record_line(int slot) const
 }
 int MainMenuStageSelect::slot_of(const std::string& stage_name) const
 {
-	const StageList* stages = this->data()->stages();
-	for (size_t i = 0; i < stages->size(); i++)
-	{
-		if (stages->at(i).name == stage_name)
-		{
-			return static_cast<int>(i);
-		}
-	}
-	return 0;
+	// A fresh save opens on Random (REV#26); a vanished stage on the first slot.
+	return static_cast<int>(stage_select_slot(*this->data()->stages(), stage_name));
 }
 int MainMenuStageSelect::random_slot() const
 {
