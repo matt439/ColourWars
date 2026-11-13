@@ -169,6 +169,8 @@ add_library(colourwars_game STATIC
     objects/projectile.cpp
     objects/projectile_contacts.cpp
     objects/projectile_ball.cpp
+    objects/round_shot_shape.cpp
+    objects/shot_retirements.cpp
     objects/projectile_builder.cpp
     objects/projectile_grenade.cpp
     objects/projectile_planted.cpp

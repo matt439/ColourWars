@@ -1026,6 +1026,15 @@ validated as an in-memory `GameTuning`; neither staged nor authored tuning is
 written. `{}` reproduces unpatched row and companion bytes. Omitted subs retain
 the game's grenade default. The native flags are `--subs` and `--tuning-patch`.
 
+`-RoundShots rectangle|circle` (native `--round-shots`, default `rectangle`)
+builds every round shot of the sweep with that collision shape
+([`ROAD#44`](feature-roadmap.md#circle-shapes-for-round-projectiles-road44)),
+and the receipt records it. Every match also prints four `shot-contacts` lines
+to `run.log`, beside the `hit-view` lines: how its round shots left play, in
+flight and at launch, for the balls and the grenade bodies apart (`cover`,
+`player`, `breakable`, `expired`, `out`). They are never CSV columns, so
+neither schema changes.
+
 The main CSV is now schema **3**, **101 columns**: the original 81 fields retain
 their order, followed by `sub`, `engaged_ticks`, `refilling_ticks`,
 `ready_fire_intents` and `observed_sub_cooldown_resets` for each of four seats.

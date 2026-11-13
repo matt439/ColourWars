@@ -184,8 +184,11 @@ void FixedSlabPaintable::on_projectile_contact(const Projectile& projectile,
 {
     if (projectile.layer() != collision_layers::projectile_team_a &&
         projectile.layer() != collision_layers::projectile_team_b) { return; }
-    if (projectile.shape()->shape_type() != ShapeType::rectangle)
-    { throw std::invalid_argument("Fixed slab paint currently requires rectangular projectile footprints"); }
+    // A round shot built as a circle (ROAD#44) paints its bounding square,
+    // the footprint it paints everywhere else.
+    if (projectile.shape()->shape_type() != ShapeType::rectangle &&
+        projectile.shape()->shape_type() != ShapeType::circle)
+    { throw std::invalid_argument("Fixed slab paint currently requires rectangular or circular projectile footprints"); }
     const PlayerTeam team = projectile.team();
     const Quad footprint = this->geometry_.local_quad(projectile.shape()->bounding_box());
     bool painted = false, captured = false;

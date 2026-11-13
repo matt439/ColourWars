@@ -551,7 +551,11 @@ void Level::burst_projectiles()
 		{
 			this->blocked_shot_feedback_->emit(*contact);
 		}
-		if (!drop->for_deletion())
+		if (drop->for_deletion())
+		{
+			this->drop_launch_retirements_.count(*drop, false);
+		}
+		else
 		{
 			// Pending, like a tool's shot, until end_tick() admits it.
 			this->pending_projectiles_.push_back(this->scene_->add(std::move(drop)));
@@ -613,13 +617,26 @@ void Level::retire_projectiles()
 	std::erase_if(this->projectiles_,
 		[this](const Projectile* projectile)
 		{
-			return projectile->for_deletion() || !this->scene_->in_bounds(*projectile);
+			const bool retired = projectile->for_deletion();
+			const bool outside = !retired && !this->scene_->in_bounds(*projectile);
+			if (retired || outside) { this->flight_retirements_.count(*projectile, outside); }
+			return retired || outside;
 		});
 	// Admitted after the survivors, in the order they were added, as end_tick()
 	// appends its pending list, so this list keeps the scene's order.
 	this->projectiles_.insert(this->projectiles_.end(),
 		this->pending_projectiles_.begin(), this->pending_projectiles_.end());
 	this->pending_projectiles_.clear();
+}
+
+ShotRetirements Level::launch_retirements() const
+{
+	ShotRetirements total = this->drop_launch_retirements_;
+	for (const Player* player : this->players_)
+	{
+		total += player->launch_retirements();
+	}
+	return total;
 }
 
 void Level::check_projectiles() const

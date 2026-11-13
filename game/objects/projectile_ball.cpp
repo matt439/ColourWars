@@ -14,16 +14,19 @@ ProjectileBall::ProjectileBall(const RectangleF& rectangle,
 	float rotation,
 	const Vector2F& origin,
 	SpriteFlip flip,
-	float layer_depth) :
+	float layer_depth,
+	RoundShotShape shape) :
 	Projectile(velocity, team, player_num, team_colour,
 		ProjectileType::ball, render_resources, strip,
 		tuning,
 		team_colour, rotation, origin, flip, layer_depth),
-	rectangle_(rectangle)
+	rectangle_(rectangle),
+	shape_mode_(shape)
 {
 	Vector2F size = this->details().col_rect_size;
 	
 	this->rectangle_.offset(-size.x / 2.0f, -size.y / 2.0f);
+	this->sync_circle();
 }
 
 void ProjectileBall::update(float dt)
@@ -34,6 +37,7 @@ void ProjectileBall::update(float dt)
 		details.gravity, details.wind_resistance, dt);
 
 	this->rectangle_.offset(displacement.x, displacement.y);
+	this->sync_circle();
 
 	colourwars::AnimationObject::update(dt);
 }
@@ -47,9 +51,21 @@ RectangleF ProjectileBall::bounds() const
 }
 const Shape* ProjectileBall::shape() const
 {
+	if (this->shape_mode_ == RoundShotShape::circle) { return &this->circle_; }
 	return &this->rectangle_;
+}
+std::optional<float> ProjectileBall::sweep_radius() const
+{
+	if (this->shape_mode_ != RoundShotShape::circle) { return std::nullopt; }
+	return this->circle_.radius();
+}
+void ProjectileBall::sync_circle()
+{
+	this->circle_ = Circle(this->rectangle_.center(),
+		0.5f * std::min(this->rectangle_.width, this->rectangle_.height));
 }
 void ProjectileBall::set_rectangle(const RectangleF& rectangle)
 {
 	this->rectangle_ = rectangle;
+	this->sync_circle();
 }

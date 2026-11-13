@@ -258,6 +258,17 @@ namespace balance_runner
             }
         }
 
+        // Builds every shot of a sweep with its shape, and puts the shipped
+        // shape back however the sweep ends.
+        class RoundShotsScope final
+        {
+        public:
+            explicit RoundShotsScope(RoundShotShape shape) { set_round_shot_shape(shape); }
+            ~RoundShotsScope() { set_round_shot_shape(RoundShotShape::rectangle); }
+            RoundShotsScope(const RoundShotsScope&) = delete;
+            RoundShotsScope& operator=(const RoundShotsScope&) = delete;
+        };
+
         Result run_match(CpuWorld& world, const Options& options, const std::string& stage, std::uint32_t seed)
         {
             std::unique_ptr<Level> level = world.build(options, stage, seed);
@@ -318,6 +329,9 @@ namespace balance_runner
             result.team_a_area = end.team_a_area; result.team_b_area = end.team_b_area;
             result.paintable_area = end.total_area;
             result.final_fingerprint = MatchFingerprint::of(*level, static_cast<int>(updates)).hash;
+            result.round_shots = options.round_shots;
+            result.flight_retirements = level->flight_retirements();
+            result.launch_retirements = level->launch_retirements();
             result.seats = samples.seats();
             for (std::size_t seat = 0; seat < result.seats.size(); ++seat)
             {
@@ -435,6 +449,29 @@ namespace balance_runner
         return lines;
     }
 
+    std::string round_shots_name(RoundShotShape shape)
+    {
+        return shape == RoundShotShape::circle ? "circle" : "rectangle";
+    }
+
+    std::string shot_contacts_lines(const Result& result)
+    {
+        std::string lines;
+        const auto line = [&](const char* phase, const char* kind, const ShotRetirementCounts& counts)
+        {
+            lines += "shot-contacts stage=" + result.stage + " seed=" + std::to_string(result.seed) +
+                " shape=" + round_shots_name(result.round_shots) + " phase=" + phase + " kind=" + kind +
+                " cover=" + std::to_string(counts.cover) + " player=" + std::to_string(counts.player) +
+                " breakable=" + std::to_string(counts.breakable) + " expired=" + std::to_string(counts.expired) +
+                " out=" + std::to_string(counts.out_of_bounds) + "\n";
+        };
+        line("flight", "ball", result.flight_retirements.ball);
+        line("flight", "grenade", result.flight_retirements.grenade);
+        line("launch", "ball", result.launch_retirements.ball);
+        line("launch", "grenade", result.launch_retirements.grenade);
+        return lines;
+    }
+
     void attribute_eliminations(Result& result, const std::vector<PlayerLethalProjectiles>& victims)
     {
         if (result.players < 1 || result.players > 4 || victims.size() != static_cast<std::size_t>(result.players))
@@ -496,6 +533,7 @@ namespace balance_runner
         {
             if (!world.has_stage(stage)) { throw std::invalid_argument("Stage is not in the content manifest: " + stage); }
         }
+        const RoundShotsScope round_shots(options.round_shots);
         std::vector<Result> results;
         results.reserve(options.stages.size() * options.seeds.size());
         for (const std::string& stage : options.stages)

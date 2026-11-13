@@ -1222,8 +1222,12 @@ std::vector<std::unique_ptr<Projectile>>
             projectiles.push_back(std::move(drop));
         }
     }
-    std::erase_if(projectiles, [](const auto& projectile)
-        { return projectile->for_deletion(); });
+    std::erase_if(projectiles, [this](const auto& projectile)
+        {
+            if (!projectile->for_deletion()) { return false; }
+            this->launch_retirements_.count(*projectile, false);
+            return true;
+        });
     return projectiles;
 }
 void Player::set_paint_audio(PaintAudio* audio)

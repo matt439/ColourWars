@@ -161,6 +161,7 @@ running.
 | `ammo <normal\|inf>` | `inf` keeps every tank full (variable; `infinite` too) |
 | `restart` | rebuild the current match, same session |
 | `menu` | leave the match for the main menu |
+| `shots.round <rectangle\|circle>` | the collision shape of round shots (the bucket's ball, the grenade and their drops) fired from now on: `rectangle` as shipped, or the [`ROAD#44`](feature-roadmap.md#circle-shapes-for-round-projectiles-road44) circle the author is deciding on. A shot keeps the shape it was fired with, so `restart` for a clean match. Not a tuning value and not saved; it goes back to `rectangle` when the game closes (variable) |
 | `timescale [0.25-4\|next\|prev]` | match speed (variable). Updates are stepped at the fixed 1/60 s (0.25 = one update every fourth frame, 2 = two per frame), never stretched; audio is not scaled. `next`/`prev` walk 0.25, 0.5, 1, 2, 4. No argument prints it |
 | `pause [on\|off\|toggle]` | pause or resume the match clock |
 | `step [n]` | pause, then run n single updates (1-600), one per frame; closes the console so they run |
@@ -1047,7 +1048,9 @@ command or shipping bot policy.
   `weapon all random` are re-seeded for each plan, so every one draws the
   same, and the Debug bots take the seed directly.
 
-`+seed 7` before `+stage` makes the whole launch repeat. `seed` alone prints
+`+seed 7` before `+stage` makes the whole launch repeat. A recording
+replays bit for bit only under the `shots.round` shape it was recorded with
+(rectangle unless set), since every round shot is built with it. `seed` alone prints
 it, and `status` shows the running round's seed (`round seed n`): `seed n` then
 `restart` builds that round again, palette and persona included.
 

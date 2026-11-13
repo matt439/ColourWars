@@ -297,6 +297,12 @@ public:
 	// The overview camera framed for the current window.
 	const labrador::Camera& overview_camera() const;
 
+	// ROAD#44's contact tally: how the round shots retired so far left play,
+	// in flight (counted as end_tick retires them) and at launch (stopped by
+	// cover at the muzzle: each player's, and grenade drops' here).
+	const ShotRetirements& flight_retirements() const { return this->flight_retirements_; }
+	ShotRetirements launch_retirements() const;
+
 	// Counts for the perf overlay, as of the last update.
 	int projectile_count() const;
 	int collision_object_count() const;
@@ -333,6 +339,8 @@ private:
 	// what the coming end_tick() retires, so neither holds a dead pointer.
 	std::vector<Projectile*> projectiles_;
 	std::vector<Projectile*> pending_projectiles_;
+	ShotRetirements flight_retirements_;
+	ShotRetirements drop_launch_retirements_;
 	// The admitted shots that took hits (takes_hits) as this tick's travel
 	// began, in scene order: what each swept shot can be spent on. Filled and
 	// emptied within resolve_projectile_movement(), so it never holds a shot

@@ -12,6 +12,7 @@
 #include "game/objects/collider.h"
 #include "game/objects/collision_object_type.h"
 #include "engine/render/colour.h"
+#include <cstdint>
 #include <memory>
 #include <span>
 #include <optional>
@@ -23,6 +24,17 @@ class ProjectilePlanted;
 // The tuning's sheet and animation strip as one resolved pair. Load-time.
 labrador::RenderResources::SheetStrip resolve_projectile_strip(
 	const ProjectileTuning& tuning, const labrador::RenderResources& render_resources);
+
+// Why a flying shot left play, as far as the shot knows it (ROAD#44's
+// contact tally, Level::shot_retirements): none until a contact retires it,
+// so a shot retired with none ran out its time.
+enum class ShotRetireCause : std::uint8_t
+{
+	none,
+	cover,
+	player,
+	breakable
+};
 
 // Abstract paint projectile: shared lifetime, team filtering and swept contacts;
 // concrete subclasses supply their shape, movement update and drawing, and
@@ -75,6 +87,8 @@ public:
 	// The painting team; layer() follows it.
 	PlayerTeam team() const;
 	ProjectileType projectile_type() const { return this->type_; }
+	// The first contact that retired it; never changes once set.
+	ShotRetireCause retire_cause() const { return this->retire_cause_; }
 	// Health a hit removes, from this projectile's own record: its kind's,
 	// or a sub's for the grenade and its drops, which share the ball's kind.
 	// A planted sprinkler touches no one, so it overrides this to zero.
@@ -159,6 +173,10 @@ protected:
 	// Whether a launch volume crossing an enemy between owner and muzzle hits
 	// them, as it hits cover there.
 	virtual bool launch_hits_players() const { return true; }
+	// The radius a round shot built as a circle (ROAD#44, RoundShotShape)
+	// sweeps with: resolve_sweep then moves that disc, not the bounding box,
+	// against each candidate. Empty, the shipped default, keeps the box sweep.
+	virtual std::optional<float> sweep_radius() const { return std::nullopt; }
 	// Whether retiring after touching only bare cover sounds a dud.
 	virtual bool duds_on_bare_cover() const { return true; }
 
@@ -235,6 +253,8 @@ private:
 
 	PlayerTeam team_ = PlayerTeam::none;
 	bool for_deletion_ = false;
+	ShotRetireCause retire_cause_ = ShotRetireCause::none;
+	void note_retire_cause(ShotRetireCause cause);
 
 };
 

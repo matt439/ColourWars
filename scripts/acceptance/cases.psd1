@@ -62,6 +62,7 @@ Cases = @(
     @{ Name = 'aim_marker' }
     @{ Name = 'player_identity' }
     @{ Name = 'blocked_shot' }
+    @{ Name = 'round_shots' }
     @{ Name = 'idle_drip' }
     @{ Name = 'quiet_character' }
     @{ Name = 'figure_slips' }

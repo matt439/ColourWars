@@ -52,6 +52,83 @@ namespace
         return std::pair{ entry, exit };
     }
 
+    // ROAD#44: the stretch of a disc's travel, its centre moving from
+    // start_centre to finish_centre, that overlaps obstacle, as fractions of
+    // the travel; empty when the disc never enters it. The disc overlaps the
+    // box exactly where its centre lies in the box rounded by its radius: the
+    // union of the box widened by the radius in x, the box widened by it in
+    // y and the four corner discs. That union is convex, so the travel
+    // crosses it in one stretch, from the earliest entry of any of the six
+    // pieces to the latest exit. Double precision throughout; a touch with no
+    // positive overlap is no entry, as for sweep_interval.
+    std::optional<std::pair<float, float>> circle_sweep_interval(
+        const Vector2F& start_centre, const Vector2F& finish_centre,
+        float radius, const RectangleF& obstacle)
+    {
+        const double x0 = start_centre.x, y0 = start_centre.y;
+        const double dx = static_cast<double>(finish_centre.x) - x0;
+        const double dy = static_cast<double>(finish_centre.y) - y0;
+        const double r = radius;
+        double entry = std::numeric_limits<double>::infinity();
+        double exit = -entry;
+        const auto keep = [&](double low, double high)
+        {
+            low = std::max(low, 0.0);
+            high = std::min(high, 1.0);
+            if (low < high) { entry = std::min(entry, low); exit = std::max(exit, high); }
+        };
+        // The centre's travel inside the box [left, right] x [top, bottom].
+        const auto box = [&](double left, double top, double right, double bottom)
+        {
+            double low = -std::numeric_limits<double>::infinity();
+            double high = -low;
+            const auto axis = [&](double from, double change, double min, double max)
+            {
+                if (change == 0.0) { return from > min && from < max; }
+                double a = (min - from) / change, b = (max - from) / change;
+                if (a > b) { std::swap(a, b); }
+                low = std::max(low, a);
+                high = std::min(high, b);
+                return low < high;
+            };
+            if (axis(x0, dx, left, right) && axis(y0, dy, top, bottom)) { keep(low, high); }
+        };
+        // The centre's travel inside the corner disc at (cx, cy).
+        const auto corner = [&](double cx, double cy)
+        {
+            const double fx = x0 - cx, fy = y0 - cy;
+            const double a = dx * dx + dy * dy;
+            const double c = fx * fx + fy * fy - r * r;
+            if (a == 0.0) { if (c < 0.0) { keep(0.0, 1.0); } return; }
+            const double b = fx * dx + fy * dy;
+            const double discriminant = b * b - a * c;
+            if (discriminant <= 0.0) { return; }
+            const double root = std::sqrt(discriminant);
+            keep((-b - root) / a, (-b + root) / a);
+        };
+        const double left = obstacle.left(), top = obstacle.top();
+        const double right = obstacle.right(), bottom = obstacle.bottom();
+        box(left - r, top, right + r, bottom);
+        box(left, top - r, right, bottom + r);
+        corner(left, top);
+        corner(right, top);
+        corner(left, bottom);
+        corner(right, bottom);
+        if (!(entry < exit)) { return std::nullopt; }
+        return std::pair{ static_cast<float>(entry), static_cast<float>(exit) };
+    }
+
+    // The stretch of a shot's travel from start to finish that overlaps
+    // obstacle: its box's (sweep_interval), or with a radius its inscribed
+    // disc's (circle_sweep_interval, ROAD#44).
+    std::optional<std::pair<float, float>> shot_interval(
+        const RectangleF& start, const RectangleF& finish,
+        const RectangleF& obstacle, std::optional<float> radius)
+    {
+        if (!radius) { return sweep_interval(start, finish, obstacle); }
+        return circle_sweep_interval(start.center(), finish.center(), *radius, obstacle);
+    }
+
     // The first breakable (Level's planted subs) this shot's travel from
     // start to finish enters: an enemy one that takes hits now, the earliest
     // entry winning and the earlier in the list on a tie. An empty list does
@@ -64,7 +141,7 @@ namespace
 
     std::optional<BreakableHit> first_breakable(const Projectile& shot,
         const RectangleF& start, const RectangleF& finish,
-        std::span<Projectile* const> breakables)
+        std::span<Projectile* const> breakables, std::optional<float> radius)
     {
         std::optional<BreakableHit> first;
         for (Projectile* target : breakables)
@@ -72,7 +149,7 @@ namespace
             // Asked now, so one broken earlier this tick stops nothing more.
             if (target == &shot || !target->takes_hits() ||
                 target->team() == shot.team()) { continue; }
-            const auto interval = sweep_interval(start, finish, target->bounds());
+            const auto interval = shot_interval(start, finish, target->bounds(), radius);
             if (interval && (!first || interval->first < first->interval.first))
             {
                 first = BreakableHit{ target, *interval };
@@ -363,7 +440,8 @@ void Projectile::resolve_translating_contacts(const RectangleF& start,
             }
             continue;
         }
-        const auto interval = sweep_interval(start, finish, object->shape()->bounding_box());
+        const auto interval = shot_interval(start, finish,
+            object->shape()->bounding_box(), this->sweep_radius());
         if (interval && (interval->first < closest_entry ||
             (interval->first == closest_entry && structure && obstruction != nullptr &&
                 obstruction->layer() != collision_layers::structure)))
@@ -375,7 +453,8 @@ void Projectile::resolve_translating_contacts(const RectangleF& start,
     }
     // Planted subs stand still, so their world-frame entry is a fraction of
     // this tick like the movers' segment times.
-    if (const auto breakable = first_breakable(*this, start, finish, breakables);
+    if (const auto breakable = first_breakable(*this, start, finish, breakables,
+        this->sweep_radius());
         breakable && breakable_first(breakable->interval.first, closest_entry, obstruction))
     {
         this->strike_breakable(start, finish, *breakable->target, breakable->interval);
@@ -458,6 +537,9 @@ void Projectile::resolve_sweep(const RectangleF& start,
         this->resolve_fixed_slab_sweep(start, finish, objects, launch, breakables);
         return;
     }
+    // A round shot built as a circle sweeps its disc (ROAD#44); every other
+    // shot, and every round one by default, keeps the box arithmetic as is.
+    const std::optional<float> radius = this->sweep_radius();
     CollisionObject* obstruction = nullptr;
     std::pair<float, float> closest{ 1.0f, 1.0f };
     for (CollisionObject* object : objects)
@@ -481,7 +563,7 @@ void Projectile::resolve_sweep(const RectangleF& start,
         {
             continue;
         }
-        const auto interval = sweep_interval(start, finish, obstacle);
+        const auto interval = shot_interval(start, finish, obstacle, radius);
         // Cover wins a tied entry time, including a launch already touching
         // both participants, independently of their order in the scene.
         if (interval && (interval->first < closest.first ||
@@ -493,7 +575,8 @@ void Projectile::resolve_sweep(const RectangleF& start,
             closest = *interval;
         }
     }
-    if (const auto breakable = first_breakable(*this, start, finish, breakables);
+    if (const auto breakable = first_breakable(*this, start, finish, breakables,
+        this->sweep_radius());
         breakable && breakable_first(breakable->interval.first, closest.first, obstruction))
     {
         this->strike_breakable(start, finish, *breakable->target, breakable->interval);
@@ -521,6 +604,12 @@ void Projectile::resolve_sweep(const RectangleF& start,
     {
         obstruction->on_contact(*this, contact->normal, contact->penetration);
         this->on_contact(*obstruction, -contact->normal, contact->penetration);
+    }
+    else if (radius)
+    {
+        // A disc that only grazed a corner in float arithmetic has no contact
+        // to answer; it flies on to where its travel ends rather than stall.
+        this->set_rectangle(finish);
     }
 }
 
@@ -556,7 +645,7 @@ void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
         {
             const RectangleF obstacle = object->shape()->bounding_box();
             if (launch && structure && launch_leaves_overlap(start, finish, obstacle)) { continue; }
-            if (const auto interval = sweep_interval(start, finish, obstacle)) { entry = interval->first; }
+            if (const auto interval = shot_interval(start, finish, obstacle, this->sweep_radius())) { entry = interval->first; }
         }
         if (entry && (*entry < closest || (*entry == closest && structure && obstruction != nullptr &&
             obstruction->layer() != collision_layers::structure)))
@@ -568,7 +657,8 @@ void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
             if (hit) { winning_hit = *hit; }
         }
     }
-    if (const auto breakable = first_breakable(*this, start, finish, breakables);
+    if (const auto breakable = first_breakable(*this, start, finish, breakables,
+        this->sweep_radius());
         breakable && breakable_first(breakable->interval.first, closest, obstruction))
     {
         this->strike_breakable(start, finish, *breakable->target, breakable->interval);
@@ -622,6 +712,7 @@ void Projectile::strike_breakable(const RectangleF& start,
     this->set_rectangle(rectangle_between(start, finish, fraction));
     // Spent on it, with no paint, damage or blocked-shot cue, as when Level
     // struck it after the tick's contacts.
+    this->note_retire_cause(ShotRetireCause::breakable);
     this->set_for_deletion(true);
     target.take_hit();
 }
@@ -639,13 +730,23 @@ void Projectile::on_structure_contact(const Structure& other,
     }
     // Flying projectiles die on contact with flat geometry or enemy players.
     // Rollers override both to process every contact in their one-step volume.
+    this->note_retire_cause(ShotRetireCause::cover);
     this->set_for_deletion(true);
 }
 
 void Projectile::on_player_contact(const Player& /*other*/,
     const Vector2F& /*normal*/, float /*penetration*/)
 {
+    this->note_retire_cause(ShotRetireCause::player);
     this->set_for_deletion(true);
+}
+
+void Projectile::note_retire_cause(ShotRetireCause cause)
+{
+    if (!this->for_deletion_ && this->retire_cause_ == ShotRetireCause::none)
+    {
+        this->retire_cause_ = cause;
+    }
 }
 
 void Projectile::answer_paint_contact(const Projectile& toucher,

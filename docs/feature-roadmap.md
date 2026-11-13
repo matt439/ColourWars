@@ -4940,21 +4940,130 @@ bulk territory swing fits the balance accepted on 2026-11-05.
 
 ### Circle shapes for round projectiles (`ROAD#44`)
 
-**OPEN, LOW, M; the pin has the narrow phase since the 2026-11-13 bump.** Every projectile collides as a
-`RectangleF`, the round ones included (`ProjectileBall::shape` and
-`ProjectileGrenade::shape` return their rectangle), and `game/` names no
-`Circle`. The engine pinned until 2026-11-13 threw from `Scene::resolve` for a
-circle; the pin now collides circles in the narrow phase (Labrador `f6752ca7`,
-"Collide circles in the narrow phase", 2026-11-04). `GAP#D5`
-added rotated slabs and horizontal movers only. As the engine's real client,
-this game would be the first to drive the circle-against-polygon paths. It adds
-a shape and keeps the hierarchy.
+**DECISION, LOW, M: the author decides on hit feel; measured 2026-11-14.**
+Every projectile used to collide as a `RectangleF`, the round ones included.
+The engine pinned since 2026-11-13 collides circles in the narrow phase
+(Labrador `f6752ca7`, "Collide circles in the narrow phase", 2026-11-04), so
+the round shots can now be circles. The circle code is in, behind a switch
+that defaults to the shipped rectangle, and the contacts are measured below.
+Whether shots keep the circle is the author's call on hit feel.
 
-First step: measure how a ball's and a
-grenade's contacts change under a `Circle` in a seeded replay and the
-projectile acceptance cases. `Projectile::resolve_sweep` takes rectangles, so
-the sweep is part of the measurement. The change in hit feel is then the
-author's call.
+**The switch.** `RoundShotShape` ([round_shot_shape.h](../game/objects/round_shot_shape.h))
+is `rectangle` (shipped) or `circle`. It covers every `ProjectileBall` (the
+bucket's ball, the grenade's drops and the sprinkler's drops) and the
+`ProjectileGrenade` body. A shot reads it once, when it is built, and keeps
+that shape for life; a grenade's drops take the grenade's shape. Only two
+things set it: the Debug console's `shots.round rectangle|circle`
+([debug-console.md](debug-console.md#commands)) and the Debug balance runner's
+`--round-shots` (`scripts/run-balance.ps1 -RoundShots`). With the default,
+nothing a player sees changes and no pin or fingerprint moves:
+`instant_replay`, `balance_runner`'s seeded byte identity and the other
+projectile cases pass unchanged. The shape is how a shot collides, not a
+number, so it is code and never a `tuning.json` leaf (AGENTS.md: data says
+*which* and *how much*, never *how*). It is one process-wide value rather than
+a `Level` option because weapons, subs and other shots build shots and none of
+them holds the `Level`; threading a setting through `LevelBuilder`, `Player`,
+`Weapon` and `SubWeapon` would be the larger change for a switch that is
+meant to go once the author decides. A seeded tape therefore replays bit for
+bit only under the setting it was recorded with.
+
+**What circle changes.** The circle is the disc inscribed in the shot's
+collision square (ball 100, drop 36, grenade 40 units), so it is the same size
+face on and smaller only at the corners. `bounds()`, drawing and every paint
+footprint stay the square, so the painted area of a hit is unchanged; only
+whether and where the shot stops changes. The engine has no swept circle, so
+`Projectile::resolve_sweep` sweeps one itself (`circle_sweep_interval` in
+[projectile_contacts.cpp](../game/objects/projectile_contacts.cpp)): the
+centre's path against the obstacle box rounded by the radius, in double
+precision, with the same entry inset, tie rules and breakable order as the
+box sweep. A disc that only grazes a corner in float arithmetic flies on to
+the end of its step. Cover and players on flat stages are swept as discs;
+two things stay boxes: the launch exemption (`launch_leaves_overlap`, which
+only ever skips), and the fixed slabs and movers, whose own sweeps are box
+sweeps (`FixedSlabGeometry::sweep`, the mover's relative segments). Those
+stand only on the Yard trials and `turbulence_slab_trial`, so that stage's
+numbers below are partly box-shaped. A circle shot paints a fixed slab with
+its square, as it paints everything.
+
+**The tally.** `Level::flight_retirements()` and `launch_retirements()`
+([shot_retirements.h](../game/objects/shot_retirements.h)) count how round
+shots leave play: on cover, on a player, on a planted sub, by running out of
+time, or out of bounds; in flight, or stopped at the muzzle by launch
+obstruction. Grenade bodies count apart from the balls. Nothing in a match
+reads it back. The balance runner prints it as four `shot-contacts` lines per
+match, never as CSV columns, so both CSV schemas are unchanged.
+
+**Measurement (2026-11-14).** Debug runner, this commit's tree on engine pin
+`1dc8533c`, four stages (`crossfeed`, `close_quarters`, `press_tower`,
+`turbulence_slab_trial`) x 32 seeds (1000-1031) = 128 1v1 matches per run,
+both seats the shipping bot at Hard, 60 s each:
+
+```
+scripts/run-balance.ps1 -SkipBuild -Stage crossfeed,close_quarters,press_tower,turbulence_slab_trial `
+    -Seed (1000..1031) -Players 2 -Bot match -Difficulty hard,hard -Duration 60 `
+    -Tools bucket,bucket -Subs wall,wall -RoundShots rectangle   # then circle
+# the same with -Tools sprayer,sprayer -Subs grenade,grenade
+```
+
+The first pair has no grenades, so every ball is a bucket shot; the second
+has no bucket, so every ball is a grenade drop.
+
+| Bucket balls, 128 matches | rectangle | circle | change |
+|---|---|---|---|
+| Shots retired in flight | 9,829 | 10,356 | +5.4% |
+| on cover / on a player | 8,558 / 978 | 8,974 / 1,123 | +4.9% / +14.8% |
+| ran out of time / on a planted wall | 249 / 44 | 211 / 48 | -15.3% / +9.1% |
+| Player share of flight retirements | 9.95% | 10.84% | +0.89 pt |
+| Stopped at launch (cover / player) | 13,695 / 1,042 | 13,230 / 1,066 | -3.4% / +2.3% |
+| Player contacts per shot, launch and flight | 8.22% | 8.88% | +0.66 pt |
+| Hit ticks dealt (hit-view) / eliminations | 1,988 / 168 | 2,162 / 196 | +8.8% / +16.7% |
+| Painted area, all matches | 8,026,039 | 8,172,652 | +1.8% |
+| Final fingerprints that differ | | 121 of 128 | |
+
+| Grenades (sprayer seats), 128 matches | rectangle | circle | change |
+|---|---|---|---|
+| Drops retired in flight (cover / player / time) | 1,750 / 1,060 / 668 | 1,807 / 1,082 / 663 | +3.3% / +2.1% / -0.7% |
+| Player share of drops in flight | 30.48% | 30.46% | flat |
+| Drops stopped at launch (of all drops) | 300 (7.9%) | 204 (5.4%) | -32% |
+| Grenade bodies (cover / player / at launch) | 146 / 153 / 16 | 150 / 154 / 9 | flat |
+| Hit ticks dealt / eliminations | 18,379 / 205 | 18,867 / 204 | +2.7% / flat |
+| Painted area, all matches | 10,003,601 | 9,946,954 | -0.6% |
+| Final fingerprints that differ | | 42 of 128 | |
+
+Per stage, bucket balls on players in flight went 255 -> 274 (Close Quarters),
+327 -> 337 (Crossfeed), 237 -> 347 (Press Tower) and 159 -> 165 (Turbulence
+Slab Trial).
+
+**Reading it.** The bots react to what happens, so a match diverges at its
+first different contact and these are counts over different matches, not
+the same shots twice; read the shares and the direction, not single digits.
+The shape matters to almost every bucket match (121 of 128 end differently)
+and to a third of grenade matches. It does not make the ball harder to land:
+the bucket's share of player contacts went up slightly (8.2% -> 8.9% of shots,
+eliminations +17%), because a disc that clears a ledge or a doorway corner
+keeps flying instead of dying on the corner, and some of those reach the
+enemy. Fewer shots die at the muzzle (-3% bucket, -32% grenade drops), for the
+same reason: a drop burst against a wall or floor no longer catches the
+corner it is born beside. Face-on contacts are identical in both shapes
+(`round_shots` pins this), so what changes is only the corner case: in
+circle mode a ball can visibly brush a corner and pass, where today the
+square stops on it. Painted area moves under 2% either way.
+
+**The author's question.** Keep circles for the ball and the grenade, or not?
+`shots.round circle` in a Debug build (then `restart`) plays it before
+deciding.
+
+- **Keep:** make `circle` the default, rebaseline anything that moves (the
+  seeded tapes and fingerprints that fire round shots, `bot_ballistics` and
+  `bot_combat_trials`, whose aim is still worked out with rectangles), retire
+  the switch and its console and runner options, and file the engine's lack
+  of a swept circle in [engine-reports.md](review/engine-reports.md), with
+  `circle_sweep_interval` as the exhibit. Slabs and movers would want disc
+  sweeps too.
+- **Decline:** delete the switch, the circle members of `ProjectileBall` and
+  `ProjectileGrenade`, the circle branch of the sweep and the slab's circle
+  footprint, and the `round_shots` case; keep the tally and the runner's
+  `shot-contacts` lines if they stay useful.
 
 ## Menu navigation follow-up (GAP#4.4)
 
