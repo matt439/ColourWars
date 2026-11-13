@@ -113,6 +113,17 @@ namespace
 		check_last_stage_mapping(mixed);
 		check_no_candidates({});
 		check_no_candidates({ mixed.front(), mixed.back() });
+		// REV#26: Stage Select's opening slot.
+		require(stage_select_slot(mixed, "") == mixed.size(),
+			"A fresh save must open Stage Select on Random while it has a candidate");
+		require(stage_select_slot(mixed, "second_arena") == 3u &&
+			stage_select_slot(mixed, "first_excluded") == 0u,
+			"A remembered stage must open Stage Select on that stage");
+		require(stage_select_slot(mixed, "not_a_stage") == 0u,
+			"A remembered stage that vanished must open Stage Select on the first stage");
+		const StageList no_candidates{ mixed.front(), mixed.back() };
+		require(stage_select_slot(no_candidates, "") == 0u && stage_select_slot({}, "") == 0u,
+			"With no Random candidate a fresh save must open on the first stage");
 	}
 
 	void check_shipped_stages(const std::filesystem::path& content)
@@ -127,6 +138,7 @@ namespace
 			{ "turbulence_gate_trial", false }, { "turbulence_lift_trial", false },
 			{ "turbulence_paint_lift_trial", false } };
 		StageList stages;
+		std::vector<std::string> order;
 		std::set<std::string> names_seen;
 		size_t crossfeed_index = 0;
 		size_t defaulted_arenas = 0;
@@ -134,6 +146,7 @@ namespace
 		{
 			const std::string& name = level.name;
 			require(names_seen.insert(name).second, "Shipped stage names must be unique");
+			order.push_back(name);
 			const std::string path = labrador::path_to_utf8(level.path);
 			const LevelLoadedInfo info(path.c_str());
 			info.validate();
@@ -154,6 +167,15 @@ namespace
 		require(defaulted_arenas == 1, "Acceptance needs exactly one arena without include_in_random");
 		require(stages.size() == expected_random.size() && stages.size() == 13,
 			"Stage selection must expose exactly the thirteen registered stages");
+		// REV#26 (2026-11-13): the Random arenas first, then the course, the
+		// originals and the Turbulence Yard trials.
+		require(order == std::vector<std::string>{ "crossfeed", "press_tower", "close_quarters",
+			"turbulence_slab_trial", "movement_course", "king_of_the_hill", "turbulence",
+			"turbulence_blockout", "turbulence_mover_trial", "turbulence_ferry_trial",
+			"turbulence_gate_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial" },
+			"Stage Select's shipped order changed from REV#26's");
+		require(stage_select_slot(stages, "") == stages.size(),
+			"A fresh save must open the shipped Stage Select on Random");
 		const std::vector<size_t> candidates = random_stage_indices(stages);
 		require(candidates.size() == 4, "Close Quarters, Crossfeed, Press Tower and the slab trial must be the four Random candidates");
 		std::set<std::string> candidate_names;

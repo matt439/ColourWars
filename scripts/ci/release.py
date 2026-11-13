@@ -7,7 +7,8 @@ A v* tag push runs this twice from the `publish` job in ci.yml:
 
 `check` refuses a tag whose commit is not on master or whose name is not the
 `project(VERSION)` that commit's CMakeLists.txt declares, and names the assets
-the release attaches. It reads the version from the tagged commit, not the
+the release attaches, and whether it is a pre-release (REL#6: every 0.x
+version is). It reads the version from the tagged commit, not the
 working tree, with the same pattern as scripts/release-package-path.ps1.
 """
 
@@ -46,6 +47,11 @@ def project_version(cmake_text: str) -> str | None:
 def package_name(version: str) -> str:
     """The Release ZIP's name, as CPack writes it (cmake/release_package.cmake)."""
     return f"ColourWars-{version}-windows-x64.zip"
+
+
+def is_prerelease(version: str) -> bool:
+    """REL#6: every 0.x release is published as a GitHub pre-release."""
+    return version.split(".", 1)[0] == "0"
 
 
 def release_notes(version: str) -> str:
@@ -114,7 +120,8 @@ def main(argv: list[str] | None = None) -> int:
         if problems:
             return 1
         _write_outputs({"version": version, "package": package_name(version),
-                        "symbols_asset": f"{SYMBOLS}#{SYMBOLS_LABEL}"})
+                        "symbols_asset": f"{SYMBOLS}#{SYMBOLS_LABEL}",
+                        "prerelease": "true" if is_prerelease(version) else "false"})
         print(f"{arguments.tag} is on master and names project(VERSION {version}).")
         return 0
 

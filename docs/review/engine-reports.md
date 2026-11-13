@@ -3043,10 +3043,10 @@ real pin.
 **Report 36 rides with this bump** (`ENG#36`): master's `8362e2d` parses JSON
 iteratively, and the bump drops `save_max_nesting` from `reader_mutations.cpp`
 as [report 36](#36-json-parsing-recurses-once-per-nesting-level---answered-on-master-before-it-was-drafted)
-says. **Whether the bump lands before or after this game's first tag,
-`v0.1.0` (`FTR#1`), is the author's call.** Before means the first release
-ships on an engine that refuses deep JSON instead of overflowing; after means
-the first release is the build the release work has already checked.
+says. **The author chose on 2026-11-13 that the bump lands after this game's
+first tag, `v0.1.0` (`FTR#1`),** so the first release is the build the release
+work has already checked; before would have shipped an engine that refuses deep
+JSON instead of overflowing.
 
 ## Rehearse against engine master (`PIN#1`)
 

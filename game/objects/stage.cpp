@@ -38,3 +38,19 @@ size_t random_stage_index(const StageList& stages, size_t random_value,
 	}
 	return indices[random_value % indices.size()];
 }
+
+size_t stage_select_slot(const StageList& stages, const std::string& stage)
+{
+	if (stage.empty())
+	{
+		return random_stage_indices(stages).empty() ? 0 : stages.size();
+	}
+	for (size_t index = 0; index < stages.size(); ++index)
+	{
+		if (stages[index].name == stage)
+		{
+			return index;
+		}
+	}
+	return 0;
+}

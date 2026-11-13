@@ -423,8 +423,8 @@ jobs:
 
   # A v* tag on master publishes the ZIP its own run built, inspected and
   # started, and that executable's PDB. The tag must name the packaged
-  # version, so v0.1.0 needs project(VERSION 0.1.0); bump CMakeLists.txt
-  # before tagging. scripts/ci/release.py holds the checks and the notes,
+  # version, so v0.1.0 needs project(VERSION 0.1.0); the versioning rule
+  # (docs/releasing.md, REL#6) moves it in the first commit after a tag. scripts/ci/release.py holds the checks and the notes,
   # tested by the lint job; docs/releasing.md says what to do if this fails.
   publish:
     needs: windows
@@ -455,11 +455,15 @@ jobs:
           VERSION: ${{ steps.release.outputs.version }}
           PACKAGE: ${{ steps.release.outputs.package }}
           SYMBOLS: ${{ steps.release.outputs.symbols_asset }}
+          PRERELEASE: ${{ steps.release.outputs.prerelease }}
         run: |
           python3 scripts/ci/release.py notes --version "$VERSION" --output notes.md
+          # REL#6: a 0.x version is a pre-release.
+          prerelease=()
+          if [ "$PRERELEASE" = "true" ]; then prerelease=(--prerelease); fi
           gh release create "$GITHUB_REF_NAME" "$PACKAGE" "$SYMBOLS" \
             --verify-tag --title "ColourWars $GITHUB_REF_NAME" \
-            --notes-file notes.md
+            --notes-file notes.md "${prerelease[@]}"
 
   # Only after every Windows job passed on the commit they checked out (a pull
   # request's test merge): its tree is what a later push may skip on.

@@ -31,3 +31,8 @@ size_t random_stage_index(const StageList& stages, size_t random_value);
 // draws exactly as the two-argument form.
 size_t random_stage_index(const StageList& stages, size_t random_value,
 	const std::string& last_stage);
+// The Stage Select slot that shows `stage`: its index, or stages.size() for
+// Random. No stage chosen yet (empty, as on a fresh save) opens on Random while
+// it has a candidate (REV#26); a name the list lacks, or an empty one with no
+// candidate, opens on the first stage.
+size_t stage_select_slot(const StageList& stages, const std::string& stage);

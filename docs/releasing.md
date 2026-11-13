@@ -10,9 +10,10 @@ branch, required `gate` and publication rules.
 
 **Selected by the author, 2026-11-11: docs and packaging first.** Prepare a
 player-focused README, the packaged help and contributor/bug-report guidance,
-then build and inspect a fresh Release ZIP. Gameplay decisions remain open;
-the selection does not change stage ordering, Random palettes, out-of-bounds
-behaviour, tuning, audio or the accepted art direction.
+then build and inspect a fresh Release ZIP. That selection did not itself
+change stage ordering, Random palettes, out-of-bounds behaviour, tuning, audio
+or the accepted art direction; the author's 2026-11-13 calls below settle stage
+ordering (`REV#26`), and the other gameplay decisions remain open.
 
 The documentation pass completes the README reshape (`FTR#15`) and contributor
 and issue guidance (`REV#15`). The README links to the source-build and
@@ -23,22 +24,32 @@ refills faster, enemy paint stops it. A live cue for standing on enemy paint, on
 the paint meter or the step sound, remains `REV#10` and is the author's
 presentation call.
 
-Author calls left for this release aim:
+The author's calls for this release aim (2026-11-13):
 
-- **Sub-weapon play review (`ROAD#11`).** The implementation is complete; the
-  author's attended review is still open in the
-  [roadmap](feature-roadmap.md#sub-weapons-road11). Documentation and a startup
-  check do not close it.
-- **README image/clip (`REV#12`).** The author still chooses the hero material;
-  this pass adds no new image or implied art acceptance.
-- **First tag (`FTR#1`).** The author decides when to publish. The download text
-  must describe the available pre-release routes until a release exists; after
-  publication, replace the artifact fallback with the direct release download.
+- **Sub-weapon play review (`ROAD#11`): waived, not performed,** like the
+  2026-11-05 checks. The sub weapons ship as implemented; see the
+  [roadmap](feature-roadmap.md#sub-weapons-road11).
+- **README image (`REV#12`):** the Crossfeed four-player heavy-paint capture
+  (`docs/images/polish-crossfeed/4p-heavy-advance-720p.png`). It shows the
+  current arena art, which `POL#16` may still replace; choosing it does not
+  accept that art.
+- **Stage Select (`REV#26`, which took in `FTR#13`):** the manifest lists the
+  four Random arenas first (Crossfeed, Press Tower, Close Quarters, Slab Yard),
+  then Movement Course, the two originals and the Turbulence Yard trials. A
+  save with no stage chosen yet opens Stage Select on Random. The Random
+  Turbulence arena, formerly *Turbulence Yard - Slab Trial*, is now named
+  **Slab Yard**; its id stays `turbulence_slab_trial`, so stage records carry
+  over.
+- **Versioning (`REL#6`):** the [rule below](#versioning-rule-rel6).
+- **Engine pin (`ENG#36`):** the next pin bump lands **after** `v0.1.0`, so the
+  first release ships the pin the candidate checks ran on.
+- **First tag (`FTR#1`):** authorized. After publication, replace the README's
+  artifact fallback with a link to the release's tag page; every `0.x` release
+  is a pre-release, which GitHub's `/releases/latest` does not return.
 
 Other design calls stay indexed in [TODO.md](../TODO.md), including `REV#1`'s
-out-of-bounds handling and `REV#26`'s arena presentation (which took in `FTR#13`). They have not
-been accepted by selecting this documentation/package pass. Arena artwork
-(`POL#16`) remains deferred.
+out-of-bounds handling. They have not been accepted by selecting this
+documentation/package pass. Arena artwork (`POL#16`) remains deferred.
 
 ## Build a clean candidate
 
@@ -107,7 +118,8 @@ CI result.
 
 These checks establish package integrity and startup on the machine that ran
 them. The hardware, participant and listening checks waived on 2026-11-05
-remain waived, not performed; the newer sub-weapon play review remains open.
+remain waived, not performed, and so is the sub-weapon play review (waived
+2026-11-13).
 See [what a green pull request means](../AGENTS.md#what-a-green-pull-request-means).
 
 ## Publish only after the author authorizes publication
@@ -173,10 +185,30 @@ landed proves the procedure, not the archive the first tag will publish.
 
 ### Release candidate evidence (`REL#1`)
 
-**Done 2026-11-12.** `scripts/release-candidate.ps1` ran on MattPC on a clean
-tree at `ccfe9b7` (branch `todo-clear-2026-11-12`, the tree pull request #81
-brings to `master`), engine pin `e7fc50e`, version `0.1.0`, under pwsh 7.4.6.
-The receipt's outcome was `passed`:
+**Done 2026-11-12, rerun 2026-11-13.** The release branch changed code and
+content (Stage Select's order and fresh-save default, the Slab Yard rename), so
+`scripts/release-candidate.ps1` ran again on MattPC on a clean tree at
+`c61cb21` (branch `release-v0.1.0`), engine pin `e7fc50e`, version `0.1.0`,
+under pwsh 7.4.6. The receipt's outcome was `passed`, with the same checks as
+the first run:
+
+| check | result |
+|---|---|
+| build (`build.ps1 -Package`) | passed |
+| package (`check-release-package.ps1`) | passed, 35 checks on 69 files |
+| packaged `build-info.txt` | passed: `ColourWars: c61cb219af7d…`, `Labrador: e7fc50e3…`, `Release`, no `-dirty` |
+| startup (`-RequireAudio -SystemOnlyPath`) | passed |
+| missing-bank fallback (`-RequireNoAudio`) | passed, with only the expected optional-bank diagnostic |
+
+ZIP `ColourWars-0.1.0-windows-x64.zip`, 21,986,119 bytes, SHA256
+`736086e2d97b554242e904aec380df3ae078711e6181ed4200f5d8efb84c6534`; the
+evidence is under
+`out/validation/release-candidate/c61cb219af7d-20261113T014146Z/`.
+
+The first run, superseded by that one, was on a clean tree at `ccfe9b7`
+(branch `todo-clear-2026-11-12`, the tree pull request #81 brings to
+`master`), engine pin `e7fc50e`, version `0.1.0`, under pwsh 7.4.6. Its
+receipt's outcome was `passed`:
 
 | check | result |
 |---|---|
@@ -202,6 +234,9 @@ in Windows Sandbox and passed. The details are in `ROAD#37`'s
 and [Build a clean candidate](#build-a-clean-candidate) now names the step.
 Labrador's `PI-14` can be pointed at that record: it is the `v0.3.0`-era run it
 was waiting for (the engine pin is `v0.3.0` plus nine commits).
+On 2026-11-13 the rerun candidate's ZIP (`c61cb21`, SHA256 `736086e2…`) passed
+the same Sandbox run: the hash matched the host, the game window opened, the
+save was created and `WM_CLOSE` exited 0.
 
 ### One-command candidate receipt (`REL#3`)
 
@@ -258,21 +293,22 @@ lists it. The bug form asks for the version shown under the title.
 
 ### Versioning rule (`REL#6`)
 
-**Decision.** The author's call. `CMakeLists.txt:3` is `project(ColourWars
-VERSION 0.1.0)`, and the only rule written down is "bump CMakeLists.txt before
-tagging" (`ci.yml:401-403`). Nothing says when the version moves after a tag or
-what a minor or patch step means for this game. Left alone, every build after
-`v0.1.0` is also `ColourWars-0.1.0-windows-x64.zip`, which undoes `FTR#6`'s aim
-of telling two downloads apart. `gh release create` (`ci.yml:440-442`) makes
-no choice about marking a `0.x` release as a pre-release.
+**Decided by the author, 2026-11-13.** `project(VERSION)` in
+[CMakeLists.txt](../CMakeLists.txt) is the one version; the title screen, the
+ZIP name, `build-info.txt` and the tag all read it.
 
-**First step.** Draft a "Versions" section here for the author: move to the next
-version in the first commit after a tag; a minor step for gameplay, content or
-save-format changes and a patch step for fixes; and whether `0.x` releases are
-marked pre-release.
-
-**Done when** the author accepts or edits the rule, it is in this guide, and
-`publish` follows its pre-release choice.
+- **The version moves in the first commit after a tag,** to the next patch
+  version (`v0.1.0` is followed by `0.1.1`). Builds between tags therefore
+  carry the version the next release will have, never the one already
+  published, so two downloads are told apart (`FTR#6`).
+- **What a step means.** A *minor* step (`0.1.x` to `0.2.0`) marks a release
+  with a gameplay, content or save-format change; a *patch* step marks one with
+  fixes only. When a minor-worthy change lands after a patch bump, that change's
+  commit raises the version to the next minor. A major step is reserved for
+  1.0.
+- **Every `0.x` release is a GitHub pre-release.** `scripts/ci/release.py
+  check` outputs `prerelease`, and the `publish` job passes `--prerelease`
+  for a `0.x` version; `scripts/ci/test_release.py` covers both.
 
 ### Release symbols (`REL#7`)
 
