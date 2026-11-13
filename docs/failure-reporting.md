@@ -135,8 +135,9 @@ then starts copies of itself with a private Unicode `LOCALAPPDATA` that install
 the handlers and crash: `RaiseException` (recorded at `kernelbase.dll`, exit
 code kept), `std::terminate` inside a `catch` (module `game`, the caught
 `invalid_argument` as `cause_0`, exit code 3), a throw out of a `noexcept`
-function (module `game`, `cause_0=runtime_error`) and an access violation
-(module `game`, exit code `0xC0000005`). Each game RVA must land within 128
+function (module `game`, `cause_0=runtime_error`), the same from a `noexcept`
+function with a `/GS` buffer, whose frame handler is main-image code, and an
+access violation (module `game`, exit code `0xC0000005`). Each game RVA must land within 128
 bytes after a marker call's return address, each crash must replace the
 previous complete record, and no record may carry a path, an argument, an
 environment value or exception text. A last child finds a directory where the
@@ -150,8 +151,8 @@ and must not disturb it.
 
 ## Crash record (`REV#63`)
 
-**Done 2026-11-13.** The author decided that day that the game writes no
-minidump
+**Done 2026-11-14.** The author decided on 2026-11-13 that the game writes
+no minidump
 ([record](review/2026-11-10-project-review.md#no-crash-dump-and-no-release-symbols-rev63));
 this is the slice taken instead. [crash_record.cpp](../game/crash_record.cpp)
 holds two handlers, and `wWinMain` installs them as its first statement, before
@@ -182,8 +183,10 @@ Then `causes_truncated` and `message_truncated`, both `false` unless a terminate
 cause chain was cut. For a structured exception the address is the faulting
 instruction. For a terminate it is a return address: the first main-image frame
 above the runtime's `terminate`, which is the call to `std::terminate` or the
-throw that left a `noexcept` function. Look up `crash_rva - 1` to land inside the
-call.
+throw that left a `noexcept` function; a main-image frame that ntdll called is
+skipped, because that is a frame handler the exception dispatcher ran
+(`__GSHandlerCheck_EH4`, linked into every `/GS` function that unwinds), not
+the throw. Look up `crash_rva - 1` to land inside the call.
 
 **The module rule.** `game` is the main image. Labrador is a static library, so
 the engine's code is inside `ColourWars.exe` too and is `game` here; the
@@ -223,8 +226,8 @@ alike.
 ## Boundary
 
 The catch in `wWinMain` reports C++ exceptions with their message; the crash
-record catches structured exceptions and terminations on the main thread with
-controlled fields only. Outside both:
+record catches unhandled structured exceptions on any thread and terminations
+on the main thread, with controlled fields only. Outside both:
 
 - A stack overflow is best effort: the main thread keeps 32 KiB for the filter,
   other threads nothing.
@@ -242,6 +245,7 @@ controlled fields only. Outside both:
 
 There is still no recovery to the menu, no exception hierarchy, no minidump and
 no engine callback containment.
+
 ### No match-step containment (`REV#4`)
 
 Declined by the author on 2026-11-13, effective with `REV#1`, which landed on

@@ -75,6 +75,16 @@ namespace
         throw_plainly(marker_file);
     }
 
+    // The same, from a noexcept function with a /GS buffer, whose frame handler
+    // is __GSHandlerCheck_EH4 in the main image rather than the runtime's own.
+    __declspec(noinline) void throw_through_guarded_noexcept(const wchar_t* marker_file) noexcept
+    {
+        volatile char buffer[64]{};
+        buffer[marker_file[0] % 64] = 1;
+        throw_plainly(marker_file);
+        buffer[1] = buffer[0];
+    }
+
     __declspec(noinline) void terminate_in_catch(const wchar_t* marker_file)
     {
         try { throw std::invalid_argument("SECRET_CAUGHT_DIAGNOSTIC"); }
@@ -95,6 +105,7 @@ namespace
         { L"raise", FailurePhase::running },
         { L"terminate_in_catch", FailurePhase::validation },
         { L"noexcept_violation", FailurePhase::launch },
+        { L"guarded_noexcept_violation", FailurePhase::running },
         { L"access_violation", FailurePhase::manifest },
     };
 
@@ -114,6 +125,7 @@ namespace
         }
         else if (mode == L"terminate_in_catch") { terminate_in_catch(marker_file); }
         else if (mode == L"noexcept_violation") { throw_through_noexcept(marker_file); }
+        else if (mode == L"guarded_noexcept_violation") { throw_through_guarded_noexcept(marker_file); }
         else if (mode == L"access_violation") { fault_through_null(marker_file); }
         std::fputs("crash child did not crash\n", stderr);
         return 2;
@@ -436,6 +448,15 @@ namespace
                 "A noexcept violation was not recorded as a terminate in the game:\n" + previous);
             require_near(hex_value(record.at("crash_rva"), true), result.marker, "The noexcept throw's");
         }
+        {
+            // A /GS frame's handler is main-image code called by ntdll; the
+            // record must still name the throw, not that handler.
+            const auto [result, record] = crash(L"guarded_noexcept_violation", "run_loop", "runtime");
+            require(result.exit_code == abort_exit && record.at("crash_kind") == "terminate" &&
+                record.at("crash_module") == "game" && record.at("cause_0") == "runtime_error",
+                "A guarded noexcept violation was not recorded as a terminate in the game:\n" + previous);
+            require_near(hex_value(record.at("crash_rva"), true), result.marker, "The guarded noexcept throw's");
+        }
 #if !defined(__SANITIZE_ADDRESS__)
         // AddressSanitizer reports an access violation itself and never
         // reaches the filter; the nightly asan leg runs the other children.
@@ -481,7 +502,7 @@ int wmain(int argc, wchar_t* argv[])
 #endif
         std::cout << "PASS crash record: module classification, allocation-free formatting, the caught "
             "record unchanged, raised exception at KernelBase, terminate with its caught cause, a noexcept "
-            "violation, " << access << ", exit codes kept, no private values, blocked-record safety.\n";
+            "violation (plain and from a /GS frame), " << access << ", exit codes kept, no private values, blocked-record safety.\n";
         return 0;
     });
 }

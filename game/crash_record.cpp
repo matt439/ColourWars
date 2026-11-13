@@ -18,6 +18,7 @@ namespace
 	std::atomic_flag crash_claimed;
 	bool installed = false;
 	HMODULE main_image = nullptr;
+	HMODULE ntdll_image = nullptr;
 	LPTOP_LEVEL_EXCEPTION_FILTER previous_filter = nullptr;
 	std::wstring record_path;
 	std::wstring temporary_path;
@@ -144,25 +145,30 @@ namespace
 		return previous_filter != nullptr ? previous_filter(pointers) : EXCEPTION_CONTINUE_SEARCH;
 	}
 
-	bool in_main_image(const void* address) noexcept
+	HMODULE image_of(const void* address) noexcept
 	{
 		HMODULE image = nullptr;
 		return GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-			GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, static_cast<LPCWSTR>(address), &image) != FALSE &&
-			image == main_image;
+			GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, static_cast<LPCWSTR>(address), &image) != FALSE ?
+			image : nullptr;
 	}
 
 	// Frame 0 is this handler and terminate itself lives in the runtime DLL,
 	// so the caller is the first main-image return address after a frame
 	// outside it: the call to std::terminate, or the throw that left a
-	// noexcept function. With no such frame, the handler's own caller.
+	// noexcept function. A main-image frame that ntdll called is skipped: it
+	// is a frame handler the exception dispatcher ran (__GSHandlerCheck_EH4,
+	// statically linked for every /GS function with unwinding), not the
+	// throw. With no such frame, the handler's own caller.
 	const void* terminate_caller(void* const* frames, unsigned count) noexcept
 	{
 		bool left_main_image = false;
 		for (unsigned index = 1; index < count; ++index)
 		{
-			const bool inside = in_main_image(frames[index]);
-			if (inside && left_main_image) { return frames[index]; }
+			const bool inside = image_of(frames[index]) == main_image;
+			const bool dispatched = inside && index + 1 < count && ntdll_image != nullptr &&
+				image_of(frames[index + 1]) == ntdll_image;
+			if (inside && left_main_image && !dispatched) { return frames[index]; }
 			left_main_image = left_main_image || !inside;
 		}
 		return count > 1 ? frames[1] : nullptr;
@@ -280,6 +286,7 @@ void install_crash_handlers() noexcept
 	if (installed) { return; }
 	installed = true;
 	main_image = GetModuleHandleW(nullptr);
+	ntdll_image = GetModuleHandleW(L"ntdll.dll");
 	try
 	{
 		wchar_t buffer[MAX_PATH * 4]{};
