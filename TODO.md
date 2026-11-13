@@ -9,18 +9,13 @@ thread starts here: read **NOW**, then the owner of the row it picks up.
 **The only ordering in this file.** Keep this block to the current aim and the next few actions;
 results go in their owners, and `git log` is the changelog.
 
-**Aim: release `v0.1.0` (the author, 2026-11-13).** The [release guide](docs/releasing.md#current-preparation-scope)
-records the author's calls: `ROAD#11`'s play review waived, the versioning rule, the README
-image, Stage Select's order, and the pin bump after the tag.
+**Aim: after `v0.1.0`.** [`v0.1.0`](https://github.com/matt439/ColourWars/releases/tag/v0.1.0)
+was published as a pre-release on 2026-11-13 ([record](docs/releasing.md#first-release-v010));
+`master` is now `0.1.1` (`REL#6`).
 
-Next actions (publication authorized 2026-11-13):
+Next actions:
 
-1. `FTR#1`: the candidate and sandbox checks passed again on the release branch (2026-11-13,
-   [evidence](docs/releasing.md#release-candidate-evidence-rel1)); merge it on a green `gate`, tag `v0.1.0` on
-   `master`, check the published pre-release, then point the README at its tag page (`0.x`
-   releases are pre-releases, which `/releases/latest` skips) and move to `0.1.1` (`REL#6`).
-2. `ENG#36` and `PIN#2`: after the tag, qualify engine master on the `PIN#1` trial build and bump
-   the pin.
+1. `ENG#36` and `PIN#2`: qualify engine master on the `PIN#1` trial build and bump the pin.
 
 The other `OPEN` rows can follow in any order. The required `gate` and up-to-date `master` rule
 still apply.
@@ -104,7 +99,7 @@ workaround is deleted.
 | `ENG#PARKED` | DECISION | LOW | S | Asks waiting for a vehicle: `window_size_changed`, desktop size (exhibit for engine `REV#83`), atomic JSON write, registry forgetting, install facts, listener/voice cap, display-awake owner, non-XInput reader (`ROAD#23`), colour transforms (was `GAP#F10`), engine `GAP#6`/`REV#60`. Author: post mouse-button names on labrador#122? [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#26`, `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed 2026-11-05 as [labrador#122](https://github.com/matt439/Labrador/issues/122) (27 with the 26 rider), #123, #124 and #125 (the Bug). Waits on the engine. When one is answered, spend it at the next pin bump; for 34, also settle what CI's strict gates accept. [Ledger](docs/review/engine-reports.md#live) |
 | `ENG#35` | DECISION | LOW | S | Drafted 2026-11-05 from the hygiene review: `AudioResources` has no non-throwing sound-group lookup, so `sound_groups.cpp` catches `out_of_range`. Checked at master `5cbc6b3`. The author decides whether to file. [Report](docs/review/engine-reports.md#35-audioresources-has-no-non-throwing-sound-group-lookup---draft-with-find-or-add-exhibit) |
-| `ENG#36` | BLOCKED | LOW | M | Master `8362e2d` parses JSON iteratively; at the next pin bump (rehearsed by `PIN#1`) drop `save_max_nesting` from `reader_mutations`. Waits on `FTR#1`: the author chose 2026-11-13 to bump after `v0.1.0` is published. Never filed. [Bump](docs/review/engine-reports.md#preparing-the-next-pin-bump-2026-11-12) |
+| `ENG#36` | OPEN | LOW | M | Master `8362e2d` parses JSON iteratively; at the next pin bump (rehearsed by `PIN#1`) drop `save_max_nesting` from `reader_mutations`. The author chose 2026-11-13 to bump after `v0.1.0`, which is now published. Never filed. [Bump](docs/review/engine-reports.md#preparing-the-next-pin-bump-2026-11-12) |
 | `ENG#37` | DECISION | LOW | S | Long golden-image filenames break ordinary deep Windows clones. Drafted from `FTR#4`, reproduced against current master; the author decides whether to file. [Report](docs/review/engine-reports.md#37-long-render-golden-filenames-break-ordinary-windows-clones---draft-with-checkout-exhibit). |
 | `ENG#38` | DECISION | LOW | S | Window presence reaches the game as one bool (activation edge, `StateContext::active()`), so Debug `debug_background.cpp` subclasses the HWND to tell minimised, hidden and power-suspended apart. Drafted against master `3fe88f64`; the author decides whether to file. [Report](docs/review/engine-reports.md#38-presence-reaches-the-game-as-one-bool---draft-with-window-subclass-exhibit) |
 
@@ -250,10 +245,10 @@ a frozen record, so this file holds each row's status. It walked a newcomer from
 to a first match, including a real build from a fresh clone; nothing was played on a pad. Its
 [last section](docs/review/2026-11-10-first-run-review.md#already-tracked) lists findings that
 already had rows. `FTR#13` was folded into `REV#26` on 2026-11-12, which closed 2026-11-13; its id is retired.
+`FTR#1` closed 2026-11-13 with the `v0.1.0` release.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `FTR#1` | OPEN | HIGH | S | No release or tag, so README's "no Git, Visual Studio or terminal" promise leads to an expiring CI artifact or a source build. Authorized 2026-11-13: tag `v0.1.0` on `master` after the release branch merges, then make step 1 one link. [Record](docs/review/2026-11-10-first-run-review.md#no-release-exists-ftr1). |
 | `FTR#14` | UNSCOPED | LOW | S | The setup path is long and the save folder is never shown; `stages` is now made on the first save write ([User stages](docs/feature-roadmap.md#user-stages-road16)). Quick Play and an Open save folder item stay undesigned. [Record](docs/review/2026-11-10-first-run-review.md#the-setup-path-is-long-and-the-save-folder-is-hidden-ftr14). |
 
 ## Areas with no open rows

@@ -7,15 +7,10 @@ arena, and a scoreboard that counts painted surface rather than kills.
 
 ## Play
 
-1. Get `ColourWars-<version>-windows-x64.zip` from the
-   [releases page](https://github.com/matt439/ColourWars/releases) when a
-   release is listed. Until the first release, a signed-in GitHub account can
-   download the `ColourWars-windows-x64` artifact from a passing
-   [pull-request CI run](https://github.com/matt439/ColourWars/actions/workflows/ci.yml?query=event%3Apull_request+is%3Asuccess):
-   open a run and look under **Artifacts** at the bottom of its summary. The
-   artifact download wraps the game ZIP in another ZIP. Only runs that built
-   the game have one, and GitHub deletes it after 14 days. If none is
-   available, follow [Easy build](docs/development.md#easy-build).
+1. Download `ColourWars-0.1.0-windows-x64.zip` from the
+   [v0.1.0 release](https://github.com/matt439/ColourWars/releases/tag/v0.1.0).
+   Later versions appear on the
+   [releases page](https://github.com/matt439/ColourWars/releases).
 2. Right-click the game ZIP and choose **Extract All**. Running the game from
    inside the ZIP doesn't work.
 3. Open the extracted folder and run `ColourWars.exe`. If Windows says
