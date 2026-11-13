@@ -1300,3 +1300,70 @@ of "reconcile paint and sampled five-tool pressure with side/loadout swaps" from
 the [static qualification](#static-qualification-and-next-slice), for bots only.
 Per-band coverage for every equal-tool control on each stage is in the receipt's
 `summary.md`.
+
+## Arena art (`POL#16`, 2026-11-14)
+
+**Play identity.** Slab Yard is the movement arena: offset platforms, two
+crossing routes over a lower bed, the horizontal mover pair and the two scored
+fixed slabs. Play fills the whole 1020-unit camera band, so the backdrop sits
+behind play everywhere and has to stay quiet.
+
+**Environment direction.** An industrial loading yard on a grey day, following
+the [brief](polish-plan.md#initial-arena-briefs): ducts and vents, stacked
+supplies, an overhead structure, distant machinery and a layered sky. Nothing
+in it moves except the clouds, and nothing suggests wind or a hazard: the
+stacks have no smoke or air lines, the louvres are closed panels, and the
+crane's hook is parked short under its girder, well above the play band and
+away from the centre baffle. No lettering and no team hue.
+
+**Props.** Six crude `yard_*` drawings in the
+[terrain recipe](../game/art/terrain/README.md), drawn only in `bg_far`,
+`bg_mid`, `bg_line` and `bg_detail` with `bg_line` outlines:
+
+| Frame | Texels | Placed |
+|---|---|---|
+| `yard_skyline` | 1024x224 | three times along the ground line, with two `hill_small` between |
+| `yard_tank` | 192x384 | once a side, stilts behind the skyline under each upper approach |
+| `yard_crane` | 512x864 | once, spanning the centre; girder at 456-496, above every walk surface |
+| `yard_stack` | 160x448 | once a side, behind each home, its hat just over the home roof |
+| `yard_crates` | 288x224 | once a side, under each side step |
+| `yard_fence` | 512x112 | three panels along the back of the ground |
+
+**Layering**, far to near, in array order: the original `paper_sky`, the
+sun, four drifting clouds and one pair of gulls in the open sky; the two tanks;
+the skyline and hills; the crane; the stacks; the fences; the crates. The
+farther and larger a piece is, the paler it is drawn: the crane, tanks,
+stacks and skyline fill in `bg_far`, and only the small near pieces (crates,
+fence posts) use `bg_mid`. Each sits behind play, so terrain, paint and
+players always draw over it.
+
+**Material palette.** The 22 structures inherited from the mover trial and
+the two slabs already carry explicit materials: `ground` floor and boundary
+walls, `pencil` steps, approaches, beds, crossovers and baffle, `ruler` home
+floors, roofs and movers, `set_square` ramps, and `eraser` fixed slabs (by
+rule). They stay as they are. `turbulence_slab_stage` pins those 22 records
+byte-for-byte to the mover trial, so a material swap here would also change
+that comparison. The yard's distinct palette is therefore its composition and
+props. Collision, spawns, stations, bounds, materials and paint totals are
+unchanged. The terrain case's pinned slab-stage total still holds.
+
+**From the shared kit:** the paper backing, sun, `cloud_big`/`cloud_small`
+with the drift contract, `birds` and `hill_small`. The brush pot and tape roll
+landmarks are not placed here. The yard has its own props, and the landmark
+check names its arenas.
+
+**Checks.** The atlas grows to 2048x1852; every original frame keeps its
+coordinates. `terrain` now holds Slab Yard to the sky-arena cloud contract
+(at least four drifting clouds with staggered phases) instead of the paper-only
+blockout rule, and pins the new atlas height. `turbulence_slab_stage` still
+pins the inherited geometry and metadata against the mover trial. It now also
+checks that the paper backing stays first, that every decoration is an
+untinted terrain `Visual`, and that the yard uses exactly the six `yard_*`
+props. `turbulence_slab_tools` no longer requires its private pre-art input to
+match the registered decorations. Review screenshots (Debug, seeds 7 and 0,
+1P and 4P) were read for scale against the character, player and paint
+readability, and anything that could read as a platform.
+
+Still human checks: how it looks on a real GPU (the opt-in painter cases
+that draw this stage, `turbulence_slabs` among them, were not run and may pin
+pixels over the old paper-only backdrop) and how it plays.
