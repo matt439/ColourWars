@@ -54,3 +54,9 @@ Frame order and coordinates are fixed, and rebuilding the same source produces
 byte-identical PNG, JSON and lineup. The two landmarks
 occupy a new shelf after the original frames and swatches; all original frame
 coordinates and the original 2048x596 texel region remain unchanged.
+
+Arena props (`POL#16`) follow the original eleven in `props`. The build takes
+each one's name and cell size from the recipe (levels place frames by that
+size), packs them after the two landmarks on the landmark shelves, and grows
+the atlas and the lineup downward to fit; the original frames keep their
+coordinates. An arena prop obeys every rule above.
