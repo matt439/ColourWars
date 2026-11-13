@@ -70,9 +70,7 @@ because the build line names a different commit.
 
 The next commit moved `project(VERSION)` to `0.1.1`, as `REL#6` says.
 
-Other design calls stay indexed in [TODO.md](../TODO.md), including `REV#1`'s
-out-of-bounds handling, which the author took on 2026-11-13 (leaving the arena
-becomes an elimination) and which has not landed. Selecting this
+Other design calls stay indexed in [TODO.md](../TODO.md). Selecting this
 documentation/package pass did not accept them. Arena artwork (`POL#16`) remains deferred.
 
 ## Build a clean candidate

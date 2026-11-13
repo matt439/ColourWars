@@ -131,7 +131,6 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `REV#1` | OPEN | MED | M | Taken 2026-11-13: leaving the bounds becomes an uncredited elimination (`Player::kill` replaces the `PlayerOutOfBounds` throw); the `player_out_of_bounds` reason and seal-the-arena warnings go with it. [Calls](docs/feature-roadmap.md#project-review-calls-2026-11-13), [record](docs/review/2026-11-10-project-review.md#a-player-leaving-the-arena-ends-the-process-rev1). |
 | `REV#3` | OPEN | LOW | M | Planted sprinklers and walls take hits by a shot's travel bounding box, tested after the tick's contacts: diagonal shots hit up to about 17 units wide, and a player inside the wall is hit before it. First step: sweep breakables in `Projectile::resolve_sweep` before player contacts ([roadmap](docs/feature-roadmap.md#umbrella-tool-proposal-road13)). [Record](docs/review/2026-11-10-project-review.md#breakable-subs-are-struck-by-travel-bounding-box-rev3). |
 
 **Release, README and repository**

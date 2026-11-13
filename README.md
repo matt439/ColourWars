@@ -176,9 +176,9 @@ creates beside its save the first time it saves, or use the editor's
 **File > Save to My Stages**. They appear after the built-in stages, marked
 "Built by you." The game rereads the folder when Stage Select opens from the
 main menu. A refused file does not stop the others loading: press **Down**
-while browsing arenas to read scan issues. Enclose a stage with solid walls,
-floor and ceiling: a player who leaves the arena currently closes the game
-([Seal the arena](docs/level-format.md#coordinates-bounds-and-spawns)).
+while browsing arenas to read scan issues. A player who leaves a stage's
+bounds is eliminated and respawns, so a gap in the walls or floor is a pit
+([Leaving the arena](docs/level-format.md#coordinates-bounds-and-spawns)).
 
 The editor needs a source build and is not included in the game ZIP.
 See [the editor guide](docs/level-editor.md#play-the-level) for naming,

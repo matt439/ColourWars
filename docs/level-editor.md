@@ -331,11 +331,12 @@ bounds control camera limits and the match's zoom-out presentation. Resizing
 `out_of_bounds` must keep every spawn inside it. Objects outside those bounds
 can be intentional boundary geometry and are allowed.
 
-Neither the editor nor the game checks that the arena is sealed, and a player
-who leaves `out_of_bounds` currently closes the game
-([Seal the arena](level-format.md#coordinates-bounds-and-spawns), `REV#1`).
-Play every reachable edge before sharing a stage. `REV#1`, taken 2026-11-13,
-will make leaving the arena an elimination; this warning goes when it lands.
+Neither the editor nor the game requires the arena to be sealed: a player
+whose box leaves `out_of_bounds` is eliminated, credited to nobody, and
+respawns at its spawn
+([Leaving the arena](level-format.md#coordinates-bounds-and-spawns), `REV#1`).
+A gap is a pit; play every reachable edge to check that the ones you have are
+the ones you meant.
 
 ## Acceptance checks
 

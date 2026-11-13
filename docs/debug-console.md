@@ -205,7 +205,7 @@ fonts). On an error it prints the reason and keeps the current values. In a matc
 with the new values; in a menu it says the values apply to the next match, and
 they are swapped in before that match is built. Reloading replaces a live
 `feedback` toggle with the file's value, and says so. Rebuilding with new tuning
-can still fail during play (for example a player knocked out of bounds); the
+can still fail during play (for example a value the simulation cannot use); the
 console only guarantees that the *commands* themselves never throw into the game.
 
 ## Unwinding

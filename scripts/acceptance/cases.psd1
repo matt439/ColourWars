@@ -136,6 +136,7 @@ Cases = @(
     @{ Name = 'text_wrap' }
     @{ Name = 'terrain' }
     @{ Name = 'lethal_provenance' }
+    @{ Name = 'out_of_bounds' }
     @{ Name = 'skirmish_bot' }
     @{ Name = 'paint_surfaces' }
     @{ Name = 'balance_regions' }

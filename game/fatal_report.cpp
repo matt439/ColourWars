@@ -2,7 +2,6 @@
 #include "game/fatal_report.h"
 #include "game/build_info.h"
 #include "game/directory_consts.h"
-#include "game/objects/player_out_of_bounds.h"
 #include "game/save/atomic_file.h"
 #include "engine/core/file_path.h"
 #include "engine/render/text_encoding.h"
@@ -112,9 +111,8 @@ void FatalReport::capture(const std::exception_ptr& failure)
 		else if (dynamic_cast<const std::logic_error*>(&error)) { cause.kind = "logic_error"; }
 		else if (dynamic_cast<const std::runtime_error*>(&error)) { cause.kind = "runtime_error"; }
 		else { cause.kind = "standard_exception"; }
-		if (dynamic_cast<const PlayerOutOfBounds*>(&error)) { cause.reason = "player_out_of_bounds"; }
 		// The engine's device failure has no type of its own (engine report 30).
-		else if (diagnostic != nullptr && std::strcmp(diagnostic, "No Direct3D hardware device found") == 0)
+		if (diagnostic != nullptr && std::strcmp(diagnostic, "No Direct3D hardware device found") == 0)
 		{
 			cause.reason = "no_hardware_device";
 		}

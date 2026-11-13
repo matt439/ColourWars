@@ -888,8 +888,7 @@ same nine painter switches passed again in Debug and Release.
 **Done 2026-11-05; behaviour change.** The failure dialog names the real record
 path, and two impossible menu states throw instead of drawing `ERROR`/`Error`.
 
-- `Level::update` throws `PlayerOutOfBounds`
-  ([player_out_of_bounds.h](../game/objects/player_out_of_bounds.h)), a
+- `Level::update` throws `PlayerOutOfBounds` (`player_out_of_bounds.h`), a
   `std::runtime_error` with the same message, and `FatalReport::capture`
   records `player_out_of_bounds` by type. A plain `runtime_error` with those
   words no longer gets the reason. The engine's device-failure `strcmp` stays
@@ -899,7 +898,11 @@ path, and two impossible menu states throw instead of drawing `ERROR`/`Error`.
   the fixed `%LOCALAPPDATA%` spelling.
 - The spawn diagnostic says a player built outside `out_of_bounds` stops the
   match with a player-out-of-bounds failure; its sibling in
-  `station_contract.h` (the editor's words) and its comment say the same. The
+  `station_contract.h` (the editor's words) and its comment say the same.
+- Superseded by `REV#1` (2026-11-14): leaving the arena is now an elimination,
+  so the throw, `PlayerOutOfBounds`, its header and the `player_out_of_bounds`
+  reason are gone, and the two diagnostics say a player built there is
+  eliminated on its first tick. The
   paintable-role error says a `structure_paintable` collision object has no
   paintable role.
 - The seven `std::exception("...")` throws (`level_end_info.cpp`,

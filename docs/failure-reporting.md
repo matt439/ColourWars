@@ -65,12 +65,11 @@ Format 1 is a UTF-8 `key=value` record containing only these controlled fields:
 - Ordered, fixed exception-kind names. Standard system/generic error categories
   may include their numeric error code. Custom category names, messages and codes
   are omitted.
-- Fixed reason codes for two diagnostics: `player_out_of_bounds` for the game's
-  own `PlayerOutOfBounds` exception, recognised by type, and
-  `no_hardware_device` when the engine's message matches exactly (it has no type
-  of its own; engine report 30). `REV#1`, taken 2026-11-13, makes leaving the
-  arena an elimination; when it lands, `player_out_of_bounds` and its checks
-  are removed, or kept and marked unreachable.
+- A fixed reason code for one diagnostic: `no_hardware_device` when the
+  engine's message matches exactly (it has no type of its own; engine report
+  30). Reasons are never read from other messages. The game's own
+  `player_out_of_bounds` reason went with `REV#1` (2026-11-14), which made
+  leaving the arena an elimination, so nothing could raise it.
 - Cause-count and diagnostic-text truncation flags.
 
 Arbitrary exception messages, RTTI names, file paths, command-line arguments,
@@ -151,9 +150,10 @@ arrives at it.
 
 ### No match-step containment (`REV#4`)
 
-Declined by the author on 2026-11-13, once `REV#1` lands
+Declined by the author on 2026-11-13, effective with `REV#1`, which landed on
+2026-11-14
 ([record](review/2026-11-10-project-review.md#no-containment-around-the-match-or-replay-step-rev4)).
-`REV#1` removes the only throw a player can reach, so the match and replay
+`REV#1` removed the only throw a player could reach, so the match and replay
 step keep no containment of their own and an escaping exception still ends at
 `wWinMain`. Reopen if a released build produces a runtime failure report
 (phase `run_loop`) that `REV#1` does not explain.

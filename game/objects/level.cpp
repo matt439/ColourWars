@@ -11,7 +11,6 @@
 #include "game/objects/match_audio.h"
 #include "game/objects/countdown_cards.h"
 #include "game/objects/match_opening.h"
-#include "game/objects/player_out_of_bounds.h"
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -427,12 +426,18 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	this->projectile_count_ = this->count_projectiles();
 	this->teammate_markers_->update(dt, this->players_, this->view_participants_);
 
-	// Players must remain in the arena; unlike projectiles, they cannot be retired.
-	for (const Player* player : this->players_)
+	// Leaving the arena is an uncredited elimination (REV#1). Players are never
+	// retired: kill() zeroes health, and the next Player::update turns that into
+	// the normal death, with its animation, sound and rumble, and the respawn at
+	// the spawn after respawn_delay. Nobody is credited, because no projectile
+	// crossed the health. A player already dead, or already at zero health this
+	// tick, is left alone: it stays where it fell until respawn() places it.
+	for (Player* player : this->players_)
 	{
-		if (!this->scene_->in_bounds(*player))
+		if (!this->scene_->in_bounds(*player) &&
+			player->state() == PlayerState::alive && player->health() > 0.0f)
 		{
-			throw PlayerOutOfBounds();
+			player->kill();
 		}
 	}
 }

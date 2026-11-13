@@ -4629,16 +4629,23 @@ this section first: a declined row below is an intended absence, and each
 names what would reopen it. Detail stays with the row's owner, linked.
 
 **Taken.** Each row is open work with a first step; none is built yet.
-- **Out of bounds is an elimination (`REV#1`, M).** A live player who leaves
-  the bounds is killed through `Player::kill()` in place of the throw in
-  `Level::update` (`game/objects/level.cpp`): no owner, no splat credit for the
-  [awards](#results-awards-road12), otherwise a normal death and redraw. A player
-  already dead outside the bounds is placed back at respawn and not killed
-  again. The fixed `player_out_of_bounds` reason
-  ([failure reporting](failure-reporting.md#phase-and-original-cause)) and its
-  checks are removed or marked unreachable; the "seal the arena" warnings in
-  [level format](level-format.md) and [the editor guide](level-editor.md) go
-  when the change lands.
+- **Out of bounds is an elimination (`REV#1`, M; built 2026-11-14).** A live
+  player whose box leaves the bounds is killed through `Player::kill()` in
+  place of the throw at the end of `Level::update` (`game/objects/level.cpp`),
+  at the same point in the tick, so every in-bounds match and tape is
+  unchanged: no owner, no splat credit for the
+  [awards](#results-awards-road12), otherwise a normal death and redraw. A
+  player already dead outside the bounds is not killed again: it stays where it
+  fell and the normal respawn places it back at its spawn, rather than being
+  moved mid-elimination. `PlayerOutOfBounds` and the fixed
+  `player_out_of_bounds` reason
+  ([failure reporting](failure-reporting.md#phase-and-original-cause)) are
+  removed, the spawn and station diagnostics say a player built outside the
+  bounds is eliminated, and the "seal the arena" warnings in
+  [level format](level-format.md#coordinates-bounds-and-spawns),
+  [the editor guide](level-editor.md) and the README are gone, so a stage may
+  have pits. The `out_of_bounds` acceptance case pins the elimination, the
+  missing credit, the respawn, the edge and a repeat run.
   ([Record](review/2026-11-10-project-review.md#a-player-leaving-the-arena-ends-the-process-rev1).)
 - **Developer panel out of Release (`REV#13`, S; done 2026-11-13, see
   [Release behaviour](debug-console.md#release-behaviour)).** `GameAction::debug` is
@@ -4710,8 +4717,8 @@ names what would reopen it. Detail stays with the row's owner, linked.
   ([Record](review/2026-11-10-project-review.md#distribution-is-one-unsigned-github-zip-rev67).)
 
 **Declined.**
-- **No containment around the match or replay step (`REV#4`).** Declined once
-  `REV#1` lands, which removes the only throw players can reach. Reopen if a
+- **No containment around the match or replay step (`REV#4`).** Declined;
+  `REV#1` has landed and removed the only throw players could reach. Reopen if a
   released build writes a `run_loop` failure report `REV#1` does not explain.
   ([Record](review/2026-11-10-project-review.md#no-containment-around-the-match-or-replay-step-rev4).)
 - **No Title/Home save notice (`REV#5`).** `HOW-TO-PLAY.txt` names the copies

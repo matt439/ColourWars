@@ -2,7 +2,6 @@
 #include "game/fatal_report.h"
 #include "game/build_info.h"
 #include "game/directory_consts.h"
-#include "game/objects/player_out_of_bounds.h"
 #include "engine/core/file_path.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/scratch.h"
@@ -133,22 +132,23 @@ namespace
             nested(std::make_exception_ptr(std::runtime_error("No Direct3D hardware device found")), "renderer failed"));
         require(nested_hardware.dialog_text("").find(L"Direct3D 11 graphics card") != std::wstring::npos,
             "Nested missing-hardware cause lost its player remedy");
-        const FatalReport bounds(FailurePhase::running, std::make_exception_ptr(PlayerOutOfBounds()));
-        const Record bounds_record = parse_record(bounds.record_text());
-        require(bounds_record.at("cause_0_reason") == "player_out_of_bounds" &&
-            bounds_record.at("cause_0") == "runtime_error" && bounds.message() == "Player out of bounds",
-            "Controlled player-bounds reason was not classified by its type");
-        // The reason follows the type, not the words: another exception with the
-        // same message is not a player out of bounds.
+        const Record nested_hardware_record = parse_record(nested_hardware.record_text());
+        require(!nested_hardware_record.contains("cause_0_reason") &&
+            nested_hardware_record.at("cause_1_reason") == "no_hardware_device",
+            "A nested missing-hardware cause was not classified at its own cause");
+        // Reasons are fixed codes, never read from arbitrary messages: the words
+        // of the retired player-out-of-bounds failure (REV#1 made leaving the
+        // arena an elimination) give a plain runtime_error no reason, alone or nested.
         const FatalReport lookalike(FailurePhase::running,
             std::make_exception_ptr(std::runtime_error("Player out of bounds")));
-        require(!parse_record(lookalike.record_text()).contains("cause_0_reason"),
-            "A plain runtime_error was classified as a player out of bounds by its message");
-        const FatalReport nested_bounds(FailurePhase::running,
-            nested(std::make_exception_ptr(PlayerOutOfBounds()), "level update failed"));
-        const Record nested_record = parse_record(nested_bounds.record_text());
-        require(!nested_record.contains("cause_0_reason") && nested_record.at("cause_1_reason") == "player_out_of_bounds",
-            "A nested player out of bounds was not classified at its own cause");
+        const Record lookalike_record = parse_record(lookalike.record_text());
+        require(!lookalike_record.contains("cause_0_reason") && lookalike_record.at("cause_0") == "runtime_error",
+            "A plain runtime_error was given a reason by its message");
+        const FatalReport nested_lookalike(FailurePhase::running,
+            nested(std::make_exception_ptr(std::runtime_error("Player out of bounds")), "level update failed"));
+        const Record nested_record = parse_record(nested_lookalike.record_text());
+        require(!nested_record.contains("cause_0_reason") && !nested_record.contains("cause_1_reason"),
+            "A nested plain runtime_error was given a reason by its message");
     }
 
     class PrivateException final : public std::exception
