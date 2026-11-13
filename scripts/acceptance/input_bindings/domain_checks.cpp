@@ -87,7 +87,8 @@ namespace input_bindings_acceptance
             case GameAction::jump: return { jump };
             case GameAction::drop: return { Key::s, Key::down };
             case GameAction::pause: return { Key::escape };
-            case GameAction::debug: return { Key::f1 };
+            // The F1 panel is Debug-only (REV#13).
+            case GameAction::debug: return dev_tools::enabled ? std::vector<Key>{ Key::f1 } : std::vector<Key>{};
             case GameAction::skip_intro: return { Key::space, Key::escape, Key::enter };
             default: return {};
             }
@@ -125,7 +126,7 @@ namespace input_bindings_acceptance
             if (action == GameAction::shoot) { rebindable(PadAction::shoot); }
             if (action == GameAction::pause) { rebindable(PadAction::pause); }
             if (action == GameAction::sub) { rebindable(PadAction::sub); }
-            if (action == GameAction::debug) { buttons = { GamepadButton::back }; }
+            if (dev_tools::enabled && action == GameAction::debug) { buttons = { GamepadButton::back }; }
             if (action == GameAction::skip_intro) { buttons = { GamepadButton::a, GamepadButton::b, GamepadButton::start }; }
             require(actual.game_pad[index].buttons == buttons, "Effective pad buttons differ from the profile or a fixed alias changed");
             const auto& actual_triggers = actual.game_pad[index].triggers;

@@ -97,16 +97,16 @@ Anywhere (a match or any menu page):
 | hold pad **Back+Start** for 0.5 s | open / close the debug menu from any pad |
 | **`** | open / close the console |
 
-F1 (per-player debug overlay), Escape (pause menu) and the gameplay keys are
-unchanged. A small strip in the bottom-right corner names any non-default state
+F1 (per-player debug overlay, Debug builds only since `REV#13`), Escape
+(pause menu) and the gameplay keys are unchanged. A small strip in the bottom-right corner names any non-default state
 (`x0.25`, `PAUSED`, `feedback off`, `GOD`, `AMMO INF`,
 `BOTS 3x paint`, `REC drive 240`, `PLAY drive 240/600`, `PLAY drive done
 (MATCH)`, `TUNED 2`, `ovl collision camera paint`, and `SCRIPT
 review.cfg:14 wait 30 updates (12 left)` while a script waits). It keeps clear
 of the paint and perf panels and, during the countdown, of the opening cards.
 
-**The chord and its buttons.** Back alone still toggles a player's F1 overlay
-and Start alone still pauses. Once a pad has both down, both buttons belong to
+**The chord and its buttons.** In Debug, Back alone still toggles a player's
+F1 overlay (in Release it does nothing) and Start alone still pauses. Once a pad has both down, both buttons belong to
 the chord until both are up again: their releases neither toggle the overlay
 nor pause the match or a menu, and that holds for a chord let go before
 0.5 s. On a menu page only the chording pad's presses are forgotten; the
@@ -1550,8 +1550,7 @@ The per-player F1/Back text also uses the current measured draw-to-draw interval
 1/60. The main thread snapshots it once before view workers start; every pane
 reads the same value and drawing advances no clock. The first draw, focus/menu
 gaps, screenshot redraws and other unavailable timing show `render fps: n/a`.
-Release has no developer timing service, so its legacy F1/Back text also shows
-`n/a`, without inferring a frame rate from the simulation step. This closes
+The panel is Debug-only (`REV#13`), so Release never shows it. This closes
 `GAP#5.4`; visible, uncontended qualification and the hardware baseline remain
 `POL#25`.
 
@@ -1622,8 +1621,8 @@ as the game. In Release:
 
 - `+` arguments are ignored; if any are present, one line goes to stderr:
   `developer arguments ignored: Release build`. Without them nothing is printed.
-- The grave key, F2-F9, F11 and the pad chord do nothing (pad Back still
-  toggles F1, Start still pauses). There is no debug clock: `GameLevel::update`
+- The grave key, F1-F9, F11, pad Back and the pad chord do nothing (Start
+  still pauses). There is no debug clock: `GameLevel::update`
   runs its own `step_match` (one `Level::update` through the shipping
   instant-replay recorder) once a frame, because the director's step hooks are
   inline and answer one step with no developer seat filter. No script, bind,
@@ -1631,15 +1630,22 @@ as the game. In Release:
   F10 does nothing either; like a lone Alt, it no longer enters the system
   menu loop, because the engine treats both as plain keys
   ([engine report 11](review/engine-reports.md#11-f10-and-a-lone-alt-belong-to-the-system-menu-with-no-opt-out--accepted-narrowed-0f3b283)).
-- The per-player F1/Back text still ships today. `REV#13`, taken by the author
-  on 2026-11-13 and not yet landed
-  ([record](review/2026-11-10-project-review.md#developer-text-panel-ships-in-release-rev13)),
-  compiles it out of Release by binding `GameAction::debug` only under
-  `COLOURWARS_DEV_TOOLS`; the draw path and its members stay, so no class
-  layout depends on the gate, and F1 stays reserved in rebinding in both
-  builds. The player help, `presentation.json`'s two "Debug" entries and the
-  README's Controls row then go, and this page becomes the panel's only
-  documentation.
+- The per-player F1/Back text is a developer tool and does not appear
+  (`REV#13`, taken by the author on 2026-11-13 and landed the same day;
+  [record](review/2026-11-10-project-review.md#developer-text-panel-ships-in-release-rev13)).
+  `fixed_action_bindings()` binds `GameAction::debug` to F1 and pad Back only
+  under `COLOURWARS_DEV_TOOLS`, so in Release the action has no source and
+  `PlayerInputData::toggle_debug` is always false. The draw path,
+  `Player::showing_debug_` and the input field stay (always off), so no class
+  layout depends on the gate, and F1 stays outside the rebinding domain in both
+  builds. The Controls help, `presentation.json`, `qps-ploc.json` and the
+  README carry no "Debug" row any more; this page is the panel's only
+  documentation. The `action_bindings` and `input_bindings` probes check the
+  binding in each build (F1 and Back toggle in Debug, nothing in Release), and
+  the `ControlsMenuOnly` painter leaf was re-qualified on MattPC in Debug and
+  Release against the shorter help (Debug `42c7d2d1304f48fc9662a2de71162f59`, Release
+  `2b76f2e339b44c78a380ce156f00498a`; StickSettingsOnly and KeyboardJumpOnly
+  also pass in both).
 - What does ship, by design, so no class layout depends on `_DEBUG`: the
   `DebugPageTarget` interface and `DebugMatchTarget` with its three bases,
   `DebugMatchView`, `DebugMatchControl` and `DebugMatchEdits` (their RTTI names
@@ -1846,8 +1852,6 @@ none.
   and inserting keys in `tune.save`: the fifty-eight listed colour fields above are
   implemented; see [the remaining scope](debug-console-record.md#remaining-live-tuning-work-dbg1) (`DBG#1`).
 - **Replays across builds or machines**, and across step sizes (`DBG#2`).
-- **The F1/Back panel out of Release** (`REV#13`, planned): see
-  [Release behaviour](#release-behaviour).
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
   this machine has no pad; both are covered on the CPU side only (`DBG#7`).
   The physical-pad check was waived by the author on 2026-11-05 and was not

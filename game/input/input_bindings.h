@@ -9,7 +9,8 @@
 #include <string_view>
 
 // The physical pad controls a gameplay action may take. none is only valid as
-// an alternate. Back stays the debug control and the D-pad stays menu-only.
+// an alternate. Back stays reserved for the Debug-only panel and the D-pad stays
+// menu-only.
 enum class PadControl : std::uint8_t
 {
 	none, a, b, x, y, left_shoulder, right_shoulder, left_trigger, right_trigger,
@@ -73,7 +74,7 @@ struct PadProfile
 };
 
 // The keyboard seat's rebindable actions, in page and save order. Mouse aim,
-// F1 debug, intro skip and menus stay fixed; Escape always pauses and Down
+// F1 debug (Debug builds only), intro skip and menus stay fixed; Escape always pauses and Down
 // always drops beside the choices below.
 enum class KeyboardAction : std::uint8_t { move_left, move_right, jump, drop, shoot, pause, sub, count };
 inline constexpr std::size_t keyboard_action_count = static_cast<std::size_t>(KeyboardAction::count);

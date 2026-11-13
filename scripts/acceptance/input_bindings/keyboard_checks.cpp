@@ -153,7 +153,7 @@ namespace input_bindings_acceptance
             desktop(GameAction::pause).keys == std::vector<Key>{ Key::escape, Key::p } &&
             desktop(GameAction::sub).keys.empty() &&
             desktop(GameAction::sub).mouse_buttons == std::vector<MouseButton>{ MouseButton::left } &&
-            desktop(GameAction::debug).keys == std::vector<Key>{ Key::f1 } &&
+            desktop(GameAction::debug).keys == (dev_tools::enabled ? std::vector<Key>{ Key::f1 } : std::vector<Key>{}) &&
             desktop(GameAction::skip_intro).keys == std::vector<Key>{ Key::space, Key::escape, Key::enter },
             "Custom keyboard mapping wrote the wrong sources or changed a fixed alias");
         for (size_t index = 0; index < game_action_count; ++index)

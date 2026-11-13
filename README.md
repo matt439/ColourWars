@@ -77,7 +77,6 @@ rebinding pages.
 | Sub | Right bumper (RB) | Right mouse button |
 | Drop through a platform | Left stick down | S or Down |
 | Pause/resume | Start | Escape |
-| Debug overlay | Back/View | F1 |
 | Menu navigation | Left stick or D-pad | Arrow keys or WASD |
 | Menu confirm | A | Enter, Space or left click |
 | Menu back | B | Escape, Backspace or right click |

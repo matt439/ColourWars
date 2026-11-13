@@ -149,7 +149,6 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `REV#10` | DEFERRED | MED | S | No live enemy-paint cue (2026-11-13); the HOW-TO-PLAY line and the refill lesson explain it. Reopens if players cannot tell why they slowed, as one choice between a cue (tank state first) and milder `POL#30` amounts. [Item](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
-| `REV#13` | OPEN | LOW | S | Taken 2026-11-13: compile the F1/Back panel out of Release (bind `GameAction::debug` only under the dev-tools gate, keep F1 reserved) and drop its Controls help and README rows; rebaseline the controls-help pins and re-qualify ControlsMenuOnly on MattPC. [Plan](docs/debug-console.md#release-behaviour). |
 | `REV#16` | DEFERRED | LOW | S | Actions are pinned by major tag with no Dependabot, and the nightly's legs each rebuild. Each Dependabot pull request would need the owner to merge it and run the full gate; per-leg builds are a recorded choice. [Record](docs/review/2026-11-10-project-review.md#ci-action-pins-and-nightly-rebuilds-rev16). |
 | `REV#18` | UNSCOPED | LOW | M | Level-editor manual/record split done 2026-11-12 ([record](docs/level-editor-record.md)). Left: moving closed rows out of feature-roadmap.md and code-hygiene.md (L, cosmetic). [Record](docs/review/2026-11-10-project-review.md#large-docs-mix-manual-and-records-rev18). |
 

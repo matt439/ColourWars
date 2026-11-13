@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/input/action_bindings.h"
+#include "game/debug/dev_tools.h"
 #include "game/input/input_slots.h"
 #include "game/objects/player_input.h"
 #include "game/states/menu_input.h"
@@ -96,7 +97,8 @@ namespace
 		case GameAction::jump: return { Key::space };
 		case GameAction::drop: return { Key::s, Key::down };
 		case GameAction::pause: return { Key::escape };
-		case GameAction::debug: return { Key::f1 };
+		// The per-player panel is Debug-only (REV#13): Release binds nothing.
+		case GameAction::debug: return dev_tools::enabled ? std::vector<Key>{ Key::f1 } : std::vector<Key>{};
 		case GameAction::skip_intro: return { Key::space, Key::escape, Key::enter };
 		default: return {};
 		}
@@ -126,7 +128,7 @@ namespace
 		if (action == GameAction::shoot)
 			{ merge(result, legacy_trigger(now, before, now.right_trigger, before.right_trigger, tuning.trigger_shoot_threshold)); }
 		if (action == GameAction::pause) { merge(result, legacy_button(now, before, GamepadButton::start)); }
-		if (action == GameAction::debug) { merge(result, legacy_button(now, before, GamepadButton::back)); }
+		if (dev_tools::enabled && action == GameAction::debug) { merge(result, legacy_button(now, before, GamepadButton::back)); }
 		if (action == GameAction::skip_intro)
 		{
 			for (const auto key : { GamepadButton::a, GamepadButton::b, GamepadButton::start })
@@ -171,6 +173,20 @@ namespace
 			menu_action_count == 4 && menu_direction_count == 4,
 			"The bounded default action surface changed without its legacy comparison");
 		const ActionBindings& bindings = default_action_bindings();
+		// REV#13: the F1 / Back panel exists only under the dev-tools gate.
+		{
+			const auto debug = static_cast<std::size_t>(GameAction::debug);
+			require(bindings.game_desktop[debug].keys == (dev_tools::enabled ? std::vector<Key>{ Key::f1 } : std::vector<Key>{}),
+				"F1 must toggle the debug panel in Debug builds only");
+			require(bindings.game_pad[debug].buttons == (dev_tools::enabled ? std::vector<GamepadButton>{ GamepadButton::back } :
+				std::vector<GamepadButton>{}), "Pad Back must toggle the debug panel in Debug builds only");
+			KeyboardState up; up.focused = true; KeyboardState down = up; set_key(down, Key::f1);
+			require(game_action(bindings, GameAction::debug, up, down, {}, {}).released == dev_tools::enabled,
+				"Releasing F1 must toggle the debug panel in Debug builds only");
+			GamepadState pad_up; pad_up.connected = true; GamepadState pad_down_state = pad_up; pad_down_state.buttons = button(GamepadButton::back);
+			require(game_action(bindings, GameAction::debug, pad_up, pad_down_state, tuning).released == dev_tools::enabled,
+				"Releasing pad Back must toggle the debug panel in Debug builds only");
+		}
 		const auto desktop = [&](const KeyboardState& now, const KeyboardState& before,
 			const MouseState& mouse = {}, const MouseState& previous_mouse = {})
 		{

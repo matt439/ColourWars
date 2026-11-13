@@ -4640,7 +4640,8 @@ names what would reopen it. Detail stays with the row's owner, linked.
   [level format](level-format.md) and [the editor guide](level-editor.md) go
   when the change lands.
   ([Record](review/2026-11-10-project-review.md#a-player-leaving-the-arena-ends-the-process-rev1).)
-- **Developer panel out of Release (`REV#13`, S).** `GameAction::debug` is
+- **Developer panel out of Release (`REV#13`, S; done 2026-11-13, see
+  [Release behaviour](debug-console.md#release-behaviour)).** `GameAction::debug` is
   bound only under `COLOURWARS_DEV_TOOLS` (`action_bindings.cpp`); the draw path
   and members stay, so no layout depends on the gate, and F1 stays reserved in
   rebinding in both builds. The Debug help entries leave `presentation.json` and
