@@ -107,6 +107,7 @@ namespace
 			throw std::runtime_error(band.where() +
 				": the band must sit in the canvas, centred across its width.");
 		}
+		slips.slip_chance = read_unit(json, "slip_chance");
 		slips.two_slip_chance = read_unit(json, "two_slip_chance");
 		const JsonValue list = json.array("list");
 		for (size_t index = 0; index < list.size(); ++index)

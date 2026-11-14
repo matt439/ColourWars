@@ -8,6 +8,7 @@
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/probe.h"
 
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <set>
@@ -108,11 +109,16 @@ namespace
         require(!FigurePerson(slips, 0).slipped(), "The house hand made a slip");
         std::set<std::string> seen;
         size_t pairs = 0;
+        size_t clean = 0;
         for (unsigned int seed = 0; seed < 4000; ++seed)
         {
             const std::uint64_t hand = MatchRandom(seed).hand();
             const FigurePerson person(slips, hand);
-            require(person.slipped(), "A match's hand drew the house figure");
+            if (!person.slipped())
+            {
+                ++clean;
+                continue;
+            }
             require(person.name(slips) == FigurePerson(slips, hand).name(slips),
                 "One hand drew two different people");
             require(names.count(person.name(slips)) == 1, "A hand drew a person the slips do not allow");
@@ -120,9 +126,15 @@ namespace
             seen.insert(person.name(slips));
         }
         require(seen.size() == people.size(), "4000 rounds never drew some allowed person");
-        require(pairs > 1600 && pairs < 2400, "Two slips were not drawn about half the time");
-        std::cout << "PASS figure slips: " << people.size() << " people, house hand clean, every person drawn, pairs "
-            << pairs << "/4000\n";
+        // Expected counts from the shipped chances, within a generous band.
+        const double expected_clean = 4000.0 * (1.0 - slips.slip_chance);
+        const double expected_pairs = 4000.0 * slips.slip_chance * slips.two_slip_chance;
+        require(std::abs(static_cast<double>(clean) - expected_clean) < 200.0,
+            "Matches did not draw the house figure at 1 - slip_chance");
+        require(std::abs(static_cast<double>(pairs) - expected_pairs) < 200.0,
+            "Slipping people did not draw two slips at two_slip_chance");
+        std::cout << "PASS figure slips: " << people.size() << " people, house hand clean, every person drawn, clean "
+            << clean << "/4000, pairs " << pairs << "/4000\n";
     }
 
     void check_bands(World& world)

@@ -29,6 +29,10 @@ FigurePerson::FigurePerson(const FigureSlipsPresentation& slips, std::uint64_t h
     const std::size_t singles = slips.list.size();
     const std::size_t pairs = people.size() - singles;
     BotRandom random(hand ^ slip_salt);
+    if (!(random.unit() < slips.slip_chance))
+    {
+        return;
+    }
     const bool two = pairs > 0 && random.unit() < slips.two_slip_chance;
     const std::uint64_t pick = random.next();
     *this = two

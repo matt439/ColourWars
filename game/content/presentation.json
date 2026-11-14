@@ -1058,8 +1058,10 @@
       "_comment": [
         "The person's face and head-outline slips (docs/drawing-mistakes-research.md",
         "section 9, decisions 5 and 8). Each match's person, chosen from its hand",
-        "(MatchRandom::hand), drew one slip or, with two_slip_chance, two that are not",
-        "exclusive; hand 0, the house hand, drew none. The cells are",
+        "(MatchRandom::hand), slipped with slip_chance (otherwise it drew the house figure)",
+        "and then drew one slip or, with two_slip_chance, two that are not exclusive;",
+        "hand 0, the house hand, drew none. Both chances were lowered on 2026-11-14 to",
+        "about half the slips per match. The cells are",
         "game/art/painter/slips.json; build-painter-art.ps1 bakes each person's band",
         "(canvas texels) as frames named <band_frame>.<person>.<strip>.<frame>, where",
         "<person> is one id or two joined by '+' in list order and <strip> is a body",
@@ -1070,7 +1072,8 @@
       ],
       "band_frame": "face",
       "band": { "x": 12.0, "y": 20.0, "width": 44.0, "height": 24.0 },
-      "two_slip_chance": 0.5,
+      "slip_chance": 0.6,
+      "two_slip_chance": 0.25,
       "list": [
         { "id": "smirk_line_overshoot", "strokes": [
           { "stroke": 11, "points": [ { "x": 28, "y": 40 }, { "x": 32, "y": 40 } ] },
