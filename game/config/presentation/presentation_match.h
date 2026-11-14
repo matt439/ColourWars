@@ -507,8 +507,8 @@ struct FigureSlip
 	std::vector<FigureSlipStroke> strokes;
 };
 
-// The slips the person drawing a match made: one, or two that are not
-// exclusive, chosen by FigurePerson from the match's hand.
+// The slips the person drawing a match made: none (the house figure), one, or
+// two that are not exclusive, chosen by FigurePerson from the match's hand.
 struct FigureSlipsPresentation
 {
 	// The person's bands are frames <band_frame>.<person>.<strip>.<frame> on
@@ -517,6 +517,9 @@ struct FigureSlipsPresentation
 	std::string band_frame;
 	// Canvas texels a person's band replaces, the same span facing either way.
 	labrador::RectangleF band;
+	// The chance a match's person slips at all, then the chance a slipping
+	// person makes two slips rather than one.
+	float slip_chance = 0.0f;
 	float two_slip_chance = 0.0f;
 	std::vector<FigureSlip> list;
 	// Index pairs into `list`, smaller first, never drawn together.

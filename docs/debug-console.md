@@ -390,7 +390,7 @@ the live F9 feedback toggle.
 |---|---|---|
 | live | `tuning.input.*`, `tuning.player.*` (not `size`), `tuning.match.sounds.*.volume`, `tuning.weapons.*`, `tuning.projectiles.*` (except sizes and mist `spread_step`), `tuning.match.opening.*`, `tuning.match.reveal.*`, `presentation.movement_feedback/respawn_redraw/opening/debug_overlay/hud/camera.*` | at once |
 | new shots | `tuning.projectiles.*.size`, `*.collision_size`, `tuning.projectiles.mist.spread_step` | the next projectile |
-| rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, `presentation.figure.slips.two_slip_chance` and `.band.*` (the band is baked art: a tuned band that no longer fits the face frames draws the authored face), anything else not listed | the next build: `restart`, or add `restart` to the tune |
+| rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, `presentation.figure.slips.slip_chance`, `.two_slip_chance` and `.band.*` (the band is baked art: a tuned band that no longer fits the face frames draws the authored face), anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
 **Colours.** These fifty-eight existing string fields are supported; numeric path

@@ -45,9 +45,11 @@ namespace
 
 	// The person laid the bricks by hand (docs/drawing-mistakes-research.md,
 	// stage 1). Decoration, so the stage's mirrored halves need not slip alike.
+	// Every rate below was halved on 2026-11-14: at the first rates the wall
+	// read as generated rather than drawn.
 	//
 	// A few joints landed off the bond.
-	constexpr unsigned brick_slip_one_in = 5;
+	constexpr unsigned brick_slip_one_in = 10;
 	constexpr float brick_slip_cells = 1.0f;
 
 	float brick_slip(float joint_x, float course_top, std::uint64_t hand)
@@ -62,18 +64,18 @@ namespace
 	// two strokes meet at different rows they overlap by up to two cells or touch
 	// only at a corner, never leave a gap a bucket fill would leak through.
 	constexpr float mortar_band = 40.0f * cell;
-	constexpr unsigned mortar_drift_one_in = 3;
+	constexpr unsigned mortar_drift_one_in = 6;
 	constexpr float mortar_min_stroke = 8.0f * cell;
 	constexpr unsigned mortar_join_cells = 3;
 
 	// A joint sometimes ran a cell or two past the line it was meant to stop at.
-	constexpr unsigned joint_overshoot_one_in = 4;
+	constexpr unsigned joint_overshoot_one_in = 8;
 
 	// Each brick is its own rectangle, and a few were drawn a cell or two off the
 	// edge they should have shared, so that edge came out doubled: two lines side
 	// by side, or with a one-cell sliver of brick between them.
-	constexpr unsigned joint_doubled_one_in = 8;
-	constexpr unsigned brick_top_doubled_one_in = 10;
+	constexpr unsigned joint_doubled_one_in = 16;
+	constexpr unsigned brick_top_doubled_one_in = 20;
 
 	struct MortarStroke
 	{
