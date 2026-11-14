@@ -79,6 +79,10 @@ ParallaxWorld parallax_world(Application& app, const LevelLoadedInfo& info,
     world.anchor = info.zoom_out_finish_bounds_rectangle().center();
     world.preferences = &preferences;
     const bool course = std::string(stage.name) == "movement_course";
+    // Close Quarters is an interior since POL#16 (2026-11-14): no sun, cloud,
+    // bird or hill layer exists to displace, so every entry stays fixed and
+    // its cases are zero-displacement controls inside the unchanged matrix.
+    const bool interior = std::string(stage.name) == "close_quarters";
     const size_t cloud_count = course ? 5 : 6, hill_count = course ? 6 : 7;
     const size_t hill_begin = cloud_count + 4;
     const std::array<const char*, 6> cloud_frames{
@@ -101,6 +105,12 @@ ParallaxWorld parallax_world(Application& app, const LevelLoadedInfo& info,
         require(entry.string("type") == "Visual" && entry.string("sheet_name") == "terrain" &&
             entry.string("colour") == "WHITE", "Parallax catalog no longer has plain WHITE terrain artwork");
         if (index == 0) { require(name == "paper" && frame == "swatch_paper", "Parallax paper order changed"); }
+        else if (interior)
+        {
+            require(!entry.has("drift") && dynamic_cast<const DriftingVisual*>(sprite.object) == nullptr &&
+                frame != "sun" && !frame.starts_with("cloud_") && frame != "birds" && !frame.starts_with("hill_"),
+                "Interior scenery gained a sky or hill layer the parallax prototype would displace");
+        }
         else if (index == 1)
         { require(name == "sun" && frame == "sun", "Parallax sun role/order changed"); sprite.depth = ParallaxDepth::distant; }
         else if (index < cloud_count + 2)
@@ -139,7 +149,7 @@ ParallaxWorld parallax_world(Application& app, const LevelLoadedInfo& info,
         }
         world.sprites.push_back(sprite);
     }
-    require(hill_begin + hill_count <= world.sprites.size(), "Parallax hill group is incomplete");
+    require(interior || hill_begin + hill_count <= world.sprites.size(), "Parallax hill group is incomplete");
     return world;
 }
 

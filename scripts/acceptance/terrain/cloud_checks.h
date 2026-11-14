@@ -30,13 +30,17 @@ namespace
 		const bool static_backdrop = stage == "crossfeed";
 		// Press Tower is an interior: a works wall under a roof, no sky. It
 		// must stay cloudless and motionless rather than be held to either
-		// sky contract; every other stage is unaffected.
-		const bool interior = stage == "press_tower";
+		// sky contract. Close Quarters became one under POL#16 (2026-11-14):
+		// a paint warehouse whose sky is only drawn inside its high windows.
+		// Every other stage is unaffected.
+		const bool interior = stage == "press_tower" || stage == "close_quarters";
 		// Turbulence's provisional static skeleton has only the approved paper
 		// backing. Clouds and landmark dressing belong to its later art/framing
 		// slice; it is cloudless for that reason, rather than an interior.
+		// Slab Yard, the selected Turbulence arena, left this list with its
+		// POL#16 loading-yard backdrop and is a drifting-sky arena.
         const bool paper_blockout = stage == "turbulence_blockout" || stage == "turbulence_mover_trial" ||
-            stage == "turbulence_slab_trial" || stage == "turbulence_ferry_trial" ||
+            stage == "turbulence_ferry_trial" ||
             stage == "turbulence_gate_trial" || stage == "turbulence_lift_trial" ||
             stage == "turbulence_paint_lift_trial";
 		if (paper_blockout)

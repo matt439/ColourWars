@@ -116,10 +116,29 @@ $paletteArgb = Get-Argb $roles
 $backdropRoles = @('bg_far','bg_mid','bg_line','bg_detail','paper')
 
 # Cell sizes are the contract: levels place these frames by name and size.
-$propSizes = [ordered]@{hill_wide=@(384,80);hill_small=@(192,48);tree_round=@(32,56);tree_tall=@(24,64)
+# The first eleven props are fixed in name, order and size. Arena props
+# (POL#16) follow them in the recipe; each keeps the size it was authored at,
+# because levels place it by that size, and packs on the landmark shelves.
+$fixedPropSizes = [ordered]@{hill_wide=@(384,80);hill_small=@(192,48);tree_round=@(32,56);tree_tall=@(24,64)
     house=@(96,88);cloud_big=@(64,24);cloud_small=@(40,16);sun=@(56,56);birds=@(24,8)
     brush_pot=@(64,80);tape_roll=@(64,40)}
-if ((@($source.props.name) -join ',') -ne (@($propSizes.Keys) -join ',')) { throw 'Terrain prop list changed.' }
+$recipeNames=@($source.props.name)
+$fixedCount=$fixedPropSizes.Count
+if ($recipeNames.Count -lt $fixedCount -or (($recipeNames[0..($fixedCount-1)]) -join ',') -ne (@($fixedPropSizes.Keys) -join ',')) {
+    throw 'Terrain prop list changed: the original eleven props must lead the recipe in order.'
+}
+$propSizes = [ordered]@{}
+foreach ($name in $fixedPropSizes.Keys) { $propSizes[$name]=$fixedPropSizes[$name] }
+$arenaProps=@()
+foreach ($prop in @($source.props | Select-Object -Skip $fixedCount)) {
+    $name=[string]$prop.name
+    if ($name -notmatch '^[a-z][a-z0-9_]*$') { throw "Arena prop '$name' needs a lower_snake_case name." }
+    if ($propSizes.Contains($name) -or $name.StartsWith('swatch_') -or $name.StartsWith('shadow_')) { throw "Arena prop '$name' repeats or shadows a frame name." }
+    $w=[int]$prop.cells[0]; $h=[int]$prop.cells[1]
+    if ($w -lt 1 -or $h -lt 1 -or $w*$scale+2*$gutter -gt [int]$source.atlas_width) { throw "Arena prop '$name' has an invalid size." }
+    $propSizes[$name]=@($w,$h)
+    $arenaProps+=$name
+}
 $tileNames = @('shadow_0','shadow_1','shadow_2','shadow_3')
 if ((@($source.speckle.tiles.PSObject.Properties.Name) -join ',') -ne ($tileNames -join ',')) { throw 'Shadow tile list changed.' }
 
@@ -207,7 +226,7 @@ try {
     # Keep the original thirteen drawings and all swatches in their fixed
     # positions. New landmarks start on a fresh shelf after the old atlas.
     $order=@('house','hill_wide','tree_tall','sun','tree_round','hill_small','cloud_big','cloud_small','birds')+$tileNames
-    $landmarks=@('brush_pot','tape_roll')
+    $landmarks=@('brush_pot','tape_roll')+$arenaProps
     $width=[int]$source.atlas_width
     $frames=[Collections.Generic.List[object]]::new()
     $x=$gutter; $y=$gutter; $shelf=0
@@ -222,7 +241,7 @@ try {
     foreach ($role in $roles) { & $place ('swatch_'+$role) $scale $scale }
     $x=$gutter; $y+=$shelf+$gutter; $shelf=0
     foreach ($name in $landmarks) { & $place $name ($drawings[$name].Width*$scale) ($drawings[$name].Height*$scale) }
-    if ($frames.Count -ne 41) { throw 'Terrain atlas needs eleven props, four shadow tiles and 26 swatches.' }
+    if ($frames.Count -ne 41+$arenaProps.Count) { throw 'Terrain atlas needs eleven props, the arena props, four shadow tiles and 26 swatches.' }
     $height=$y+$shelf+$gutter
 
     $atlas=[Drawing.Bitmap]::new($width,$height,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
@@ -248,7 +267,11 @@ try {
         (($definition|ConvertTo-Json -Depth 6)+[Environment]::NewLine),[Text.UTF8Encoding]::new($false))
 
     # Review sheet on paper: authored cells at 3 px, every frame at 1 px, tile seams, swatches.
-    $preview=[Drawing.Bitmap]::new(1600,1400,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    # The sheet is 1600x1400 for the original kit; arena props extend it
+    # downward, and it is cropped back to its content (never below 1400).
+    $sheetHeight=1400
+    foreach ($name in $arenaProps) { $sheetHeight+=4*$drawings[$name].Height+2*44 }
+    $preview=[Drawing.Bitmap]::new(1600,$sheetHeight,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $lineupMargin=12; $lineupRight=$preview.Width-$lineupMargin; $lineupBottom=$preview.Height-$lineupMargin
     $g=[Drawing.Graphics]::FromImage($preview)
     # Review labels must not inherit desktop ClearType/font-smoothing state.
@@ -311,8 +334,14 @@ try {
             $script:lx+=150
         }
         $g.Flush([Drawing.Drawing2D.FlushIntention]::Sync)
-        [ColourWars.TerrainArt]::SavePng($preview,(Join-Path $sourceDir 'lineup.png'))
-        Write-Output "Lineup $($preview.Width)x$($preview.Height): content bottom $lineupUsedBottom, limit $lineupBottom."
+        $finalHeight=[Math]::Max(1400,$lineupUsedBottom+$lineupMargin)
+        if ($finalHeight -lt $preview.Height) {
+            $cropped=$preview.Clone([Drawing.Rectangle]::new(0,0,$preview.Width,$finalHeight),$preview.PixelFormat)
+            try { [ColourWars.TerrainArt]::SavePng($cropped,(Join-Path $sourceDir 'lineup.png')) } finally { $cropped.Dispose() }
+        } else {
+            [ColourWars.TerrainArt]::SavePng($preview,(Join-Path $sourceDir 'lineup.png'))
+        }
+        Write-Output "Lineup $($preview.Width)x${finalHeight}: content bottom $lineupUsedBottom, limit $lineupBottom."
     } finally {$ink.Dispose();$small.Dispose();$font.Dispose();$g.Dispose();$preview.Dispose()}
 
     foreach ($frame in $frames) {
@@ -331,4 +360,4 @@ try {
 Copy-Item -LiteralPath (Join-Path $working 'terrain.png') -Destination (Join-Path $textures 'terrain.png') -Force
 $staleDds = Join-Path $textures 'terrain.dds'
 if (Test-Path -LiteralPath $staleDds) { Remove-Item -LiteralPath $staleDds }
-Write-Output "Built eleven backdrop props, four shadow tiles and 26 swatches into a ${width}x$height terrain PNG and lineup."
+Write-Output "Built $($propSizes.Count) backdrop props ($($arenaProps.Count) arena), four shadow tiles and 26 swatches into a ${width}x$height terrain PNG and lineup."

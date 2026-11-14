@@ -10,7 +10,7 @@ grid. Every hue lives in these texels; runtime draws the sheet with a WHITE tint
 Run `powershell -ExecutionPolicy Bypass -File scripts/build-terrain-art.ps1`
 from the repository root. Windows System.Drawing fills the integer-cell shapes
 without antialiasing and draws lines cell by cell. Each cell expands to exactly
-4x4 texels, producing the 2048x920 working atlas
+4x4 texels, producing the 2048x3232 working atlas
 `../sources/textures/terrain.png`, runtime
 `../../content/textures/terrain.json` and `.png` (a copy of the working PNG),
 and the review [`lineup.png`](lineup.png). Ordinary builds need neither
@@ -39,6 +39,30 @@ gutter.
 | `birds` | 96x32 | two bg_line gull strokes |
 | `brush_pot` | 256x320 | quiet stationery pot with three differently shaped brushes, flat fills and a plain rim with no highlights; bg_line outlines distinguish it from walkable terrain |
 | `tape_roll` | 256x160 | flat roll with a paper core and short peeled end, no shading inside the core or on the end; the same backdrop roles, without team colours or text |
+| `press_roof_bay` | 600x96 | Press Tower: one sawtooth roof tooth in section, a paper-glazed upright with a cross mullion, a bg_mid roof slab falling to the right, a bottom chord and two truss webs; tiles edge to edge |
+| `press_chimneys` | 176x72 | Press Tower: a distant bg_far gable and two chimneys, one capped, meant to show only above a roof slope |
+| `press_frame` | 640x680 | Press Tower: the screw press, two riveted bg_mid columns under an arched crosshead, a nut, a bg_far threaded screw, a tilted capstan bar and four knee braces |
+| `press_trestle` | 144x320 | Press Tower: a two-legged bg_mid trestle, cross-braced in bg_line, hung under a stair tread |
+| `press_sign` | 160x256 | Press Tower: a blank bg_mid board a little out of true on two bg_line rods; mid-tone so it never reads as a HUD panel, and no lettering |
+| `press_hook` | 96x288 | Press Tower: a crane trolley, a bg_line chain and a hook block |
+| `press_rolls` | 160x120 | Press Tower: three bg_far paper rolls stacked end-on with paper cores |
+| `yard_skyline` | 1024x224 | Slab Yard's distant works in bg_far: a sawtooth hall with one tooth dragged a cell low, two chimneys, a parapet block, a gable shed, two silos and a curved-roof warehouse with a thin stack; bg_mid windows and a shuttered door, no lettering |
+| `yard_tank` | 192x384 | bg_far water tank with a leaning cone roof, porthole, ladder and band on three stilts with one crooked cross brace |
+| `yard_crane` | 512x864 | bg_far gantry crane: open lattice girder (two thin chords, zigzag between, sky through), A-frame legs with X braces and bogies, a cab by the right leg and the trolley parked left with a short hook, well above the play band |
+| `yard_stack` | 160x448 | bg_far exhaust stack: coolie hat, flanged duct with a branch elbowing down, plant box with a bg_mid louvre panel; nothing blows |
+| `yard_crates` | 288x224 | three bg_far crates on a pallet, one X-braced, one planked with a bg_mid sack slumped on it, one dropped on top a little skew |
+| `yard_fence` | 512x112 | chain-link panel: three bg_mid posts, sagging bg_line top wires and a quiet bg_far diamond mesh; posts sit on the ends so panels overlap one post |
+| `cq_window` | 256x160 | Close Quarters' high window: a bg_mid frame of six paper panes holding a sliver of the sky kit (a cloud, one gull, a hill line that crosses the mullion) and a sill |
+| `cq_door` | 384x400 | a roller loading door half raised: housing with two end caps, bg_far slats, a bottom bar and blank handle, crates and a sack in the bg_mid gap beneath |
+| `cq_rack` | 288x384 | shelving of two uprights and three boards crowded with tins, a bucket, a roller, cartons and a sack, so no shelf top reads clean; blank bg_detail labels, never text |
+| `cq_tank` | 256x320 | a paint tank on three legs: domed top with a hatch, two staircase seams, a sight glass half full, a dial with a needle and a side outlet |
+| `cq_pipes` | 640x192 | a pipe run hung from the ceiling: a main pipe with flanges and a valve wheel ending in a drop, and a second pipe rising back into the roof |
+| `cq_bench` | 384x128 | a low workbench with a vice, a tin of brushes, a roller lying down, a rag and a drawer, cluttered along its top |
+| `cq_timber` | 224x160 | three planks stood almost upright against the wall with end grain, offcuts on the floor beside them; short and steep so no plank reads as a ramp up to the deck |
+| `cq_drums` | 256x176 | two paint drums with hoops, a blank label and a grey drip, and a third on its side showing its end |
+| `cf_paint_tube` | 128x256 | Crossfeed: squeezed-out paint tube standing on its ribbed cap, crimped end up, two crumple lines and a blank colour band |
+| `cf_pencil_cup` | 160x288 | Crossfeed: plain banded cup with two sharpened pencils, one upside down on its eraser and a leaning stub |
+| `cf_palette` | 384x256 | Crossfeed: kidney palette propped on a stick, thumb hole and notch, grey wells and one empty ring |
 | `shadow_0`..`shadow_3` | 64x32 | shadow_deep specks dense in the top two rows, shadow specks thinning to none in the last; columns 0 and 15 empty so tiles abut in any order |
 | `swatch_<role>` | 4x4 | one opaque block per palette role |
 
@@ -54,3 +78,9 @@ Frame order and coordinates are fixed, and rebuilding the same source produces
 byte-identical PNG, JSON and lineup. The two landmarks
 occupy a new shelf after the original frames and swatches; all original frame
 coordinates and the original 2048x596 texel region remain unchanged.
+
+Arena props (`POL#16`) follow the original eleven in `props`. The build takes
+each one's name and cell size from the recipe (levels place frames by that
+size), packs them after the two landmarks on the landmark shelves, and grows
+the atlas and the lineup downward to fit; the original frames keep their
+coordinates. An arena prop obeys every rule above.
