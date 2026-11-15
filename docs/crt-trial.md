@@ -48,3 +48,64 @@ Release and non-D3D11 qualification; verify target engine tip/green CI under
 the repository's pin policy. Startup/probe success does not establish these.
 A permanent option, default change, motion/curvature, gameplay film and engine
 migration acceptance are explicitly out of scope of this trial.
+
+## Focused capture follow-up: harness boundary
+
+Read-only inspection found a useful but incomplete route:
+
+- `scripts/check-painter.ps1` launches its probe hidden with an isolated profile.
+  Its `-CountdownOnly` route reaches real `Level` opening/countdown scenes.
+- `scripts/acceptance/painter_visual.cpp` constructs its own `Application`.
+  It does not run `game/main.cpp`, which currently declares the CRT chain.
+  Merely setting the trial flag for that probe is therefore invalid: Level
+  would supply CRT values without the matching declared post chain.
+- `painter_visual/reveal_checks.h` tests RevealArt primitives rather than the
+  complete MatchOpening final-reveal composition. It cannot establish that
+  the CRT glass boundary preserves the full final scene.
+- `check-finish-details.ps1` explicitly focuses the real game window and parks
+  the desktop pointer. It was not run: unattended foreground interference is
+  outside this check's scope.
+
+No new screenshots were captured in this follow-up. Existing startup results
+are not evidence of glass-only rendering, final-screen text readability,
+Reduce effects pixel neutrality, or unchanged split-screen pixels.
+
+### Short attended owner check
+
+Use a **new PowerShell window** and the isolated trial build. This process-only
+profile override keeps the normal player's save out of the experiment:
+
+```powershell
+Set-Location C:\Projects\ColourWars-crt-trial
+$env:LOCALAPPDATA = Join-Path $PWD 'out\validation\crt-owner-profile'
+New-Item -ItemType Directory -Force $env:LOCALAPPDATA | Out-Null
+$env:COLOURWARS_CRT_TRIAL = '0' # first pass; use '1' for the second
+& .\out\build\x64-debug\game\ColourWars.exe
+```
+
+1. In the isolated profile, set Reduce effects off. Start a multiplayer match
+   with the full opening, not solo practice. Watch the monitor opening, the
+   push into gameplay, and the final-score reveal. Note glass texture versus
+   physical bezel/person, cursor, instructions and score text.
+2. Close the game, set the flag to `1`, and repeat the same setup. Only the
+   glass picture should gain mild texture; the physical foreground and text
+   should remain crisp. Normal split-screen should not acquire a film.
+3. With the trial enabled, set Reduce effects on and repeat. The CRT texture
+   must disappear. Also check pause/resume and a window-size change.
+4. Close the game and this PowerShell window. Its environment overrides do not
+   persist. This short check is feedback, not deterministic pixel/perf proof.
+
+### Small proposed harness change (not implemented)
+
+Extract chain registration and required view capacity into shared inline helpers
+in `game/config/crt_trial.h`; call those from `game/main.cpp` and
+`scripts/acceptance/painter_visual.cpp`. This removes the divergent startup seam.
+Then add one focused CRT leaf, not a general painter sweep, capturing real
+`Level::draw` at fixed opening, active and final-reveal ticks, with chain off/on
+and Reduce effects. The leaf must compare equal neutral/split-screen frames and
+bound every changed pixel to the glass, while preserving the foreground.
+The exact new leaf dispatch/registration would touch `scripts/check-painter.ps1`,
+`scripts/acceptance/painter_visual.cpp` and a new
+`scripts/acceptance/painter_visual/crt_trial_checks.h`; its evidence selector and
+record must follow the existing painter leaf registration rules. This is the
+next automated gate, deferred rather than built during shared-machine contention.
