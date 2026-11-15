@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/config/crt_trial.h"
 #include "game/objects/match_opening.h"
 #include "game/carried/removed_members.h"
 #include "game/objects/level_inputs.h"
@@ -337,6 +338,17 @@ void MatchOpening::draw(Renderer& renderer, const Scene& scene, const OpeningClo
 	// Each view's figures act in that view's own camera.
 	scene.draw(renderer,
 		[this, &players](int /*view*/, DrawList& list) { this->draw_acting(list, players); });
+
+    if (crt_trial::requested() && !this->preferences_->reduce_effects)
+    {
+        const auto glass = this->monitor_->glass(screen);
+        renderer.set_post_values(PostEffect::crt,
+            crt_values(crt_trial::settings(this->presentation_->opening().crt_trial, glass),
+                renderer.back_buffer_size()));
+        // Physical foreground and authored UI stay sharp. The film affects
+        // only the monitor's already-drawn picture, not the person or menus.
+        renderer.begin_overlay();
+    }
 
 	// In front: the last view executes after every other.
 	DrawList front = renderer.view(renderer.view_count() - 1);

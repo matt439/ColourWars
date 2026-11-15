@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/config/crt_trial.h"
 #include "engine/app/application.h"
 #include "engine/app/content_root.h"
 #include "engine/core/file_path.h"
@@ -70,6 +71,8 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		SettingsSession settings_session(save);
 
 		ApplicationOptions options;
+        // Four player views plus the crisp physical foreground, only for the trial.
+        if (crt_trial::requested()) { options.view_capacity = 5; }
 		options.window_class_name = L"ColourWarsWindowClass";
 		options.window_title = L"Colour Wars";
 		options.resolution = save.resolution();
@@ -116,6 +119,11 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		Application app(std::move(options));
 		app.initialize();
 		fit_initial_window(app, save);
+        if (crt_trial::requested())
+        {
+            const std::array effects{ PostEffect::crt };
+            app.renderer()->set_post_effects(effects);
+        }
 
 		// Register the game's level resource kind. Level definitions survive device
 		// restoration, so this kind has no reload callback.

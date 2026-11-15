@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/config/crt_trial.h"
 #include "game/states/menu_page.h"
 
 using namespace labrador;
@@ -187,6 +188,7 @@ void MenuPage::set_prompts(const std::wstring& legend, const PromptBarPresentati
 
 void MenuPage::draw(Renderer& renderer) const
 {
+	crt_trial::clear(renderer);
 	std::vector<UiLayer> layers;
 
 	layers.push_back({ this->texture_container_.get(), TextureFilter::point });

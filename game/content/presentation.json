@@ -1192,6 +1192,13 @@
     "fill_frame": "pixel",
     "bezel_shades": [ "D9D0B6", "CFC5A6", "E4DDC8", "C2B796", "D6C9A3", "BDB8AA" ],
     "bezel_shadow": "00000059",
+    "crt_trial": {
+      "scanline_count": 90,
+      "scanline_strength": 0.12,
+      "mask_strength": 0.08,
+      "vignette": 0.06,
+      "brightness": 1.04
+    },
     "monitor_art": {
       "_comment": "Static Paint.exe monitor body: coarse black pen, stepped corners and layered airbrush shade. Widths use screen height; hardware rectangles use screen fractions and stay outside the unchanged glass.",
       "ink": "000000",
