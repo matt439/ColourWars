@@ -218,6 +218,7 @@ private:
 	std::unique_ptr<OptionRow> vsync_row_ = nullptr;
 	std::unique_ptr<OptionRow> team_palette_row_ = nullptr;
 	std::unique_ptr<labrador::UiText> controls_ = nullptr;
+	std::unique_ptr<labrador::UiText> graphics_ = nullptr;
 	std::unique_ptr<labrador::UiText> restore_defaults_ = nullptr;
 
 	std::unique_ptr<labrador::UiText> apply_ = nullptr;

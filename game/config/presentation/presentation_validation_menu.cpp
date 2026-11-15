@@ -183,7 +183,7 @@ Presentation::Validation::StatusBacks Presentation::Validation::status_back_card
 	const MainMenuPresentation& main = this->presentation.main_menu_;
 	const ControlsSettingsPresentation& controls = this->presentation.controls_settings_;
 	const auto& options_art = setup.options_art;
-	const RectangleF options_back = padded_back(main.options_position + Vector2F(0.0f, main.options_spacing.y * 7.0f),
+	const RectangleF options_back = padded_back(main.options_position + Vector2F(0.0f, main.options_spacing.y * 8.0f),
 		main.options_font, options_art);
 	const RectangleF controls_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 10.0f),
 		controls.item_font, controls.art);

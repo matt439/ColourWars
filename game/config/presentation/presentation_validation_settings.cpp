@@ -61,6 +61,27 @@ void Presentation::Validation::validate_controls_actions() const
 	{
 		check_controls_item(controls_items[index], static_cast<int>(index), index >= 4 && index <= 8);
 	}
+    // Graphics is a distinct, sparse page using the same panel geometry.
+    check_controls_item(MenuItem::crt_monitor, 0, true);
+    check_controls_item(MenuItem::apply, 4, true);
+    check_controls_item(MenuItem::back, 5, true);
+    const auto& controls = this->presentation.controls_settings_;
+    const auto& graphics = this->presentation.menu_text_.graphics;
+    const Vector2F heading = fixed_menu_size("menu_text.graphics.heading", graphics.heading,
+        this->presentation.menu_.heading_font);
+    check_fixed_paper("menu_text.graphics.heading", RectangleF(controls.heading_position, heading),
+        controls.box_size, controls.art.focus_padding);
+    const RectangleF help_area(controls.controls_position, controls.controls_size);
+    const RectangleF help = check_help_fit("menu_text.graphics.help", graphics.help,
+        controls.controls_position, controls.controls_size, help_area);
+    const RectangleF back = padded_back(controls.layout.position +
+        Vector2F(0.0f, controls.layout.spacing.y * 5.0f), controls.item_font, controls.art);
+    for (const StatusMessage& message : { StatusMessage{"graphics.pending", graphics.pending},
+        StatusMessage{"graphics.saved", graphics.saved}, StatusMessage{"graphics.saved_override", graphics.saved_override},
+        StatusMessage{"graphics.save_failed", graphics.save_failed} })
+    { check_status(message, controls.help_font, controls.status_position, controls.box_size, controls.art, {back, help}); }
+    for (const auto& words : {graphics.launch_on, graphics.launch_off, graphics.override_on, graphics.override_off})
+    { std::ignore = fixed_menu_size("menu_text.graphics.launch", words, controls.help_font); }
 }
 
 // Phase 1: Sticks' option rows, Apply and Back.

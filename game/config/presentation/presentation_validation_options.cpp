@@ -16,13 +16,13 @@
 using namespace labrador;
 using namespace presentation_read;
 
-// Phase 1: Options' eight actions; the four option rows fit their labels.
+// Phase 1: Options' nine actions; the four option rows fit their labels.
 void Presentation::Validation::validate_options_actions(const SetupGeometry& setup) const
 {
 	const MainMenuPresentation& main = this->presentation.main_menu_;
 	const auto& options_art = setup.options_art;
 	const MenuItem options_items[]{ MenuItem::resolution, MenuItem::fullscreen, MenuItem::vsync,
-		MenuItem::team_palette, MenuItem::controls_audio, MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
+		MenuItem::team_palette, MenuItem::controls_audio, MenuItem::graphics, MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
 	for (size_t index = 0; index < std::size(options_items); ++index)
 	{
 		const Vector2F position = main.options_position +

@@ -446,7 +446,7 @@ namespace presentation_read
 			throw std::runtime_error(json.where() + ": options_value_x must follow the label inside options_box_size.");
 		}
 		if (menu.options_heading_position.y >= menu.options_position.y ||
-			menu.options_position.y + menu.options_spacing.y * 7.0f >= menu.options_status_position.y ||
+			menu.options_position.y + menu.options_spacing.y * 8.0f >= menu.options_status_position.y ||
 			menu.options_spacing.y <= options_art.focus_padding.y * 2.0f ||
 			menu.options_spacing.x > design_resolution.x)
 		{

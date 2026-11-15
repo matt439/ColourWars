@@ -106,6 +106,18 @@
   },
 
   "menu_text": {
+    "graphics": {
+      "heading": "Graphics",
+      "help": "CRT monitor adds texture to the\nopening and result monitor.\nOff by default. Restart after saving.\nReduce effects turns the texture off.\nGameplay and score text stay clear.",
+      "pending": "Apply saves the next launch. Back discards changes.",
+      "saved": "Saved. Restart the game to apply CRT monitor changes.",
+      "saved_override": "Saved. Remove the developer override and restart to use this choice.",
+      "save_failed": "Could not save CRT monitor. Next launch is unchanged.",
+      "launch_on": "This launch: CRT On",
+      "launch_off": "This launch: CRT Off",
+      "override_on": "Developer override: CRT On",
+      "override_off": "Developer override: CRT Off"
+    },
     "brand": "C O L O U R W A R S   /   LOCAL PAINT BATTLES",
     "solo_practice_hint": "Solo practice: choose Single Match",
     "practice_tool": "Tool:  < {tool} >",
@@ -459,7 +471,9 @@
       "series_stage": "Series stage",
       "variant": "Variant",
       "vsync": "Vsync",
-      "toggle_fire": "Toggle fire"
+      "toggle_fire": "Toggle fire",
+      "graphics": "Graphics",
+      "crt_monitor": "CRT monitor (restart)"
     }
   },
 
@@ -515,7 +529,7 @@
       "home": "B0B0A8"
     },
     "options_warning_colour": "8A301C",
-    "options_spacing": { "x": 540.0, "y": 82.0 },
+    "options_spacing": { "x": 540.0, "y": 72.0 },
     "display_trial_seconds": 15.0,
     "weapon_description": {
       "colour": "1B1C20",

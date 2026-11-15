@@ -38,7 +38,7 @@ enum class MenuItem
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
 	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
-	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, series_stage, vsync, variant, toggle_fire, count
+	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, series_stage, vsync, variant, toggle_fire, graphics, crt_monitor, count
 };
 
 struct MenuTitleText
@@ -95,6 +95,11 @@ struct ProfilesMenuText
 	std::wstring heading, profile, none, name, boost, worn_by, nobody, new_profile, delete_profile, help;
 	std::wstring idle_status, saved_status, editing_status, name_taken_status, full_status,
 		delete_confirm_status, deleted_status;
+};
+
+struct GraphicsMenuText
+{
+	std::wstring heading, help, pending, saved, saved_override, save_failed, launch_on, launch_off, override_on, override_off;
 };
 
 struct MenuStatusText
@@ -334,6 +339,7 @@ struct MenuText
 	KeyboardKeysMenuText keyboard_jump;
 	PadButtonsMenuText pad_buttons;
 	ProfilesMenuText profiles;
+	GraphicsMenuText graphics;
 	MenuStatusText status;
 	MenuValueText values;
 	MenuConfirmationText confirmations;
