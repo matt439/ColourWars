@@ -112,6 +112,12 @@ label fits.
 Profile edits save immediately. Other settings pages use **Apply** to save
 and **Back** to discard unapplied changes.
 
+Options > **Graphics** offers **CRT monitor (restart)**, Off by default.
+Apply saves the next launch; restart to add texture only to the opening and
+result monitor glass. Gameplay and score text stay clear. **Reduce effects**
+suppresses the texture. The Graphics page separately shows this launch's state;
+Back discards unapplied changes and a failed save leaves the next launch unchanged.
+
 Options > **Team palette** offers Random or a fixed pair. Purple/gold,
 red/azure and magenta/forest are checked under protan, deutan and tritan
 colour-vision simulation. HUD and Results also identify teams by A/B letters.

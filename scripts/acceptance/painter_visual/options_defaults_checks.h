@@ -41,7 +41,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
         ~ClearDefaults() { this->stack.clear(); painter_scripted_pads::states = {}; this->blocked.release(); }
     } clear{ stack, blocked };
     const auto& style = presentation.menu(); const auto& look = presentation.main_menu();
-    require(presentation.menu_text().item(MenuItem::restore_defaults) == options_reference_labels[5] &&
+    require(presentation.menu_text().item(MenuItem::restore_defaults) == options_reference_labels[6] &&
         SaveData{}.resolution == ScreenResolution::s_1920_1080 && !SaveData{}.fullscreen && SaveData{}.vsync && SaveData{}.team_palette == TeamColourPair::random,
         "Options defaults independent copy or canonical display defaults drifted");
     const int keyboard = input_slots::keyboard_and_mouse; int device = keyboard, row = 0, status = 0;
@@ -100,7 +100,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     };
     const auto restore = [&]
     {
-        go(5); const Vector2I size = app.resolution_manager()->resolution_ivec(); tap(GamepadButton::a); staged = true; shown_vsync = true; status = 1; unchanged(size);
+        go(6); const Vector2I size = app.resolution_manager()->resolution_ivec(); tap(GamepadButton::a); staged = true; shown_vsync = true; status = 1; unchanged(size);
     };
     const auto applied = [&]
     {
@@ -114,7 +114,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     };
     const auto apply = [&](Vector2I size, bool success)
     {
-        go(6); const HWND window = static_cast<HWND>(app.window());
+        go(7); const HWND window = static_cast<HWND>(app.window());
         const auto before = bytes(); const auto resolution = preferences.resolution();
         const bool fullscreen = preferences.fullscreen(); const auto palette = preferences.team_palette();
         const bool display_trial = resolution != ScreenResolution::s_1920_1080 || fullscreen || app.fullscreen();
@@ -152,7 +152,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440), Vector2I(1600, 1200), Vector2I(1920, 1200), Vector2I(2560, 1080) })
     {
         device = keyboard; resize(size); seed(); open();
-        for (int focus = 0; focus < 8; ++focus) { go(focus); compare("initial-row" + std::to_string(focus), focus == 5); }
+        for (int focus = 0; focus < 9; ++focus) { go(focus); compare("initial-row" + std::to_string(focus), focus == 6); }
         restore(); compare("restored-pending", true); restore(); compare("repeat-restore");
         apply(size, true); compare("saved", true); reload(true); const auto once = bytes(); apply(size, true); require(bytes() == once, "Repeated defaults Apply changed serialized preferences"); compare("repeat-apply");
         seed(); open(); restore(); const auto prior = bytes(); require(blocked.hold(), "Cannot lock the isolated defaults save");
@@ -166,7 +166,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     {
         device = slot; seed(); stack.clear(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<MainMenuHome>(&context, MainMenuHome::InitialFocus::options)); tick(); tick(); const Frame home_destination = frame();
-        open(); go(5); hold(GamepadButton::a, true); tick();
+        open(); go(6); hold(GamepadButton::a, true); tick();
         if (slot == keyboard) { static_cast<WindowNotify&>(app).on_deactivated(); tick(); static_cast<WindowNotify&>(app).on_activated(); tick(); }
         else { painter_scripted_pads::states[3].connected = false; tick(); painter_scripted_pads::states[3].connected = true; tick(); tick(); }
         hold(GamepadButton::a, false); tick(); tick(); tick(settled); unchanged(size); compare("interrupted-restore");
@@ -174,7 +174,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
         // Five down is SFX (Controls rows listed below): stage an edit the child then discards.
         for (int move = 0; move < 5; ++move) { tap(GamepadButton::dpad_down); } tap(GamepadButton::dpad_right);
         tap(GamepadButton::b); tick(); require(parent.pixels == frame().pixels && stack.depth() == 2, "Controls return lost pending defaults or parent focus"); unchanged(size); compare("after-controls");
-        go(7); tap(GamepadButton::a); require(stack.depth() == 2 && frame().pixels == home_destination.pixels, "Defaults Back did not return actual Home Options focus"); unchanged(size); staged = false; open(); compare("back-discard");
+        go(8); tap(GamepadButton::a); require(stack.depth() == 2 && frame().pixels == home_destination.pixels, "Defaults Back did not return actual Home Options focus"); unchanged(size); staged = false; open(); compare("back-discard");
         restore(); tap(GamepadButton::b); require(stack.depth() == 2 && frame().pixels == home_destination.pixels, "Defaults Escape did not return actual Home Options focus"); unchanged(size); staged = false; open(); compare("escape-discard");
         restore(); stack.notify_activation(false); compare("deactivated-restore"); stack.notify_activation(true); tick(); active->debug_reset_input(slot); compare("developer-reset");
         expected.reduce_effects = true; live_play_settings(preferences_session).reduce_effects = true; restore(); const Frame quiet = compare("reduced-restore"); tick(0.0f); tick(-0.5f); tick(settled); require(quiet.pixels == frame().pixels, "Reduced defaults response moved or nonpositive time changed it");
@@ -193,7 +193,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     // Vsync alone is the Apply that takes neither a display trial nor a resize,
     // yet it must reach the renderer and the file.
     seed(); open(); go(2); tap(GamepadButton::dpad_right); shown_vsync = true; status = 1; unchanged(size); compare("vsync-pending", true);
-    go(6); tap(GamepadButton::a); tick();
+    go(7); tap(GamepadButton::a); tick();
     require(stack.depth() == 2 && preferences.vsync() && app.renderer()->vsync() && preferences.resolution() == ScreenResolution::s_1280_720 &&
         preferences.team_palette() == TeamColourPair::blue_yellow && app.resolution_manager()->resolution_ivec() == size,
         "Vsync-only Apply opened a trial, resized or missed the renderer");

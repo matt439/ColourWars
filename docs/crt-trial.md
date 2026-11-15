@@ -1,271 +1,119 @@
-# CRT glass trial (local, opt-in)
+# Optional CRT monitor graphics
 
-This is a reversible consumer experiment, not a shipping graphics option.
-Default startup declares no post chain. `COLOURWARS_CRT_TRIAL=1` enables it for
-that process; other values leave it off. Nothing is written to the saved settings.
-Reduce effects disables the material. Clear the environment variable to compare.
+This local branch adds **Options > Graphics > CRT monitor (restart)**. It is
+**Off by default**. Apply saves the choice for the next launch; Back discards
+unapplied changes. The page separately shows the current launch's state. A
+failed write leaves the previous saved choice intact and reports failure.
+Nothing is pushed, deployed or enabled in the owner's normal profile.
 
-## Art boundary
+## Behavior and lifecycle
 
-Only the monitor glass region in the opening and final reveal receives the
-material. Physical foreground, authored UI and menus are recorded after the
-post boundary. Normal gameplay clears the effect. No curvature or chromatic
-aberration is used, so the existing cursor coordinates need no inverse mapping.
-This preserves the push-through-the-glass direction in `backstory.md`.
+- Only the opening and final-reveal monitor glass receives the CRT texture.
+  Physical foreground, authored UI and score cards remain sharp. Normal
+  split-screen gameplay clears the effect.
+- **Reduce effects** suppresses CRT texture immediately without changing the
+  saved CRT choice. Per-seat settings do not override this shared-screen rule.
+- An immutable `crt_trial::Runtime` captures the saved choice before Application
+  creation. It is borrowed explicitly by the shell and real Level consumers.
+  Saving/reloading preferences cannot mutate it during a running match.
+- Off launches keep the empty post chain and four renderer views. On launches
+  reserve five views for four player views plus the crisp foreground.
+- Save version 11 adds `crt_monitor`. Missing/malformed values read as false.
+  The dedicated SettingsSession setter changes only this field, rolls it back
+  on failed persistence and preserves other preferences/profiles.
+- No curvature or chromatic split: pointer coordinates remain unchanged.
+  `opening.crt_trial` contains optional presentation values; absent is neutral.
+  Scanline count respects Labrador's four-output-pixel minimum spacing.
 
-The `opening.crt_trial` presentation record holds the mild trial values. The
-record is optional and defaults to neutral. Scanline count is capped by the
-actual glass height so spacing never falls below Labrador's four-pixel minimum.
-The opt-in allocates one extra renderer view for the crisp foreground, including
-four-player layouts. No blanket gameplay or HUD film is intended.
+### Developer override
 
-## Dependency and isolation
+`COLOURWARS_CRT_TRIAL=1` forces On, `0` forces Off, and absent/other values follow
+the saved choice. The Graphics page explicitly identifies an override. Saving
+under an override tells the player to remove it and restart to use that choice.
+The override is never written to the save. Legacy isolated probes can still
+use the original environment path; the production executable uses explicit
+launch state. Restart the process after changing an environment override.
 
-The isolated `work/crt-trial` worktree moves Labrador from
+## Dependency and local isolation
+
+Branch `work/crt-trial`, isolated worktree `ColourWars-crt-trial`. The original
+checkout is untouched. Separate pin commit `9eed4e9f` advances Labrador from
 `1dc8533c175059f84f947f99e21b11f36967d135` to
-`d44101a08d5e57327d17ef64015e9e973358fe5b`. That is 51 intervening commits;
-this is not a minimal engine patch. The pin change is a separate commit.
-The material API comes from `1d12336`, built on the P1 post pipeline.
-Relevant runtime changes include render targets/post stages on all backends and
-Basic Render Driver software-device classification. No engine edits are made.
-The original checkout and its engine pin remain untouched. Nothing is pushed.
+`d44101a08d5e57327d17ef64015e9e973358fe5b`, 51 intervening commits. Runtime changes
+include the post pipeline on all backends, CRT material and software-adapter
+classification. No engine code is edited. This is not a minimal engine patch;
+verify the engine green-tip policy before proposing release/merge.
 
-## Evidence and limits (2026-11-15)
+## Validation evidence, 2026-11-15
 
-- Pin-only Windows D3D11 Debug consumer build passed.
-- Trial Windows D3D11 Debug build passed.
-- `crt_trial`, `menu_presentation`, `gameplay_tuning` acceptance passed.
-- CRT probe checks neutral identity, adaptive spacing at small/large glass sizes,
-  absent-config neutrality and zero geometric/chromatic displacement.
-- Hidden isolated startup and graceful close passed with opt-in off and on.
-  This checks content loading and startup, not the match material's appearance.
-- Evidence is in `out/validation/crt` and `crt-startup-default` / `crt-startup-on`.
+### Rendering
 
-Still required before proposing this for shipping: actual opening/reveal visual
-comparison at 720p/1080p/1440p, all player counts, pause/resume and resize;
-Reduce effects comparison; full-match readability and frame-time measurement;
-Release and non-D3D11 qualification; verify target engine tip/green CI under
-the repository's pin policy. Startup/probe success does not establish these.
-A permanent option, default change, motion/curvature, gameplay film and engine
-migration acceptance are explicitly out of scope of this trial.
+The focused hidden painter fixture draws real seeded 2P/4P Levels at opening,
+active gameplay, post-pullback overview and painted-result beats. It captures
+normal/reduced effects at 720p and 1080p, without physical input or foreground
+focus. Each frame has a duplicate frozen readback and state check; Debug also
+checks replay fingerprints. Both flag-based and saved-choice paths were tested.
 
-## Focused capture follow-up: harness boundary
+32 off/on pairs: all eight active pairs and all sixteen reduced-effects pairs
+are byte-identical. Twelve normal monitor pairs have nonzero changes strictly
+inside glass; zero outside pixels change. Independent score-card interiors are
+identical. Inspected painted results show clear A 100.0% / B 0.0% labels and crisp
+foreground. A no-paint fixture that closed the program was not accepted as
+score-text evidence; final fixtures paint before the reveal.
 
-Read-only inspection found a useful but incomplete route:
+- Saved-choice Debug off (environment unset):
+  `out/validation/crt-saved-off/x64-debug/909ed349931b4f06bf95fceb850328ea`
+- Saved-choice Debug on (environment unset):
+  `out/validation/crt-saved-on/x64-debug/a3d9d306de134685b269def6f14f57bf`
+- Comparison: `out/validation/crt-saved-diff.json`
+- Saved-choice Release off (environment unset):
+  `out/validation/crt-saved-release-off/x64-release/c2f77221d8494be5bf8008ed0ffcae98`
+- Saved-choice Release on (environment unset):
+  `out/validation/crt-saved-release-on/x64-release/60f58b6f1a62445e976ee1c0296907ed`
+- Release comparison: `out/validation/crt-saved-release-diff.json`
 
-- `scripts/check-painter.ps1` launches its probe hidden with an isolated profile.
-  Its `-CountdownOnly` route reaches real `Level` opening/countdown scenes.
-- `scripts/acceptance/painter_visual.cpp` constructs its own `Application`.
-  It does not run `game/main.cpp`, which currently declares the CRT chain.
-  Merely setting the trial flag for that probe is therefore invalid: Level
-  would supply CRT values without the matching declared post chain.
-- `painter_visual/reveal_checks.h` tests RevealArt primitives rather than the
-  complete MatchOpening final-reveal composition. It cannot establish that
-  the CRT glass boundary preserves the full final scene.
-- `check-finish-details.ps1` explicitly focuses the real game window and parks
-  the desktop pointer. It was not run: unattended foreground interference is
-  outside this check's scope.
+### Settings and interface
 
-No new screenshots were captured in this follow-up. Existing startup results
-are not evidence of glass-only rendering, final-screen text readability,
-Reduce effects pixel neutrality, or unchanged split-screen pixels.
+Debug and Release builds passed. Focused Debug `crt_trial`, `settings`, `player_profiles` and
+`menu_presentation` passed after the final UI/library rebuild:
+`out/validation/crt-settings-final-core/x64-debug`.
+The full focused `menu_text` CPU suite also passed:
+`out/validation/crt-menu-text-final/x64-debug`. Existing independent Options
+row/fit fixtures were updated for the Graphics entry and 72-pixel row spacing;
+inclusive-edge acceptance and +0.25 overflow rejection remain intact.
 
-### Short attended owner check
+The hidden Graphics child test passed pending/Back cancellation, durable save
+versus immutable current launch, parent Options preservation, failed-write
+rollback/recovery, and developer-override disclosure. Five frozen 720p captures
+cover default, saved restart, save failure, saved Off and override saving.
+Saved/failure/override captures were inspected: no clipping or overlaps, clear
+contrast, distinct saved/current state and readable help/status.
+Debug evidence: `out/validation/crt-ui/x64-debug/f69ba79dbccd4d52ba2a2ad93105f12a`.
+The same focused Graphics route also passed in Release:
+`out/validation/crt-ui-release/x64-release/82592bd19cc94b609c86f1d194a528e7`.
 
-Use a **new PowerShell window** and the isolated trial build. This process-only
-profile override keeps the normal player's save out of the experiment:
+### Reproduction
 
-```powershell
-Set-Location C:\Projects\ColourWars-crt-trial
-$env:LOCALAPPDATA = Join-Path $PWD 'out\validation\crt-owner-profile'
-New-Item -ItemType Directory -Force $env:LOCALAPPDATA | Out-Null
-$env:COLOURWARS_CRT_TRIAL = '0' # first pass; use '1' for the second
-& .\out\build\x64-debug\game\ColourWars.exe
-```
-
-1. In the isolated profile, set Reduce effects off. Start a multiplayer match
-   with the full opening, not solo practice. Watch the monitor opening, the
-   push into gameplay, and the final-score reveal. Note glass texture versus
-   physical bezel/person, cursor, instructions and score text.
-2. Close the game, set the flag to `1`, and repeat the same setup. Only the
-   glass picture should gain mild texture; the physical foreground and text
-   should remain crisp. Normal split-screen should not acquire a film.
-3. With the trial enabled, set Reduce effects on and repeat. The CRT texture
-   must disappear. Also check pause/resume and a window-size change.
-4. Close the game and this PowerShell window. Its environment overrides do not
-   persist. This short check is feedback, not deterministic pixel/perf proof.
-
-### Small proposed harness change (not implemented)
-
-Extract chain registration and required view capacity into shared inline helpers
-in `game/config/crt_trial.h`; call those from `game/main.cpp` and
-`scripts/acceptance/painter_visual.cpp`. This removes the divergent startup seam.
-Then add one focused CRT leaf, not a general painter sweep, capturing real
-`Level::draw` at fixed opening, active and final-reveal ticks, with chain off/on
-and Reduce effects. The leaf must compare equal neutral/split-screen frames and
-bound every changed pixel to the glass, while preserving the foreground.
-The exact new leaf dispatch/registration would touch `scripts/check-painter.ps1`,
-`scripts/acceptance/painter_visual.cpp` and a new
-`scripts/acceptance/painter_visual/crt_trial_checks.h`; its evidence selector and
-record must follow the existing painter leaf registration rules. This is the
-next automated gate, deferred rather than built during shared-machine contention.
-
-## Rendered gate completed (2026-11-15, supersedes harness blocker above)
-
-The shared initializer and narrowly scoped `-CrtTrialOnly` painter route are now
-implemented. Inspection found `monitor_story` can reach the complete real Level
-reveal safely, without the broad monitor matrix. The route uses that fixture,
-2P/4P seeded inputs, 720p, and four frozen beats: opening, active split-screen,
-post-pullback overview, and visible painted-result cards. Each beat is drawn
-with normal and reduced effects, with duplicate readbacks and simulation
-observation/Debug fingerprint checks. Flag off and on run in separate processes.
-It uses hidden windows and isolated profile fixtures, never foreground input.
-
-- Shared-initializer Debug build passed, capped at two compiler jobs.
-- Both final focused painter runs passed on D3D11 / NVIDIA RTX 5080.
-- 16 off/on frame pairs (32 captures, 64 duplicate-check readbacks) compared.
-- All four active split-screen pairs are byte-identical.
-- All eight reduced-effects pairs are byte-identical, including results.
-- Six normal opening/overview/result pairs change, strictly inside the authored
-  glass (x=128..1151, y=50..596). Zero changed pixels outside it.
-- Independently selected score-card interiors spanning the visible glyphs are
-  byte-identical. Inspected opening and painted-result captures: physical
-  foreground remains crisp; large score labels remain clearly readable.
-- Earlier no-paint fixtures closed the program instead of showing score cards.
-  Those captures were not accepted as score-readability evidence. Final runs
-  paint with the existing deterministic monitor fixture and show A 100.0%,
-  B 0.0%. The first off-run also exposed a contact-sheet selector omission;
-  it was fixed and final off/on runs pass the full focused wrapper.
-
-Reproduce from an x64 developer PowerShell after building Debug:
+From an x64 Visual Studio developer PowerShell, after the appropriate build:
 
 ```powershell
-$env:COLOURWARS_CRT_TRIAL='0'
-./scripts/check-painter.ps1 -SkipBuild -CrtTrialOnly -OutputDirectory out/validation/crt-off
-$env:COLOURWARS_CRT_TRIAL='1'
-./scripts/check-painter.ps1 -SkipBuild -CrtTrialOnly -OutputDirectory out/validation/crt-on
-# Substitute the captures directories printed by these two runs:
+Remove-Item Env:COLOURWARS_CRT_TRIAL -ErrorAction SilentlyContinue
+./scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -CrtTrialOnly -OutputDirectory out/validation/crt-off
+./scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -CrtTrialOnly -CrtSavedOn -OutputDirectory out/validation/crt-on
 python scripts/compare-crt-captures.py OFF/captures ON/captures
+./scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -GraphicsSettingsOnly
 ```
 
-The comparison uses Pillow/numpy, exact expected frame names, equal state CSVs,
-authored glass bounds, nonzero enabled deltas, neutral equality and score-card
-interiors. Final local evidence:
+Use the printed captures directories in the comparison. Pillow/numpy are
+required. The comparator enforces expected filenames, matching state CSVs,
+glass containment, nonzero enabled changes, neutral equality and score interiors.
+All wrappers use isolated saves. No comparison manipulates the owner's profile.
 
-- off: `out/validation/crt-painted-off/x64-debug/043bb9ba73cd458ab0148231e3873d59`
-- on: `out/validation/crt-painted-on/x64-debug/8e194980c1e94f8786a3c9c17c869326`
-- comparison: `out/validation/crt-painted-diff.json`
-- inspected result image: `out/validation/crt-painted-result.png`
+## Remaining gates
 
-Remaining gates: full moving transition and pause/resume/resize visual checks,
-other resolutions, Release/non-D3D11, frame-time/hardware-floor qualification,
-engine green-tip policy and owner taste. These fixed 720p samples do not prove
-all text or all frames are readable, nor establish performance acceptance.
-
-## Release / 1080p extension (2026-11-15)
-
-MattPC had no compiler, build or game/painter processes at the preflight check.
-A fresh x64-release configure and full D3D11 build passed with `--parallel 2`.
-The same focused hidden leaf now adds 1920x1080 through its existing exact-resize
-helper, with no new production behavior. Both Release off/on runs passed.
-
-- 32 paired frames across 720p/1080p, 2P/4P and four beats; 64 saved captures,
-  each checked with a duplicate frozen readback (128 total).
-- All eight active split-screen pairs and all sixteen reduced-effects pairs
-  are byte-identical across flag off/on.
-- Twelve normal monitor-scene pairs have nonzero changes strictly inside glass.
-  No outside-glass pixels change at either resolution.
-- Independently selected score-card/glyph interiors remain exact at both sizes.
-  Inspected the 1080p painted result: A 100.0% / B 0.0% is clear, with crisp
-  card edges, silhouette and physical bezel. The texture remains conspicuous.
-- Release checks frozen public state and repeated pixels. Replay fingerprint
-  checks remain Debug-only; no claim of Release fingerprint instrumentation.
-
-Evidence:
-
-- off: `out/validation/crt-release-off/x64-release/0236b07e1a444ee185277145814f4ce8`
-- on: `out/validation/crt-release-on/x64-release/23e78d6a5dc34ac28d669d60ae52ea59`
-- comparison: `out/validation/crt-release-diff.json`
-- inspected image: `out/validation/crt-release-result-1080.png`
-
-Use `-Preset x64-release` in the focused commands above to reproduce. The
-comparison script accepts the original 720p-only evidence or the expanded
-720p/1080p set, requires exact expected frame names in both runs and checks
-resolution-scaled glass and card interiors.
-
-No comparable frame-phase timings are recorded by this capture runner.
-Readback/window-hidden runtimes are not gameplay FPS; no performance claim is
-made. Remaining gates are moving transitions, pause/resume/resize under play,
-non-D3D11 and hardware-floor coverage, performance, engine green-tip policy and
-owner taste. This increment qualifies fixed Release D3D11 captures, not all
-those outstanding dimensions.
-
-## Saved-setting integration proposal (not implemented)
-
-Repository inspection found no rule requiring a separate owner decision for a
-default-off graphics preference. The remaining issue is lifecycle/UI scope,
-not permission. Keep the qualified opt-in implementation unchanged for now.
-
-### Recommended first normal-use version
-
-- Saved global boolean `crt_monitor`, default false. Missing/malformed legacy
-  values fall back to false; writes preserve other play settings and profiles.
-- Label `CRT monitor`, Off/On. Help: `Adds texture to the opening and result
-  monitor. Off by default. Restart required. Reduce effects turns it off.`
-- Apply saves the choice through the existing SettingsSession path. Back
-  discards the pending page selection. A distinct status says `Saved. CRT
-  monitor changes after restart.` Only show that after a successful save and
-  when the saved choice differs from this run's active choice. Failed writes
-  must say the CRT choice was not saved, not promise that restart will apply it.
-- Latch this run's effective CRT choice before Application creation. Only enabled
-  launches request five view slots and install the post chain. Default-off
-  launches retain four views and the empty pipeline. Reduce effects still
-  suppresses values immediately without changing the saved CRT choice.
-- Keep the environment variable developer-only: absent follows saved choice;
-  exact `1` forces on, exact `0` forces off; other values are ignored. The UI
-  must disclose an active override rather than imply its row controls this run.
-
-### Why not simply add a boolean and read it while drawing?
-
-`ApplicationOptions::view_capacity` is fixed at device creation. Existing default
-is four; a four-view scene plus crisp foreground needs five. `set_post_effects`
-is only legal outside an active render frame. An immediate option is possible,
-but it must deliberately reserve the extra view for everyone and centralize
-chain installation/removal at a proven frame boundary. It is not safe to switch
-that chain from Level::draw, or claim the default's allocation cost is unchanged.
-
-The current Controls page has eleven validated rows: nine entries, Apply at 9,
-Back at 10. Its Apply currently promises active settings even when the write
-fails. Inserting another switch and returning that same message would misstate
-the restart-only CRT behavior and can collide with the footer. Display Options
-has a different trial/rollback transaction for resolution/fullscreen. Neither
-is a free extra row with automatic lifecycle semantics.
-
-### Exact implementation surfaces
-
-1. `game/config/play_settings.h`, `game/save/save.cpp`: persisted default-off
-   field and tolerant read/write; SettingsSession already copies global fields,
-   but must be tested with worn per-pad profiles.
-2. `game/config/crt_trial.h`, `game/main.cpp`, `game/game_data.h` and its
-   implementation: explicit latched runtime choice/override shared with menus
-   and render consumers instead of re-reading a pending saved value. Pass that
-   choice into `game/objects/level_draw.cpp`, `match_opening.cpp` and
-   `game/states/menu_page.cpp`; do not use a mutable process-global toggle.
-3. `game/states/controls_settings_menu.h/.cpp`: pending choice, Apply merge,
-   restart/override/failure status; add the row only with an explicit page layout
-   adjustment. Alternatively place it on a small Graphics child page, which is
-   more extensible but beyond this bounded increment.
-4. `game/config/presentation/menu_geometry.h`,
-   `presentation_menu_text.h`, `presentation_read.h`,
-   `presentation_validation_settings.cpp` and `game/content/presentation.json`:
-   row indices, localized labels/help/status and fit validation. Preserve the
-   literal display trial's rollback behavior; CRT should not join that transaction.
-5. Focused probes: `settings`, `menu_presentation`, `crt_trial`, plus a focused
-   Controls UI capture. Test old save/defaults, round-trip, malformed values,
-   failed writes, child-page changes, worn profiles, Back cancellation, restart
-   latching and environment precedence. Exercise actual saved-choice on/off in
-   `painter_visual.cpp` / `crt_trial_checks.h`, not just the environment path.
-
-A second-stage immediate-apply version should be a separate explicit lifecycle
-change with pause/resume and device-restoration tests. Until then this document
-is a concrete implementation plan, not a claim that a user-facing setting ships.
+Fixed captures do not qualify moving transitions, pause/resume or resize while
+playing, non-D3D11 backends, hardware floors or all text at every size. The
+texture is conspicuous: retain opt-in and review owner taste before changing it.
+The runner does not record comparable gameplay phase timings; hidden readback
+runtimes are not FPS and no performance claim is made. Native builds were
+capped at two compiler jobs after checking for competing build/game processes.

@@ -409,7 +409,8 @@ namespace menu_text_acceptance
         { "keyboard_jump", L"Keyboard Keys" }, { "pad_buttons", L"Pad Buttons" }, { "rumble", L"Rumble" },
         { "watch_replay", L"Watch Replay" },
         { "profiles", L"Profiles" }, { "series_stage", L"Series stage" }, { "vsync", L"Vsync" },
-        { "variant", L"Variant" }, { "toggle_fire", L"Toggle fire" }
+        { "variant", L"Variant" }, { "toggle_fire", L"Toggle fire" },
+        { "graphics", L"Graphics" }, { "crt_monitor", L"CRT monitor (restart)" }
     };
 
     using World = acceptance::ContentWorld;

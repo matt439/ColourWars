@@ -323,7 +323,7 @@ namespace menu_text_acceptance
                     paper.right() - art.shadow_offset - art.focus_padding.x - value_position.x :
                     controls.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset - value_position.x,
                     spacing.y - art.focus_padding.y * 2.0f);
-                require(limit == (use.options ? labrador::Vector2F(930.0f, 68.0f) : labrador::Vector2F(332.0f, 48.0f)),
+                require(limit == (use.options ? labrador::Vector2F(930.0f, 58.0f) : labrador::Vector2F(332.0f, 48.0f)),
                     "Authored value fixture no longer exercises the shipped Options/Controls fitting limits");
                 const auto font = world.render.resolve_sprite_font(style.item_font);
                 std::wstring authored = look.menu_text().values.*use.field;

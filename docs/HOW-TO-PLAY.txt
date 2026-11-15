@@ -85,7 +85,11 @@ onto your own paint or unpainted ground to refill again.
 Menus: left stick or D-pad / arrow keys to move, A / Enter (or a left
 click) to choose, B / Escape (or a right click) to go back. A click acts on
 the highlighted row, wherever the pointer is. Controls, volume, window size
-and full screen are under Options. To quit, choose Exit on the main menu.
+and full screen are under Options. Options > Graphics offers CRT monitor
+(restart), Off by default. Apply saves it for the next launch; restart to add
+texture to the opening/result monitor glass. Reduce effects turns the texture
+off. Gameplay stays clear. Back discards unapplied choices. To quit, choose
+Exit on the main menu.
 
 
 Settings, your own stages and removing the game

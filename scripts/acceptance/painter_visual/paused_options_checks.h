@@ -9,8 +9,8 @@ Frame paused_options_reference(Application& app, const Canvas& canvas,
 {
     require(selected >= 0 && selected < 8 && !(resolution_disabled && selected == 0),
         "Independent paused Options requires an enabled selected row");
-    constexpr std::array<MenuItem, 8> roles{ MenuItem::resolution, MenuItem::fullscreen,
-        MenuItem::vsync, MenuItem::team_palette, MenuItem::controls_audio,
+    constexpr std::array<MenuItem, 9> roles{ MenuItem::resolution, MenuItem::fullscreen,
+        MenuItem::vsync, MenuItem::team_palette, MenuItem::controls_audio, MenuItem::graphics,
         MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
     require(words.heading(MenuHeading::options) == L"Options" &&
         !expected_caption.empty() && words.options_palette_timing == expected_caption,
@@ -178,7 +178,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
         const std::string stem = "paused-options-" + name + "-" + std::to_string(players) + "p-" + std::to_string(actual.width) + 'x' + std::to_string(actual.height);
         if (actual.pixels != reference.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(reference, output / (stem + "-failure-expected.ppm"));
             const auto delta = foreground_delta_bounds(actual, reference); std::cerr << "PAUSED OPTIONS " << name << " row=" << row << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
-        require(actual.pixels == reference.pixels, "Paused Options differs from independent complete paper/caption/eight-row reference");
+        require(actual.pixels == reference.pixels, "Paused Options differs from independent complete paper/caption/nine-row reference");
         std::srand(9137); const int next = std::rand(); std::srand(9137);
         require(actual.pixels == stack_frame(app).pixels && actual.pixels == stack_frame(app).pixels && std::rand() == next,
             "Frozen paused Options changed pixels or consumed draw RNG");
@@ -194,7 +194,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     require(original.menu_text().options_palette_timing == L"Palette applies next round or restart.", "Paused palette timing copy drifted");
     for (Vector2I size : { Vector2I(1280,720), Vector2I(1920,1080), Vector2I(2560,1440), Vector2I(1600,1200), Vector2I(1920,1200), Vector2I(2560,1080) })
     {
-        resize(size); for (int focus = 0; focus < 8; ++focus) { go(focus); compare("focus" + std::to_string(focus), focus == 3); }
+        resize(size); for (int focus = 0; focus < 9; ++focus) { go(focus); compare("focus" + std::to_string(focus), focus == 3); }
         go(0); tick(0.0f); tick(-0.5f); compare("nonpositive");
     }
     check_world();
@@ -227,14 +227,14 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     tap(GamepadButton::a); row = 0; captured = presentation; tick(); compare("reopened-caption-font", true);
     tap(GamepadButton::b); presentation = original; tap(GamepadButton::a); row = 0; captured = original; tick(); compare("restored-caption"); check_world();
     // Staged defaults can be discarded by either own Back route.
-    go(5); tap(GamepadButton::a); resolution_value = L"1920x1080"; vsync_value = L"On"; palette_value = L"Random"; status = original.menu_text().status.options_pending;
-    const auto before_discard = bytes(); compare("restore-staged", true); go(7); tap(GamepadButton::a);
+    go(6); tap(GamepadButton::a); resolution_value = L"1920x1080"; vsync_value = L"On"; palette_value = L"Random"; status = original.menu_text().status.options_pending;
+    const auto before_discard = bytes(); compare("restore-staged", true); go(8); tap(GamepadButton::a);
     require(stack.depth() == 3 && bytes() == before_discard, "Paused Options Back saved or replaced Pause"); tap(GamepadButton::a); row = 0; status.clear(); resolution_value = L"1280x720"; vsync_value = L"Off"; palette_value = L"A: Blue / B: Yellow"; tick(); compare("back-discard");
-    go(5); tap(GamepadButton::a); tap(GamepadButton::b); require(stack.depth() == 3 && bytes() == before_discard, "Paused Options Escape saved or resumed");
+    go(6); tap(GamepadButton::a); tap(GamepadButton::b); require(stack.depth() == 3 && bytes() == before_discard, "Paused Options Escape saved or resumed");
     tap(GamepadButton::a); row = 0; tick(); compare("escape-discard"); check_world();
     // A palette-only Apply saves now but preserves this built arena and paint.
     go(3); tap(GamepadButton::dpad_left); palette_value = L"A: Pink / B: Green"; status = original.menu_text().status.options_pending;
-    compare("palette-pending"); go(6); tap(GamepadButton::a); status = original.menu_text().status.options_saved;
+    compare("palette-pending"); go(7); tap(GamepadButton::a); status = original.menu_text().status.options_saved;
     compare("palette-saved", true); const auto new_palette = preferences.team_palette();
     require(new_palette != TeamColourPair::blue_yellow && !preferences.vsync() && stack.depth() == 4, "Palette-only Apply incorrectly opened a display trial or changed vsync"); check_world();
     tap(GamepadButton::b); tap(GamepadButton::dpad_up); tap(GamepadButton::a); require(stack.depth() == 3, "Restart did not retain typed Pause frame");
@@ -286,8 +286,8 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
     }
     // Private windowed trial paths remain children of the retained Options.
     open_match(2);
-    const auto begin_trial = [&] { go(5); tap(GamepadButton::a); resolution_value = L"1920x1080"; vsync_value = L"On"; palette_value = L"Random";
-        status = original.menu_text().status.options_pending; go(6); const auto before = bytes(); tap(GamepadButton::a); hide(); tick();
+    const auto begin_trial = [&] { go(6); tap(GamepadButton::a); resolution_value = L"1920x1080"; vsync_value = L"On"; palette_value = L"Random";
+        status = original.menu_text().status.options_pending; go(7); const auto before = bytes(); tap(GamepadButton::a); hide(); tick();
         require(stack.depth() == 5 && bytes() == before && preferences.resolution() == ScreenResolution::s_1280_720,
             "Paused display trial wrote before Keep or replaced its parent"); };
     const auto rolled_back = [&] { hide(); tick(); require(stack.depth() == 4 && app.resolution_manager()->resolution_ivec() == Vector2I(1280,720) &&
