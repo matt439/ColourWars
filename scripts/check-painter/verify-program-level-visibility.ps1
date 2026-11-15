@@ -29,7 +29,7 @@ if ($plSummary.scope -cne $plScope -or $plSummary.stage -cne 'crossfeed' -or $pl
     $plSummary.state -cne 'opening' -or $plSummary.viewport -cne '1280x720' -or ($plSummary.input_slots -join ',') -cne '4,3' -or
     $plSummary.construction_admission -cne 'source-derived-end-tick-not-instrumented' -or
     ($plSummary.program_mask -join ',') -cne '136,59,1007,480' -or ($plSummary.program_patch -join ',') -cne '632,92,16,16' -or
-    ($plSummary.paper_patch -join ',') -cne '392,242,16,16' -or ($plSummary.glass_patch -join ',') -cne '132,100,1,1') {
+    ($plSummary.paper_patch -join ',') -cne '480,242,16,16' -or ($plSummary.glass_patch -join ',') -cne '132,100,1,1') {
     throw 'Program Level declared route/sites or source-only admission label differ'
 }
 foreach ($plKey in @('whole_frame_reset','frozen_public_style_resources')) {
@@ -47,7 +47,7 @@ if ($plCases.Count -ne 3 -or $plSamples.Count -ne 9 -or
 }
 $plStates = @('baseline','rgb','restored')
 $plSites = @('exposed-program','covered-paper','outside-program-glass')
-$plAreas = @(@(632,92,16,16),@(392,242,16,16),@(132,100,1,1))
+$plAreas = @(@(632,92,16,16),@(480,242,16,16),@(132,100,1,1))
 $plColours = @(0x2C2C2C,0x35BCE1,0x2C2C2C)
 for ($plIndex=0; $plIndex -lt 3; ++$plIndex) {
     $plCase = $plCases[$plIndex]
