@@ -607,6 +607,18 @@ two-player Crossfeed full-opening checkpoint at 1280x720. Direct-Monitor alpha
 evidence remains separate; other story phases/rosters and human story acceptance
 remain open.
 
+The covered-paper control is the 16x16 rectangle `(480,242)` with literal RGB
+`C9D3D9`. The former `(392,242)` site was covered by POL#16's authored
+`cf_paint_tube`, causing nightly issue #88. On 2026-11-15 the retained local
+RTX 5080 frame reproduced the first mismatch at `(394,242)` (`8E958C`).
+Removing only that decorative object from staged test content made the original
+witness pass; production content was restored before validating the new site.
+This is a fixture correction, not a renderer workaround: patch size, literal
+colour, whole-frame repeats/restoration, mask-only delta and six-readback budget
+are unchanged. Native failures now retain the first mismatching coordinate,
+expected/observed RGB and patch rectangle as JSON as well as stderr, so the
+nightly's existing JSON/log upload preserves actionable evidence without PPMs.
+
 Monitor borrows `opening.glass_colour` at four writes: initial glass, palette
 repaint, picker panel and close-button face. Each premultiplies base RGBA once,
 without event fade. Opaque `161616`, API/geometry, captured persona/resources,
