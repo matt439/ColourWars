@@ -134,7 +134,10 @@ It passes when the receipt's ZIP hash matches the host's, the window opens, the
 save is created and `WM_CLOSE` exits 0. It proves the loader and runtime
 requirements, not a player's GPU.
 
-Check that the packaged guide and runtime assets match the committed sources.
+`check-release-package.ps1` checks that the extracted guide and every runtime
+asset match the reviewed source byte-for-byte, using the packager's allow-list.
+It also refuses unreviewed files in runtime directories. Run it from the source
+revision that produced the ZIP; an older released ZIP needs its matching checkout.
 Evidence under `out/validation/` is local, not a public download or a hosted
 CI result.
 
