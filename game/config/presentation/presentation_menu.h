@@ -314,6 +314,7 @@ struct ResultsMenuPresentation
 	labrador::Vector2F box_size = { 0.0f, 0.0f };
 	float session_score_y = 0.0f;
 	float session_result_y = 0.0f;
+	float score_basis_y = 0.0f;
 	// The stage record line, right-aligned to the score bar, below it.
 	float record_y = 0.0f;
 	labrador::Vector2F contribution_position = { 0.0f, 0.0f };

@@ -135,6 +135,8 @@
         "single_match_heading": "[Results]",
         "proceed": "[Press A/Enter to proceed]",
         "contribution_heading": "[Surface held (% of arena)]",
+        "share_basis": "[Team share of painted surface]",
+        "empty_share_basis": "[No surface painted. Equal shares mean a draw.]",
         "series_team_a_wins": "[Team A wins the series!]",
         "series_team_b_wins": "[Team B wins the series!]",
         "draw_no_win": "[Draw - no win awarded]",

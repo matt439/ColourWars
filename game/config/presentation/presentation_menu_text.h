@@ -160,6 +160,8 @@ struct MenuResultsText
 	std::wstring single_match_heading;
 	std::wstring proceed;
 	std::wstring contribution_heading;
+	std::wstring share_basis;
+	std::wstring empty_share_basis;
 	std::wstring series_team_a_wins;
 	std::wstring series_team_b_wins;
 	std::wstring draw_no_win;

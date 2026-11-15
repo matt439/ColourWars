@@ -134,6 +134,7 @@ namespace
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 #include "scripts/acceptance/painter_visual/how_to_play_checks.h"
 #include "scripts/acceptance/painter_visual/first_match_flow_checks.h"
+#include "scripts/acceptance/painter_visual/duel_flow_checks.h"
 #endif
 #include "scripts/acceptance/painter_visual/scripted_menu_owner.h"
 #include "scripts/acceptance/painter_visual/action_combat_checks.h"
@@ -447,7 +448,7 @@ int wmain(int argc, wchar_t** argv)
         GameTuning tuning((content / "tuning.json").string().c_str());
         // First-match qualification follows the standalone game's selected locale.
         // Other historical exact-raster leaves retain their authored base locale.
-        const bool localized_flow=argc==4 && std::wstring(argv[3])==L"first-match-flow";
+        const bool localized_flow=argc==4 && (std::wstring(argv[3])==L"first-match-flow" || std::wstring(argv[3])==L"results-menu");
         const ActiveLocale active_locale(Locales::read((content/"locales").string()),
             localized_flow ? locale_selection::requested_from_environment() : std::string{});
         Presentation presentation(active_locale.presentation((content/"presentation.json").string()));
@@ -503,6 +504,7 @@ int wmain(int argc, wchar_t** argv)
         {
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
             first_match_flow(app, tuning, presentation, content, output, crt_runtime);
+            duel_flow(app,tuning,presentation,content,output,crt_runtime);
 #else
             throw std::runtime_error("First flow requires scripted gamepads");
 #endif

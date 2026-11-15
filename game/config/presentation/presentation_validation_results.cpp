@@ -151,6 +151,10 @@ void Presentation::Validation::validate_results_lines(const StageGeometry& stage
 {
 	const ResultsMenuPresentation& results = this->presentation.results_menu_;
 	const auto& results_panel = stage_geometry.results_panel;
+	// Competitive single matches have no series ledger. Reserve that authored
+    // band for the new caption without changing historical winner ink bounds.
+    const float score_basis_top = results.session_result_y;
+    float score_basis_bottom=menu_geometry::results_fill_box(results).y;
 	// Results uses zero-offset transparent text shadows. Center the actual
 	// unscaled text bounds on the full-height paper, as its widgets do.
 	const auto check_results_centered = [&](const char* role, const std::wstring& text,
@@ -255,6 +259,7 @@ void Presentation::Validation::validate_results_lines(const StageGeometry& stage
 		// MenuPaperArtwork draws its face and shade within the supplied bounds.
 		// Match the widgets' single padding inflation and zero text shadow.
 		plate.inflate(results.art.focus_padding);
+        score_basis_bottom=std::min(score_basis_bottom,plate.y);
 		if (!finite_rectangle(plate) || !results_panel.contains(plate))
 		{
 			throw std::runtime_error(this->presentation.source_path_ + ": " + key +
@@ -277,4 +282,18 @@ void Presentation::Validation::validate_results_lines(const StageGeometry& stage
 		std::ignore = fixed_menu_size("menu_text.results.team_b_percentage at monitor", team_b,
 			this->presentation.opening_.percent_font);
 	}
+    for(const auto& field : {std::pair("share_basis", &this->presentation.menu_text_.results.share_basis),
+        std::pair("empty_share_basis", &this->presentation.menu_text_.results.empty_share_basis)})
+    {
+        const std::string key=std::string("menu_text.results.")+field.first;
+        const Vector2F size=fixed_menu_size(key,*field.second,results.contribution_font);
+        const RectangleF bounds(menu_geometry::centred_x(size.x),results.score_basis_y,size.x,size.y);
+        if(!finite_rectangle(bounds) || !results_panel.contains(bounds) || bounds.y<score_basis_top ||
+            bounds.bottom()>std::min({score_basis_bottom,results.contribution_position.y,results.record_y}))
+            throw std::runtime_error(this->presentation.source_path_+": "+key+
+                " at results_menu.score_basis_y must fit unscaled in the reserved single-match ledger band above the score bar/percentage plates and contributions/records; caption="+
+                std::to_string(bounds.y)+".."+std::to_string(bounds.bottom())+", permitted="+std::to_string(score_basis_top)+".."+
+                std::to_string(std::min({score_basis_bottom,results.contribution_position.y,results.record_y})));
+    }
+
 }

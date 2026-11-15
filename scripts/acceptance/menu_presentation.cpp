@@ -151,6 +151,28 @@ namespace
         variants.rejects("quick_match","back_position",at(0.25f),&world);
     }
 
+    void check_score_basis(Variants& variants, World& world)
+    {
+        variants.rejects("results_menu","score_basis_y",[](rapidjson::Document& d){d["results_menu"].RemoveMember("score_basis_y");});
+        for(const char* key:{"share_basis","empty_share_basis"})
+        {
+            variants.rejects("results",key,[key](rapidjson::Document& d){d["menu_text"]["results"].RemoveMember(key);});
+            variants.rejects("results",key,[key](rapidjson::Document& d){
+                d["menu_text"]["results"][key].SetString(std::string(500,'W').c_str(),d.GetAllocator());},&world);
+        }
+        for(float y:{255.0f,404.75f,490.0f,635.0f})
+            variants.rejects("results_menu","score_basis_y",[y](rapidjson::Document& d){d["results_menu"]["score_basis_y"].SetFloat(y);},&world);
+        const auto defaults=variants.load([](rapidjson::Document&){});
+        const auto font=world.render.resolve_sprite_font(defaults.results_menu().contribution_font);
+        const float height=std::max(world.render.measure_text(font,defaults.menu_text().results.share_basis).y,
+            world.render.measure_text(font,defaults.menu_text().results.empty_share_basis).y);
+        // Shipped percentage plate top: panel110 + fill offset380 + border10 - padding18 = 482.
+        const auto at=[height](float extra){return [height,extra](rapidjson::Document& d){
+            d["results_menu"]["score_basis_y"].SetFloat(482.0f-height+extra);};};
+        variants.load(at(0)).validate_resources(world.render,world.audio);
+        variants.rejects("results_menu","score_basis_y",at(0.25f),&world);
+    }
+
     void check_gate_permission(Variants& variants)
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
@@ -664,6 +686,7 @@ int main(int argc, char** argv)
         check_defaults(defaults);
         defaults.validate_resources(world.render, world.audio);
         check_quick_review(variants, world);
+        check_score_basis(variants, world);
         check_camera_options(variants);
         check_practice_row_spacing(variants);
         check_figure_cross_checks(variants);
