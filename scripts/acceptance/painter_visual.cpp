@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/config/crt_trial.h"
+#include "game/config/locale.h"
 #include "game/config/sound_groups.h"
 #include "game/carried/removed_members.h"
 #include "engine/app/application.h"
@@ -444,7 +445,13 @@ int wmain(int argc, wchar_t** argv)
         Registry<LevelLoadedInfo> levels("Level");
         StageList stages;
         GameTuning tuning((content / "tuning.json").string().c_str());
-        Presentation presentation((content / "presentation.json").string().c_str());
+        // First-match qualification follows the standalone game's selected locale.
+        // Other historical exact-raster leaves retain their authored base locale.
+        const bool localized_flow=argc==4 && std::wstring(argv[3])==L"first-match-flow";
+        const ActiveLocale active_locale(Locales::read((content/"locales").string()),
+            localized_flow ? locale_selection::requested_from_environment() : std::string{});
+        Presentation presentation(active_locale.presentation((content/"presentation.json").string()));
+        if(localized_flow) std::cout << "FLOW locale=" << active_locale.tag() << '\n';
         Save saved_preferences; SettingsSession saved_preferences_session(saved_preferences);
         saved_preferences_session.load_save_file();
         require(!saved_preferences_session.play_settings().aim_marker, "Isolated visual save did not preserve aim_marker=false");
@@ -495,7 +502,7 @@ int wmain(int argc, wchar_t** argv)
         if (argc == 4 && std::wstring(argv[3]) == L"first-match-flow")
         {
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
-            first_match_flow(app, tuning, presentation, content, output);
+            first_match_flow(app, tuning, presentation, content, output, crt_runtime);
 #else
             throw std::runtime_error("First flow requires scripted gamepads");
 #endif

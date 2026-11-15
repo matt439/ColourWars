@@ -220,6 +220,9 @@ struct MainMenuPresentation
 	labrador::Vector2F home_position;
 	labrador::Vector2F home_subtitle_position;
 	labrador::Vector2F home_help_position;
+	labrador::Vector2F home_quick_position;
+	labrador::Vector2F quick_heading_position, quick_body_position;
+	labrador::Vector2F quick_start_position, quick_customise_position, quick_back_position;
 	labrador::Vector2F home_spacing;
 	std::string title_font;
 	std::string announcement_font;

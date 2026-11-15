@@ -129,6 +129,12 @@
       "no_controller": "Connect a controller",
       "build": "v{version} / Build {revision} / {configuration}"
     },
+    "quick_match": {
+      "title": "Play a bot",
+      "body": "P1: this controller, Team A. P2: Normal bot, Team B.\nSprayer + Grenade. Your active profile's Boost applies.\nSingle Match, Standard rules, {duration}.\nYour active controls, colours and accessibility settings apply.\nJoin lets you choose a profile before choosing an arena.\nChoose Customise to edit teams, tools, bot or match settings.",
+      "start": "Continue to Join",
+      "customise": "Customise"
+    },
     "learn": {
       "start": "1 / 3  YOUR FIRST MATCH\nPaint more of the arena than the other team.\nSplats interrupt opponents; painted territory decides the winner.\nStart with Play > Single Match > 1 Player (practice).\nChoose a tool, then Movement Course to learn at your own pace.\nFor a local match, choose 2-4 players and join each seat.\nThe host can fill spare seats with bots.\nChoose teams, tools and an arena; each human confirms their choice.",
       "controls": "2 / 3  YOUR SAVED CONTROLS\nHold Jump for height. Aim in a direction, then shoot to paint.\nChange bindings in Options > Controls / audio.\nPad numbers follow their slots; menu A/B and Enter/Esc stay fixed.",
@@ -513,6 +519,14 @@
     "title_no_pad_y": 800.0,
     "home_position": { "x": 460.0, "y": 180.0 },
     "home_help_position": { "x": 1000.0, "y": 420.0 },
+    "home_quick_position": { "x": 1000.0, "y": 540.0 },
+    "quick_match": {
+      "heading_position": { "x": 180.0, "y": 100.0 },
+      "body_position": { "x": 180.0, "y": 240.0 },
+      "start_position": { "x": 180.0, "y": 590.0 },
+      "customise_position": { "x": 180.0, "y": 710.0 },
+      "back_position": { "x": 180.0, "y": 830.0 }
+    },
     "home_subtitle_position": { "x": 460.0, "y": 315.0 },
     "home_spacing": { "x": 250.0, "y": 120.0 },
     "options_heading_position": { "x": 280.0, "y": 60.0 },

@@ -335,6 +335,7 @@ struct MenuText
 	MenuTitleText title;
 	std::wstring home_subtitle;
 	std::wstring learn_start, learn_controls, learn_finish, learn_next;
+    std::wstring quick_title, quick_body, quick_start, quick_customise;
 	std::wstring display_trial_countdown;
 	std::wstring options_palette_timing;
 	MenuHelpText help;

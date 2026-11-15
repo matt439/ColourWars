@@ -28,6 +28,8 @@ enum class MainMenuScreen
 	title,
 	home,
 	how_to_play,
+    quick_match,
+    quick_join,
 	options,
 	credits,
 	mode_select,
@@ -153,9 +155,25 @@ private:
 	std::unique_ptr<labrador::UiText> heading_ = nullptr;
 	std::unique_ptr<labrador::UiText> play_ = nullptr;
 	std::unique_ptr<labrador::UiText> learn_ = nullptr;
+    std::unique_ptr<labrador::UiText> quick_ = nullptr;
 	std::unique_ptr<labrador::UiText> options_ = nullptr;
 	std::unique_ptr<labrador::UiText> credits_ = nullptr;
 	std::unique_ptr<labrador::UiText> exit_ = nullptr;
+};
+
+class MainMenuQuickMatch final : public MainMenuPage
+{
+public:
+    explicit MainMenuQuickMatch(MenuContext* context) : MainMenuPage(context) {}
+    void init() override;
+    void update_page(float dt) override;
+    bool shows_focus_backing() const override { return false; }
+private:
+    void accept(bool customise);
+    int activating_slot_ = -1;
+    std::unique_ptr<MenuPaperArtwork> paper_;
+    std::unique_ptr<labrador::UiTexture> background_;
+    std::unique_ptr<labrador::UiText> heading_, body_, start_, customise_, back_;
 };
 
 class MainMenuHowToPlay final : public MainMenuPage
@@ -362,12 +380,13 @@ private:
 class MainMenuJoin final : public RosterSetupPage
 {
 public:
-	explicit MainMenuJoin(MenuContext* context);
+	explicit MainMenuJoin(MenuContext* context, bool reviewed_preset = false);
 	void update_page(float dt) override;
 	void init() override;
 protected:
 	bool shows_focus_backing() const override { return false; }
 private:
+    bool reviewed_preset_ = false;
 	MenuPaperArtPresentation setup_art_;
 	struct JoinMotionRow
 	{

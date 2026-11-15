@@ -85,6 +85,15 @@ void Presentation::Validation::validate_home_actions() const
         main.home_help_position,
         menu_geometry::footer_paper(main.home_box_size, this->presentation.menu_.footer_y),
         main.home_spacing.y, std::nullopt, main.art);
+    RectangleF quick(main.home_quick_position, fixed_menu_size("menu_text.quick_match.title",
+        this->presentation.menu_text_.quick_title, this->presentation.menu_.detail_font));
+    check_fixed_paper("main_menu.home_quick_position", quick, main.home_box_size, main.art.focus_padding);
+    quick.inflate(main.art.focus_padding);
+    RectangleF guide(main.home_help_position, fixed_menu_size("How to play",
+        this->presentation.menu_text_.item(MenuItem::how_to_play), this->presentation.menu_.item_font));
+    guide.inflate(main.art.focus_padding);
+    if(overlaps(quick, guide)) throw std::runtime_error(this->presentation.source_path_ +
+        ": main_menu.home_quick_position overlaps How to play");
 	for (size_t index = 0; index < std::size(home_items); ++index)
 	{
 		check_menu_item(home_items[index], this->presentation.menu_.item_font, main.home_position +
@@ -95,6 +104,8 @@ void Presentation::Validation::validate_home_actions() const
         RectangleF help(main.home_help_position, fixed_menu_size("How to play", this->presentation.menu_text_.item(MenuItem::how_to_play),
             this->presentation.menu_.item_font));
         action.inflate(main.art.focus_padding); help.inflate(main.art.focus_padding);
+        if(overlaps(action, quick)) throw std::runtime_error(this->presentation.source_path_ +
+            ": main_menu.home_quick_position overlaps another Home action");
         if (overlaps(action, help)) throw std::runtime_error(this->presentation.source_path_ + ": menu_text.items.how_to_play at main_menu.home_help_position: Home How to play overlaps another action");
 	}
 }
@@ -119,6 +130,37 @@ void Presentation::Validation::validate_credits_text() const
     next.inflate(main.art.focus_padding); back.inflate(main.art.focus_padding);
     if (overlaps(next, back)) throw std::runtime_error(this->presentation.source_path_ +
         ": menu_text.learn.next overlaps the guide Back action");
+    // The starter review is authored separately from Credits. Validate the same
+    // fitting area used at runtime, but refuse copy that would become too small.
+    const std::string quick_key = "main_menu.quick_match";
+    RectangleF quick_heading(main.quick_heading_position, fixed_menu_size(quick_key,
+        words.quick_title, style.heading_font));
+    check_fixed_paper(quick_key + ".heading_position", quick_heading, main.credits_box_size, Vector2F::zero);
+    const Vector2F quick_available(menu_geometry::paper_text_right(paper, main.art)-main.quick_body_position.x,
+        main.quick_start_position.y-main.art.focus_padding.y-main.quick_body_position.y);
+    const Vector2F quick_raw=fixed_menu_size("menu_text.quick_match.body", words.quick_body, style.detail_font);
+    const float quick_scale=menu_geometry::fit_scale(quick_raw,quick_available);
+    if(quick_available.x<=0 || quick_available.y<=0 || !std::isfinite(quick_scale) || quick_scale<0.85f)
+        throw std::runtime_error(this->presentation.source_path_+": "+quick_key+
+            ".body_position: menu_text.quick_match.body must fit at least 85% of the detail font");
+    RectangleF quick_body(main.quick_body_position,quick_raw*quick_scale);
+    check_fixed_paper(quick_key+".body_position",quick_body,main.credits_box_size,Vector2F::zero);
+    RectangleF previous=quick_heading;
+    if(previous.bottom()>quick_body.y) throw std::runtime_error(this->presentation.source_path_+
+        ": "+quick_key+".body_position overlaps heading_position");
+    previous=quick_body;
+    const Vector2F quick_positions[]{main.quick_start_position,main.quick_customise_position,main.quick_back_position};
+    const std::wstring quick_labels[]{words.quick_start,words.quick_customise,words.item(MenuItem::back)};
+    const char* quick_keys[]{"start_position","customise_position","back_position"};
+    for(size_t i=0;i<std::size(quick_positions);++i)
+    {
+        RectangleF action(quick_positions[i],fixed_menu_size(quick_key,quick_labels[i],style.item_font));
+        check_fixed_paper(quick_key+"."+quick_keys[i],action,main.credits_box_size,main.art.focus_padding);
+        action.inflate(main.art.focus_padding);
+        if(previous.bottom()>action.y) throw std::runtime_error(this->presentation.source_path_+
+            ": "+quick_key+"."+quick_keys[i]+" overlaps preceding content");
+        previous=action;
+    }
 	check_menu_item(MenuItem::back, this->presentation.menu_.item_font, main.credits_back_position,
 		menu_geometry::footer_paper(main.credits_box_size, this->presentation.menu_.footer_y), 0.0f, std::nullopt,
 		main.art);

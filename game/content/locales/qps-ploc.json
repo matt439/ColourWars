@@ -8,6 +8,12 @@
   ],
   "presentation": {
     "menu_text": {
+      "quick_match": {
+  "title": "[Play a bot]",
+  "body": "[P1: this controller, Team A. P2: Normal bot, Team B.]\n[Sprayer + Grenade. Your active profile's Boost applies.]\n[Single Match, Standard rules, {duration}.]\n[Your active controls, colours and accessibility settings apply.]\n[Join lets you choose a profile before choosing an arena.]\n[Choose Customise to edit teams, tools, bot or match settings.]",
+  "start": "[Continue to Join]",
+  "customise": "[Customise]"
+},
       "brand": "[C O L O U R W A R S   /   LOCAL PAINT BATTLES]",
       "solo_practice_hint": "[Solo practice: choose Single Match]",
       "practice_tool": "[Tool:  < {tool} >]",

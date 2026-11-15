@@ -53,6 +53,8 @@ std::unique_ptr<MainMenuPage> make_main_menu_page(MenuContext* context, const Ma
 	{
 	case MainMenuScreen::home:
 		return std::make_unique<MainMenuHome>(context, route.home_focus);
+	case MainMenuScreen::quick_match:
+        return std::make_unique<MainMenuQuickMatch>(context);
 	case MainMenuScreen::how_to_play:
 		return std::make_unique<MainMenuHowToPlay>(context);
 	case MainMenuScreen::options:
@@ -63,6 +65,8 @@ std::unique_ptr<MainMenuPage> make_main_menu_page(MenuContext* context, const Ma
 		return std::make_unique<MainMenuModeSelect>(context);
 	case MainMenuScreen::player_count:
 		return std::make_unique<MainMenuPlayerCount>(context);
+	case MainMenuScreen::quick_join:
+        return std::make_unique<MainMenuJoin>(context, true);
 	case MainMenuScreen::join:
 		return std::make_unique<MainMenuJoin>(context);
 	case MainMenuScreen::team_select:
