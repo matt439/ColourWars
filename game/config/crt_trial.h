@@ -26,6 +26,17 @@ namespace crt_trial
         return enabled;
     }
 
+    inline int view_capacity() { return requested() ? 5 : 4; }
+
+    inline void initialize(labrador::Renderer& renderer)
+    {
+        if (requested())
+        {
+            const std::array effects{ labrador::PostEffect::crt };
+            renderer.set_post_effects(effects);
+        }
+    }
+
     inline labrador::CrtSettings settings(const CrtTrialPresentation& look,
         const labrador::RectangleF& glass)
     {

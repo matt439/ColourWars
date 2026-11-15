@@ -109,3 +109,55 @@ The exact new leaf dispatch/registration would touch `scripts/check-painter.ps1`
 `scripts/acceptance/painter_visual/crt_trial_checks.h`; its evidence selector and
 record must follow the existing painter leaf registration rules. This is the
 next automated gate, deferred rather than built during shared-machine contention.
+
+## Rendered gate completed (2026-11-15, supersedes harness blocker above)
+
+The shared initializer and narrowly scoped `-CrtTrialOnly` painter route are now
+implemented. Inspection found `monitor_story` can reach the complete real Level
+reveal safely, without the broad monitor matrix. The route uses that fixture,
+2P/4P seeded inputs, 720p, and four frozen beats: opening, active split-screen,
+post-pullback overview, and visible painted-result cards. Each beat is drawn
+with normal and reduced effects, with duplicate readbacks and simulation
+observation/Debug fingerprint checks. Flag off and on run in separate processes.
+It uses hidden windows and isolated profile fixtures, never foreground input.
+
+- Shared-initializer Debug build passed, capped at two compiler jobs.
+- Both final focused painter runs passed on D3D11 / NVIDIA RTX 5080.
+- 16 off/on frame pairs (32 captures, 64 duplicate-check readbacks) compared.
+- All four active split-screen pairs are byte-identical.
+- All eight reduced-effects pairs are byte-identical, including results.
+- Six normal opening/overview/result pairs change, strictly inside the authored
+  glass (x=128..1151, y=50..596). Zero changed pixels outside it.
+- Independently selected score-card interiors spanning the visible glyphs are
+  byte-identical. Inspected opening and painted-result captures: physical
+  foreground remains crisp; large score labels remain clearly readable.
+- Earlier no-paint fixtures closed the program instead of showing score cards.
+  Those captures were not accepted as score-readability evidence. Final runs
+  paint with the existing deterministic monitor fixture and show A 100.0%,
+  B 0.0%. The first off-run also exposed a contact-sheet selector omission;
+  it was fixed and final off/on runs pass the full focused wrapper.
+
+Reproduce from an x64 developer PowerShell after building Debug:
+
+```powershell
+$env:COLOURWARS_CRT_TRIAL='0'
+./scripts/check-painter.ps1 -SkipBuild -CrtTrialOnly -OutputDirectory out/validation/crt-off
+$env:COLOURWARS_CRT_TRIAL='1'
+./scripts/check-painter.ps1 -SkipBuild -CrtTrialOnly -OutputDirectory out/validation/crt-on
+# Substitute the captures directories printed by these two runs:
+python scripts/compare-crt-captures.py OFF/captures ON/captures
+```
+
+The comparison uses Pillow/numpy, exact expected frame names, equal state CSVs,
+authored glass bounds, nonzero enabled deltas, neutral equality and score-card
+interiors. Final local evidence:
+
+- off: `out/validation/crt-painted-off/x64-debug/043bb9ba73cd458ab0148231e3873d59`
+- on: `out/validation/crt-painted-on/x64-debug/8e194980c1e94f8786a3c9c17c869326`
+- comparison: `out/validation/crt-painted-diff.json`
+- inspected result image: `out/validation/crt-painted-result.png`
+
+Remaining gates: full moving transition and pause/resume/resize visual checks,
+other resolutions, Release/non-D3D11, frame-time/hardware-floor qualification,
+engine green-tip policy and owner taste. These fixed 720p samples do not prove
+all text or all frames are readable, nor establish performance acceptance.

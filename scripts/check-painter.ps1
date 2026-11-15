@@ -72,6 +72,7 @@ param(
     [switch] $ResultPercentageOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
+    [switch] $CrtTrialOnly,
     [switch] $ClosingOnly,
     [switch] $SupplyOnly,
     [switch] $HudOnly,

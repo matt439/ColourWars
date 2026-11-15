@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/config/crt_trial.h"
 #include "game/config/sound_groups.h"
 #include "game/carried/removed_members.h"
 #include "engine/app/application.h"
@@ -143,6 +144,7 @@ namespace
 #include "scripts/acceptance/painter_visual/miniature_reference_checks.h"
 #include "scripts/acceptance/painter_visual/miniature_terrain_checks.h"
 #include "scripts/acceptance/painter_visual/countdown_checks.h"
+#include "scripts/acceptance/painter_visual/crt_trial_checks.h"
 #include "scripts/acceptance/painter_visual/cq_blockout_checks.h"
 #include "scripts/acceptance/painter_visual/crossfeed_checks.h"
 #include "scripts/acceptance/painter_visual/gate_permission_checks.h"
@@ -284,7 +286,7 @@ int wmain(int argc, wchar_t** argv)
         require(argc == 3 || (argc == 5 && (std::wstring(argv[3]) == L"turbulence-mover" || std::wstring(argv[3]) == L"turbulence-shoulder" || std::wstring(argv[3]) == L"turbulence-slab") && !std::wstring(argv[4]).empty()) || (argc == 4 && (std::wstring(argv[3]) == L"hud-paper-tune-colours" || std::wstring(argv[3]) == L"hud-closing-shade" || std::wstring(argv[3]) == L"hud-closing-materials" || std::wstring(argv[3]) == L"stage-preview-background-tune-colour" || std::wstring(argv[3]) == L"hud-label-tune-colours" || std::wstring(argv[3]) == L"hud-timer-tune-colour" ||
             std::wstring(argv[3]) == L"identity" ||
             std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"landmark" || std::wstring(argv[3]) == L"parallax" || std::wstring(argv[3]) == L"miniature-terrain" || std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"press-tower" || std::wstring(argv[3]) == L"turbulence-blockout" || std::wstring(argv[3]) == L"gate-permission" || std::wstring(argv[3]) == L"ferry-direction" || std::wstring(argv[3]) == L"surface-finish" || std::wstring(argv[3]) == L"route-warning" || std::wstring(argv[3]) == L"tune-colours" || std::wstring(argv[3]) == L"monitor" ||
-            std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"closing" ||
+            std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"crt-trial" || std::wstring(argv[3]) == L"closing" ||
             std::wstring(argv[3]) == L"supply" || std::wstring(argv[3]) == L"hud" ||
             std::wstring(argv[3]) == L"practice-replay" || std::wstring(argv[3]) == L"resume" || std::wstring(argv[3]) == L"end-menu" ||
             std::wstring(argv[3]) == L"pause-menu" || std::wstring(argv[3]) == L"results-menu" ||
@@ -455,9 +457,11 @@ int wmain(int argc, wchar_t** argv)
         options.max_threads = 4;
         if (stage_scan_only || turbulence_mover_only || turbulence_shoulder_only || turbulence_slab_only || (argc == 4 && (std::wstring(argv[3]) == L"miniature-terrain" ||
             std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"press-tower" || std::wstring(argv[3]) == L"turbulence-blockout" || std::wstring(argv[3]) == L"gate-permission" || std::wstring(argv[3]) == L"ferry-direction" || std::wstring(argv[3]) == L"surface-finish" || std::wstring(argv[3]) == L"route-warning" || keyboard_jump_only))) { options.view_capacity = 5; }
+        if (crt_trial::requested()) { options.view_capacity = crt_trial::view_capacity(); }
         options.visible = false;
         Application app(options);
         app.initialize();
+        crt_trial::initialize(*app.renderer());
         const auto& device = app.renderer()->device_info();
         std::cout << "DEVICE backend=" << device.backend << " api=" << device.api
             << " name=" << device.device_name << " vendor=" << device.vendor_id
@@ -482,6 +486,12 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner());
         const Canvas canvas(app.render_resources());
+        if (argc == 4 && std::wstring(argv[3]) == L"crt-trial")
+        {
+            crt_trial_capture(app, builder, preferences, output);
+            std::cout << "PASS focused CRT story captures; pixel A/B comparison is a separate gate\n";
+            return 0;
+        }
         if (result_percentage_only)
         {
             result_percentage_checks(app, levels, tuning, presentation, output);
