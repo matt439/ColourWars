@@ -95,3 +95,13 @@ scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -EndMenuOnly
 Use `x64-release` for the Release checks. Remaining menus, selection cards and
 stage preview stay open under `POL#16`. Reference-arena composition, movement
 feel, physical controllers and listening acceptance retain their TODO owners.
+
+## Single-match score-basis clarification (2026-11-15)
+
+Competitive single-match Results now label the team percentages as share of
+painted surface. A zero-painted match instead explains that no surface was
+painted and equal shares mean a draw. The player-row heading still identifies
+percent of the whole arena. Neither denominator nor the zero-paint convention
+changed. Solo/series, the hidden post-reveal bar and omitted repeated winner are
+unchanged. The caption occupies the unused single-match series-ledger band with
+unscaled type; existing rows were not moved. [Rehearsal and qualification](review/2026-11-15-local-duel-results.md).

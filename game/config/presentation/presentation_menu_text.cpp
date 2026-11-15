@@ -355,6 +355,8 @@ namespace presentation_read
 		text.results.single_match_heading = read_menu_line(results, "single_match_heading");
 		text.results.proceed = read_menu_line(results, "proceed");
 		text.results.contribution_heading = read_menu_line(results, "contribution_heading");
+		text.results.share_basis = read_menu_line(results, "share_basis");
+		text.results.empty_share_basis = read_menu_line(results, "empty_share_basis");
 		text.results.series_team_a_wins = read_menu_line(results, "series_team_a_wins");
 		text.results.series_team_b_wins = read_menu_line(results, "series_team_b_wins");
 		text.results.draw_no_win = read_menu_line(results, "draw_no_win");

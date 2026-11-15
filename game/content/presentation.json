@@ -251,6 +251,8 @@
       "single_match_heading": "Results",
       "proceed": "Press A/Enter to proceed",
       "contribution_heading": "Surface held (% of arena)",
+      "share_basis": "Team share of painted surface",
+      "empty_share_basis": "No surface painted. Equal shares mean a draw.",
       "series_team_a_wins": "Team A wins the series!",
       "series_team_b_wins": "Team B wins the series!",
       "draw_no_win": "Draw - no win awarded",
@@ -732,6 +734,7 @@
     "winner_y": 255.0,
     "session_score_y": 340.0,
     "session_result_y": 405.0,
+    "score_basis_y": 405.0,
     "record_y": 635.0,
     "proceed_y": 880.0,
     "art": {

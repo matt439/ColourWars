@@ -872,6 +872,7 @@ namespace presentation_read
 		menu.winner_y = read_y("winner_y");
 		menu.session_score_y = read_y("session_score_y");
 		menu.session_result_y = read_y("session_result_y");
+		menu.score_basis_y = read_y("score_basis_y");
 		menu.proceed_y = read_y("proceed_y");
 		menu.record_y = read_y("record_y");
 		if (menu.heading_y >= menu.winner_y || menu.winner_y >= menu.session_score_y ||
