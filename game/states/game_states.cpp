@@ -194,7 +194,7 @@ void GameLevel::init()
 		this->data()->resolution_manager(),
 		this->data()->thread_pool(),
 		this->data()->partitioner(),
-		&this->data()->settings_session()->input_bindings());
+		&this->data()->settings_session()->input_bindings(), this->data()->crt_runtime());
 
 	// Content reloaded from the menus is swapped in by the first build.
 	this->debug_attachment_.emplace(this->data()->debug(), static_cast<DebugMatchTarget&>(*this));

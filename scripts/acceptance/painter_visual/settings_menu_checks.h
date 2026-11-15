@@ -61,9 +61,9 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         bounds.inflate(page_art.focus_padding + Vector2F(page_art.keyline_width + 2.0f));
         return bounds;
     };
-    const std::array<const wchar_t*, 8> labels{
-        L"Resolution", L"Fullscreen", L"Vsync", L"Team palette", L"Controls / audio", L"Restore defaults", L"Apply", L"Back" };
-    constexpr size_t palette_row = 3, apply_row = 6, back_row = 7;
+    const std::array<const wchar_t*, 9> labels{
+        L"Resolution", L"Fullscreen", L"Vsync", L"Team palette", L"Controls / audio", L"Graphics", L"Restore defaults", L"Apply", L"Back" };
+    constexpr size_t palette_row = 3, apply_row = 7, back_row = 8;
     const auto row_label = [&](size_t index)
     {
         return text_bounds(look.options_font, labels[index], look.options_position +
@@ -94,7 +94,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         "Options/Credits paper overlaps the shared controls footer");
     std::cout << "OPTIONS heading=" << options_heading.x << ',' << options_heading.y << ',' <<
         options_heading.width << ',' << options_heading.height << " first-card-y=" << card(row_label(0)).y << '\n';
-    for (const wchar_t* label : { L"Resolution", L"Fullscreen", L"Vsync", L"Team palette", L"Controls / audio", L"Restore defaults", L"Apply", L"Back", L"A: Blue / B: Yellow", L"3840x2160" })
+    for (const wchar_t* label : { L"Resolution", L"Fullscreen", L"Vsync", L"Team palette", L"Controls / audio", L"Graphics", L"Restore defaults", L"Apply", L"Back", L"A: Blue / B: Yellow", L"3840x2160" })
     {
         const Vector2F size = measure(look.options_font, label);
         std::wcout << L"MEASURE " << label << L"=" << size.x << L',' << size.y << L'\n';
@@ -357,8 +357,8 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         {
             const std::wstring value = row == 0 ? L"1920x1080" : row == 1 ? L"Off" : row == 2 ? L"On" : row == palette_row ?
                 presentation.team_palette().fixed_pair(TeamColourPair::blue_yellow).label : L"";
-            const Frame frame = capture("options", std::array<const char*, 8>{
-                "resolution", "fullscreen", "vsync", "palette", "controls", "restore-defaults", "apply", "back" }[row],
+            const Frame frame = capture("options", std::array<const char*, 9>{
+                "resolution", "fullscreen", "vsync", "palette", "controls", "graphics", "restore-defaults", "apply", "back" }[row],
                 options_panel, row_bounds(row, value));
             contrast(frame, options_heading);
             linear_lettering(frame, style.heading_font, L"Options", options_heading);

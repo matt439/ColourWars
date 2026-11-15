@@ -1,5 +1,7 @@
 #pragma once
 
+namespace crt_trial { class Runtime; }
+
 #include "game/config/play_settings.h"
 
 #include "game/objects/level.h"
@@ -31,7 +33,8 @@ public:
 		labrador::ResolutionManager* resolution_manager,
 		labrador::ThreadPool* thread_pool,
 		const labrador::Partitioner* partitioner,
-		const InputBindings* input_bindings = nullptr);
+		const InputBindings* input_bindings = nullptr,
+        const crt_trial::Runtime* crt_runtime = nullptr);
 
 	// `practice` asks for untimed solo practice: a one-human roster on a stage
 	// whose stations carry lessons gets them and no clock (POL#19). Any other
@@ -46,6 +49,7 @@ public:
 		bool practice = false);
 
 private:
+    const crt_trial::Runtime* crt_runtime_ = nullptr;
 	std::unique_ptr<TeamColourTools> team_colour_ = nullptr;
 	std::unique_ptr<PlayerBuilder> player_builder_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;

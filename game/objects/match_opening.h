@@ -1,5 +1,7 @@
 #pragma once
 
+namespace crt_trial { class Runtime; }
+
 #include "game/carried/sound_bank_object.h"
 #include "game/objects/level_state.h"
 #include "game/objects/level_end_info.h"
@@ -160,6 +162,7 @@ private:
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;
 	const labrador::ViewportManager* viewport_manager_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
+    const crt_trial::Runtime* crt_runtime_ = nullptr;
 	// The owning Level's; fixed for the match.
 	const TeamColour* team_colours_ = nullptr;
 	// The room tone and the story voices.

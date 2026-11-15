@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/config/crt_trial.h"
 #include "engine/app/application.h"
 #include "engine/app/content_root.h"
 #include "engine/core/file_path.h"
@@ -68,8 +69,11 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		save.load_save_file();
 		// This run's settings: the save's, with any worn profiles laid over them.
 		SettingsSession settings_session(save);
+        const crt_trial::Runtime crt_runtime(save.saved_play_settings().crt_monitor);
 
 		ApplicationOptions options;
+        // Four player views plus the crisp physical foreground, only for the trial.
+        options.view_capacity = crt_runtime.view_capacity();
 		options.window_class_name = L"ColourWarsWindowClass";
 		options.window_title = L"Colour Wars";
 		options.resolution = save.resolution();
@@ -116,6 +120,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		Application app(std::move(options));
 		app.initialize();
 		fit_initial_window(app, save);
+        crt_runtime.initialize(*app.renderer());
 
 		// Register the game's level resource kind. Level definitions survive device
 		// restoration, so this kind has no reload callback.
@@ -161,6 +166,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		sound_groups::apply(*app.audio_resources(), settings_session.play_settings());
 
 		data.set_application(&app);
+        data.set_crt_runtime(&crt_runtime);
 		data.set_save(&save);
 		data.set_settings_session(&settings_session);
 		data.set_stage_catalog(&stage_catalog);

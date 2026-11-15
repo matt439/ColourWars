@@ -13,7 +13,9 @@ param(
     [string] $OutputDirectory,
     # Debug CI may explicitly accept D3D11 software rendering. Such a run
     # establishes neither hardware visual acceptance nor performance acceptance.
-    [switch] $AllowSoftwareAdapter
+    [switch] $AllowSoftwareAdapter,
+    # Separate CI functional evidence, never hardware qualification.
+    [switch] $HostedSoftwareFunctional
 )
 
 $ErrorActionPreference = 'Stop'
@@ -22,6 +24,10 @@ Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-diagnostics.ps1')
 . (Join-Path $PSScriptRoot 'probe-build.ps1')
 . (Join-Path $PSScriptRoot 'quiet-game.ps1')
+
+if ($HostedSoftwareFunctional -and $AllowSoftwareAdapter) {
+    throw 'Choose only one adapter evidence policy.'
+}
 
 if ($AllowSoftwareAdapter -and $Preset -eq 'x64-release') {
     throw '-AllowSoftwareAdapter is supported only by the x64-debug probe.'
@@ -86,7 +92,7 @@ $result = [ordered]@{
     player_counts = @(1, 4)
     palette = 'blue_orange'
     weapons = @('sprayer', 'roller', 'sprayer', 'roller')
-    adapter_policy = if ($AllowSoftwareAdapter) { 'debug_hardware_or_software' } else { 'hardware_only' }
+    adapter_policy = if ($HostedSoftwareFunctional) { 'hosted_software_functional_only' } elseif ($AllowSoftwareAdapter) { 'debug_hardware_or_software' } else { 'hardware_only' }
     adapter_kind = 'unreported'
     device_line = ''
     rendering_scope = 'Scripted visual checks on the recorded adapter; software rendering establishes no hardware visual acceptance, and this probe establishes no performance acceptance.'
@@ -145,7 +151,8 @@ try {
         -WorkingDirectory $working -ArgumentList @((Quote-Path $gameDirectory),
             (Quote-Path $captures), $SequenceFrames.ToString(),
             $(if ($OnePlayerRouteSequences) { '1' } else { '0' }),
-            $(if ($AllowSoftwareAdapter) { '1' } else { '0' })) `
+            $(if ($AllowSoftwareAdapter) { '1' } else { '0' }),
+            $(if ($HostedSoftwareFunctional) { '1' } else { '0' })) `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
         -RedirectStandardError (Join-Path $run 'run.err')
     $null = $process.Handle
@@ -171,7 +178,8 @@ try {
     }
     if ($deviceLines.Count -ne 1 -or
         $result.adapter_kind -notin @('hardware', 'software') -or
-        ($result.adapter_kind -eq 'software' -and -not $AllowSoftwareAdapter)) {
+        ($HostedSoftwareFunctional -and $result.adapter_kind -ne 'software') -or
+        ($result.adapter_kind -eq 'software' -and -not ($AllowSoftwareAdapter -or $HostedSoftwareFunctional))) {
         throw 'The probe did not report one adapter matching the requested policy.'
     }
     Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'run.err'))

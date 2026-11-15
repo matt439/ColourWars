@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/controls_settings_menu.h"
+#include "game/states/graphics_settings_menu.h"
 #include "game/states/display_confirmation.h"
 #include "game/states/main_menu.h"
 #include "game/states/menu_cycle.h"
@@ -303,15 +304,17 @@ void MainMenuOptions::init()
 	this->controls_ = std::make_unique<UiText>("controls", this->text().item(MenuItem::controls_audio),
 		row_style.item_font, this->calculate_widget_position(0, 4),
 		this->render_resources(), look.art.ink);
+    this->graphics_ = std::make_unique<UiText>("graphics", this->text().item(MenuItem::graphics),
+        row_style.item_font, this->calculate_widget_position(0, 5), this->render_resources(), look.art.ink);
 	this->restore_defaults_ = std::make_unique<UiText>("restore_defaults",
 		this->text().item(MenuItem::restore_defaults), row_style.item_font,
-		this->calculate_widget_position(0, 5), this->render_resources(), look.art.ink);
+		this->calculate_widget_position(0, 6), this->render_resources(), look.art.ink);
 
 	this->apply_ = std::make_unique<UiText>(
 		"apply",
 		this->text().item(MenuItem::apply),
 		row_style.item_font,
-		this->calculate_widget_position(0, 6),
+		this->calculate_widget_position(0, 7),
 		this->render_resources(),
 		look.art.ink);
 
@@ -319,7 +322,7 @@ void MainMenuOptions::init()
 		"back",
 		this->text().item(MenuItem::back),
 		row_style.item_font,
-		this->calculate_widget_position(0, 7),
+		this->calculate_widget_position(0, 8),
 		this->render_resources(),
 		look.art.ink);
 
@@ -345,6 +348,7 @@ void MainMenuOptions::init()
 	this->text_container_->add_child(this->vsync_row_.get());
 	this->text_container_->add_child(this->team_palette_row_.get());
 	this->text_container_->add_child(this->controls_.get());
+	this->text_container_->add_child(this->graphics_.get());
 	this->text_container_->add_child(this->restore_defaults_.get());
 	this->text_container_->add_child(this->apply_.get());
 	this->text_container_->add_child(this->back_.get());
@@ -362,6 +366,12 @@ void MainMenuOptions::init()
 			this->context()->push(std::make_unique<ControlsSettingsMenu>(
 				this->menu_context(), this->pausing_slot_.value_or(-1)));
 		});
+    this->focus_.add(this->graphics_.get(), [this]
+    {
+        this->play_wave(this->confirm_sound_);
+        this->input()->reset_actions();
+        this->context()->push(std::make_unique<GraphicsSettingsMenu>(this->menu_context(), this->pausing_slot_.value_or(-1)));
+    });
 	this->focus_.add(this->restore_defaults_.get(), [this] { this->restore_defaults(); });
 	this->focus_.add(this->apply_.get(), [this] { this->apply_settings(); });
 	this->focus_.add(this->back_.get(), [this] { this->close(); });

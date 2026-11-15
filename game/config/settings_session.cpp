@@ -33,6 +33,18 @@ const PlaySettings& SettingsSession::play_settings() const
     return this->play_;
 }
 
+bool SettingsSession::set_crt_monitor_and_save(bool enabled)
+{
+    const PlaySettings previous = this->save_->saved_play_settings();
+    PlaySettings desired = previous;
+    desired.crt_monitor = enabled;
+    this->save_->set_play_settings(desired);
+    const bool saved = this->save_->save_to_file();
+    if (!saved) { this->save_->set_play_settings(previous); }
+    this->refresh_effective();
+    return saved;
+}
+
 bool SettingsSession::set_play_settings_and_save(const PlaySettings& settings)
 {
     // Checked before anything changes; the worn slots' values go to their

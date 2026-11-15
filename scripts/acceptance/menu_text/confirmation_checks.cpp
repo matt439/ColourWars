@@ -331,6 +331,7 @@ namespace menu_text_acceptance
             // Isolate card clearance from stock descenders in the setup rows
             // that share the compact padding. Ordinary Pause art remains valid.
             d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
+            d["main_menu"]["fonts"]["options"].SetString("menu_text_exact");
             d["pause_menu"]["art"]["keyline_width"].SetFloat(5.0f);
             d["main_menu"]["setup_focus_padding"]["y"].SetFloat(8.0f);
         };

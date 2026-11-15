@@ -73,7 +73,7 @@ function Write-ContactSheet {
                 $_.Name -like 'identity-background-*-badges.ppm' -or
                 $_.Name -like 'drift-*-detail.ppm' -or $_.Name -like 'miniature-terrain-*-detail.ppm' -or
                 $_.Name -like 'tune-colours-*-detail.ppm' -or $_.Name -like 'parallax-*.ppm' -or
-                $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
+                $_.Name -like 'crt-*.ppm' -or $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
                 $_.Name -like 'supply-*-detail.ppm' -or $_.Name -like 'hud-*-detail.ppm' -or
                 $_.Name -like 'resume-*-detail.ppm' -or $_.Name -like 'end-menu-*-detail.ppm' -or
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
@@ -107,7 +107,7 @@ function Write-ContactSheet {
             $width = $bitmap.Width
             $height = $bitmap.Height
             $images.Add([pscustomobject]@{ name = $file.BaseName; bitmap = $bitmap })
-            if ($file.BaseName -like 'monitor-*' -or $file.BaseName -like 'closing-story-*') {
+            if ($file.BaseName -like 'crt-*' -or $file.BaseName -like 'monitor-*' -or $file.BaseName -like 'closing-story-*') {
                 $monitorCellWidth = [Math]::Max($monitorCellWidth, $width + 16)
                 $monitorCellHeight = [Math]::Max($monitorCellHeight, $height + 48)
             }
@@ -121,7 +121,7 @@ function Write-ContactSheet {
             }
         }
         if ($images.Count -eq 0) { throw 'No painter or monitor captures were produced.' }
-        $painters = @($images | Where-Object { $_.name -notlike 'monitor-*' -and $_.name -notlike 'closing-story-*' -and $_.name -notlike 'pad-jump-*' -and $_.name -notlike 'rumble-settings-*' })
+        $painters = @($images | Where-Object { $_.name -notlike 'crt-*' -and $_.name -notlike 'monitor-*' -and $_.name -notlike 'closing-story-*' -and $_.name -notlike 'pad-jump-*' -and $_.name -notlike 'rumble-settings-*' })
         Write-ContactSheetPages -Images $painters -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-contact'
         $padJump = @($images | Where-Object { $_.name -like 'pad-jump-*' })
@@ -183,7 +183,7 @@ function Write-ContactSheet {
                 -CellHeight $identityBackgroundHeight -CaptureDirectory $CaptureDirectory `
                 -Stem 'painter-identity-background-contact'
         }
-        $monitors = @($images | Where-Object { $_.name -like 'monitor-*' })
+        $monitors = @($images | Where-Object { $_.name -like 'crt-*' -or $_.name -like 'monitor-*' })
         Write-ContactSheetPages -Images $monitors -CellWidth $monitorCellWidth -CellHeight $monitorCellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-monitor-contact'
         $countdowns = @($images | Where-Object { $_.name -like 'countdown-*' })

@@ -142,7 +142,7 @@ namespace presentation_read
 		const JsonValue json = root.object("menu_text");
 		// stage_scan is optional, so a misspelt key must fail rather than be skipped.
 		content_value::require_known_keys(json, { "brand", "solo_practice_hint", "practice_tool",
-			"options_palette_timing", "title", "home_subtitle", "display_trial_countdown", "help",
+			"graphics", "options_palette_timing", "title", "home_subtitle", "display_trial_countdown", "help",
 			"keyboard_jump", "pad_buttons", "profiles", "status", "values", "confirmations", "end",
 			"results", "stage_scan", "stage", "stage_names", "records", "labels", "connection",
 			"stick_readouts", "hud", "subs", "countdown", "controls", "headings", "prompts", "items" });
@@ -232,6 +232,18 @@ namespace presentation_read
 			catch (const std::invalid_argument& error)
 			{ throw std::runtime_error(jump.where() + ": " + field.first + ": " + error.what()); }
 		}
+
+        const JsonValue graphics = json.object("graphics");
+        content_value::require_known_keys(graphics, { "heading", "help", "pending", "saved", "saved_override", "save_failed",
+            "launch_on", "launch_off", "override_on", "override_off" });
+        for (const auto& field : { std::pair{ "heading", &GraphicsMenuText::heading },
+            std::pair{ "pending", &GraphicsMenuText::pending }, std::pair{ "saved", &GraphicsMenuText::saved },
+            std::pair{ "saved_override", &GraphicsMenuText::saved_override },
+            std::pair{ "save_failed", &GraphicsMenuText::save_failed }, std::pair{ "launch_on", &GraphicsMenuText::launch_on },
+            std::pair{ "launch_off", &GraphicsMenuText::launch_off }, std::pair{ "override_on", &GraphicsMenuText::override_on },
+            std::pair{ "override_off", &GraphicsMenuText::override_off } })
+        { text.graphics.*field.second = read_menu_line(graphics, field.first); }
+        text.graphics.help = read_menu_block(graphics, "help");
 		const JsonValue status = json.object("status");
 		const JsonValue pad_buttons = json.object("pad_buttons");
 		PadButtonsMenuText& buttons = text.pad_buttons;

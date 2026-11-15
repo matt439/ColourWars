@@ -33,7 +33,8 @@ namespace
 			actual.sfx_volume == wanted.sfx_volume &&
 			actual.view_shake == wanted.view_shake &&
 			actual.aim_marker == wanted.aim_marker &&
-			actual.reduce_effects == wanted.reduce_effects && actual.pad_rumble == wanted.pad_rumble &&
+			actual.crt_monitor == wanted.crt_monitor &&
+            actual.reduce_effects == wanted.reduce_effects && actual.pad_rumble == wanted.pad_rumble &&
 			actual.pad_comfort == wanted.pad_comfort,
 			"Shared play preferences did not survive reloading");
 		for (int slot = 0; slot < input_slots::pad_count; ++slot)
@@ -646,6 +647,8 @@ int main()
 			"aim_marker", &PlaySettings::aim_marker);
 		check_boolean_loading(directory, "aim_marker", &PlaySettings::aim_marker,
 			"reduce_effects", &PlaySettings::reduce_effects);
+		check_boolean_loading(directory, "crt_monitor", &PlaySettings::crt_monitor,
+            "aim_marker", &PlaySettings::aim_marker);
 		check_boolean_loading(directory, "reduce_effects", &PlaySettings::reduce_effects,
 			"view_shake", &PlaySettings::view_shake);
 		check_stick_loading(directory);

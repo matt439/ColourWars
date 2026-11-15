@@ -42,6 +42,7 @@ Cases = @(
     @{ Name = 'sub_weapons' }
     @{ Name = 'settings' }
     @{ Name = 'initial_display' }
+    @{ Name = 'crt_trial' }
     @{ Name = 'player_profiles' }
     @{ Name = 'match_records' }
     @{ Name = 'remembered_setup' }

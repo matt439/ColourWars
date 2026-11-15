@@ -40,6 +40,7 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 	const AudioResources* audio_resources = services.audio_resources;
 	const MatchSetup* roster = round_setup.roster;
 	this->preferences_ = services.preferences;
+    this->crt_runtime_ = services.crt_runtime;
 	this->presentation_ = presentation;
 	this->render_resources_ = render_resources;
 	this->roster_.resize(this->players_.size());

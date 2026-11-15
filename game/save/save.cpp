@@ -241,6 +241,8 @@ namespace
             read_switch("view_shake", data.play.view_shake);
             read_switch("aim_marker", data.play.aim_marker);
             read_switch("reduce_effects", data.play.reduce_effects);
+            data.play.crt_monitor = false;
+            read_switch("crt_monitor", data.play.crt_monitor);
         }
 
         void write(SaveWriter& writer, const SaveData& data) const override
@@ -285,6 +287,8 @@ namespace
             writer.boolean(data.play.aim_marker);
             writer.key("reduce_effects");
             writer.boolean(data.play.reduce_effects);
+            writer.key("crt_monitor");
+            writer.boolean(data.play.crt_monitor);
         }
     };
 

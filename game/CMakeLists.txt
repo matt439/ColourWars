@@ -214,6 +214,7 @@ add_library(colourwars_game STATIC
     states/resume_countdown.cpp
     states/match_suspension.cpp
     states/controls_settings_menu.cpp
+    states/graphics_settings_menu.cpp
     states/keyboard_key_capture.cpp
     states/keyboard_keys_menu.cpp
     states/loadout_choice.cpp

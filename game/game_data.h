@@ -12,6 +12,8 @@
 #include "game/config/tuning.h"
 #include "game/debug/debug_director.h"
 
+namespace crt_trial { class Runtime; }
+
 // Borrowed application and game services for the shell: states, menu pages,
 // MenuContext, StagePreview and the developer tools. Nothing in game/objects,
 // game/ai or game/carried names it; a state unpacks it into a builder, which
@@ -22,6 +24,9 @@ class GameData
 {
 public:
     GameData() = default;
+
+    void set_crt_runtime(const crt_trial::Runtime* runtime) { crt_runtime_ = runtime; }
+    const crt_trial::Runtime* crt_runtime() const { return crt_runtime_; }
 
     void set_application(labrador::Application* application);
     void set_save(Save* save);
@@ -78,6 +83,7 @@ public:
     const labrador::Partitioner* partitioner() const;
 
 private:
+    const crt_trial::Runtime* crt_runtime_ = nullptr;
     labrador::Application* application_ = nullptr;
     Save* save_ = nullptr;
     SettingsSession* settings_session_ = nullptr;

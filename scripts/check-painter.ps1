@@ -72,6 +72,9 @@ param(
     [switch] $ResultPercentageOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
+    [switch] $CrtTrialOnly,
+    [switch] $CrtSavedOn,
+    [switch] $GraphicsSettingsOnly,
     [switch] $ClosingOnly,
     [switch] $SupplyOnly,
     [switch] $HudOnly,
@@ -213,7 +216,9 @@ $null = New-Item -ItemType Directory -Path $run, $captures, $working, $privatePr
 $saveDirectory = Join-Path $privateProfile 'ColourWars'
 $null = New-Item -ItemType Directory -Path $saveDirectory -Force
 $saveFixture = Join-Path $saveDirectory 'save_data.json'
-[IO.File]::WriteAllText($saveFixture, '{"aim_marker":false}', [Text.UTF8Encoding]::new($false))
+if ($CrtSavedOn -and -not $CrtTrialOnly) { throw 'CrtSavedOn requires CrtTrialOnly.' }
+$saveJson = if ($CrtSavedOn) { '{"aim_marker":false,"crt_monitor":true}' } else { '{"aim_marker":false}' }
+[IO.File]::WriteAllText($saveFixture, $saveJson, [Text.UTF8Encoding]::new($false))
 $saveFixtureHash = (Get-FileHash -LiteralPath $saveFixture).Hash
 
 foreach ($command in 'cmake', 'cl', 'git') {

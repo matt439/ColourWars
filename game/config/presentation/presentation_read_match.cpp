@@ -711,6 +711,17 @@ namespace presentation_read
 		opening.fill_frame = json.identifier("fill_frame");
 		opening.bezel_shades = read_colours(json, "bezel_shades");
 		opening.bezel_shadow = read_colour(json, "bezel_shadow");
+        if (json.has("crt_trial"))
+        {
+            const JsonValue crt = json.object("crt_trial");
+            require_known_keys(crt, { "scanline_count", "scanline_strength",
+                "mask_strength", "vignette", "brightness" });
+            opening.crt_trial.scanline_count = read_positive(crt, "scanline_count");
+            opening.crt_trial.scanline_strength = read_unit(crt, "scanline_strength");
+            opening.crt_trial.mask_strength = read_unit(crt, "mask_strength");
+            opening.crt_trial.vignette = read_unit(crt, "vignette");
+            opening.crt_trial.brightness = read_non_negative(crt, "brightness");
+        }
 		const JsonValue art = json.object("monitor_art");
 		MonitorArtPresentation& monitor = opening.monitor_art;
 		monitor.ink = read_colour(art, "ink");

@@ -655,6 +655,15 @@ struct RevealArtPresentation
 // The monitor the picture is on, the person at it and the cursor they use:
 // the opening's look (docs/backstory.md, "Opening"). Rectangles are fractions
 // of the screen, sizes fractions of its height, colours are drawn as is.
+struct CrtTrialPresentation
+{
+    float scanline_count = 0.0f;
+    float scanline_strength = 0.0f;
+    float mask_strength = 0.0f;
+    float vignette = 0.0f;
+    float brightness = 1.0f;
+};
+
 struct OpeningPresentation
 {
 	std::string sprite_sheet;
@@ -663,6 +672,7 @@ struct OpeningPresentation
 	std::vector<labrador::Colour> bezel_shades;
 	labrador::Colour bezel_shadow;
 	MonitorArtPresentation monitor_art;
+	CrtTrialPresentation crt_trial;
 	labrador::RectangleF glass;
 	labrador::Colour glass_colour;
 	// Behind the picture, where it does not fill the glass.
