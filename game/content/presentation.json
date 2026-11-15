@@ -341,7 +341,8 @@
       "pause_player_title": "Pause Menu P{player}",
       "controller_lost": "Controller lost",
       "all_connected": "All players connected.",
-      "teams_required": "Both teams need a player"
+      "teams_required": "Both teams need a player",
+      "team_choice_required": "Choose a team with Left/Right, then Ready."
     },
     "stick_readouts": {
       "connected": "{device} - connected",

@@ -554,6 +554,7 @@ namespace presentation_read
 		text.connection.controller_lost = read_menu_line(connection, "controller_lost");
 		text.connection.all_connected = read_menu_line(connection, "all_connected");
 		text.connection.teams_required = read_menu_line(connection, "teams_required");
+		text.connection.team_choice_required = read_menu_line(connection, "team_choice_required");
 		try { std::ignore = format_label_template(text.connection.pause_player_title, { { L"{player}", L"1" } }); }
 		catch (const std::invalid_argument& error)
 		{ throw std::runtime_error(connection.where() + ": pause_player_title: " + error.what()); }

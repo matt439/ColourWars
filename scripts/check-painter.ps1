@@ -76,6 +76,7 @@ param(
     [switch] $CrtSavedOn,
     [switch] $GraphicsSettingsOnly,
     [switch] $HowToPlayOnly,
+    [switch] $FirstMatchFlowOnly,
     [switch] $ClosingOnly,
     [switch] $SupplyOnly,
     [switch] $HudOnly,
@@ -167,7 +168,7 @@ if ($CompileOnly -and $focusedSelectors.Count -gt 0) {
 }
 # Each entry is one compile: $true selects the scripted gamepad reader.
 $painterCompileVariants = if ($CompileOnly) { @($false, $true) } else {
-    @([bool]($HowToPlayOnly -or $RumbleOnly -or $KeyboardJumpOnly -or $StageSummaryOnly -or $WeaponTuneColoursOnly -or $MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $BotPlayersOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $StagePreviewBackgroundTuneColourOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly))
+    @([bool]($FirstMatchFlowOnly -or $HowToPlayOnly -or $RumbleOnly -or $KeyboardJumpOnly -or $StageSummaryOnly -or $WeaponTuneColoursOnly -or $MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $BotPlayersOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $StagePreviewBackgroundTuneColourOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly))
 }
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
