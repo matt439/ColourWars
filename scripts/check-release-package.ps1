@@ -47,6 +47,12 @@ if (-not (Test-Path -LiteralPath (Join-Path $package 'ColourWars.exe') -PathType
 }
 $checks = 0
 
+# Checking mere presence misses stale settings, guide text and art. Compare
+# extracted bytes with the same reviewed allow-list used by the packager.
+& cmake "-DPACKAGE_DIR=$package" -P (Join-Path $repository 'cmake/check_packaged_assets.cmake')
+if ($LASTEXITCODE -ne 0) { throw 'Packaged runtime assets do not match reviewed source.' }
+$checks++
+
 $files = @(Get-ChildItem -LiteralPath $package -File -Recurse)
 $leaked = @($files | Where-Object {
     $_.Extension -in '.wav', '.mp3', '.ogg', '.pdb' -or $_.FullName -eq (Join-Path $package 'README.md') -or
