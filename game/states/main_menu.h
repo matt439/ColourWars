@@ -27,6 +27,7 @@ enum class MainMenuScreen
 {
 	title,
 	home,
+	how_to_play,
 	options,
 	credits,
 	mode_select,
@@ -139,7 +140,7 @@ private:
 class MainMenuHome final : public MainMenuPage
 {
 public:
-	enum class InitialFocus { play, options, credits };
+	enum class InitialFocus { play, how_to_play, options, credits };
 	explicit MainMenuHome(MenuContext* context, InitialFocus initial_focus = InitialFocus::play);
 	void update_page(float dt) override;
 	void init() override;
@@ -151,9 +152,26 @@ private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiText> heading_ = nullptr;
 	std::unique_ptr<labrador::UiText> play_ = nullptr;
+	std::unique_ptr<labrador::UiText> learn_ = nullptr;
 	std::unique_ptr<labrador::UiText> options_ = nullptr;
 	std::unique_ptr<labrador::UiText> credits_ = nullptr;
 	std::unique_ptr<labrador::UiText> exit_ = nullptr;
+};
+
+class MainMenuHowToPlay final : public MainMenuPage
+{
+public:
+    explicit MainMenuHowToPlay(MenuContext* context);
+    void init() override;
+protected:
+    void update_page(float dt) override;
+    bool shows_focus_backing() const override { return false; }
+private:
+    void refresh();
+    int page_ = 0;
+    std::unique_ptr<MenuPaperArtwork> paper_;
+    std::unique_ptr<labrador::UiTexture> background_;
+    std::unique_ptr<labrador::UiText> heading_, body_, next_, back_;
 };
 
 // A separate pushed frame keeps cancellation on the same Home page.

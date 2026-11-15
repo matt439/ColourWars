@@ -219,6 +219,7 @@ struct MainMenuPresentation
 	float title_no_pad_y = 0.0f;
 	labrador::Vector2F home_position;
 	labrador::Vector2F home_subtitle_position;
+	labrador::Vector2F home_help_position;
 	labrador::Vector2F home_spacing;
 	std::string title_font;
 	std::string announcement_font;

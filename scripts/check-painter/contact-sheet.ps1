@@ -73,7 +73,7 @@ function Write-ContactSheet {
                 $_.Name -like 'identity-background-*-badges.ppm' -or
                 $_.Name -like 'drift-*-detail.ppm' -or $_.Name -like 'miniature-terrain-*-detail.ppm' -or
                 $_.Name -like 'tune-colours-*-detail.ppm' -or $_.Name -like 'parallax-*.ppm' -or
-                $_.Name -like 'crt-*.ppm' -or $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
+                $_.Name -like 'learn-*.ppm' -or $_.Name -like 'crt-*.ppm' -or $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
                 $_.Name -like 'supply-*-detail.ppm' -or $_.Name -like 'hud-*-detail.ppm' -or
                 $_.Name -like 'resume-*-detail.ppm' -or $_.Name -like 'end-menu-*-detail.ppm' -or
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or

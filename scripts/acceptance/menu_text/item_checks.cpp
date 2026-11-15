@@ -6,7 +6,7 @@ namespace menu_text_acceptance
 {
     void check_item_bounds(Variants& variants, World& world)
     {
-        for (const char* key : { "play", "options", "credits", "exit", "controls_audio", "apply", "back",
+        for (const char* key : { "play", "how_to_play", "options", "credits", "exit", "controls_audio", "apply", "back",
             "single_match", "best_of_three", "best_of_five", "match_length", "one_player_practice",
             "two_players", "three_players", "four_players", "resume", "restart", "quit", "yes", "no",
             "change_teams", "change_weapons", "change_level", "exit_to_main_menu", "restore_defaults", "keep", "revert",
@@ -15,6 +15,12 @@ namespace menu_text_acceptance
             variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
                 { d["menu_text"]["items"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         }
+        variants.rejects("Home How to play", [](rapidjson::Document& d)
+        {
+            d["main_menu"]["home_help_position"]["x"].SetFloat(460.0f);
+        }, &world);
+        variants.rejects("learn.next", [](rapidjson::Document& d)
+        { d["menu_text"]["learn"]["next"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         const auto original = variants.load([](rapidjson::Document&) {});
         const float row_height = 20.0f + original.main_menu().art.focus_padding.y * 2.0f;
         const float paper_right = (1920.0f + original.main_menu().home_box_size.x) / 2.0f -
@@ -62,6 +68,8 @@ namespace menu_text_acceptance
 
     void check_restore_defaults_text(Variants& variants, World& world)
     {
+        variants.rejects("learn.next", [](rapidjson::Document& d)
+        { d["menu_text"]["learn"]["next"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& main = original.main_menu();
         const auto art = options_art(main);
@@ -173,6 +181,8 @@ namespace menu_text_acceptance
             d["menu_style"]["shadow"]["item_offset"]["x"].SetFloat(1.5f);
             d["menu_style"]["shadow"]["item_offset"]["y"].SetFloat(1.5f);
         };
+        variants.rejects("learn.next", [](rapidjson::Document& d)
+        { d["menu_text"]["learn"]["next"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& look = original.main_menu();
         const float row_height = 20.0f + 1.5f + look.setup_focus_padding.y * 2.0f + look.setup_shadow_offset;
@@ -339,6 +349,8 @@ namespace menu_text_acceptance
                 choice->value["name"].SetString(rapidjson::StringRef(tools[tool++ % std::size(tools)]));
             }
         };
+        variants.rejects("learn.next", [](rapidjson::Document& d)
+        { d["menu_text"]["learn"]["next"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& pause = original.pause_menu();
         const auto options_size = world.render.measure_text(world.render.resolve_sprite_font(original.menu().item_font),

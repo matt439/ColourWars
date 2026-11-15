@@ -274,7 +274,7 @@ namespace presentation_read
 		require_known_keys(json, { "title_box_size", "home_box_size", "options_box_size",
 			"credits_box_size", "setup_box_size", "team_box_size", "weapon_box_size", "stage_box_size",
 			"setup_focus_padding", "setup_shadow_offset", "art", "title_y", "title_subtitle_y",
-			"title_start_y", "title_no_pad_y", "home_position", "home_subtitle_position", "home_spacing",
+			"title_start_y", "title_no_pad_y", "home_position", "home_help_position", "home_subtitle_position", "home_spacing",
 			"options_heading_position", "options_position", "options_value_x", "options_status_position",
 			"credits", "fonts", "build_id_y", "backgrounds", "options_warning_colour",
 			"options_spacing", "display_trial_seconds", "weapon_description", "mode_select_spacing",
@@ -355,6 +355,7 @@ namespace presentation_read
 		menu.title_no_pad_y = title_height("title_no_pad_y");
 		menu.home_position = position("home_position");
 		menu.home_subtitle_position = position("home_subtitle_position");
+        menu.home_help_position = position("home_help_position");
 
 		const JsonValue fonts = json.object("fonts");
 		menu.title_font = fonts.string("title");

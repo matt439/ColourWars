@@ -76,16 +76,26 @@ void Presentation::Validation::validate_menu_chrome() const
 	}
 }
 
-// Phase 1: Home's four actions.
+// Phase 1: Home's original actions and optional guide.
 void Presentation::Validation::validate_home_actions() const
 {
 	const MainMenuPresentation& main = this->presentation.main_menu_;
 	const MenuItem home_items[]{ MenuItem::play, MenuItem::options, MenuItem::credits, MenuItem::exit };
+    check_menu_item(MenuItem::how_to_play, this->presentation.menu_.item_font,
+        main.home_help_position,
+        menu_geometry::footer_paper(main.home_box_size, this->presentation.menu_.footer_y),
+        main.home_spacing.y, std::nullopt, main.art);
 	for (size_t index = 0; index < std::size(home_items); ++index)
 	{
 		check_menu_item(home_items[index], this->presentation.menu_.item_font, main.home_position +
 			Vector2F(0.0f, main.home_spacing.y * static_cast<float>(index + 2)),
 			menu_geometry::footer_paper(main.home_box_size, this->presentation.menu_.footer_y), main.home_spacing.y, std::nullopt, main.art);
+        RectangleF action(main.home_position + Vector2F(0.0f, main.home_spacing.y * static_cast<float>(index + 2)),
+            fixed_menu_size("Home action", this->presentation.menu_text_.item(home_items[index]), this->presentation.menu_.item_font));
+        RectangleF help(main.home_help_position, fixed_menu_size("How to play", this->presentation.menu_text_.item(MenuItem::how_to_play),
+            this->presentation.menu_.item_font));
+        action.inflate(main.art.focus_padding); help.inflate(main.art.focus_padding);
+        if (overlaps(action, help)) throw std::runtime_error(this->presentation.source_path_ + ": menu_text.items.how_to_play at main_menu.home_help_position: Home How to play overlaps another action");
 	}
 }
 
@@ -93,6 +103,22 @@ void Presentation::Validation::validate_home_actions() const
 void Presentation::Validation::validate_credits_text() const
 {
 	const MainMenuPresentation& main = this->presentation.main_menu_;
+    const auto paper = menu_geometry::footer_paper(main.credits_box_size, this->presentation.menu_.footer_y);
+    const auto& words = this->presentation.menu_text_;
+    const auto& style = this->presentation.menu_;
+    const RectangleF heading(main.credits_heading_position,
+        fixed_menu_size("menu_text.items.how_to_play", words.item(MenuItem::how_to_play), style.heading_font));
+    check_fixed_paper("menu_text.items.how_to_play", heading, main.credits_box_size, Vector2F::zero);
+    RectangleF next(main.credits_back_position,
+        fixed_menu_size("menu_text.learn.next", words.learn_next, style.item_font));
+    const auto back_size = fixed_menu_size("menu_text.items.back", words.item(MenuItem::back), style.item_font);
+    RectangleF back(Vector2F(menu_geometry::paper_text_right(paper, main.art) - back_size.x,
+        main.credits_back_position.y), back_size);
+    check_fixed_paper("menu_text.learn.next", next, main.credits_box_size, main.art.focus_padding);
+    check_fixed_paper("menu_text.items.back", back, main.credits_box_size, main.art.focus_padding);
+    next.inflate(main.art.focus_padding); back.inflate(main.art.focus_padding);
+    if (overlaps(next, back)) throw std::runtime_error(this->presentation.source_path_ +
+        ": menu_text.learn.next overlaps the guide Back action");
 	check_menu_item(MenuItem::back, this->presentation.menu_.item_font, main.credits_back_position,
 		menu_geometry::footer_paper(main.credits_box_size, this->presentation.menu_.footer_y), 0.0f, std::nullopt,
 		main.art);
