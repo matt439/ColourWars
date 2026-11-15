@@ -410,7 +410,7 @@ namespace menu_text_acceptance
         { "watch_replay", L"Watch Replay" },
         { "profiles", L"Profiles" }, { "series_stage", L"Series stage" }, { "vsync", L"Vsync" },
         { "variant", L"Variant" }, { "toggle_fire", L"Toggle fire" },
-        { "graphics", L"Graphics" }, { "crt_monitor", L"CRT monitor (restart)" }
+        { "graphics", L"Graphics" }, { "crt_monitor", L"CRT monitor (restart)" }, { "how_to_play", L"How to play" }
     };
 
     using World = acceptance::ContentWorld;

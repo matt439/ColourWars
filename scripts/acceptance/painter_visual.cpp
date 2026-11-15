@@ -130,6 +130,9 @@ namespace
 {
 #include "scripts/acceptance/painter_visual/painter_fixtures.h"
 #include "scripts/acceptance/painter_visual/graphics_settings_checks.h"
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+#include "scripts/acceptance/painter_visual/how_to_play_checks.h"
+#endif
 #include "scripts/acceptance/painter_visual/scripted_menu_owner.h"
 #include "scripts/acceptance/painter_visual/action_combat_checks.h"
 #include "scripts/acceptance/painter_visual/tool_checks.h"
@@ -287,7 +290,7 @@ int wmain(int argc, wchar_t** argv)
         require(argc == 3 || (argc == 5 && (std::wstring(argv[3]) == L"turbulence-mover" || std::wstring(argv[3]) == L"turbulence-shoulder" || std::wstring(argv[3]) == L"turbulence-slab") && !std::wstring(argv[4]).empty()) || (argc == 4 && (std::wstring(argv[3]) == L"hud-paper-tune-colours" || std::wstring(argv[3]) == L"hud-closing-shade" || std::wstring(argv[3]) == L"hud-closing-materials" || std::wstring(argv[3]) == L"stage-preview-background-tune-colour" || std::wstring(argv[3]) == L"hud-label-tune-colours" || std::wstring(argv[3]) == L"hud-timer-tune-colour" ||
             std::wstring(argv[3]) == L"identity" ||
             std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"landmark" || std::wstring(argv[3]) == L"parallax" || std::wstring(argv[3]) == L"miniature-terrain" || std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"press-tower" || std::wstring(argv[3]) == L"turbulence-blockout" || std::wstring(argv[3]) == L"gate-permission" || std::wstring(argv[3]) == L"ferry-direction" || std::wstring(argv[3]) == L"surface-finish" || std::wstring(argv[3]) == L"route-warning" || std::wstring(argv[3]) == L"tune-colours" || std::wstring(argv[3]) == L"monitor" ||
-            std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"crt-trial" || std::wstring(argv[3]) == L"graphics-settings" || std::wstring(argv[3]) == L"closing" ||
+            std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"crt-trial" || std::wstring(argv[3]) == L"graphics-settings" || std::wstring(argv[3]) == L"how-to-play" || std::wstring(argv[3]) == L"closing" ||
             std::wstring(argv[3]) == L"supply" || std::wstring(argv[3]) == L"hud" ||
             std::wstring(argv[3]) == L"practice-replay" || std::wstring(argv[3]) == L"resume" || std::wstring(argv[3]) == L"end-menu" ||
             std::wstring(argv[3]) == L"pause-menu" || std::wstring(argv[3]) == L"results-menu" ||
@@ -423,7 +426,7 @@ int wmain(int argc, wchar_t** argv)
         require(!crack_tune_colour_only, "CrackTuneColourOnly requires the normal gamepad reader");
         require(!limb_tune_colours_only, "LimbTuneColoursOnly requires the normal gamepad reader");
 
-        require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || bot_players_only || remembered_setup_only || connection_text_only || stick_readouts_only || team_focus_only || team_tune_colours_only || weapon_tune_colours_only || stage_summary_only || stage_preview_background_tune_colour_only || menu_labels_only || menu_text_only || keyboard_jump_only || rumble_only ||
+        require(argc == 4 && (std::wstring(argv[3]) == L"how-to-play" || std::wstring(argv[3]) == L"team-setup" || bot_players_only || remembered_setup_only || connection_text_only || stick_readouts_only || team_focus_only || team_tune_colours_only || weapon_tune_colours_only || stage_summary_only || stage_preview_background_tune_colour_only || menu_labels_only || menu_text_only || keyboard_jump_only || rumble_only ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options")),
             "The scripted gamepad backend is restricted to focused team/setup/menu-text acceptance");
 #else
@@ -488,6 +491,15 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), nullptr, &crt_runtime);
         const Canvas canvas(app.render_resources());
+        if (argc == 4 && std::wstring(argv[3]) == L"how-to-play")
+        {
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+            how_to_play_matrix(app, canvas, tuning, presentation, output);
+#else
+            throw std::runtime_error("How to play checks require scripted gamepads");
+#endif
+            return 0;
+        }
         if (argc == 4 && std::wstring(argv[3]) == L"graphics-settings")
         {
             graphics_settings_matrix(app, canvas, tuning, presentation, output);

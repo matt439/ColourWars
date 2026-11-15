@@ -31,6 +31,10 @@ run over Remote Desktop or in most virtual machines.
 Playing
 -------
 
+New here? On Home, move right from Play to How to play. Its three pages
+explain practice/local setup, show your saved controls, and explain results
+and rematches. Back returns to Home; the guide does not change your setup.
+
 Play > Single Match (or Best of 3 / Best of 5) > choose how many players.
 The device you choose with becomes Player 1.
 
