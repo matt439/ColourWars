@@ -1,3 +1,13 @@
+# Reviewed Play a bot starter route
+
+**Current status:** qualified optional implementation selected after the prototype.
+The final scope retains Join/profile choice, full Play and Customise. Local Debug,
+Release, CRT and pseudo-locale evidence is recorded below; hosted CI remains the
+PR gate. Earlier local-only and missing-proof notes are the experiment history,
+not the current release checklist.
+
+---
+
 # LOCAL ONLY: reviewed one-bot shortcut prototype
 
 Base: master after #93 (`0fd18572`). Not an approved shipping design. No push,
@@ -157,3 +167,61 @@ added a confirm to the original practice path; corrected that test edit without
 changing expectations, then reran the complete six-route matrix successfully.
 No hosted CI, push, PR, deployment, release or #88 change.
 `menu_text` and `team_selection` CPU acceptance also passed in Release; evidence in `out/validation/quick-readiness-cpu/x64-release`.
+
+## Qualified implementation scope (supersedes the local-only proposal)
+
+The selected reversible scope is an optional **Play a bot** Home action. Default
+Play and the complete Customise route remain; teams and bot are disclosed, the
+existing Join/profile chooser is mandatory, and the player chooses the arena.
+This does not alter tools, bot policy, scoring, match rules or arena eligibility.
+
+The earlier already-worn-profile defect was reproduced at actual launch: a worn
+Boost=2 profile arrived as Boost=0. The shortcut now adopts its initiating device's
+profile Boost before Join, just as full Player Count does. Runtime checks cover
+both choosing a profile at Join and entering with one already worn. Review copy
+now states that active profile Boost and active controls/preferences apply; it
+no longer claims all seats always have zero Boost.
+
+Authored presentation fields replace prototype geometry. Strict validation checks
+panel bounds, focused-action overlap, minimum 85% body text size, exactly one
+duration token and the actual expanded runtime body. Independent Home expected
+rasters explicitly include the added optional action. Pseudo-locale is authored.
+
+The revised real-runtime rehearsal retains the 6-confirm/7-direction route (10
+confirms through live rematch). It also independently compares Join Back to Count,
+changed difficulty to full Team, unclaimed-human refusal, arena Back to full tools,
+held-confirm handling, and disconnected-host refusal/reconnect. Each cancellation
+checks that no unstarted match was saved. Effective remapped keyboard P/pad Y
+Pause opens actual pause and Back resumes. Existing full practice/versus routes
+remain in the same rehearsal. These use synthetic input, not physical devices.
+
+No release, deployment, nightly dispatch or issue #88 change is part of this work.
+
+Final local evidence (native RTX 5080 D3D11, no physical-input claim):
+- Release seven-route matrix with real CRT enabled:
+  `out/validation/quick-final-crt/x64-release/`.
+- Release seven-route pseudo-locale matrix:
+  `out/validation/quick-final-pseudo/x64-release/6fa011657fc143a6aae175579b07260c`.
+- Debug seven-route matrix:
+  `out/validation/quick-final-debug/x64-debug/1461105ceb6f42e0a7216d6387841b06`.
+- Existing Home return-focus, Main Menu and How to play raster/input leaves:
+  `out/validation/quick-home`, `quick-main`, `quick-guide` (Release).
+- Release CPU menu_presentation/locales and menu_text:
+  `out/validation/quick-layout5` and `quick-layout-menu-text3`.
+
+The original #93 neutral-team refusal/repeated-refusal assertions remain. Those
+**two deliberately invalid attempts** are logged separately and excluded from
+valid-path confirmation counts; they are not necessary steps for a new player.
+The synthetic-pad profile case adds one optional X selection as previously noted.
+Neither is silently claimed as a saved confirmation.
+
+The layout schema surfaced old shared-font fixture interactions. Tests now
+isolate the intended glyph/hint/countdown consumer, while retaining strict
+production checks and the original negative coverage. No gate, refusal, tolerance
+or hardware requirement was relaxed.
+
+Final Debug CPU `menu_text`, `menu_presentation`, `locales` and `team_selection`
+passed: `out/validation/quick-final-debug-cpu/x64-debug/acceptance-summary.json`.
+The local CI utility suite passed all 62 tests and Markdown links resolved.
+Its first attempt used a plain shell without CMake; rerunning in the documented
+VS developer environment resolved that environment-only failure. No test changed.

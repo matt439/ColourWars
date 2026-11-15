@@ -198,7 +198,7 @@ already had rows. `FTR#13` was folded into `REV#26` on 2026-11-12, which closed 
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `FTR#14` | UNSCOPED | LOW | S | The setup path is long and the save folder is never shown; `stages` is now made on the first save write ([User stages](docs/feature-roadmap.md#user-stages-road16)). Quick Play and an Open save folder item stay undesigned. [Record](docs/review/2026-11-10-first-run-review.md#the-setup-path-is-long-and-the-save-folder-is-hidden-ftr14). |
+| `FTR#14` | UNSCOPED | LOW | S | The setup path is long and the save folder is never shown; `stages` is now made on the first save write ([User stages](docs/feature-roadmap.md#user-stages-road16)). Optional reviewed Play a bot now retains Join/profile choice and shortens fresh setup ([qualification](docs/review/2026-11-15-quick-match-prototype.md)); an Open save folder item stays undesigned. [Record](docs/review/2026-11-10-first-run-review.md#the-setup-path-is-long-and-the-save-folder-is-hidden-ftr14). |
 
 ## Areas with no open rows
 

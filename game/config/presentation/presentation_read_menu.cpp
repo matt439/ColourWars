@@ -274,7 +274,7 @@ namespace presentation_read
 		require_known_keys(json, { "title_box_size", "home_box_size", "options_box_size",
 			"credits_box_size", "setup_box_size", "team_box_size", "weapon_box_size", "stage_box_size",
 			"setup_focus_padding", "setup_shadow_offset", "art", "title_y", "title_subtitle_y",
-			"title_start_y", "title_no_pad_y", "home_position", "home_help_position", "home_subtitle_position", "home_spacing",
+			"title_start_y", "title_no_pad_y", "home_position", "home_help_position", "home_quick_position", "quick_match", "home_subtitle_position", "home_spacing",
 			"options_heading_position", "options_position", "options_value_x", "options_status_position",
 			"credits", "fonts", "build_id_y", "backgrounds", "options_warning_colour",
 			"options_spacing", "display_trial_seconds", "weapon_description", "mode_select_spacing",
@@ -356,6 +356,14 @@ namespace presentation_read
 		menu.home_position = position("home_position");
 		menu.home_subtitle_position = position("home_subtitle_position");
         menu.home_help_position = position("home_help_position");
+        menu.home_quick_position = position("home_quick_position");
+        const JsonValue quick = json.object("quick_match");
+        require_known_keys(quick, {"heading_position", "body_position", "start_position", "customise_position", "back_position"});
+        menu.quick_heading_position = read_vector(quick, "heading_position");
+        menu.quick_body_position = read_vector(quick, "body_position");
+        menu.quick_start_position = read_vector(quick, "start_position");
+        menu.quick_customise_position = read_vector(quick, "customise_position");
+        menu.quick_back_position = read_vector(quick, "back_position");
 
 		const JsonValue fonts = json.object("fonts");
 		menu.title_font = fonts.string("title");

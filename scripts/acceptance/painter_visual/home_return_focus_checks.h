@@ -82,6 +82,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         label(L"Make your mark.", style.heading_font, look.home_position, art.ink);
         label(L"Paint the arena. Claim the win.", style.detail_font, look.home_subtitle_position, art.ink);
         label(L"How to play", style.item_font, look.home_help_position, art.ink);
+        label(L"Play a bot", style.detail_font, look.home_quick_position, art.ink);
         const std::array<std::wstring, 4> actions{ L"Play", L"Options", L"Credits", L"Exit" };
         std::array<RectangleF, 4> rows;
         for (int row = 0; row < 4; ++row)

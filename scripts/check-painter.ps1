@@ -218,7 +218,7 @@ $null = New-Item -ItemType Directory -Path $run, $captures, $working, $privatePr
 $saveDirectory = Join-Path $privateProfile 'ColourWars'
 $null = New-Item -ItemType Directory -Path $saveDirectory -Force
 $saveFixture = Join-Path $saveDirectory 'save_data.json'
-if ($CrtSavedOn -and -not $CrtTrialOnly) { throw 'CrtSavedOn requires CrtTrialOnly.' }
+if ($CrtSavedOn -and -not ($CrtTrialOnly -or $FirstMatchFlowOnly)) { throw 'CrtSavedOn requires CrtTrialOnly or FirstMatchFlowOnly.' }
 $saveJson = if ($CrtSavedOn) { '{"aim_marker":false,"crt_monitor":true}' } else { '{"aim_marker":false}' }
 [IO.File]::WriteAllText($saveFixture, $saveJson, [Text.UTF8Encoding]::new($false))
 $saveFixtureHash = (Get-FileHash -LiteralPath $saveFixture).Hash

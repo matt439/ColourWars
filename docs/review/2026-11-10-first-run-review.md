@@ -231,6 +231,16 @@ There are about eight confirm screens before a first match. The save and
 by hand (`docs/HOW-TO-PLAY.txt:77-79`). Candidates: a Quick Play item, an
 "Open save folder" item and creating `stages` on first run. None is designed.
 
+**2026-11-15 follow-up:** the optional **Play a bot** route now offers a disclosed
+one-human/Normal-bot preset, then the existing Join/profile choice and free arena
+selection. Default Play and full Customise remain. Measured valid-path launch is
+6 confirmations/7 directions versus 13/11, with unchanged Results/Rematch.
+This does not skip the per-run device/profile requirement of REV#32 or change
+match mechanics. Scope, qualification and limits are recorded in
+[the starter-route review](2026-11-15-quick-match-prototype.md). An Open save folder
+item remains undesigned; `stages` creation was handled separately.
+
+
 ## Finding help
 
 ### The README mixes audiences (FTR#15)

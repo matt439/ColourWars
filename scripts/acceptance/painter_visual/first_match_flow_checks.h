@@ -1,7 +1,7 @@
-// Local first-run rehearsal. Only physical input snapshots and silent display
+// Local first-run rehearsal. Only synthetic input snapshots and silent display
 // preferences are supplied; production match duration, rules and roster flow stay intact.
 void first_match_flow(Application& app, GameTuning& tuning, Presentation& presentation,
-    const std::filesystem::path& content, const std::filesystem::path& output)
+    const std::filesystem::path& content, const std::filesystem::path& output, const crt_trial::Runtime& crt_runtime)
 {
     const auto catalog = acceptance::manifest_catalog(content);
     StateContext& stack = app;
@@ -9,17 +9,19 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
     for (bool quick : {false, true})
     for (bool practice : {true, false})
     for (bool pad : {false, true})
+    for (bool already_worn : {false, true})
     {
         if(quick && practice) continue;
+        if(already_worn && !(quick && pad)) continue;
         stack.clear();
-        const std::string prefix = std::string(pad ? "flow-pad" : "flow-keyboard") + (practice ? "-practice" : "-versus") + (quick ? "-quick" : "-full");
+        const std::string prefix = std::string(pad ? "flow-pad" : "flow-keyboard") + (practice ? "-practice" : "-versus") + (quick ? "-quick" : "-full") + (already_worn ? "-worn" : "");
         const acceptance::IsolatedSave profile(output / (prefix + "-fresh-profile"));
         Save preferences; SettingsSession session(preferences); session.load_save_file();
         require(!preferences.last_match_setup(), "Flow profile was not fresh");
-        PlaySettings quiet = session.play_settings(); quiet.music_volume = quiet.sfx_volume = 0; quiet.reduce_effects = true;
+        PlaySettings quiet = session.play_settings(); quiet.music_volume = quiet.sfx_volume = 0; quiet.reduce_effects = true; quiet.crt_monitor=crt_runtime.enabled();
         require(session.set_play_settings_and_save(quiet), "Cannot isolate silent flow preferences");
         GameData data; data.set_application(&app); data.set_save(&preferences); data.set_settings_session(&session);
-        data.set_tuning(&tuning); data.set_presentation(&presentation); data.set_stage_catalog(&catalog);
+        data.set_tuning(&tuning); data.set_presentation(&presentation); data.set_stage_catalog(&catalog); data.set_crt_runtime(&crt_runtime);
         app.viewport_manager()->set_layout(ScreenLayout::one_player);
         app.resolution_manager()->set_resolution_exactly({1280,720});
         std::ignore = app.renderer()->window_size_changed(1280,720);
@@ -83,13 +85,62 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
             require(reference.pixels==stack_frame(app).pixels,"Customise did not open the existing full Mode page");
             require(!preferences.last_match_setup() && session.input_bindings()==before,
                 "Customise wrote a match before launch");
-            reference_stack.clear(); stack.clear(); stack.push(std::make_unique<GameMenu>(&data)); tick(); tick();
+            reference_stack.clear(); stack.clear();
+            // Direct real-page rehearsals isolate each interruption and compare
+            // against an independently constructed full-route destination.
+            for(int scenario=0;scenario<(pad ? 6 : 5);++scenario)
+            {
+                proposed=MatchSetup{}; proposed.set_player_count(2);
+                proposed.set_player_bot(1,BotDifficulty::normal);
+                proposed.begin_input_claims(pad ? 0 : input_slots::keyboard_and_mouse);
+                proposed.set_player_team(0,PlayerTeam::a); proposed.set_player_team(1,PlayerTeam::b);
+                reference_input.reset_actions();
+                stack.push(std::make_unique<MainMenuJoin>(&reference_context,true)); tick(); tick();
+                if(scenario==0) tap(GamepadButton::b); // Back retains the complete Count route.
+                if(scenario==1) { tap(GamepadButton::dpad_right); tap(GamepadButton::a); } // Hard bot -> full Team.
+                if(scenario==2) { tap(GamepadButton::dpad_right); tap(GamepadButton::dpad_right); tap(GamepadButton::a); } // Unclaimed human cannot continue.
+                if(scenario==3) { tap(GamepadButton::a); tap(GamepadButton::b); } // Arena Back -> full tools.
+                if(scenario==4) {
+                    if(pad) painter_scripted_pads::states[0].buttons=static_cast<uint16_t>(1u<<static_cast<unsigned int>(GamepadButton::a));
+                    else app.keyboard()->on_key_down(Key::enter);
+                    for(int held=0;held<30;++held) tick();
+                    painter_scripted_pads::states[0].buttons=0; app.keyboard()->on_key_up(Key::enter); tick(); tick();
+                } // A held Join confirm must not also confirm/launch the arena.
+                if(scenario==5) {
+                    painter_scripted_pads::states[0].connected=false; tick(); tick();
+                    const Frame waiting=stack_frame(app);
+                    app.keyboard()->on_key_down(Key::enter); tick(); app.keyboard()->on_key_up(Key::enter); tick();
+                    require(waiting.pixels==stack_frame(app).pixels,"Other device advanced disconnected host Join");
+                    require(!preferences.last_match_setup(),"Disconnected host launched a match");
+                    painter_scripted_pads::states[0].connected=true; tick(); tick(); tap(GamepadButton::a);
+                }
+                const Frame observed=stack_frame(app);
+                StateContext destination;
+                if(scenario==0) destination.push(std::make_unique<MainMenuPlayerCount>(&reference_context));
+                if(scenario==1) destination.push(std::make_unique<MainMenuTeamSelect>(&reference_context));
+                if(scenario==2) destination.push(std::make_unique<MainMenuJoin>(&reference_context,true));
+                if(scenario==3) destination.push(std::make_unique<MainMenuWeaponSelect>(&reference_context));
+                if(scenario==4 || scenario==5) destination.push(std::make_unique<MainMenuStageSelect>(&reference_context));
+                app.renderer()->begin_frame(); destination.draw(*app.renderer()); const Frame expected_destination=read(*app.renderer());
+                save(observed,output/(prefix+"-interruption-"+std::to_string(scenario)+".ppm"));
+                require(observed.pixels==expected_destination.pixels,"Reviewed Join interruption differs from independent full-route destination");
+                require(!preferences.last_match_setup(),"Join interruption committed an unstarted match");
+                destination.clear(); stack.clear();
+            }
+            stack.push(std::make_unique<GameMenu>(&data)); tick(); tick();
             confirmations=0; directions=0; // timed/count comparison begins at fresh Title, after separate recovery rehearsal.
+        }
+        if(quick) {
+            InputBindings remapped=session.input_bindings();
+            set_keyboard_control(remapped,KeyboardAction::pause,DesktopControl{Key::p,MouseButton::none});
+            remapped.pads[0][PadAction::pause]={PadControl::y,PadControl::none};
+            require(session.set_input_bindings_and_save(remapped),"Cannot seed private remapped pause");
         }
         int test_profile=-1;
         if(quick && pad) {
             bool saved=false; test_profile=session.add_profile_and_save("QUICK",0,saved);
             require(saved && preferences.set_profile_boost_and_save(test_profile,2),"Cannot seed private optional profile");
+            if(already_worn) require(session.wear_profile(0,test_profile),"Cannot wear private starter profile");
         }
         capture("title"); confirm("home");
         if(quick)
@@ -97,7 +148,7 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
             tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_right); confirm("review-preset");
             require(!preferences.last_match_setup(),"Review committed preset before acceptance");
             confirm("preset-join");
-            if(pad) {
+            if(pad && !already_worn) {
                 painter_scripted_pads::states[0].buttons=static_cast<uint16_t>(1u<<static_cast<unsigned int>(GamepadButton::x));
                 tick(); painter_scripted_pads::states[0].buttons=0; tick(); tick();
                 require(session.worn_profile(0)==test_profile,"Existing Join did not wear chosen profile");
@@ -116,6 +167,15 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
         {
             tap(GamepadButton::dpad_down); confirm("join-two");
             tap(GamepadButton::dpad_right); capture("bot-filled"); confirm("teams");
+            // Preserve #93's negative regression checks, separate from the
+            // valid-path confirmation count being compared with the shortcut.
+            const Frame neutral_team=stack_frame(app);
+            tap(GamepadButton::a); --confirmations; capture("negative-neutral-ready-refused");
+            const Frame refused_team=stack_frame(app);
+            require(neutral_team.pixels!=refused_team.pixels,"Ready on an unchosen team was silently ignored");
+            require(!preferences.last_match_setup(),"Rejected team Ready saved or started the match");
+            tap(GamepadButton::a); --confirmations; capture("negative-neutral-ready-repeated");
+            require(refused_team.pixels==stack_frame(app).pixels,"Repeated refused Ready changed team or warning");
             tap(GamepadButton::dpad_left); confirm("host-team-ready");
             tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_right); confirm("tool");
             confirm("host-tool"); confirm("host-sub");
@@ -151,6 +211,14 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
         // Skip only the normal narrative, using the same visible proceed control.
         confirm("story-skipped");
         for(int i=0;i<240;++i) tick();
+        if(quick) {
+            if(pad) painter_scripted_pads::states[0].buttons=static_cast<uint16_t>(1u<<static_cast<unsigned int>(GamepadButton::y));
+            else app.keyboard()->on_key_down(Key::p);
+            tick(); painter_scripted_pads::states[0].buttons=0; app.keyboard()->on_key_up(Key::p); tick();
+            require(stack.depth()==3,"Quick match did not use effective remapped pause");
+            capture("remapped-pause"); tap(GamepadButton::b);
+            require(stack.depth()==2,"Quick remapped pause Back did not resume");
+        }
         if(pad) painter_scripted_pads::states[0].left_stick.x=1.0f; else app.keyboard()->on_key_down(Key::d);
         for(int i=0;i<60;++i) tick();
         painter_scripted_pads::states[0].left_stick.x=0; app.keyboard()->on_key_up(Key::d); tick(); capture("playing");

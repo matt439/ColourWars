@@ -12,6 +12,11 @@ void MainMenuQuickMatch::accept(bool customise)
     proposed.set_player_team(0, PlayerTeam::a);
     proposed.set_player_team(1, PlayerTeam::b);
     proposed.set_screen_layout(ScreenLayout::one_player);
+    // Match the full Count -> Join route: an already-worn profile carries
+    // its Boost before Join is shown, not only when the player changes it.
+    const int worn = this->settings_session()->worn_profile(this->activating_slot_);
+    if(worn >= 0) proposed.set_player_handicap(0,
+        this->save()->profiles().list[static_cast<size_t>(worn)].boost);
     *this->level_settings() = proposed;
     this->go_to(customise ? MainMenuScreen::mode_select : MainMenuScreen::quick_join);
 }
@@ -40,21 +45,24 @@ void MainMenuQuickMatch::init()
     this->background_=std::make_unique<UiTexture>("background",style.sprite_sheet,style.fill_frame,
         menu_geometry::design_area(),this->render_resources(),CrudeDrawing::premultiplied(look.home_background_colour));
     this->heading_=std::make_unique<UiText>("heading",text.quick_title,style.heading_font,
-        look.credits_heading_position,this->render_resources(),look.art.ink);
+        look.quick_heading_position,this->render_resources(),look.art.ink);
     std::wstring body = text.quick_body;
     const auto token = body.find(L"{duration}");
     if(token != std::wstring::npos) body.replace(token, 10,
         text.setting_duration(this->data()->tuning()->match().duration, false));
     this->body_=std::make_unique<UiText>("body",body,style.detail_font,
-        look.credits_position,this->render_resources(),look.art.ink);
-    this->start_=std::make_unique<UiText>("start",text.quick_start,style.item_font,Vector2F(180,650),this->render_resources(),look.art.ink);
-    this->customise_=std::make_unique<UiText>("customise",text.quick_customise,style.item_font,Vector2F(180,740),this->render_resources(),look.art.ink);
-    this->back_=std::make_unique<UiText>("back",text.item(MenuItem::back),style.item_font,Vector2F(180,830),this->render_resources(),look.art.ink);
+        look.quick_body_position,this->render_resources(),look.art.ink);
+    this->start_=std::make_unique<UiText>("start",text.quick_start,style.item_font,look.quick_start_position,this->render_resources(),look.art.ink);
+    this->customise_=std::make_unique<UiText>("customise",text.quick_customise,style.item_font,look.quick_customise_position,this->render_resources(),look.art.ink);
+    this->back_=std::make_unique<UiText>("back",text.item(MenuItem::back),style.item_font,look.quick_back_position,this->render_resources(),look.art.ink);
     this->paper_=std::make_unique<MenuPaperArtwork>(menu_geometry::footer_paper(look.credits_box_size,style.footer_y),
         this->render_resources(),&style,&look.art,&this->focus_,nullptr,&this->focus_motion_,&this->settings_session()->play_settings());
-    this->body_->set_scale(menu_geometry::fit_scale(this->body_->bounds().size(),Vector2F(
-        menu_geometry::paper_text_right(this->paper_->rectangle(),look.art)-look.credits_position.x,
-        650-look.art.focus_padding.y-look.credits_position.y)));
+    const float body_scale=menu_geometry::fit_scale(this->body_->bounds().size(),Vector2F(
+        menu_geometry::paper_text_right(this->paper_->rectangle(),look.art)-look.quick_body_position.x,
+        look.quick_start_position.y-look.art.focus_padding.y-look.quick_body_position.y));
+    if(!std::isfinite(body_scale) || body_scale<0.85f)
+        throw std::runtime_error("main_menu.quick_match: expanded duration/body must fit at least 85% of detail font");
+    this->body_->set_scale(body_scale);
     this->texture_container_=std::make_unique<UiContainer>("texture");
     this->texture_container_->add_child(this->background_.get()); this->texture_container_->add_child(this->paper_.get());
     this->text_container_=std::make_unique<UiContainer>("text");

@@ -307,8 +307,8 @@ void MainMenuHome::init()
 		this->calculate_widget_position(0, 2), this->render_resources(), look.art.focus_ink);
 	this->learn_ = std::make_unique<UiText>("how_to_play", this->text().item(MenuItem::how_to_play), style.item_font,
         look.home_help_position, this->render_resources(), look.art.ink);
-    this->quick_ = std::make_unique<UiText>("quick-prototype", this->text().quick_title, style.detail_font,
-        look.home_help_position + Vector2F(0, look.home_spacing.y), this->render_resources(), look.art.ink);
+    this->quick_ = std::make_unique<UiText>("quick-match", this->text().quick_title, style.detail_font,
+        look.home_quick_position, this->render_resources(), look.art.ink);
     this->options_ = std::make_unique<UiText>("options", this->text().item(MenuItem::options), style.item_font,
 		this->calculate_widget_position(0, 3), this->render_resources(), look.art.ink);
 	this->credits_ = std::make_unique<UiText>("credits", this->text().item(MenuItem::credits), style.item_font,

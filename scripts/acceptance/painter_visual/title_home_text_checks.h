@@ -68,6 +68,7 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             add(L"Make your mark.", style.heading_font, look.home_position, art.ink);
             add(words[4], style.detail_font, look.home_subtitle_position, art.ink);
             add(L"How to play", style.item_font, look.home_help_position, art.ink);
+        add(L"Play a bot", style.detail_font, look.home_quick_position, art.ink);
             constexpr std::array<const wchar_t*, 4> actions{ L"Play", L"Options", L"Credits", L"Exit" };
             for (size_t row = 0; row < actions.size(); ++row)
                 { add(actions[row], style.item_font, look.home_position + Vector2F(0.0f,
