@@ -199,3 +199,73 @@ made. Remaining gates are moving transitions, pause/resume/resize under play,
 non-D3D11 and hardware-floor coverage, performance, engine green-tip policy and
 owner taste. This increment qualifies fixed Release D3D11 captures, not all
 those outstanding dimensions.
+
+## Saved-setting integration proposal (not implemented)
+
+Repository inspection found no rule requiring a separate owner decision for a
+default-off graphics preference. The remaining issue is lifecycle/UI scope,
+not permission. Keep the qualified opt-in implementation unchanged for now.
+
+### Recommended first normal-use version
+
+- Saved global boolean `crt_monitor`, default false. Missing/malformed legacy
+  values fall back to false; writes preserve other play settings and profiles.
+- Label `CRT monitor`, Off/On. Help: `Adds texture to the opening and result
+  monitor. Off by default. Restart required. Reduce effects turns it off.`
+- Apply saves the choice through the existing SettingsSession path. Back
+  discards the pending page selection. A distinct status says `Saved. CRT
+  monitor changes after restart.` Only show that after a successful save and
+  when the saved choice differs from this run's active choice. Failed writes
+  must say the CRT choice was not saved, not promise that restart will apply it.
+- Latch this run's effective CRT choice before Application creation. Only enabled
+  launches request five view slots and install the post chain. Default-off
+  launches retain four views and the empty pipeline. Reduce effects still
+  suppresses values immediately without changing the saved CRT choice.
+- Keep the environment variable developer-only: absent follows saved choice;
+  exact `1` forces on, exact `0` forces off; other values are ignored. The UI
+  must disclose an active override rather than imply its row controls this run.
+
+### Why not simply add a boolean and read it while drawing?
+
+`ApplicationOptions::view_capacity` is fixed at device creation. Existing default
+is four; a four-view scene plus crisp foreground needs five. `set_post_effects`
+is only legal outside an active render frame. An immediate option is possible,
+but it must deliberately reserve the extra view for everyone and centralize
+chain installation/removal at a proven frame boundary. It is not safe to switch
+that chain from Level::draw, or claim the default's allocation cost is unchanged.
+
+The current Controls page has eleven validated rows: nine entries, Apply at 9,
+Back at 10. Its Apply currently promises active settings even when the write
+fails. Inserting another switch and returning that same message would misstate
+the restart-only CRT behavior and can collide with the footer. Display Options
+has a different trial/rollback transaction for resolution/fullscreen. Neither
+is a free extra row with automatic lifecycle semantics.
+
+### Exact implementation surfaces
+
+1. `game/config/play_settings.h`, `game/save/save.cpp`: persisted default-off
+   field and tolerant read/write; SettingsSession already copies global fields,
+   but must be tested with worn per-pad profiles.
+2. `game/config/crt_trial.h`, `game/main.cpp`, `game/game_data.h` and its
+   implementation: explicit latched runtime choice/override shared with menus
+   and render consumers instead of re-reading a pending saved value. Pass that
+   choice into `game/objects/level_draw.cpp`, `match_opening.cpp` and
+   `game/states/menu_page.cpp`; do not use a mutable process-global toggle.
+3. `game/states/controls_settings_menu.h/.cpp`: pending choice, Apply merge,
+   restart/override/failure status; add the row only with an explicit page layout
+   adjustment. Alternatively place it on a small Graphics child page, which is
+   more extensible but beyond this bounded increment.
+4. `game/config/presentation/menu_geometry.h`,
+   `presentation_menu_text.h`, `presentation_read.h`,
+   `presentation_validation_settings.cpp` and `game/content/presentation.json`:
+   row indices, localized labels/help/status and fit validation. Preserve the
+   literal display trial's rollback behavior; CRT should not join that transaction.
+5. Focused probes: `settings`, `menu_presentation`, `crt_trial`, plus a focused
+   Controls UI capture. Test old save/defaults, round-trip, malformed values,
+   failed writes, child-page changes, worn profiles, Back cancellation, restart
+   latching and environment precedence. Exercise actual saved-choice on/off in
+   `painter_visual.cpp` / `crt_trial_checks.h`, not just the environment path.
+
+A second-stage immediate-apply version should be a separate explicit lifecycle
+change with pause/resume and device-restoration tests. Until then this document
+is a concrete implementation plan, not a claim that a user-facing setting ships.
