@@ -52,7 +52,8 @@ public:
 	// first free pad control), which is where older builds put it.
 	// 10 adds "toggle_fire" to each "pad_comfort" entry and each "profiles"
 	// entry; absent reads as false, hold to fire, as older builds played.
-	static constexpr int version = 10;
+	// 11 adds default-off restart-only CRT monitor preference.
+	static constexpr int version = 11;
 
 	Save() = default;
 	// Only a missing save without a legacy file uses these first-run defaults.

@@ -4,38 +4,55 @@
 #include "game/config/presentation/presentation_match.h"
 #include <algorithm>
 #include <cstdlib>
+#include <optional>
 #include <string_view>
 
-// A local opt-in experiment, not a saved player preference. The default chain
-// stays empty. Only exact "1" enables it, fixed for the process lifetime.
+// Runtime is immutable for one launch: saved preferences take effect on restart.
+// An explicit developer environment override never changes the saved preference.
 namespace crt_trial
 {
-    inline bool requested()
+    inline std::optional<bool> environment_override()
     {
-        static const bool enabled = [] {
-            #ifdef _MSC_VER
-            char buffer[2]{};
-            size_t size = 0;
-            if (getenv_s(&size, buffer, sizeof(buffer), "COLOURWARS_CRT_TRIAL") != 0) return false;
-            const char* value = buffer;
+#ifdef _MSC_VER
+        char buffer[2]{};
+        size_t size = 0;
+        if (getenv_s(&size, buffer, sizeof(buffer), "COLOURWARS_CRT_TRIAL") != 0) return std::nullopt;
+        const char* value = buffer;
 #else
-            const char* value = std::getenv("COLOURWARS_CRT_TRIAL");
+        const char* value = std::getenv("COLOURWARS_CRT_TRIAL");
 #endif
-            return value != nullptr && std::string_view(value) == "1";
-        }();
-        return enabled;
+        if (value != nullptr && std::string_view(value) == "1") return true;
+        if (value != nullptr && std::string_view(value) == "0") return false;
+        return std::nullopt;
     }
 
-    inline int view_capacity() { return requested() ? 5 : 4; }
-
-    inline void initialize(labrador::Renderer& renderer)
+    class Runtime
     {
-        if (requested())
+    public:
+        explicit Runtime(bool saved = false, std::optional<bool> override = environment_override()) :
+            enabled_(override.value_or(saved)), overridden_(override.has_value()) {}
+        bool enabled() const { return enabled_; }
+        bool overridden() const { return overridden_; }
+        int view_capacity() const { return enabled_ ? 5 : 4; }
+        void initialize(labrador::Renderer& renderer) const
         {
-            const std::array effects{ labrador::PostEffect::crt };
-            renderer.set_post_effects(effects);
+            if (enabled_)
+            {
+                const std::array effects{ labrador::PostEffect::crt };
+                renderer.set_post_effects(effects);
+            }
         }
-    }
+    private:
+        const bool enabled_;
+        const bool overridden_;
+    };
+
+    // Legacy isolated probes may omit the runtime; preserve their explicit flag.
+    inline const Runtime& probe_runtime() { static const Runtime runtime; return runtime; }
+    inline bool requested() { return probe_runtime().enabled(); }
+    inline bool enabled(const Runtime* runtime) { return runtime ? runtime->enabled() : requested(); }
+    inline int view_capacity() { return probe_runtime().view_capacity(); }
+    inline void initialize(labrador::Renderer& renderer) { probe_runtime().initialize(renderer); }
 
     inline labrador::CrtSettings settings(const CrtTrialPresentation& look,
         const labrador::RectangleF& glass)
@@ -53,8 +70,8 @@ namespace crt_trial
         return result;
     }
 
-    inline void clear(labrador::Renderer& renderer)
+    inline void clear(labrador::Renderer& renderer, const Runtime* runtime = nullptr)
     {
-        if (requested()) { renderer.set_post_values(labrador::PostEffect::crt, {}); }
+        if (enabled(runtime)) { renderer.set_post_values(labrador::PostEffect::crt, {}); }
     }
 }

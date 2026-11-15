@@ -14,7 +14,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	ResolutionManager* resolution_manager,
 	ThreadPool* thread_pool,
 	const Partitioner* partitioner,
-	const InputBindings* input_bindings) :
+	const InputBindings* input_bindings, const crt_trial::Runtime* crt_runtime) :
 	render_resources_(render_resources),
 	audio_resources_(audio_resources),
 	level_infos_(level_infos),
@@ -26,6 +26,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	partitioner_(partitioner),
 	input_bindings_(input_bindings)
 {
+	this->crt_runtime_ = crt_runtime;
 	this->preferences_ = preferences;
 	this->team_colour_ = std::make_unique<TeamColourTools>();
 	this->player_builder_ = std::make_unique<PlayerBuilder>(tuning, presentation);
@@ -107,7 +108,8 @@ std::unique_ptr<Level>
 			.resolution_manager = this->resolution_manager_,
 			.viewport_manager = this->viewport_manager_,
 			.preferences = this->preferences_,
-			.input_bindings = this->input_bindings_ };
+			.input_bindings = this->input_bindings_,
+            .crt_runtime = this->crt_runtime_ };
 		LevelStage stage{
 			.name = this->presentation_->menu_text().stage_title(settings.stage(), load_info->display_name(),
 				"the display_name of stage '" + settings.stage() + "'"),

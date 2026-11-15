@@ -116,6 +116,7 @@ MatchOpening::MatchOpening(const LevelServices& services, const std::string& sou
 	resolution_manager_(services.resolution_manager),
 	viewport_manager_(services.viewport_manager),
 	preferences_(services.preferences),
+    crt_runtime_(services.crt_runtime),
 	team_colours_(team_colours),
 	audio_(audio)
 {
@@ -339,7 +340,7 @@ void MatchOpening::draw(Renderer& renderer, const Scene& scene, const OpeningClo
 	scene.draw(renderer,
 		[this, &players](int /*view*/, DrawList& list) { this->draw_acting(list, players); });
 
-    if (crt_trial::requested() && !this->preferences_->reduce_effects)
+    if (crt_trial::enabled(this->crt_runtime_) && !this->preferences_->reduce_effects)
     {
         const auto glass = this->monitor_->glass(screen);
         renderer.set_post_values(PostEffect::crt,

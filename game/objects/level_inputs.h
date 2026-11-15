@@ -1,5 +1,7 @@
 #pragma once
 
+namespace crt_trial { class Runtime; }
+
 #include "engine/math/rectanglef.h"
 #include "game/objects/level_station.h"
 #include "game/objects/match_random.h"
@@ -54,6 +56,7 @@ struct LevelServices
 	const PlaySettings* preferences = nullptr;
 	// Null shows the built-in default bindings.
 	const InputBindings* input_bindings = nullptr;
+    const crt_trial::Runtime* crt_runtime = nullptr;
 };
 
 // The stage's sound: its bank, its music and its end sting.

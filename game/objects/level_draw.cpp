@@ -16,7 +16,7 @@ using namespace labrador;
 
 void Level::draw(Renderer& renderer) const
 {
-	crt_trial::clear(renderer);
+	crt_trial::clear(renderer, this->crt_runtime_);
 	if (this->intro_showing() || this->reveal_showing())
 	{
 		// The countdown's number and cards show in the picture as they do in the panes.

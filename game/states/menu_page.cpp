@@ -188,7 +188,7 @@ void MenuPage::set_prompts(const std::wstring& legend, const PromptBarPresentati
 
 void MenuPage::draw(Renderer& renderer) const
 {
-	crt_trial::clear(renderer);
+	crt_trial::clear(renderer, this->data()->crt_runtime());
 	std::vector<UiLayer> layers;
 
 	layers.push_back({ this->texture_container_.get(), TextureFilter::point });

@@ -1,5 +1,7 @@
 #pragma once
 
+namespace crt_trial { class Runtime; }
+
 #include "game/config/play_settings.h"
 #include "game/config/presentation/presentation_match.h"
 
@@ -359,6 +361,7 @@ private:
 	std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers_;
 
 	const PlaySettings* preferences_ = nullptr;
+    const crt_trial::Runtime* crt_runtime_ = nullptr;
 
 	// The match's voices, in the one list pause, resume and teardown walk
 	// (its own, then each player's), the arena music, the match cues and the
