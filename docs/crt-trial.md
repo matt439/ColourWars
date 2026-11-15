@@ -161,3 +161,41 @@ Remaining gates: full moving transition and pause/resume/resize visual checks,
 other resolutions, Release/non-D3D11, frame-time/hardware-floor qualification,
 engine green-tip policy and owner taste. These fixed 720p samples do not prove
 all text or all frames are readable, nor establish performance acceptance.
+
+## Release / 1080p extension (2026-11-15)
+
+MattPC had no compiler, build or game/painter processes at the preflight check.
+A fresh x64-release configure and full D3D11 build passed with `--parallel 2`.
+The same focused hidden leaf now adds 1920x1080 through its existing exact-resize
+helper, with no new production behavior. Both Release off/on runs passed.
+
+- 32 paired frames across 720p/1080p, 2P/4P and four beats; 64 saved captures,
+  each checked with a duplicate frozen readback (128 total).
+- All eight active split-screen pairs and all sixteen reduced-effects pairs
+  are byte-identical across flag off/on.
+- Twelve normal monitor-scene pairs have nonzero changes strictly inside glass.
+  No outside-glass pixels change at either resolution.
+- Independently selected score-card/glyph interiors remain exact at both sizes.
+  Inspected the 1080p painted result: A 100.0% / B 0.0% is clear, with crisp
+  card edges, silhouette and physical bezel. The texture remains conspicuous.
+- Release checks frozen public state and repeated pixels. Replay fingerprint
+  checks remain Debug-only; no claim of Release fingerprint instrumentation.
+
+Evidence:
+
+- off: `out/validation/crt-release-off/x64-release/0236b07e1a444ee185277145814f4ce8`
+- on: `out/validation/crt-release-on/x64-release/23e78d6a5dc34ac28d669d60ae52ea59`
+- comparison: `out/validation/crt-release-diff.json`
+- inspected image: `out/validation/crt-release-result-1080.png`
+
+Use `-Preset x64-release` in the focused commands above to reproduce. The
+comparison script accepts the original 720p-only evidence or the expanded
+720p/1080p set, requires exact expected frame names in both runs and checks
+resolution-scaled glass and card interiors.
+
+No comparable frame-phase timings are recorded by this capture runner.
+Readback/window-hidden runtimes are not gameplay FPS; no performance claim is
+made. Remaining gates are moving transitions, pause/resume/resize under play,
+non-D3D11 and hardware-floor coverage, performance, engine green-tip policy and
+owner taste. This increment qualifies fixed Release D3D11 captures, not all
+those outstanding dimensions.

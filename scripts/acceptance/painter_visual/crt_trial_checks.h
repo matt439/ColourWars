@@ -4,17 +4,18 @@ void crt_trial_capture(Application& app, LevelBuilder& builder, PlaySettings& pr
 {
     std::ofstream records(output / "crt-trial.csv");
     records << "capture,state,reduce_effects\n";
+    for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
     for (const int count : { 2, 4 })
     {
         auto level = monitor_story(app, builder, count);
-        resize(app, *level, {1280, 720});
+        resize(app, *level, size);
         auto inputs = neutral_inputs();
         const auto snap = [&](const char* beat)
         {
             for (const bool reduced : {false, true})
             {
                 preferences.reduce_effects = reduced;
-                const std::string stem = "crt-" + std::to_string(count) + "p-" + beat +
+                const std::string stem = std::string("crt-") + (size.x == 1280 ? "" : "1080-") + std::to_string(count) + "p-" + beat +
                     (reduced ? "-reduced" : "-normal");
                 const auto before = observation(*level);
 #if COLOURWARS_DEV_TOOLS
