@@ -21,6 +21,8 @@ namespace menu_text_acceptance
         }, &world);
         variants.rejects("learn.next", [](rapidjson::Document& d)
         { d["menu_text"]["learn"]["next"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
+        variants.rejects("connection.team_choice_required", [](rapidjson::Document& d)
+        { d["menu_text"]["connection"]["team_choice_required"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         const auto original = variants.load([](rapidjson::Document&) {});
         const float row_height = 20.0f + original.main_menu().art.focus_padding.y * 2.0f;
         const float paper_right = (1920.0f + original.main_menu().home_box_size.x) / 2.0f -

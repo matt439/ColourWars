@@ -62,6 +62,14 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 			}
 			// Continue so other players can act in the same frame.
 		}
+		else if (inputs[i].action == MenuInputAction::proceed && team == PlayerTeam::none)
+        {
+            // A fresh row has no team. Do not silently ignore Ready or choose
+            // for the player: explain the input that can satisfy the gate.
+            this->play_wave(this->error_sound_);
+            this->both_teams_needed_->set_text(this->text().connection.team_choice_required);
+            this->both_teams_needed_->set_hidden(false);
+        }
 		else if (inputs[i].action == MenuInputAction::proceed &&
 			team != PlayerTeam::none)
 		{
@@ -71,6 +79,7 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 				!this->roster_is_playable())
 			{
 				this->play_wave(this->error_sound_);
+                this->both_teams_needed_->set_text(this->text().connection.teams_required);
 				this->both_teams_needed_->set_hidden(false);
 			}
 			else

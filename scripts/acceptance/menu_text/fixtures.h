@@ -186,7 +186,8 @@ namespace menu_text_acceptance
         { "pause_player_title", L"Pause Menu P{player}", &MenuConnectionText::pause_player_title },
         { "controller_lost", L"Controller lost", &MenuConnectionText::controller_lost },
         { "all_connected", L"All players connected.", &MenuConnectionText::all_connected },
-        { "teams_required", L"Both teams need a player", &MenuConnectionText::teams_required }
+        { "teams_required", L"Both teams need a player", &MenuConnectionText::teams_required },
+        { "team_choice_required", L"Choose a team with Left/Right, then Ready.", &MenuConnectionText::team_choice_required }
     };
     struct LabelText { const char* key; const wchar_t* text; std::wstring MenuLabelText::* field; };
     constexpr LabelText label_text[]{

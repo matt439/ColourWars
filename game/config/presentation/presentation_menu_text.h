@@ -271,6 +271,7 @@ struct MenuConnectionText
 	std::wstring controller_lost;
 	std::wstring all_connected;
 	std::wstring teams_required;
+	std::wstring team_choice_required;
 };
 
 // Pad Sticks preview copy. Percent signs and authored line breaks are literal;

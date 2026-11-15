@@ -440,3 +440,5 @@
     }
 
     if ($HowToPlayOnly) { $result.diagnostic = 'Optional Home guide: keyboard and synthetic pad navigation, 720p/1080p pages, frozen captures, both Back paths, retained Home focus and saved binding; no complete-match, physical-controller or performance claim.' }
+
+    if ($FirstMatchFlowOnly) { $result.diagnostic = 'Fresh keyboard/synthetic-pad local human+bot menu-to-natural-results-to-rematch rehearsal; default duration, real manifest, no physical controller claim.' }
