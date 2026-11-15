@@ -35,6 +35,27 @@ namespace
 {
     using acceptance::require;
 
+    constexpr bool admits_device(RenderDeviceKind kind, bool debug_build,
+        bool debug_software, bool hosted_software)
+    {
+        if ((debug_software && hosted_software) || (!debug_build && debug_software))
+            return false;
+        if (hosted_software) return kind == RenderDeviceKind::software;
+        return kind == RenderDeviceKind::hardware ||
+            (debug_build && debug_software && kind == RenderDeviceKind::software);
+    }
+    static_assert(admits_device(RenderDeviceKind::hardware, false, false, false));
+    static_assert(!admits_device(RenderDeviceKind::software, false, false, false));
+    static_assert(!admits_device(RenderDeviceKind::software, true, false, false));
+    static_assert(admits_device(RenderDeviceKind::software, true, true, false));
+    static_assert(!admits_device(RenderDeviceKind::software, false, true, false));
+    static_assert(admits_device(RenderDeviceKind::software, false, false, true));
+    static_assert(admits_device(RenderDeviceKind::software, true, false, true));
+    static_assert(!admits_device(RenderDeviceKind::hardware, true, false, true));
+    static_assert(!admits_device(RenderDeviceKind::null_device, false, false, true));
+    static_assert(!admits_device(static_cast<RenderDeviceKind>(99), false, false, true));
+    static_assert(!admits_device(RenderDeviceKind::software, true, true, true));
+
     // A Debug engine asks its debug layers to break on error, and with no
     // debugger attached a break is an uncaught STATUS_BREAKPOINT that ends the
     // probe with nothing on stdout or stderr. Every break is stepped over and
@@ -633,9 +654,9 @@ int wmain(int argc, wchar_t** argv)
     AddVectoredExceptionHandler(1, step_over_debug_break);
     return acceptance::run_probe("movement feedback visual", [&]
     {
-        require(argc == 4 || argc == 5 || argc == 6,
+        require(argc == 4 || argc == 5 || argc == 6 || argc == 7,
             "usage: movement_feedback_visual <staged-content> <output> <sequence-frames> "
-            "[one-player-route-sequences 0|1] [allow-software-adapter 0|1]");
+            "[one-player-route-sequences 0|1] [allow-software-adapter 0|1] [hosted-software-functional 0|1]");
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
         const int sequence_frames = std::stoi(argv[3]);
@@ -644,12 +665,20 @@ int wmain(int argc, wchar_t** argv)
         // Paired route sequences are four-player only unless asked: each one is
         // two 720p frames per tick for each selected player count.
         const bool one_player_route_sequences = argc >= 5 && std::wstring(argv[4]) == L"1";
-        const bool allow_software_adapter = argc == 6 && std::wstring(argv[5]) == L"1";
-        if (argc == 6)
+        const bool allow_software_adapter = argc >= 6 && std::wstring(argv[5]) == L"1";
+        if (argc >= 6)
         {
             require(std::wstring(argv[5]) == L"0" || std::wstring(argv[5]) == L"1",
                 "allow-software-adapter must be 0 or 1");
         }
+        const bool hosted_software_functional = argc == 7 && std::wstring(argv[6]) == L"1";
+        if (argc == 7)
+        {
+            require(std::wstring(argv[6]) == L"0" || std::wstring(argv[6]) == L"1",
+                "hosted-software-functional must be 0 or 1");
+        }
+        require(!(allow_software_adapter && hosted_software_functional),
+            "choose only one adapter evidence policy");
 #if !defined(_DEBUG)
         require(!allow_software_adapter,
             "software-adapter opt-in is supported only by the Debug probe");
@@ -692,7 +721,12 @@ int wmain(int argc, wchar_t** argv)
             << " api=" << device.api
             << " name=" << device.device_name << " vendor=" << device.vendor_id
             << " device=" << device.device_id << '\n';
-        bool permitted_device = device.kind == RenderDeviceKind::hardware;
+        constexpr bool debug_build =
+#if defined(_DEBUG)
+            true;
+#else
+            false;
+#endif
 #if defined(_DEBUG)
         // The engine asks for the debug layer only where it is installed, and
         // CI catches D3D usage errors only if it is. Asked the way the SDK
@@ -700,11 +734,13 @@ int wmain(int argc, wchar_t** argv)
         std::cout << "DEBUG_LAYER available=" << (SUCCEEDED(D3D11CreateDevice(nullptr,
             D3D_DRIVER_TYPE_NULL, nullptr, D3D11_CREATE_DEVICE_DEBUG, nullptr, 0,
             D3D11_SDK_VERSION, nullptr, nullptr, nullptr)) ? 1 : 0) << '\n';
-        permitted_device = permitted_device ||
-            (allow_software_adapter && device.kind == RenderDeviceKind::software);
 #endif
+        // This separate lane requires truthful software classification. It runs
+        // every assertion below, but cannot qualify real-hardware rendering.
+        const bool permitted_device = admits_device(device.kind, debug_build,
+            allow_software_adapter, hosted_software_functional);
         require(device.backend == "d3d11" && permitted_device,
-            "visual evidence requires a D3D11 hardware device or explicit Debug software-adapter opt-in");
+            "adapter does not match hardware-default, Debug opt-in, or explicit hosted-software-functional policy");
         app.resource_loader()->register_kind("level", {
             [&](const std::string& directory, const std::string& name, bool) {
                 auto info = std::make_unique<LevelLoadedInfo>((directory + name + ".json").c_str());

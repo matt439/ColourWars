@@ -616,6 +616,14 @@ way. `scripts/acceptance/frame_pacing.cpp:206` has the gate too, but is only
 compiled on hosted runners. This repository has to decide what those gates
 accept before such a fix lands.
 
+**2026-11-15 integration answer.** The new pin includes the correct classification.
+PR CI now has a separate explicit hosted-software movement-functional lane,
+with unchanged pixel assertions and truthful device evidence; strict default
+hardware checks remain, with Debug/Release real-GPU qualification mandatory
+for this pin/renderer change. See [adapter evidence policy](../crt-trial.md#adapter-evidence-policy).
+Nightly painter/paint-fx policy remains unchanged and needs separate work;
+this does not claim those hosted hardware-only gates pass.
+
 **The ask.** Report the Basic Render Driver as software (or add a kind that says
 what it is), and say in `SEAM.md` what the kind promises. Whether Release should
 still start on it is the engine's call under T6.

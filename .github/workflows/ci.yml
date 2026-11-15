@@ -213,16 +213,14 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-      # Hidden, scripted correctness checks, and the only match frames either
-      # preset draws on a pull request. The runner's Microsoft Basic Render
-      # Driver is a software rasteriser that DXGI does not flag as software, so
-      # the engine reports it as hardware and this passes the hardware-only
-      # gate. That establishes no hardware or performance acceptance.
-      - name: Movement feedback rendering checks
+      # Explicit software-functional evidence in both presets. All pixel and
+      # movement assertions run; software is never reported as hardware.
+      # Strict hardware-default qualification remains a separate real-GPU check.
+      - name: Movement feedback hosted-software functional checks
         if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.checks }}
         timeout-minutes: 20
         run: |
-          pwsh -NoProfile -File scripts/check-movement-feedback.ps1 -Preset ${{ matrix.preset }} -SkipBuild
+          pwsh -NoProfile -File scripts/check-movement-feedback.ps1 -Preset ${{ matrix.preset }} -SkipBuild -HostedSoftwareFunctional
 
       # Keep structured diagnostics on failure without uploading the probe's
       # executable, objects or large raw PPM capture matrix.

@@ -117,3 +117,26 @@ texture is conspicuous: retain opt-in and review owner taste before changing it.
 The runner does not record comparable gameplay phase timings; hidden readback
 runtimes are not FPS and no performance claim is made. Native builds were
 capped at two compiler jobs after checking for competing build/game processes.
+
+## Adapter evidence policy
+
+The engine pin correctly classifies the hosted Microsoft Basic Render Driver
+as software (ENG#34). CI previously ran on that same CPU rasteriser but received
+an incorrect hardware label. It now explicitly selects
+`-HostedSoftwareFunctional` in both Debug and Release. This separate lane
+requires a D3D11 software device and runs every existing movement/pixel assertion
+without skips or changed tolerances. Hardware, unknown and null devices are
+rejected in that lane; it cannot provide hardware or performance acceptance.
+
+The default movement probe remains strict hardware-only in both configurations.
+The older Debug-only `-AllowSoftwareAdapter` retains its Release refusal and
+cannot be combined with the hosted lane. Both wrapper and native probe enforce
+the requested evidence policy; compile-time policy cases cover their boundaries.
+
+Before merging this pin/renderer change, strict hardware-default Debug and
+Release movement checks must pass on the final source and engine revisions,
+with recorded device identity and no software opt-in. This is separate local
+qualification, not a hosted check or a fabricated GitHub status. Hosted `gate`
+remains required and cannot be bypassed. The nightly painter/paint-fx hardware
+policies are unchanged and may still reject the hosted software adapter; this
+change does not claim a passing nightly or close its issue.
