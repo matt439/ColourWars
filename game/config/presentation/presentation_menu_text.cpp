@@ -142,7 +142,7 @@ namespace presentation_read
 		const JsonValue json = root.object("menu_text");
 		// stage_scan is optional, so a misspelt key must fail rather than be skipped.
 		content_value::require_known_keys(json, { "brand", "solo_practice_hint", "practice_tool",
-			"learn", "graphics", "options_palette_timing", "title", "home_subtitle", "display_trial_countdown", "help",
+			"quick_prototype", "learn", "graphics", "options_palette_timing", "title", "home_subtitle", "display_trial_countdown", "help",
 			"keyboard_jump", "pad_buttons", "profiles", "status", "values", "confirmations", "end",
 			"results", "stage_scan", "stage", "stage_names", "records", "labels", "connection",
 			"stick_readouts", "hud", "subs", "countdown", "controls", "headings", "prompts", "items" });
@@ -168,6 +168,12 @@ namespace presentation_read
 		catch (const std::invalid_argument& error)
 		{ throw std::runtime_error(title.where() + ": build: " + error.what()); }
 		text.home_subtitle = read_menu_line(json, "home_subtitle");
+        const JsonValue quick = json.object("quick_prototype");
+        content_value::require_known_keys(quick, {"title", "body", "start", "customise"});
+        text.quick_title = read_menu_line(quick, "title");
+        text.quick_body = read_menu_block(quick, "body");
+        text.quick_start = read_menu_line(quick, "start");
+        text.quick_customise = read_menu_line(quick, "customise");
         const JsonValue learn = json.object("learn");
         content_value::require_known_keys(learn, {"start", "controls", "finish", "next"});
         text.learn_start = read_menu_block(learn, "start");

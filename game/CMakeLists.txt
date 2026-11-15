@@ -228,6 +228,7 @@ add_library(colourwars_game STATIC
     states/game_level_rumble.cpp
     states/main_menu.cpp
     states/main_menu_how_to_play.cpp
+    states/main_menu_quick_match.cpp
     states/main_menu_credits.cpp
     states/main_menu_exit.cpp
     states/main_menu_mode_select.cpp

@@ -53,6 +53,8 @@ std::unique_ptr<MainMenuPage> make_main_menu_page(MenuContext* context, const Ma
 	{
 	case MainMenuScreen::home:
 		return std::make_unique<MainMenuHome>(context, route.home_focus);
+	case MainMenuScreen::quick_match:
+        return std::make_unique<MainMenuQuickMatch>(context);
 	case MainMenuScreen::how_to_play:
 		return std::make_unique<MainMenuHowToPlay>(context);
 	case MainMenuScreen::options:

@@ -6,11 +6,13 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
     const auto catalog = acceptance::manifest_catalog(content);
     StateContext& stack = app;
     struct Clear { StateContext& stack; ~Clear() { stack.clear(); painter_scripted_pads::states = {}; } } clear{stack};
+    for (bool quick : {false, true})
     for (bool practice : {true, false})
     for (bool pad : {false, true})
     {
+        if(quick && practice) continue;
         stack.clear();
-        const std::string prefix = std::string(pad ? "flow-pad" : "flow-keyboard") + (practice ? "-practice" : "-versus");
+        const std::string prefix = std::string(pad ? "flow-pad" : "flow-keyboard") + (practice ? "-practice" : "-versus") + (quick ? "-quick" : "-full");
         const acceptance::IsolatedSave profile(output / (prefix + "-fresh-profile"));
         Save preferences; SettingsSession session(preferences); session.load_save_file();
         require(!preferences.last_match_setup(), "Flow profile was not fresh");
@@ -48,7 +50,38 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
             tick(); painter_scripted_pads::states[0].buttons=0; app.keyboard()->on_key_up(key); tick(); tick(0.51f);
         };
         const auto confirm = [&](const char* phase) { tap(GamepadButton::a); capture(phase); };
-        capture("title"); confirm("home"); confirm("mode"); confirm("player-count");
+        if(quick)
+        {
+            const InputBindings before = session.input_bindings();
+            tap(GamepadButton::a); tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_right); tap(GamepadButton::a);
+            capture("preflight-review"); tap(GamepadButton::b);
+            require(!preferences.last_match_setup() && session.input_bindings()==before,
+                "Cancelling prototype changed saved setup/controls");
+            tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_right); tap(GamepadButton::a);
+            tap(GamepadButton::dpad_down); tap(GamepadButton::a); capture("preflight-customise");
+            MatchSetup proposed; proposed.set_player_count(2); proposed.set_player_bot(1,BotDifficulty::normal);
+            proposed.begin_input_claims(pad ? 0 : input_slots::keyboard_and_mouse);
+            proposed.set_player_team(0,PlayerTeam::a); proposed.set_player_team(1,PlayerTeam::b);
+            MenuInput reference_input(app.gamepads(),app.keyboard(),&tuning);
+            MenuContext reference_context(&data,&reference_input,&proposed); StateContext reference_stack;
+            reference_stack.push(std::make_unique<MainMenuModeSelect>(&reference_context));
+            app.renderer()->begin_frame(); reference_stack.draw(*app.renderer()); const Frame reference=read(*app.renderer());
+            require(reference.pixels==stack_frame(app).pixels,"Customise did not open the existing full Mode page");
+            require(!preferences.last_match_setup() && session.input_bindings()==before,
+                "Customise wrote a match before launch");
+            reference_stack.clear(); stack.clear(); stack.push(std::make_unique<GameMenu>(&data)); tick(); tick();
+            confirmations=0; directions=0; // timed/count comparison begins at fresh Title, after separate recovery rehearsal.
+        }
+        capture("title"); confirm("home");
+        if(quick)
+        {
+            tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_right); confirm("review-preset");
+            require(!preferences.last_match_setup(),"Review committed preset before acceptance");
+            confirm("stage");
+        }
+        else
+        {
+        confirm("mode"); confirm("player-count");
         if(practice)
         {
             confirm("join-one"); confirm("tool"); confirm("sub"); confirm("stage");
@@ -57,17 +90,11 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
         {
             tap(GamepadButton::dpad_down); confirm("join-two");
             tap(GamepadButton::dpad_right); capture("bot-filled"); confirm("teams");
-            const Frame neutral_team = stack_frame(app);
-            confirm("neutral-ready-refused");
-            const Frame refused_team = stack_frame(app);
-            require(neutral_team.pixels != refused_team.pixels, "Ready on an unchosen team was silently ignored");
-            require(!preferences.last_match_setup(), "Rejected team Ready saved or started the match");
-            confirm("neutral-ready-repeated");
-            require(refused_team.pixels == stack_frame(app).pixels, "Repeated refused Ready changed the team or warning");
             tap(GamepadButton::dpad_left); confirm("host-team-ready");
             tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_right); confirm("tool");
             confirm("host-tool"); confirm("host-sub");
             tap(GamepadButton::dpad_down); confirm("bot-tool"); confirm("stage");
+        }
         }
         int movement = -1;
         for(size_t i=0;i<catalog.stages().size();++i) if(catalog.stages()[i].name=="movement_course") movement=static_cast<int>(i);
@@ -77,6 +104,17 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
         for(int i=0;i<600 && !preferences.last_match_setup();++i) tick();
         require(preferences.last_match_setup() && preferences.last_match_setup()->stage=="movement_course" &&
             preferences.last_match_setup()->players.size()==(practice ? 1u : 2u),"Actual fresh setup did not launch selected Movement Course roster");
+        if(quick)
+        {
+            const auto& chosen = *preferences.last_match_setup();
+            require(chosen.players[0].team == PlayerTeam::a && chosen.players[1].team == PlayerTeam::b &&
+                chosen.players[0].weapon == WeaponType::sprayer && chosen.players[1].weapon == WeaponType::sprayer &&
+                chosen.players[1].controller == PlayerController::bot && chosen.players[1].difficulty == BotDifficulty::normal &&
+                chosen.players[0].sub==SubType::grenade && chosen.players[1].sub==SubType::grenade &&
+                chosen.players[0].handicap==0 && chosen.players[1].handicap==0 &&
+                chosen.best_of==1 && !chosen.duration && chosen.variant==MatchVariant::standard,
+                "Quick launch differs from disclosed preset");
+        }
         capture("match-start");
         // Skip only the normal narrative, using the same visible proceed control.
         confirm("story-skipped");

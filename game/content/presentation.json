@@ -129,6 +129,12 @@
       "no_controller": "Connect a controller",
       "build": "v{version} / Build {revision} / {configuration}"
     },
+    "quick_prototype": {
+      "title": "Play a bot (prototype)",
+      "body": "REVIEW THIS PRESET BEFORE CONTINUING\nP1: this controller, Team A. P2: Normal bot, Team B.\nBoth use Sprayer + Grenade; no Boost/handicap.\nSingle Match, Standard rules, {duration}.\nYour saved controls, colours and accessibility settings stay unchanged.\nNext: YOU choose the arena and review its briefing.\nChoose Customise to edit teams, tools, bot or match settings.\nBack leaves your existing setup untouched.",
+      "start": "Choose arena",
+      "customise": "Customise"
+    },
     "learn": {
       "start": "1 / 3  YOUR FIRST MATCH\nPaint more of the arena than the other team.\nSplats interrupt opponents; painted territory decides the winner.\nStart with Play > Single Match > 1 Player (practice).\nChoose a tool, then Movement Course to learn at your own pace.\nFor a local match, choose 2-4 players and join each seat.\nThe host can fill spare seats with bots.\nChoose teams, tools and an arena; each human confirms their choice.",
       "controls": "2 / 3  YOUR SAVED CONTROLS\nHold Jump for height. Aim in a direction, then shoot to paint.\nChange bindings in Options > Controls / audio.\nPad numbers follow their slots; menu A/B and Enter/Esc stay fixed.",
