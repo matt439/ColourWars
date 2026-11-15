@@ -106,9 +106,22 @@ namespace
         check_edge("main_menu.team_select", "warning_position", [](rapidjson::Document& d)
             { d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(52.0f); },
             [](rapidjson::Document& d) { d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(51.75f); });
+        // Isolate the original 192px warning's exact right edge from the
+        // longer guidance that shares its position. Both retain their own
+        // independent complete-copy boundary and +0.25px refusal below.
         check_edge("main_menu.team_select", "warning_position", [](rapidjson::Document& d)
-            { d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(1673.0f); },
-            [](rapidjson::Document& d) { d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(1673.25f); });
+        {
+            d["menu_text"]["connection"]["team_choice_required"].SetString("Fit");
+            d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(1673.0f);
+        }, [](rapidjson::Document& d)
+            { d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(1673.25f); });
+        require(world.render.measure_text(world.render.resolve_sprite_font("setup_exact"),
+            L"Choose a team with Left/Right, then Ready.") == Vector2F(336.0f, 20.0f),
+            "Team choice guidance fixture no longer measures its complete shipped wording");
+        check_edge("main_menu.team_select", "warning_position", [](rapidjson::Document& d)
+            { d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(1529.0f); },
+            [](rapidjson::Document& d)
+            { d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(1529.25f); });
         check_edge("main_menu.team_select", "warning_position", [](rapidjson::Document& d)
             { d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(905.0f); },
             [](rapidjson::Document& d) { d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(905.25f); });

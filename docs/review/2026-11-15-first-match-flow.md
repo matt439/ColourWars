@@ -75,3 +75,14 @@ tool and sub as well as their own, but progress is mainly communicated by row
 highlighting. A per-row textual status (choose team / choose tool / choose sub /
 ready) and a clear host-next-step line could make the existing choices legible
 without introducing Quick Play or choosing gameplay options for the user.
+
+## CI fixture correction
+
+The first hosted run failed `menu_presentation` in Debug and Release. The old
+right-edge fixture placed the 192px warning at x1673, but the new 336px guidance
+shares its position and correctly failed the unchanged production bounds check.
+The corrected fixture isolates the original warning for its original exact edge,
+and adds the new guidance's independently measured x1529 exact edge and x1529.25
+refusal. Neither validation nor overflow tolerance changed. The same failure was
+reproduced locally before the fixture correction.
+The corrected `menu_presentation` case passed locally in both Release and Debug.
