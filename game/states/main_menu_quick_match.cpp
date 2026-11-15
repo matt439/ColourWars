@@ -13,7 +13,7 @@ void MainMenuQuickMatch::accept(bool customise)
     proposed.set_player_team(1, PlayerTeam::b);
     proposed.set_screen_layout(ScreenLayout::one_player);
     *this->level_settings() = proposed;
-    this->go_to(customise ? MainMenuScreen::mode_select : MainMenuScreen::stage_select);
+    this->go_to(customise ? MainMenuScreen::mode_select : MainMenuScreen::quick_join);
 }
 
 void MainMenuQuickMatch::update_page(float)

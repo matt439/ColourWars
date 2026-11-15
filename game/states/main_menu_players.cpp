@@ -201,7 +201,7 @@ void MainMenuPlayerCount::start_join(int players)
 #pragma endregion MainMenuPlayerCount
 
 #pragma region MainMenuJoin
-MainMenuJoin::MainMenuJoin(MenuContext* context) : RosterSetupPage(context)
+MainMenuJoin::MainMenuJoin(MenuContext* context, bool reviewed_preset) : RosterSetupPage(context), reviewed_preset_(reviewed_preset)
 {
 }
 
@@ -468,7 +468,14 @@ void MainMenuJoin::update_page(float /*dt*/)
 	if (continue_requested && !roster_changed)
 	{
 		this->play_wave(this->confirm_sound_);
-		if (this->player_count() == 1)
+		if (this->reviewed_preset_ && settings->player_count()==2 && settings->human_count()==1 &&
+            settings->player_settings()[1].controller==PlayerController::bot &&
+            settings->player_settings()[1].difficulty==BotDifficulty::normal &&
+            settings->player_team(0)==PlayerTeam::a && settings->player_team(1)==PlayerTeam::b)
+        {
+            this->go_to(MainMenuScreen::stage_select);
+        }
+        else if (this->player_count() == 1)
 		{
 			this->go_to(MainMenuScreen::weapon_select);
 		}

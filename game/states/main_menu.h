@@ -29,6 +29,7 @@ enum class MainMenuScreen
 	home,
 	how_to_play,
     quick_match,
+    quick_join,
 	options,
 	credits,
 	mode_select,
@@ -379,12 +380,13 @@ private:
 class MainMenuJoin final : public RosterSetupPage
 {
 public:
-	explicit MainMenuJoin(MenuContext* context);
+	explicit MainMenuJoin(MenuContext* context, bool reviewed_preset = false);
 	void update_page(float dt) override;
 	void init() override;
 protected:
 	bool shows_focus_backing() const override { return false; }
 private:
+    bool reviewed_preset_ = false;
 	MenuPaperArtPresentation setup_art_;
 	struct JoinMotionRow
 	{

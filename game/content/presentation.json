@@ -131,8 +131,8 @@
     },
     "quick_prototype": {
       "title": "Play a bot (prototype)",
-      "body": "REVIEW THIS PRESET BEFORE CONTINUING\nP1: this controller, Team A. P2: Normal bot, Team B.\nBoth use Sprayer + Grenade; no Boost/handicap.\nSingle Match, Standard rules, {duration}.\nYour saved controls, colours and accessibility settings stay unchanged.\nNext: YOU choose the arena and review its briefing.\nChoose Customise to edit teams, tools, bot or match settings.\nBack leaves your existing setup untouched.",
-      "start": "Choose arena",
+      "body": "REVIEW THIS PRESET BEFORE CONTINUING\nP1: this controller, Team A. P2: Normal bot, Team B.\nSprayer + Grenade; no Boost unless you choose a profile.\nSingle Match, Standard rules, {duration}.\nYour saved controls, colours and accessibility settings stay unchanged.\nNext: Join to choose your profile, then choose an arena.\nChoose Customise to edit teams, tools, bot or match settings.\nBack leaves your existing setup untouched.",
+      "start": "Continue to Join",
       "customise": "Customise"
     },
     "learn": {

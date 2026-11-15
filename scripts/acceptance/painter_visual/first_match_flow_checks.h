@@ -54,7 +54,21 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
         {
             const InputBindings before = session.input_bindings();
             tap(GamepadButton::a); tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_right); tap(GamepadButton::a);
-            capture("preflight-review"); tap(GamepadButton::b);
+            capture("preflight-review");
+            for(const Vector2I size : {Vector2I(1024,768),Vector2I(1280,720),Vector2I(1920,1080),Vector2I(2560,1080)})
+            for(bool reduced : {false,true})
+            {
+                PlaySettings variant=quiet; variant.reduce_effects=reduced;
+                require(session.set_play_settings_and_save(variant),"Cannot set isolated review effects");
+                app.resolution_manager()->set_resolution_exactly(size);
+                std::ignore=app.renderer()->window_size_changed(size.x,size.y);
+                tick();
+                capture("review-"+std::to_string(size.x)+"x"+std::to_string(size.y)+(reduced?"-reduced":"-motion"));
+            }
+            require(session.set_play_settings_and_save(quiet),"Cannot restore review effects");
+            app.resolution_manager()->set_resolution_exactly({1280,720});
+            std::ignore=app.renderer()->window_size_changed(1280,720);
+            tap(GamepadButton::b);
             require(!preferences.last_match_setup() && session.input_bindings()==before,
                 "Cancelling prototype changed saved setup/controls");
             tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_right); tap(GamepadButton::a);
@@ -72,11 +86,23 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
             reference_stack.clear(); stack.clear(); stack.push(std::make_unique<GameMenu>(&data)); tick(); tick();
             confirmations=0; directions=0; // timed/count comparison begins at fresh Title, after separate recovery rehearsal.
         }
+        int test_profile=-1;
+        if(quick && pad) {
+            bool saved=false; test_profile=session.add_profile_and_save("QUICK",0,saved);
+            require(saved && preferences.set_profile_boost_and_save(test_profile,2),"Cannot seed private optional profile");
+        }
         capture("title"); confirm("home");
         if(quick)
         {
             tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_right); confirm("review-preset");
             require(!preferences.last_match_setup(),"Review committed preset before acceptance");
+            confirm("preset-join");
+            if(pad) {
+                painter_scripted_pads::states[0].buttons=static_cast<uint16_t>(1u<<static_cast<unsigned int>(GamepadButton::x));
+                tick(); painter_scripted_pads::states[0].buttons=0; tick(); tick();
+                require(session.worn_profile(0)==test_profile,"Existing Join did not wear chosen profile");
+                capture("join-profile-chosen");
+            }
             confirm("stage");
         }
         else
@@ -111,9 +137,15 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
                 chosen.players[0].weapon == WeaponType::sprayer && chosen.players[1].weapon == WeaponType::sprayer &&
                 chosen.players[1].controller == PlayerController::bot && chosen.players[1].difficulty == BotDifficulty::normal &&
                 chosen.players[0].sub==SubType::grenade && chosen.players[1].sub==SubType::grenade &&
-                chosen.players[0].handicap==0 && chosen.players[1].handicap==0 &&
+                chosen.players[0].handicap==(pad ? 2 : 0) && chosen.players[1].handicap==0 &&
                 chosen.best_of==1 && !chosen.duration && chosen.variant==MatchVariant::standard,
                 "Quick launch differs from disclosed preset");
+            const auto& kept=session.play_settings();
+            require(kept.reduce_effects==quiet.reduce_effects && kept.view_shake==quiet.view_shake &&
+                kept.aim_marker==quiet.aim_marker && kept.aim_sensitivity==quiet.aim_sensitivity &&
+                kept.crt_monitor==quiet.crt_monitor && kept.sticks==quiet.sticks &&
+                kept.pad_comfort==quiet.pad_comfort && kept.pad_rumble==quiet.pad_rumble,
+                "Quick launch changed comfort/graphics preferences");
         }
         capture("match-start");
         // Skip only the normal narrative, using the same visible proceed control.
