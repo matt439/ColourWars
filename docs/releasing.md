@@ -70,6 +70,12 @@ because the build line names a different commit.
 
 The next commit moved `project(VERSION)` to `0.1.1`, as `REL#6` says.
 
+The [2026-11-15 shipped-package check](review/2026-11-15-shipped-package-qualification.md)
+records a separate download of this published ZIP: its digest matched, package
+inspection passed 35 checks on 69 files, and isolated startup passed on MattPC.
+It covers package integrity and startup; it does not establish an attended
+first match, controller recovery or listening quality.
+
 Other design calls stay indexed in [TODO.md](../TODO.md). Selecting this
 documentation/package pass did not accept them. Arena artwork (`POL#16`) remains deferred.
 
