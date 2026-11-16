@@ -128,9 +128,13 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
         const SeatSetup& entry = players.at(static_cast<size_t>(player));
         constexpr std::array<const wchar_t*, 5> devices{
             L"Pad 1", L"Pad 2", L"Pad 3", L"Pad 4", L"Keyboard/mouse" };
-        const std::wstring device = entry.num < 0 ? L"Waiting to join" : devices.at(static_cast<size_t>(entry.num));
-        const std::wstring text = L"P" + std::to_wstring(player + 1) + L" - " + device +
-            (entry.team == PlayerTeam::a ? L" | Team A | " : L" | Team B | ") +
+        std::wstring device = entry.num < 0 ? L"Waiting to join" : devices.at(static_cast<size_t>(entry.num));
+        std::wstring team=entry.team == PlayerTeam::a ? L" | Team A | " : L" | Team B | ";
+        if(presentation.menu_text().results.single_match_heading==L"[Results]") {
+            if(entry.num!=input_slots::keyboard_and_mouse)device=L"["+device+L"]";
+            team=L"["+team+L"]";
+        }
+        const std::wstring text = L"P" + std::to_wstring(player + 1) + L" - " + device + team +
             info.player_percentage_string(paint_owners::index(entry.num, player));
         return RectangleF(look.contribution_position + Vector2F(0.0f,
             look.contribution_spacing * static_cast<float>(player + 1)),
@@ -174,9 +178,11 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
     complete.finish_round(victory);
     complete.next_round();
     complete.finish_round(victory);
-    const std::array<ResultsMenuProbeCase, 6> cases{ {
+    LevelEndInfo empty_draw=draw; empty_draw.team_a_area=empty_draw.team_b_area=0; empty_draw.player_areas={};
+    const std::array<ResultsMenuProbeCase, 7> cases{ {
         { victory, single, "victory-revealed", 2, true },
         { draw, single, "draw-revealed", 2, true },
+        { empty_draw, single, "empty-revealed", 2, true },
         { victory, next, "series-next-revealed", 4, true },
         { victory, complete, "series-complete-revealed", 4, true },
         { solo_a, single, "solo-a-plain", 1, false },
@@ -230,7 +236,7 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
             require(panel.contains(UiPlayerBadge::before(row, presentation.player_identity())),
                 "Results roster badge escapes its paper");
         }
-        for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080),
+        for (const Vector2I size : { Vector2I(1024,768), Vector2I(1280, 720), Vector2I(1920, 1080),
             Vector2I(2560, 1440), Vector2I(1600, 1200), Vector2I(1920, 1200), Vector2I(2560, 1080) })
         {
             resize_page(size);
@@ -241,6 +247,32 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
             tap(Key::escape);
             require(stack.depth() == 2, "Escape bypassed actual results continuation");
             const Frame normal = stack_frame(app);
+            if(!fixture.session.is_series())
+            {
+                const bool visible=!fixture.info.one_team_only();
+                const bool empty=fixture.info.team_a_area==0 && fixture.info.team_b_area==0;
+                std::wstring literal=empty ? L"No surface painted. Equal shares mean a draw." : L"Team share of painted surface";
+                if(presentation.menu_text().results.single_match_heading==L"[Results]")literal=L"["+literal+L"]";
+                const auto& authored=empty ? presentation.menu_text().results.empty_share_basis : presentation.menu_text().results.share_basis;
+                require(authored==literal,"Score-basis copy differs from its independent English/pseudo fixture");
+                colourwars::UiTextDropShadow caption("independent-score-basis",literal,look.contribution_font,Vector2F::zero,
+                    app.render_resources(),look.art.ink,Colour(),Vector2F::zero,!visible);
+                caption.set_position({(1920.0f-caption.bounds().width)/2.0f,look.score_basis_y});
+                if(visible && (!fixture.revealed || fixture.info.winning_team()==PlayerTeam::none))
+                    require(winner.bottom()<caption.bounds().y,"Shipped winner copy overlaps single-match score-basis caption");
+                Renderer& renderer=*app.renderer();renderer.begin_frame();renderer.set_view_count(1);
+                DrawList list=renderer.view(0);const Viewport viewport=app.viewport_manager()->fullscreen_viewport();
+                const Camera view=Camera::frame(RectangleF(Vector2F::zero,menu_consts::design_resolution),viewport);
+                list.set_viewport(viewport);list.set_camera(view);list.set_filter(TextureFilter::point);
+                canvas.draw(list,view.visible_rectangle(viewport));FocusGroup none;
+                const MenuPaperArtwork paper(panel,app.render_resources(),&style,&art,&none);paper.draw(list);
+                list.set_filter(TextureFilter::linear);caption.draw(list);const Frame reference=read(renderer);
+                const RectangleF band(panel.x+10,look.score_basis_y-1,panel.width-20,caption.bounds().height+2);
+                require(panel.contains(band),"Score-basis comparison band escaped paper");
+                const auto area=pixel_bounds(project(band));
+                require(foreground_crop(normal,area,0).pixels==foreground_crop(reference,area,0).pixels,
+                    "Actual score-basis label/visibility differs from independent literal unscaled reference");
+            }
             std::srand(6197);
             const int expected_random = std::rand();
             std::srand(6197);
@@ -320,8 +352,17 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
     LevelEndInfo even = unpainted;
     even.team_a_area = even.team_b_area = 50.0f;
     open(even, single, false); finish();
-    require(unpainted_draw.pixels == stack_frame(app).pixels,
-        "Unpainted competitive results lost their deliberate even draw presentation");
+    const Frame painted_draw=stack_frame(app);
+    RectangleF basis_bounds=centered(contribution_font,presentation.menu_text().results.empty_share_basis,look.score_basis_y);
+    basis_bounds=RectangleF::union_of(basis_bounds,centered(contribution_font,presentation.menu_text().results.share_basis,look.score_basis_y));
+    basis_bounds.inflate(Vector2F(1.0f));
+    const RectangleI basis_delta=foreground_delta_bounds(unpainted_draw,painted_draw);
+    require(basis_delta.width>0 && basis_delta.height>0 && pixel_bounds(project(basis_bounds)).contains(basis_delta),
+        "Empty/even results must differ only in their truthful score-basis caption, not scoring or other content");
+    require(unpainted.team_a_ratio()==0.5f && unpainted.team_b_ratio()==0.5f,
+        "Empty competitive scoring convention changed");
+    save(unpainted_draw,output/"results-menu-empty-basis-720p.ppm");
+    save(painted_draw,output/"results-menu-painted-tie-basis-720p.ppm");
 
     roster(4);
     open(victory, next, true); finish();

@@ -16,7 +16,7 @@ a piece of stationery that fills its collision shape exactly:
 
 | Material | Worn by | Drawing |
 |---|---|---|
-| `ground` | solid structures; the big paintable floors | Halved-bond tile courses with black joints in the top four courses; about one joint in five slips a cell off the bond, keyed on its world position ([drawing mistakes](drawing-mistakes-research.md#7-recommendation-and-stages)), `ground_shade` below. Scoring faces use the common white primer described below. |
+| `ground` | solid structures; the big paintable floors | Halved-bond tile courses with black joints in the top four courses; about one joint in ten slips a cell off the bond, keyed on its world position ([drawing mistakes](drawing-mistakes-research.md#7-recommendation-and-stages)), `ground_shade` below. Scoring faces use the common white primer described below. |
 | `pencil` | long paintable platforms and walls | `pencil_body` with a shaded lower facet; an eraser and ferrule at the end away from the stage's mirror line, a cut wood end with its graphite core toward it. A pencil across the mirror line is cut at both ends; one standing up has its eraser at the top; one shorter than four times its thickness (or 60 units) has no end caps. |
 | `eraser` | tall paintable blocks (King of the Hill's tiers) | `eraser_fill`, a keylined `eraser_shade` lower third and one shine dash below the paint band. |
 | `paint_tin` | King of the Hill's summit | Metal tin side on: rim, `prop_accent` label band, shaded side. |
@@ -657,3 +657,25 @@ Captioned jokes need the author's wording and do not gate non-text landmarks.
 Close Quarters' own composition and fitting the kit to revised geometry stay
 with `POL#17`, with readability rechecked in `POL#24`; further per-arena production
 stays with `POL#16`/`POL#21`.
+
+## Per-arena backdrops (`POL#16`, 2026-11-14)
+
+The four Random arenas now have backdrops of their own, drawn in the same kit:
+24 arena props (`press_*`, `yard_*`, `cq_*`, `cf_*`) follow the original eleven
+in the [recipe](../game/art/terrain/terrain.json), and the build packs them on the
+landmark shelves, growing the atlas to 2048x3232 while every original frame keeps
+its coordinates. Each arena's brief, prop list, layering and checks are in its
+own doc: [Press Tower](polish-press-tower.md), [Slab Yard](polish-turbulence.md),
+[Close Quarters](polish-close-quarters.md) and [Crossfeed](polish-crossfeed.md).
+
+- The palette is unchanged. Props draw only with the five backdrop roles, so
+  each arena's identity is its composition, its props and its mix of structure
+  materials; per-arena hues would change the accepted 26-role contract and
+  remain the author's call.
+- Close Quarters is now a paint warehouse interior. It no longer uses the
+  countryside kit or drifting clouds, so the cloud-drift crops above are a
+  dated record of the old composition; Movement Course, King of the Hill and
+  Turbulence keep the drifting clouds.
+- No arena carries lettering: signs and labels are blank boards (`POL#35`).
+- What only a person can judge stays open: how the art looks on a real GPU,
+  and whether any prop reads as a platform or cover in play.

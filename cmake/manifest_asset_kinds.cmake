@@ -1,4 +1,9 @@
 # One manifest-kind to runtime-file rule for packaging and source registration.
+# A kind lists the runtime files each of its names ships. An entry of
+# alternatives such as "dds|png" means exactly one of them: the engine's
+# load_texture_asset reads name.dds or name.png and refuses a name with both.
+# colourwars_manifest_resolve below, editor/stage_registration.cpp and the
+# registration acceptance fixture each pick the one that exists.
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_LIST_DIR}/manifest_asset_kinds.json")
 file(READ "${CMAKE_CURRENT_LIST_DIR}/manifest_asset_kinds.json" COLOURWARS_MANIFEST_ASSET_KINDS)
@@ -16,12 +21,37 @@ function(colourwars_manifest_extensions output kind)
     set(extensions "")
     foreach(index RANGE 0 ${last})
         string(JSON extension GET "${values}" ${index})
-        if(NOT extension MATCHES "^[a-z0-9]+$")
+        if(NOT extension MATCHES "^[a-z0-9]+([|][a-z0-9]+)*$")
             message(FATAL_ERROR "Invalid runtime extension for ${kind}: ${extension}")
         endif()
         list(APPEND extensions "${extension}")
     endforeach()
     set(${output} "${extensions}" PARENT_SCOPE)
+endfunction()
+
+# The runtime file `base`.`extension` names under `content`, relative to it.
+# A plain extension is the file whatever is on disk; an entry of alternatives
+# is the one alternative present, and none or more than one is refused.
+function(colourwars_manifest_resolve output content base extension)
+    if(NOT extension MATCHES "[|]")
+        set(${output} "${base}.${extension}" PARENT_SCOPE)
+        return()
+    endif()
+    string(REPLACE "|" ";" alternatives "${extension}")
+    set(found "")
+    foreach(alternative IN LISTS alternatives)
+        if(EXISTS "${content}/${base}.${alternative}")
+            list(APPEND found "${base}.${alternative}")
+        endif()
+    endforeach()
+    list(LENGTH found count)
+    if(count EQUAL 0)
+        message(FATAL_ERROR "Missing release asset: ${base}.${extension}")
+    elseif(count GREATER 1)
+        string(REPLACE ";" " and " both "${found}")
+        message(FATAL_ERROR "Both ${both} exist; the engine refuses a texture with two files: delete one.")
+    endif()
+    set(${output} "${found}" PARENT_SCOPE)
 endfunction()
 
 function(colourwars_configure_manifest_kinds output)

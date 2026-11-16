@@ -1,6 +1,6 @@
 {
   "font": ["spritefont"],
-  "sprite_sheet": ["json", "dds"],
+  "sprite_sheet": ["json", "dds|png"],
   "level": ["json"],
   "sound_bank": ["json", "xwb"]
 }

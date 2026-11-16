@@ -358,7 +358,7 @@ namespace press_tower_acceptance
         const std::vector<Piece> pieces = blueprint_pieces(bounds);
         require(pieces.size() == 30 && s.map.surfaces.size() == pieces.size(),
             "Press Tower needs exactly 30 collision objects; found " + std::to_string(s.map.surfaces.size()));
-        require(s.map.info.non_collision_objects_json().size() == 17, "Press Tower needs exactly 17 visuals; found " +
+        require(s.map.info.non_collision_objects_json().size() == 25, "Press Tower needs exactly 25 visuals; found " +
             std::to_string(s.map.info.non_collision_objects_json().size()));
         for (const Piece& piece : pieces)
         {

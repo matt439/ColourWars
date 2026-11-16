@@ -194,7 +194,7 @@ void GameLevel::init()
 		this->data()->resolution_manager(),
 		this->data()->thread_pool(),
 		this->data()->partitioner(),
-		&this->data()->settings_session()->input_bindings());
+		&this->data()->settings_session()->input_bindings(), this->data()->crt_runtime());
 
 	// Content reloaded from the menus is swapped in by the first build.
 	this->debug_attachment_.emplace(this->data()->debug(), static_cast<DebugMatchTarget&>(*this));
@@ -419,7 +419,7 @@ void GameLevel::update(float dt)
 		// A toggle-fire pad stops firing too, and does not resume on return.
 		this->player_input_->release_toggles();
 		// Neutral physical baseline, then the normal seat filter supplies bots
-		// or replay input. Actual pad presence is checked separately below.
+		// or replay input. Pad presence is checked below, once focused again.
 		player_inputs.resize(input_slots::count);
 		for (int slot = 0; slot < input_slots::count; ++slot)
 		{
@@ -439,9 +439,11 @@ void GameLevel::update(float dt)
 
 	// Check current presence, not just a disconnect edge: focus loss can hide
 	// the edge, and no participant may lose match time while reconnecting.
-	// A seat a Debug bot or replay drives never waits for its pad.
-	const int missing_slot = disconnected_player_slot(this->settings_,
-		*this->data()->gamepads(), this->data()->debug());
+	// A seat a Debug bot or replay drives never waits for its pad. Only a
+	// focused update can tell: the engine reads every pad disconnected while
+	// the window is inactive, so a Debug background match checks on return.
+	const int missing_slot = gate.focused ? disconnected_player_slot(this->settings_,
+		*this->data()->gamepads(), this->data()->debug()) : -1;
 	// The pause page may have handed a seat to a returning pad (ROAD#4).
 	this->sync_level_pads();
 	if (dt > 0.0f && gate.focused)

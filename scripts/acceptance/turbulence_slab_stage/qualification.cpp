@@ -54,10 +54,34 @@ namespace turbulence_slab_stage_acceptance
             for (auto field = original.MemberBegin(); field != original.MemberEnd(); ++field)
             {
                 const std::string name = field->name.GetString();
-                if (name == "display_name" || name == "include_in_random" || name == "collision_objects") { continue; }
+                // The backdrop is the arena's own (POL#16, docs/polish-turbulence.md):
+                // the mover trial keeps its paper-only blockout backing.
+                if (name == "display_name" || name == "include_in_random" || name == "collision_objects" ||
+                    name == "non_collision_objects") { continue; }
                 require(stage.HasMember(field->name) && stage[field->name] == field->value,
                     "Registered slab stage changed original spawns/non-display metadata");
             }
+            // Slab Yard's loading-yard backdrop: the original paper backing stays
+            // first and farthest, and every other decoration is an untinted
+            // terrain Visual, so the arena art never touches play.
+            const auto& decorations = stage["non_collision_objects"];
+            require(decorations.IsArray() && decorations.Size() > 1 &&
+                decorations[0] == original["non_collision_objects"][0],
+                "Registered slab stage lost its paper backing behind the yard backdrop");
+            std::set<std::string> yard_frames;
+            for (rapidjson::SizeType index = 0; index < decorations.Size(); ++index)
+            {
+                const auto& object = decorations[index];
+                require(std::string(object["type"].GetString()) == "Visual" &&
+                    std::string(object["sheet_name"].GetString()) == "terrain" &&
+                    std::string(object["colour"].GetString()) == "WHITE",
+                    "Slab Yard backdrop holds something other than an untinted terrain Visual");
+                const std::string frame = object["frame_name"].GetString();
+                if (frame.starts_with("yard_")) { yard_frames.insert(frame); }
+            }
+            require(yard_frames == std::set<std::string>{ "yard_crane", "yard_crates", "yard_fence",
+                "yard_skyline", "yard_stack", "yard_tank" },
+                "Slab Yard backdrop lost or gained a loading-yard prop");
             require(std::string(stage["display_name"].GetString()) == "Slab Yard" &&
                 stage.HasMember("include_in_random") && stage["include_in_random"].IsBool() && stage["include_in_random"].GetBool(),
                 "Registered slab stage must keep its display identity and its accepted place in Random");

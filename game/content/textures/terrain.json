@@ -453,6 +453,270 @@
                                            "w":  256,
                                            "h":  160
                                        }
+                          },
+                          {
+                              "name":  "press_roof_bay",
+                              "position":  {
+                                               "x":  524,
+                                               "y":  596
+                                           },
+                              "size":  {
+                                           "w":  600,
+                                           "h":  96
+                                       }
+                          },
+                          {
+                              "name":  "press_chimneys",
+                              "position":  {
+                                               "x":  1128,
+                                               "y":  596
+                                           },
+                              "size":  {
+                                           "w":  176,
+                                           "h":  72
+                                       }
+                          },
+                          {
+                              "name":  "press_frame",
+                              "position":  {
+                                               "x":  1308,
+                                               "y":  596
+                                           },
+                              "size":  {
+                                           "w":  640,
+                                           "h":  680
+                                       }
+                          },
+                          {
+                              "name":  "press_trestle",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  1280
+                                           },
+                              "size":  {
+                                           "w":  144,
+                                           "h":  320
+                                       }
+                          },
+                          {
+                              "name":  "press_sign",
+                              "position":  {
+                                               "x":  152,
+                                               "y":  1280
+                                           },
+                              "size":  {
+                                           "w":  160,
+                                           "h":  256
+                                       }
+                          },
+                          {
+                              "name":  "press_hook",
+                              "position":  {
+                                               "x":  316,
+                                               "y":  1280
+                                           },
+                              "size":  {
+                                           "w":  96,
+                                           "h":  288
+                                       }
+                          },
+                          {
+                              "name":  "press_rolls",
+                              "position":  {
+                                               "x":  416,
+                                               "y":  1280
+                                           },
+                              "size":  {
+                                           "w":  160,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "yard_skyline",
+                              "position":  {
+                                               "x":  580,
+                                               "y":  1280
+                                           },
+                              "size":  {
+                                           "w":  1024,
+                                           "h":  224
+                                       }
+                          },
+                          {
+                              "name":  "yard_tank",
+                              "position":  {
+                                               "x":  1608,
+                                               "y":  1280
+                                           },
+                              "size":  {
+                                           "w":  192,
+                                           "h":  384
+                                       }
+                          },
+                          {
+                              "name":  "yard_crane",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  1668
+                                           },
+                              "size":  {
+                                           "w":  512,
+                                           "h":  864
+                                       }
+                          },
+                          {
+                              "name":  "yard_stack",
+                              "position":  {
+                                               "x":  520,
+                                               "y":  1668
+                                           },
+                              "size":  {
+                                           "w":  160,
+                                           "h":  448
+                                       }
+                          },
+                          {
+                              "name":  "yard_crates",
+                              "position":  {
+                                               "x":  684,
+                                               "y":  1668
+                                           },
+                              "size":  {
+                                           "w":  288,
+                                           "h":  224
+                                       }
+                          },
+                          {
+                              "name":  "yard_fence",
+                              "position":  {
+                                               "x":  976,
+                                               "y":  1668
+                                           },
+                              "size":  {
+                                           "w":  512,
+                                           "h":  112
+                                       }
+                          },
+                          {
+                              "name":  "cq_window",
+                              "position":  {
+                                               "x":  1492,
+                                               "y":  1668
+                                           },
+                              "size":  {
+                                           "w":  256,
+                                           "h":  160
+                                       }
+                          },
+                          {
+                              "name":  "cq_door",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  2536
+                                           },
+                              "size":  {
+                                           "w":  384,
+                                           "h":  400
+                                       }
+                          },
+                          {
+                              "name":  "cq_rack",
+                              "position":  {
+                                               "x":  392,
+                                               "y":  2536
+                                           },
+                              "size":  {
+                                           "w":  288,
+                                           "h":  384
+                                       }
+                          },
+                          {
+                              "name":  "cq_tank",
+                              "position":  {
+                                               "x":  684,
+                                               "y":  2536
+                                           },
+                              "size":  {
+                                           "w":  256,
+                                           "h":  320
+                                       }
+                          },
+                          {
+                              "name":  "cq_pipes",
+                              "position":  {
+                                               "x":  944,
+                                               "y":  2536
+                                           },
+                              "size":  {
+                                           "w":  640,
+                                           "h":  192
+                                       }
+                          },
+                          {
+                              "name":  "cq_bench",
+                              "position":  {
+                                               "x":  1588,
+                                               "y":  2536
+                                           },
+                              "size":  {
+                                           "w":  384,
+                                           "h":  128
+                                       }
+                          },
+                          {
+                              "name":  "cq_timber",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  2940
+                                           },
+                              "size":  {
+                                           "w":  224,
+                                           "h":  160
+                                       }
+                          },
+                          {
+                              "name":  "cq_drums",
+                              "position":  {
+                                               "x":  232,
+                                               "y":  2940
+                                           },
+                              "size":  {
+                                           "w":  256,
+                                           "h":  176
+                                       }
+                          },
+                          {
+                              "name":  "cf_paint_tube",
+                              "position":  {
+                                               "x":  492,
+                                               "y":  2940
+                                           },
+                              "size":  {
+                                           "w":  128,
+                                           "h":  256
+                                       }
+                          },
+                          {
+                              "name":  "cf_palette",
+                              "position":  {
+                                               "x":  624,
+                                               "y":  2940
+                                           },
+                              "size":  {
+                                           "w":  384,
+                                           "h":  256
+                                       }
+                          },
+                          {
+                              "name":  "cf_pencil_cup",
+                              "position":  {
+                                               "x":  1012,
+                                               "y":  2940
+                                           },
+                              "size":  {
+                                           "w":  160,
+                                           "h":  288
+                                       }
                           }
                       ]
 }

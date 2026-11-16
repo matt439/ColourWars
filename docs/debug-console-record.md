@@ -597,6 +597,15 @@ pacing or pending manual steps. Disabling the mode during an inactive match
 holds the next script statement and queued match action until activation.
 Default-off menu-side script handling keeps its earlier behavior.
 
+**Amended 2026-11-13 at the engine pin bump** ([`PIN#2`](review/engine-reports.md#qualify-masters-behaviour-changes-pin2)).
+The engine now suspends its pad reader whenever the window is not in front and
+shown, and a suspended reader answers every pad disconnected, so an inactive
+window cannot read pad presence at all. A background match no longer checks
+it: `GameLevel::update` asks only on a focused update, and a pad lost while in
+the background opens the waiting pause on the first update after return. A
+human pad seat therefore no longer stops an unattended run at once; it stays
+neutral, as every non-bot seat does in the background.
+
 Both game presets build under `/W4 /WX`. The focused `debug_console
 --background-only` case passes in Debug and Release, including all-field
 post-mouse neutralization, driver ordering, held edges, both disable-batch
@@ -604,7 +613,7 @@ orders, command validation, existing clock/script/bot/replay regressions,
 shared layouts and Release command/RTTI exclusion. Nine relevant existing
 consumer cases also pass per preset.
 
-The Debug `RumbleOnly` supplement passes twenty cases through actual GameLevel
+The Debug `RumbleOnly` supplement passes twenty cases (twenty-one since the 2026-11-13 amendment) through actual GameLevel
 and StateContext, with injected window facts and synthetic activation. It
 records and replays 420 updates, checks the final fingerprint and neutral
 non-bot tape channels, pre-update Music/SFX gains, every motor intent and
@@ -2100,10 +2109,11 @@ acceptance. `DBG#1` remains open; this audit adds no new tunable fields.
 
 ## Foreground checks (`CI#1`)
 
-**UNSCOPED.** `scripts/check-debug-console.ps1` remains an opt-in local check:
-its real key events and focus-sensitive scripts need a reliable foreground
-desktop, which the current hosted CI workflow does not establish. First assess
-an attended/dedicated runner model with explicit focus ownership and retained
-failure evidence. Scope CI integration only after that model is demonstrated;
-a hidden launch or synthetic CPU input check does not qualify the foreground
-workflow. Existing CPU acceptance and startup/editor CI checks remain in place.
+**DECLINED 2026-11-13.** The author chose no trial push to a hosted runner.
+`scripts/check-debug-console.ps1` stays a local, opt-in human check: its real
+key events and focus-sensitive scripts need a reliable foreground desktop,
+which hosted CI does not establish, and a hidden launch or synthetic CPU input
+check does not qualify the foreground workflow. The CPU-side `debug_console`
+acceptance case and the startup/editor CI checks remain in place. *Reopen* if
+a self-hosted or dedicated runner appears, or if a debug-console regression
+reaches `master` that the `debug_console` case missed.

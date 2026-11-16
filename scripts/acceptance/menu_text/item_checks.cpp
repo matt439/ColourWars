@@ -6,7 +6,7 @@ namespace menu_text_acceptance
 {
     void check_item_bounds(Variants& variants, World& world)
     {
-        for (const char* key : { "play", "options", "credits", "exit", "controls_audio", "apply", "back",
+        for (const char* key : { "play", "how_to_play", "options", "credits", "exit", "controls_audio", "apply", "back",
             "single_match", "best_of_three", "best_of_five", "match_length", "one_player_practice",
             "two_players", "three_players", "four_players", "resume", "restart", "quit", "yes", "no",
             "change_teams", "change_weapons", "change_level", "exit_to_main_menu", "restore_defaults", "keep", "revert",
@@ -15,6 +15,14 @@ namespace menu_text_acceptance
             variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
                 { d["menu_text"]["items"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         }
+        variants.rejects("Home How to play", [](rapidjson::Document& d)
+        {
+            d["main_menu"]["home_help_position"]["x"].SetFloat(460.0f);
+        }, &world);
+        variants.rejects("learn.next", [](rapidjson::Document& d)
+        { d["menu_text"]["learn"]["next"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
+        variants.rejects("connection.team_choice_required", [](rapidjson::Document& d)
+        { d["menu_text"]["connection"]["team_choice_required"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         const auto original = variants.load([](rapidjson::Document&) {});
         const float row_height = 20.0f + original.main_menu().art.focus_padding.y * 2.0f;
         const float paper_right = (1920.0f + original.main_menu().home_box_size.x) / 2.0f -
@@ -62,13 +70,16 @@ namespace menu_text_acceptance
 
     void check_restore_defaults_text(Variants& variants, World& world)
     {
+        variants.rejects("learn.next", [](rapidjson::Document& d)
+        { d["menu_text"]["learn"]["next"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& main = original.main_menu();
         const auto art = options_art(main);
-        require(main.options_spacing == labrador::Vector2F(540.0f, 82.0f) &&
+        // Nine rows keep a real gap between 58px glyphs and 7px focus padding.
+        require(main.options_spacing == labrador::Vector2F(540.0f, 80.0f) &&
             art.focus_padding == labrador::Vector2F(28.0f, 7.0f) && art.shadow_offset == 2.0f &&
             original.menu().item_font == "lato_black_48" && main.options_font == "lato_black_36",
-            "Eight-row Options changed its reviewed compact geometry or its row font");
+            "Nine-row Options changed its reviewed compact geometry or its row font");
         const auto normalized = variants.load([](rapidjson::Document& d)
         {
             d["menu_text"]["items"]["restore_defaults"].SetString("  A\xC2\xA0\xE2\x80\x9C" "B" "\xE2\x80\x9D\xE2\x80\x94" "C\xE2\x80\xA6  ");
@@ -108,15 +119,15 @@ namespace menu_text_acceptance
             edge.validate_resources(world.render, world.audio);
             std::wstring source = edge.menu_text().item(MenuItem::restore_defaults);
             UiText text("restore_defaults", source, name,
-                main.options_position + labrador::Vector2F(0.0f, main.options_spacing.y * 5.0f), &world.render, art.ink);
+                main.options_position + labrador::Vector2F(0.0f, main.options_spacing.y * 6.0f), &world.render, art.ink);
             source = L"Changed after construction";
             auto card = text.bounds(); card.inflate(art.focus_padding);
-            require(text.text() == L"~" && text.bounds().width == 1470.0f && text.bounds().y == 630.0f &&
+            require(text.text() == L"~" && text.bounds().width == 1470.0f && text.bounds().y == 700.0f &&
                 card.right() == (1920.0f + main.options_box_size.x) / 2.0f - art.shadow_offset,
-                "Plain Restore defaults borrowed its copy, fitted its width or missed row5's inclusive paper-face edge");
+                "Plain Restore defaults borrowed its copy, fitted its width or missed row6's inclusive paper-face edge");
             text.set_hidden(true); DrawList no_device; text.draw(no_device);
         }
-        // Only row7 Back reaches the paper-face bottom; a stale seven-row mapping
+        // Only row8 Back reaches the paper-face bottom; a stale eight-row mapping
         // would accept the overflow variant below.
         const auto back_bottom = [](rapidjson::Document& d)
         {
@@ -125,14 +136,14 @@ namespace menu_text_acceptance
             d["prompt_bar"]["font"].SetString("menu_text_exact");
             for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
             for (const auto& entry : status_text) { d["menu_text"]["status"][entry.key].SetString("Fit"); }
-            d["main_menu"]["options_position"]["y"].SetFloat(337.0f);
+            d["main_menu"]["options_position"]["y"].SetFloat(271.0f);
             d["main_menu"]["options_status_position"]["y"].SetFloat(914.0f);
         };
         variants.load(back_bottom).validate_resources(world.render, world.audio);
         variants.rejects("items.back", [&](rapidjson::Document& d)
         {
             back_bottom(d);
-            d["main_menu"]["options_position"]["y"].SetFloat(337.25f);
+            d["main_menu"]["options_position"]["y"].SetFloat(271.25f);
         }, &world);
     }
 
@@ -173,6 +184,8 @@ namespace menu_text_acceptance
             d["menu_style"]["shadow"]["item_offset"]["x"].SetFloat(1.5f);
             d["menu_style"]["shadow"]["item_offset"]["y"].SetFloat(1.5f);
         };
+        variants.rejects("learn.next", [](rapidjson::Document& d)
+        { d["menu_text"]["learn"]["next"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& look = original.main_menu();
         const float row_height = 20.0f + 1.5f + look.setup_focus_padding.y * 2.0f + look.setup_shadow_offset;
@@ -339,6 +352,8 @@ namespace menu_text_acceptance
                 choice->value["name"].SetString(rapidjson::StringRef(tools[tool++ % std::size(tools)]));
             }
         };
+        variants.rejects("learn.next", [](rapidjson::Document& d)
+        { d["menu_text"]["learn"]["next"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& pause = original.pause_menu();
         const auto options_size = world.render.measure_text(world.render.resolve_sprite_font(original.menu().item_font),

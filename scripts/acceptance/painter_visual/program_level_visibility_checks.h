@@ -66,11 +66,23 @@ void program_level_visibility_checks(Application& app, Registry<LevelLoadedInfo>
             "Program Level drawing changed public replay fingerprint");
 #endif
     };
-    const auto patch = [](const Frame& actual, const RectangleI& area, std::uint32_t rgb)
+    const auto patch = [&](const Frame& actual, const RectangleI& area, std::uint32_t rgb)
     {
         for (int y = area.y; y < area.y + area.height; ++y)
         { for (int x = area.x; x < area.x + area.width; ++x)
-            { require(monitor_rgb(actual, x, y) == rgb, "Program Level declared patch is covered or has wrong literal RGB"); } }
+            {
+                const auto observed = monitor_rgb(actual, x, y);
+                if (observed != rgb)
+                {
+                    std::ofstream mismatch(output / "program-level-patch-mismatch.json");
+                    mismatch << "{\"x\":" << x << ",\"y\":" << y << ",\"expected_rgb\":" << rgb <<
+                        ",\"observed_rgb\":" << observed << ",\"patch\":[" << area.x << ',' << area.y << ',' <<
+                        area.width << ',' << area.height << "]}\n";
+                    std::cerr << "Program Level patch mismatch at " << x << ',' << y << ": expected " << rgb <<
+                        ", observed " << observed << '\n';
+                }
+                require(observed == rgb, "Program Level declared patch is covered or has wrong literal RGB");
+            } }
     };
     constexpr std::array<const char*, 3> names{ "baseline", "rgb", "restored" };
     const std::array<Colour, 3> colours{ original.program_colour, Colour(53, 188, 225), original.program_colour };
@@ -95,9 +107,12 @@ void program_level_visibility_checks(Application& app, Registry<LevelLoadedInfo>
             require(frames[state].width == 1280 && frames[state].height == 720 && frames[state].pixels == repeat.pixels,
                 "Program Level completed composition changed on frozen repeat");
             patch(frames[state], { 632, 92, 16, 16 }, expected[state]);
-            patch(frames[state], { 392, 242, 16, 16 }, 0xC9D3D9u);
+            // POL#16 added cf_paint_tube over the old (392,242) paper site.
+            // The retained #88 frame and a tube-only removal isolate that occluder;
+            // use the adjacent clear paper, retaining the same 16x16 literal guard.
+            patch(frames[state], { 480, 242, 16, 16 }, 0xC9D3D9u);
             patch(frames[state], { 132, 100, 1, 1 }, 0x161616u);
-            for (const RectangleI area : { RectangleI(392, 242, 16, 16), RectangleI(132, 100, 1, 1) })
+            for (const RectangleI area : { RectangleI(480, 242, 16, 16), RectangleI(132, 100, 1, 1) })
             {
                 for (int y = area.y; y < area.y + area.height; ++y)
                 { for (int x = area.x; x < area.x + area.width; ++x)
@@ -132,7 +147,7 @@ void program_level_visibility_checks(Application& app, Registry<LevelLoadedInfo>
     {
         cases << names[index] << ",2,true," << (index == 1 ? "false" : "true") << ',' << deltas[index] <<
             ",0,true,single-six-draw-bracket,actual-level-single-opening-checkpoint\n"; ++case_rows;
-        const std::array<RectangleI, 3> areas{ RectangleI(632, 92, 16, 16), RectangleI(392, 242, 16, 16), RectangleI(132, 100, 1, 1) };
+        const std::array<RectangleI, 3> areas{ RectangleI(632, 92, 16, 16), RectangleI(480, 242, 16, 16), RectangleI(132, 100, 1, 1) };
         constexpr std::array<const char*, 3> sites{ "exposed-program", "covered-paper", "outside-program-glass" };
         const std::array<std::uint32_t, 3> rgb{ expected[index], 0xC9D3D9u, 0x161616u };
         for (size_t site = 0; site < sites.size(); ++site)
@@ -152,7 +167,7 @@ void program_level_visibility_checks(Application& app, Registry<LevelLoadedInfo>
         "\"observation_input_updates\":0,\"observation_time_updates\":0,\"readbacks\":6,\"case_rows\":3,\"sample_rows\":9,\"csv_rows\":12,"
         "\"full_ppms\":2,\"crops\":0,\"commands\":0,\"rng_brackets\":1,\"repeat_pairs\":3,\"whole_frame_reset\":true,"
         "\"frozen_public_style_resources\":true,\"private_story_clocks_observed\":false,\"program_mask\":[136,59,1007,480],"
-        "\"program_patch\":[632,92,16,16],\"paper_patch\":[392,242,16,16],\"glass_patch\":[132,100,1,1],\"event_fade\":false}\n";
+        "\"program_patch\":[632,92,16,16],\"paper_patch\":[480,242,16,16],\"glass_patch\":[132,100,1,1],\"event_fade\":false}\n";
     require(summary.good(), "Cannot write Program Level summary");
     std::cout << "PASS program-level-visibility: one actual 2P Crossfeed full opening, one positive .4f setup update; "
         "6 readbacks / 3 cases + 9 samples / 2 full PPMs / 0 crops, zero observation updates, one RNG bracket. "

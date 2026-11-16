@@ -166,11 +166,13 @@ namespace level_editor_acceptance
         }
         {
             LevelDocument document(tuning);
-            document.load(levels / "close_quarters.json");
+            // Close Quarters, the earlier subject, became a cloudless interior
+            // under POL#16; the Movement Course keeps the same drifting cloud_4.
+            document.load(levels / "movement_course.json");
             const Rect world = document.rectangle(Entry{ EntryKind::bounds, 0, "" });
             const Entry cloud = named(document, EntryKind::decoration, "cloud_4");
             const auto source = record(document, cloud);
-            const auto copy = record(document, mirror_once(document, cloud, "Close Quarters cloud_4"));
+            const auto copy = record(document, mirror_once(document, cloud, "Movement Course cloud_4"));
             require(std::abs(copy["drift"]["phase"].GetDouble() - (source["drift"]["phase"].GetDouble() - 0.5)) < 1e-12,
                 "A drifting visual's phase did not wrap half a cycle");
             require(copy["rectangle"]["x"].GetDouble() == world.x + (world.x + world.width) -
@@ -178,7 +180,7 @@ namespace level_editor_acceptance
                 "A drifting visual did not reflect its anchor");
             // A phase just under 0.5 rounds to a whole cycle, which wraps to 0.
             document.set_property(cloud, "drift/phase", "0.4999999999999");
-            const auto wrapped = record(document, mirror_once(document, cloud, "Close Quarters cloud_4 near 0.5"));
+            const auto wrapped = record(document, mirror_once(document, cloud, "Movement Course cloud_4 near 0.5"));
             require(wrapped["drift"]["phase"].GetDouble() == 0.0,
                 "A drift phase just under 0.5 did not wrap to 0");
         }

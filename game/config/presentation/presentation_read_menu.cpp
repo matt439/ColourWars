@@ -130,15 +130,35 @@ namespace presentation_read
 			{
 				throw std::runtime_error(entry.where() + ": team pair label must not be empty.");
 			}
-			palette.pairs.push_back({ key, label, { resolve("team_a"), resolve("team_b") } });
+			const bool in_random = entry.has("in_random") ? entry.boolean("in_random") : true;
+			palette.pairs.push_back({ key, label, { resolve("team_a"), resolve("team_b") }, in_random });
 		}
 		// Saved fixed preferences must always resolve, regardless of array order.
+		std::vector<std::string> fixed_keys;
 		for (int value = 0; value < static_cast<int>(TeamColourPair::count); ++value)
 		{
 			const char* key = TeamColourTools::palette_key(static_cast<TeamColourPair>(value));
 			bool found = false;
 			for (const TeamPaletteEntry& pair : palette.pairs) { found |= pair.key == key; }
 			if (!found) { throw std::runtime_error(pairs.where() + ": missing fixed team pair '" + key + "'."); }
+			fixed_keys.emplace_back(key);
+		}
+		// Random needs a pair to land on, and a pair out of Random must still be
+		// reachable as a fixed Options choice (REV#14).
+		bool any_random = false;
+		for (const TeamPaletteEntry& pair : palette.pairs)
+		{
+			any_random |= pair.in_random;
+			if (!pair.in_random &&
+				std::find(fixed_keys.begin(), fixed_keys.end(), pair.key) == fixed_keys.end())
+			{
+				throw std::runtime_error(pairs.where() + ": team pair '" + pair.key +
+					"' is in neither Random nor Options.");
+			}
+		}
+		if (!any_random)
+		{
+			throw std::runtime_error(pairs.where() + ": no team pair is in Random; at least one needs in_random true.");
 		}
 		return palette;
 	}
@@ -254,7 +274,7 @@ namespace presentation_read
 		require_known_keys(json, { "title_box_size", "home_box_size", "options_box_size",
 			"credits_box_size", "setup_box_size", "team_box_size", "weapon_box_size", "stage_box_size",
 			"setup_focus_padding", "setup_shadow_offset", "art", "title_y", "title_subtitle_y",
-			"title_start_y", "title_no_pad_y", "home_position", "home_subtitle_position", "home_spacing",
+			"title_start_y", "title_no_pad_y", "home_position", "home_help_position", "home_quick_position", "quick_match", "home_subtitle_position", "home_spacing",
 			"options_heading_position", "options_position", "options_value_x", "options_status_position",
 			"credits", "fonts", "build_id_y", "backgrounds", "options_warning_colour",
 			"options_spacing", "display_trial_seconds", "weapon_description", "mode_select_spacing",
@@ -335,6 +355,15 @@ namespace presentation_read
 		menu.title_no_pad_y = title_height("title_no_pad_y");
 		menu.home_position = position("home_position");
 		menu.home_subtitle_position = position("home_subtitle_position");
+        menu.home_help_position = position("home_help_position");
+        menu.home_quick_position = position("home_quick_position");
+        const JsonValue quick = json.object("quick_match");
+        require_known_keys(quick, {"heading_position", "body_position", "start_position", "customise_position", "back_position"});
+        menu.quick_heading_position = read_vector(quick, "heading_position");
+        menu.quick_body_position = read_vector(quick, "body_position");
+        menu.quick_start_position = read_vector(quick, "start_position");
+        menu.quick_customise_position = read_vector(quick, "customise_position");
+        menu.quick_back_position = read_vector(quick, "back_position");
 
 		const JsonValue fonts = json.object("fonts");
 		menu.title_font = fonts.string("title");
@@ -426,7 +455,7 @@ namespace presentation_read
 			throw std::runtime_error(json.where() + ": options_value_x must follow the label inside options_box_size.");
 		}
 		if (menu.options_heading_position.y >= menu.options_position.y ||
-			menu.options_position.y + menu.options_spacing.y * 7.0f >= menu.options_status_position.y ||
+			menu.options_position.y + menu.options_spacing.y * 8.0f >= menu.options_status_position.y ||
 			menu.options_spacing.y <= options_art.focus_padding.y * 2.0f ||
 			menu.options_spacing.x > design_resolution.x)
 		{
@@ -843,6 +872,7 @@ namespace presentation_read
 		menu.winner_y = read_y("winner_y");
 		menu.session_score_y = read_y("session_score_y");
 		menu.session_result_y = read_y("session_result_y");
+		menu.score_basis_y = read_y("score_basis_y");
 		menu.proceed_y = read_y("proceed_y");
 		menu.record_y = read_y("record_y");
 		if (menu.heading_y >= menu.winner_y || menu.winner_y >= menu.session_score_y ||

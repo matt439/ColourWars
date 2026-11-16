@@ -6,7 +6,7 @@
         "The press head is the summit: from it a holder sees both home roofs and gantries but no floor, bed, frame or spawn body.",
         "Optional climbs are the stair (four 80-unit taps or held jumps) and the hoist (bed to frame to shoulder, two held jumps, then a tap).",
         "Ramps support players but pass paint. Rulers are one-way supports, solid to projectiles; press_base is covered and never scores.",
-        "Interior dressing only: works wall, skylights, roof truss and hanging signs; no sun, clouds or hills.",
+        "Interior dressing only: a works wall under a sawtooth roof, the screw-press frame round the tower, trestles under the stairs, paper rolls, crane hooks and blank hanging signs; no sun, clouds or hills.",
         "Accepted by the author as the King of the Hill arena on 2026-11-05 and included in Random; the original King of the Hill file stays selectable but leaves Random.",
         "Reuses accepted King of the Hill audio and icon; this does not create a new cue or claim listening acceptance."
     ],
@@ -797,106 +797,262 @@
             "colour": "WHITE"
         },
         {
-            "name": "skylight_1",
+            "name": "roof_sky",
             "type": "Visual",
             "sheet_name": "terrain",
             "frame_name": "swatch_paper",
-            "rectangle": {
-                "x": 200,
-                "y": 400,
-                "width": 200,
-                "height": 48
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "skylight_2",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "swatch_paper",
-            "rectangle": {
-                "x": 800,
-                "y": 400,
-                "width": 200,
-                "height": 48
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "skylight_3",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "swatch_paper",
-            "rectangle": {
-                "x": 1400,
-                "y": 400,
-                "width": 200,
-                "height": 48
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "skylight_4",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "swatch_paper",
-            "rectangle": {
-                "x": 2000,
-                "y": 400,
-                "width": 200,
-                "height": 48
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "skylight_5",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "swatch_paper",
-            "rectangle": {
-                "x": 2600,
-                "y": 400,
-                "width": 200,
-                "height": 48
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "skylight_6",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "swatch_paper",
-            "rectangle": {
-                "x": 3200,
-                "y": 400,
-                "width": 200,
-                "height": 48
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "roof_truss",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "swatch_bg_line",
             "rectangle": {
                 "x": 0,
-                "y": 460,
+                "y": 380,
                 "width": 3600,
-                "height": 8
+                "height": 84
             },
             "colour": "WHITE"
         },
         {
-            "name": "tower_backwall",
+            "name": "chimneys_1",
             "type": "Visual",
             "sheet_name": "terrain",
-            "frame_name": "swatch_bg_mid",
+            "frame_name": "press_chimneys",
+            "rectangle": {
+                "x": 1016,
+                "y": 380,
+                "width": 176,
+                "height": 72
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "chimneys_2",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_chimneys",
+            "rectangle": {
+                "x": 2816,
+                "y": 380,
+                "width": 176,
+                "height": 72
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_bay_1",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_roof_bay",
+            "rectangle": {
+                "x": 0,
+                "y": 380,
+                "width": 600,
+                "height": 96
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_bay_2",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_roof_bay",
+            "rectangle": {
+                "x": 600,
+                "y": 380,
+                "width": 600,
+                "height": 96
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_bay_3",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_roof_bay",
+            "rectangle": {
+                "x": 1200,
+                "y": 380,
+                "width": 600,
+                "height": 96
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_bay_4",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_roof_bay",
+            "rectangle": {
+                "x": 1800,
+                "y": 380,
+                "width": 600,
+                "height": 96
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_bay_5",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_roof_bay",
+            "rectangle": {
+                "x": 2400,
+                "y": 380,
+                "width": 600,
+                "height": 96
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_bay_6",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_roof_bay",
+            "rectangle": {
+                "x": 3000,
+                "y": 380,
+                "width": 600,
+                "height": 96
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "press_frame",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_frame",
             "rectangle": {
                 "x": 1480,
-                "y": 700,
+                "y": 520,
                 "width": 640,
-                "height": 500
+                "height": 680
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "trestle_1_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_trestle",
+            "rectangle": {
+                "x": 1008,
+                "y": 1120,
+                "width": 144,
+                "height": 320
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "trestle_1_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_trestle",
+            "rectangle": {
+                "x": 2448,
+                "y": 1120,
+                "width": 144,
+                "height": 320
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "trestle_2_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_trestle",
+            "rectangle": {
+                "x": 1168,
+                "y": 1040,
+                "width": 144,
+                "height": 320
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "trestle_2_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_trestle",
+            "rectangle": {
+                "x": 2288,
+                "y": 1040,
+                "width": 144,
+                "height": 320
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "trestle_3_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_trestle",
+            "rectangle": {
+                "x": 1328,
+                "y": 960,
+                "width": 144,
+                "height": 320
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "trestle_3_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_trestle",
+            "rectangle": {
+                "x": 2128,
+                "y": 960,
+                "width": 144,
+                "height": 320
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "rolls_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_rolls",
+            "rectangle": {
+                "x": 700,
+                "y": 1160,
+                "width": 160,
+                "height": 120
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "rolls_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_rolls",
+            "rectangle": {
+                "x": 2740,
+                "y": 1160,
+                "width": 160,
+                "height": 120
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "hook_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_hook",
+            "rectangle": {
+                "x": 820,
+                "y": 464,
+                "width": 96,
+                "height": 288
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "hook_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_hook",
+            "rectangle": {
+                "x": 2684,
+                "y": 464,
+                "width": 96,
+                "height": 288
             },
             "colour": "WHITE"
         },
@@ -904,12 +1060,12 @@
             "name": "sign_a",
             "type": "Visual",
             "sheet_name": "terrain",
-            "frame_name": "swatch_prop_accent",
+            "frame_name": "press_sign",
             "rectangle": {
                 "x": 600,
-                "y": 700,
+                "y": 468,
                 "width": 160,
-                "height": 56
+                "height": 256
             },
             "colour": "WHITE"
         },
@@ -917,64 +1073,12 @@
             "name": "sign_b",
             "type": "Visual",
             "sheet_name": "terrain",
-            "frame_name": "swatch_prop_accent",
+            "frame_name": "press_sign",
             "rectangle": {
                 "x": 2840,
-                "y": 700,
+                "y": 468,
                 "width": 160,
-                "height": 56
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "hanger_a1",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "swatch_metal_dark",
-            "rectangle": {
-                "x": 608,
-                "y": 468,
-                "width": 8,
-                "height": 232
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "hanger_a2",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "swatch_metal_dark",
-            "rectangle": {
-                "x": 744,
-                "y": 468,
-                "width": 8,
-                "height": 232
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "hanger_b1",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "swatch_metal_dark",
-            "rectangle": {
-                "x": 2984,
-                "y": 468,
-                "width": 8,
-                "height": 232
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "hanger_b2",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "swatch_metal_dark",
-            "rectangle": {
-                "x": 2848,
-                "y": 468,
-                "width": 8,
-                "height": 232
+                "height": 256
             },
             "colour": "WHITE"
         },
@@ -997,8 +1101,8 @@
             "sheet_name": "terrain",
             "frame_name": "tape_roll",
             "rectangle": {
-                "x": 1672,
-                "y": 652,
+                "x": 3212,
+                "y": 812,
                 "width": 256,
                 "height": 160
             },

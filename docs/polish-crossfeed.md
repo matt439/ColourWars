@@ -858,6 +858,88 @@ one route whatever the floor's owner, which paint underfoot changes by design.
 The geometry, spawn, route, tool, supply, painting and opening checks keep the
 shipped tuning.
 
+## Arena art (`POL#16`, 2026-11-14)
+
+**Play identity.** Crossfeed is the reference arena: two mirrored homes, a
+baffle-and-bench upper departure on each side and a contested centre where the
+suspended eraser "mixer" sits over the plinth. Its art stays light-touch so it
+remains the yardstick the other arenas are judged against.
+
+**Environment direction.** An outdoor stationery desk under the shared paper
+sky: the kit's sun, two static clouds and two hills, the brush pot standing on
+the mixer and the tape roll on the right bench. What it lacked, now that every
+other Random arena carries landmarks of its own, was anything that says *this*
+desk. The answer is the painter's mixing kit that a centre called the mixer
+implies: the paint tube squeezed empty, the cup the pencils live in and the
+palette the colours would be mixed on, if there were any. A rinse jar with
+brushes in it was tried first and dropped in review: it was a second pot of
+three handles at the brush pot's size, one bench gap from it, so the left
+baffle read as a rival mixer and the centre lost its one landmark.
+
+**Props.** Three new terrain frames, drawn in the recipe
+([terrain.json](../game/art/terrain/terrain.json)) with the backdrop roles only
+and bg_line outlines, as crude staircase drawings on the cell grid:
+
+| Frame | Cells | Drawing |
+|---|---|---|
+| `cf_paint_tube` | 32x64 | paint tube squeezed out and stood on its ribbed cap, crimped end up with three crimp ticks, two crumple lines across the flattened body and a blank colour band where its colour would be named |
+| `cf_pencil_cup` | 40x72 | plain cup with two sagging bands, holding two sharpened pencils of different heights, one upside down on its eraser and one stub leaning out |
+| `cf_palette` | 96x64 | kidney palette with a thumb hole and notch, propped upright on a stick; its wells hold only greys, and one well stands empty, an outlined ring the palette shows through (so it cannot be mistaken for the paper-filled thumb hole), the last palette slot from [the backstory](backstory.md) |
+
+**Layering and placement.** All three are far layers, drawn after the clouds
+and before the hills, at native atlas size (one texel per world unit, as the
+brush pot is), each with its visible foot on a support so nothing floats:
+
+| Visual | Rectangle (X, Y, W, H) | Stands on |
+|---|---|---|
+| `cf_pencil_cup` | 136, 680, 160, 288 | left home roof (Y 960) |
+| `cf_paint_tube` | 856, 688, 128, 256 | left baffle (Y 940), centred on the baffle's 800-1040 |
+| `cf_palette` | 3136, 712, 384, 256 | right home roof (Y 960) |
+
+The pencil cup and palette bookend the arena above the two homes, where only
+roof-jumpers stand in front of them; the tube is a narrow upright on the left
+baffle, a third the width of the brush pot, so the brush pot stays the centre's
+one big landmark and the tape roll keeps the right bench, as the accepted
+composition had it. The left home keeps its cloud, the right its sun.
+None of the props reaches the hills or overlaps another prop. The palette has
+no flat top, the tube's crimped end is tilted and the cup's rim is a curve, so
+none reads as a ledge. All are quiet bg_far/bg_mid fills. The tube carries no
+bg_detail because players fight on the baffle in front of it, and a pale band
+behind a yellow player lost contrast in the seed 0 4P review. The only
+bg_detail is two palette wells and the pencil points, the value the clouds
+already use.
+
+**Material palette.** Unchanged. The accepted mix stays: ground on the floors,
+homes' steps, baffles and plinth, pencil benches, ruler rulers, the eraser
+mixer and set-square ramps. Crossfeed's distinct material palette is its
+composition and these props, not a re-skin of approved structures. No
+collision geometry, spawn, station, bound or material moved, so painted area
+and scoring are as before; the editor's 124,320 scoring-area pin and the
+`crossfeed` case's per-object scoring totals check that.
+
+**What stays from the shared kit.** `paper_sky`, `sun`, `cloud_a`, `cloud_b`
+(still static, as the reference arena was accepted), `hill_a`, `hill_b`,
+`brush_pot` and `tape_roll`, all at their accepted rectangles and in their
+accepted order after the new props.
+
+**Checks.** The `terrain` case now requires the three props by name, frame,
+order (between `cloud_b` and `hill_a`), native size, zero origin, untinted and
+static, with the brush pot and tape roll moved to decorations 10 and 11 of 11.
+On this branch alone the terrain atlas stayed 2048x920, with the three frames packed on the landmark shelf
+beside the brush pot and tape roll; merged with the other three arenas' props it is 2048x3232. Run on 2026-11-14 in Debug: `terrain`,
+`level_format`, `stage_selection`, `paint`, `paint_surfaces`,
+`balance_regions`, `ammo`, `user_stages`, `level_heap` and `crossfeed`, plus
+`check-level-editor.ps1` (editor round trip, mirror pairs, symmetry report)
+and `check-stage-registration.ps1`, the link check and the lint.
+Screenshots were reviewed at 1P and 4P on seeds 7 and 0, and as the timelapse
+arena overview. The same cases and checks were run again after the review that
+swapped the jar for the tube and redrew the empty well, and the `terrain` case
+failed as it should when the tube was moved 4 units.
+
+**Still a human check.** How the props look on a real GPU, and whether they
+help or crowd the panes in play, especially the jar behind a fight on the left
+baffle and the palette behind the right home's roof.
+
 ## Coupled movement and five-tool comparison (2026-10-20)
 
 This comparison retains the six-object coverage from 2026-10-20. P3 movement

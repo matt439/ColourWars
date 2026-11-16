@@ -5,8 +5,9 @@
 // left; the pages themselves decide when, this file decides what is built.
 //
 //   Title         -> Home
-//   Home          -> Title (Back), Mode Select, Options, Credits
+//   Home          -> Title (Back), Mode Select, How to play, Options, Credits
 //                    (Exit pushes its confirmation above Home instead)
+//   How to play   -> Home on How to play (no setup changes)
 //   Options       -> Home on Options        (as a paused child it pops)
 //   Credits       -> Home on Credits
 //   Mode Select   -> Home (Back), Player Count
@@ -52,6 +53,10 @@ std::unique_ptr<MainMenuPage> make_main_menu_page(MenuContext* context, const Ma
 	{
 	case MainMenuScreen::home:
 		return std::make_unique<MainMenuHome>(context, route.home_focus);
+	case MainMenuScreen::quick_match:
+        return std::make_unique<MainMenuQuickMatch>(context);
+	case MainMenuScreen::how_to_play:
+		return std::make_unique<MainMenuHowToPlay>(context);
 	case MainMenuScreen::options:
 		return std::make_unique<MainMenuOptions>(context);
 	case MainMenuScreen::credits:
@@ -60,6 +65,8 @@ std::unique_ptr<MainMenuPage> make_main_menu_page(MenuContext* context, const Ma
 		return std::make_unique<MainMenuModeSelect>(context);
 	case MainMenuScreen::player_count:
 		return std::make_unique<MainMenuPlayerCount>(context);
+	case MainMenuScreen::quick_join:
+        return std::make_unique<MainMenuJoin>(context, true);
 	case MainMenuScreen::join:
 		return std::make_unique<MainMenuJoin>(context);
 	case MainMenuScreen::team_select:

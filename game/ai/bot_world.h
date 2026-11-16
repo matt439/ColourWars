@@ -42,6 +42,16 @@ struct BotBody
 	bool sub_ready = false;
 };
 
+// A planted sub standing in the match (ROAD#11), listed only while enemy
+// shots still break it: the sprinkler a bot shoots and the paint wall that
+// blocks its sight (REV#21).
+struct BotPlantedSub
+{
+	labrador::RectangleF bounds;
+	PlayerTeam team = PlayerTeam::none;
+	SubType type = SubType::sprinkler;
+};
+
 // What the shipping bots may ask of a running match (HYG#40). Nothing here
 // returns a game object or a mutable reference, so game/ai reaches the world
 // only through this and value headers. LevelBotWorld implements it.
@@ -66,7 +76,11 @@ public:
 	// body's bottom centre), as paint underfoot reads it: none where the top is
 	// unpainted or two supports disagree, nullopt where no support top lies.
 	virtual std::optional<PlayerTeam> top_paint_team(labrador::Vector2F foot) const = 0;
+	// Every standing planted sub, either team's, in Scene order.
+	virtual std::vector<BotPlantedSub> planted_subs() const = 0;
 	// Projectile cover includes every gate, even one the bot can walk through.
+	// It ignores planted subs: MatchBotDriver::clear_sight adds the enemy
+	// paint walls a bot's sight stops at.
 	virtual bool line_of_sight(labrador::Vector2F from, labrador::Vector2F to) const = 0;
 	// Candidate route visibility only; the policy separately sweeps its body.
 	virtual bool traversal_line_of_sight(labrador::Vector2F from, labrador::Vector2F to,

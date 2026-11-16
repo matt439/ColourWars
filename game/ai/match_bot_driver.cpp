@@ -2,6 +2,8 @@
 #include "game/ai/match_bot_driver.h"
 #include "game/ai/match_bot_ballistics.h"
 #include "game/ai/match_bot_territory.h"
+#include "engine/math/intersects.h"
+#include "engine/math/segment.h"
 #include <array>
 #include <cmath>
 #include <limits>
@@ -96,6 +98,19 @@ float MatchBotDriver::engagement_distance(const BotBody& body, const GameTuning&
 		projectile.details.col_rect_size.x * 0.5f + tuning.player().size.x * 0.5f;
 }
 
+bool MatchBotDriver::clear_sight(const BotWorld& world, const std::vector<BotPlantedSub>& planted,
+	PlayerTeam viewer, Vector2F from, Vector2F to)
+{
+	if (!world.line_of_sight(from, to)) { return false; }
+	const Segment line(from, to);
+	for (const BotPlantedSub& sub : planted)
+	{
+		if (sub.type == SubType::wall && sub.team != viewer && sub.team != PlayerTeam::none &&
+			rectangle_segment_intersect(sub.bounds, line)) { return false; }
+	}
+	return true;
+}
+
 void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& world)
 {
 	// Input is observed before this step settles gates. React to the permission
@@ -128,6 +143,7 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 	const std::vector<RectangleF> obstacles = world.obstacles(PlayerTeam::none);
 	const std::vector<MatchBotSupport> supports = world.supports(PlayerTeam::none);
 	const std::vector<MatchBotRamp> ramps = world.ramps();
+	const std::vector<BotPlantedSub> planted = world.planted_subs();
 	for (size_t seat = 0; seat < this->bots_.size() && seat < seats.size() &&
 		seat < static_cast<size_t>(world.participant_count()); ++seat)
 	{
@@ -203,6 +219,8 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 		view.supports = gates.empty() ? supports : world.supports(player.team);
 		view.ramps = ramps;
 		const float sight = this->tuning_->bots().sight_distance;
+		const auto sees = [&](Vector2F from, Vector2F to)
+		{ return clear_sight(world, planted, player.team, from, to); };
 		if (view.alive)
 		{
 			for (int other = 0; other < world.participant_count(); ++other)
@@ -211,9 +229,18 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 				if (other == static_cast<int>(seat) || candidate.team == player.team ||
 					!candidate.alive || candidate.health <= 0.0f ||
 					Vector2F::distance_squared(candidate.center, view.center) > sight * sight ||
-					!world.line_of_sight(view.center, candidate.center)) { continue; }
+					!sees(view.center, candidate.center)) { continue; }
 				view.enemies.push_back({ candidate.center, candidate.velocity,
 					engagement_distance(candidate, *this->tuning_) });
+			}
+			// An enemy sprinkler in sight is a target too (REV#21).
+			for (const BotPlantedSub& sub : planted)
+			{
+				const Vector2F centre = sub.bounds.center();
+				if (sub.type != SubType::sprinkler || sub.team == player.team || sub.team == PlayerTeam::none ||
+					Vector2F::distance_squared(centre, view.center) > sight * sight ||
+					!sees(view.center, centre)) { continue; }
+				view.enemy_sprinklers.push_back(centre);
 			}
 			const bool replan = bot->needs_territory();
 			if ((replan || support_shot(*bot, player)) && !surfaces.empty())
@@ -243,7 +270,7 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 						const float cost = std::fabs(gap.x) + std::fabs(gap.y) * 2.0f;
 						if (cost < best_other_cost && gap.length() <= view.engage_distance &&
 							match_bot_territory::top_launch_lands(view, lip->bounds, gap.angle(), *this->tuning_) &&
-							world.line_of_sight(view.center, lip->point)) { best_other_cost = cost; other = lip; }
+							sees(view.center, lip->point)) { best_other_cost = cost; other = lip; }
 						continue;
 					}
 					const Vector2F gap = top->point - view.center;
@@ -253,7 +280,7 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 					const bool aimable = cost < best_support_cost &&
 						match_bot_territory::top_launch_clear(view, top->point, *this->tuning_, this->difficulties_[seat]) &&
 						(!deliberate || match_bot_territory::top_launch_lands(view, top->bounds, gap.angle(), *this->tuning_));
-					if ((!aimable && view.support_open) || !world.line_of_sight(view.center, top->point)) { continue; }
+					if ((!aimable && view.support_open) || !sees(view.center, top->point)) { continue; }
 					view.support_open = true;
 					if (aimable) { view.support_paint = top->point; view.support_bounds = top->bounds; best_support_cost = cost; }
 				}
@@ -269,7 +296,7 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 						if (surface.team == player.team) { continue; }
 						const Vector2F point = paint_point(surface, this->tuning_->paint().thickness + view.size.x * 0.05f);
 						if (Vector2F::distance_squared(point, view.center) > sight * sight) { continue; }
-						if (world.line_of_sight(view.center, point)) { view.territory.push_back(point); }
+						if (sees(view.center, point)) { view.territory.push_back(point); }
 						else if (!gates.empty() && world.traversal_line_of_sight(view.center, point, player.team))
 						{ view.route_territory.push_back(point); }
 					}

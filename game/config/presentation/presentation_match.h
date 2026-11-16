@@ -507,8 +507,8 @@ struct FigureSlip
 	std::vector<FigureSlipStroke> strokes;
 };
 
-// The slips the person drawing a match made: one, or two that are not
-// exclusive, chosen by FigurePerson from the match's hand.
+// The slips the person drawing a match made: none (the house figure), one, or
+// two that are not exclusive, chosen by FigurePerson from the match's hand.
 struct FigureSlipsPresentation
 {
 	// The person's bands are frames <band_frame>.<person>.<strip>.<frame> on
@@ -517,6 +517,9 @@ struct FigureSlipsPresentation
 	std::string band_frame;
 	// Canvas texels a person's band replaces, the same span facing either way.
 	labrador::RectangleF band;
+	// The chance a match's person slips at all, then the chance a slipping
+	// person makes two slips rather than one.
+	float slip_chance = 0.0f;
 	float two_slip_chance = 0.0f;
 	std::vector<FigureSlip> list;
 	// Index pairs into `list`, smaller first, never drawn together.
@@ -652,6 +655,15 @@ struct RevealArtPresentation
 // The monitor the picture is on, the person at it and the cursor they use:
 // the opening's look (docs/backstory.md, "Opening"). Rectangles are fractions
 // of the screen, sizes fractions of its height, colours are drawn as is.
+struct CrtTrialPresentation
+{
+    float scanline_count = 0.0f;
+    float scanline_strength = 0.0f;
+    float mask_strength = 0.0f;
+    float vignette = 0.0f;
+    float brightness = 1.0f;
+};
+
 struct OpeningPresentation
 {
 	std::string sprite_sheet;
@@ -660,6 +672,7 @@ struct OpeningPresentation
 	std::vector<labrador::Colour> bezel_shades;
 	labrador::Colour bezel_shadow;
 	MonitorArtPresentation monitor_art;
+	CrtTrialPresentation crt_trial;
 	labrador::RectangleF glass;
 	labrador::Colour glass_colour;
 	// Behind the picture, where it does not fill the glass.
@@ -715,15 +728,21 @@ struct TeamPaletteEntry
 	std::string key;
 	std::wstring label;
 	TeamColour colours;
+	// False keeps a pair out of the Random draw; it stays a fixed Options
+	// choice (REV#14).
+	bool in_random = true;
 };
 
 // Fixed preference keys remain save-compatible. Extra authored entries join
-// Random without adding an enum or a fixed Options choice.
+// Random without adding an enum or a fixed Options choice, unless they say
+// in_random false; a pair with in_random false must be a fixed Options choice.
 struct TeamPalettePresentation
 {
 	std::vector<NamedTeamColour> colours;
 	std::vector<TeamPaletteEntry> pairs;
 
 	const TeamPaletteEntry& fixed_pair(TeamColourPair pair) const;
+	// The pair at `draw` wrapped over every pair; the Random draw redraws when
+	// it lands on one whose in_random is false (REV#14).
 	const TeamPaletteEntry& random_pair(size_t draw) const;
 };

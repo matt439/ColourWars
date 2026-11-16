@@ -299,6 +299,9 @@ namespace
             { "xx.json", "menu_text.stage_names.crossfeed", "a number" });
         composing("pair-key", R"({ "team_palette": { "pairs": [ { "key": "x" }, null, null, null, null, null ] } })",
             { "xx.json", "team_palette.pairs[0].key", "only text" });
+        // Nor can a locale put a pair kept out of Random back into it (REV#14).
+        composing("pair-in-random", R"({ "team_palette": { "pairs": [ null, { "in_random": true }, null, null, null, null ] } })",
+            { "xx.json", "team_palette.pairs[1].in_random", "only text" });
 
         // A null element keeps that element; an object element names its text.
         {

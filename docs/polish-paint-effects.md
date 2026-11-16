@@ -48,7 +48,8 @@ used. Drawing is const and does not advance effects.
 The owning structure includes airborne impact overhang in `cull_bounds`,
 while tile contact bounds remain exact. The jet includes its rotated visual
 extent in `cull_bounds` too. Geometry bounds used by layout and collision stay
-unchanged. Only the reviewed DDS and frame JSON enter
+unchanged. Only the reviewed atlas (a PNG since
+[`PIN#3`](review/engine-reports.md#png-atlases-and-texconv-pin3)) and frame JSON enter
 staging and Release; the editable source, working PNG, preview and recipe stay
 outside runtime content.
 

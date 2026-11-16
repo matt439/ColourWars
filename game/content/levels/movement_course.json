@@ -129,7 +129,15 @@
             "lesson": {
                 "title": "EMPTY AND REFILL",
                 "text": "Shoot until your paint runs dry: the aim marker\nshows a cross. Stop shooting for a moment and\nthe tank refills, faster on your own paint.\nStanding on enemy paint stops it.",
-                "area": { "x": 4560.0, "y": 300.0, "width": 1120.0, "height": 710.0 }
+                "area": { "x": 4560.0, "y": 300.0, "width": 680.0, "height": 710.0 }
+            }
+        },
+        {
+            "name": "sub", "x": 5400.0, "y": 875.0,
+            "lesson": {
+                "title": "USE YOUR SUB",
+                "text": "Press Sub to use the sub you chose: grenade,\nsprinkler or paint wall. The tick on the PAINT\nmeter shows its cost; the square after PAINT\nis solid when it is ready.",
+                "area": { "x": 5240.0, "y": 300.0, "width": 440.0, "height": 710.0 }
             }
         }
     ],

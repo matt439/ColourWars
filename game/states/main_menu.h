@@ -27,6 +27,9 @@ enum class MainMenuScreen
 {
 	title,
 	home,
+	how_to_play,
+    quick_match,
+    quick_join,
 	options,
 	credits,
 	mode_select,
@@ -139,7 +142,7 @@ private:
 class MainMenuHome final : public MainMenuPage
 {
 public:
-	enum class InitialFocus { play, options, credits };
+	enum class InitialFocus { play, how_to_play, options, credits };
 	explicit MainMenuHome(MenuContext* context, InitialFocus initial_focus = InitialFocus::play);
 	void update_page(float dt) override;
 	void init() override;
@@ -151,9 +154,42 @@ private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiText> heading_ = nullptr;
 	std::unique_ptr<labrador::UiText> play_ = nullptr;
+	std::unique_ptr<labrador::UiText> learn_ = nullptr;
+    std::unique_ptr<labrador::UiText> quick_ = nullptr;
 	std::unique_ptr<labrador::UiText> options_ = nullptr;
 	std::unique_ptr<labrador::UiText> credits_ = nullptr;
 	std::unique_ptr<labrador::UiText> exit_ = nullptr;
+};
+
+class MainMenuQuickMatch final : public MainMenuPage
+{
+public:
+    explicit MainMenuQuickMatch(MenuContext* context) : MainMenuPage(context) {}
+    void init() override;
+    void update_page(float dt) override;
+    bool shows_focus_backing() const override { return false; }
+private:
+    void accept(bool customise);
+    int activating_slot_ = -1;
+    std::unique_ptr<MenuPaperArtwork> paper_;
+    std::unique_ptr<labrador::UiTexture> background_;
+    std::unique_ptr<labrador::UiText> heading_, body_, start_, customise_, back_;
+};
+
+class MainMenuHowToPlay final : public MainMenuPage
+{
+public:
+    explicit MainMenuHowToPlay(MenuContext* context);
+    void init() override;
+protected:
+    void update_page(float dt) override;
+    bool shows_focus_backing() const override { return false; }
+private:
+    void refresh();
+    int page_ = 0;
+    std::unique_ptr<MenuPaperArtwork> paper_;
+    std::unique_ptr<labrador::UiTexture> background_;
+    std::unique_ptr<labrador::UiText> heading_, body_, next_, back_;
 };
 
 // A separate pushed frame keeps cancellation on the same Home page.
@@ -218,6 +254,7 @@ private:
 	std::unique_ptr<OptionRow> vsync_row_ = nullptr;
 	std::unique_ptr<OptionRow> team_palette_row_ = nullptr;
 	std::unique_ptr<labrador::UiText> controls_ = nullptr;
+	std::unique_ptr<labrador::UiText> graphics_ = nullptr;
 	std::unique_ptr<labrador::UiText> restore_defaults_ = nullptr;
 
 	std::unique_ptr<labrador::UiText> apply_ = nullptr;
@@ -343,12 +380,13 @@ private:
 class MainMenuJoin final : public RosterSetupPage
 {
 public:
-	explicit MainMenuJoin(MenuContext* context);
+	explicit MainMenuJoin(MenuContext* context, bool reviewed_preset = false);
 	void update_page(float dt) override;
 	void init() override;
 protected:
 	bool shows_focus_backing() const override { return false; }
 private:
+    bool reviewed_preset_ = false;
 	MenuPaperArtPresentation setup_art_;
 	struct JoinMotionRow
 	{
@@ -398,8 +436,9 @@ private:
 	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
 
-	// Shown when completing a multiplayer roster would leave a team empty.
+	// Shared feedback for a neutral Ready press or an incomplete team roster.
 	std::unique_ptr<colourwars::UiTextDropShadow> both_teams_needed_ = nullptr;
+	int team_choice_warning_player_ = -1;
 
 	std::vector<std::unique_ptr<PlayerWidgets>> player_widgets_;
 	// Roster seats are cursor slots, independent of each seat's input device.

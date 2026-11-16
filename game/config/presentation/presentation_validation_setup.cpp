@@ -146,10 +146,14 @@ void Presentation::Validation::validate_team_heading(RosterPapers& papers) const
 	const RectangleF team_heading = check_team_text("menu_text.headings.teams",
 		this->presentation.menu_text_.heading(MenuHeading::teams), this->presentation.menu_.heading_font,
 		this->presentation.menu_.layout.position, this->presentation.menu_.heading_shadow_offset);
-	const RectangleF team_warning = check_team_text(
+	RectangleF team_warning = check_team_text(
 		"menu_text.connection.teams_required at main_menu.team_select.warning_position",
 		this->presentation.menu_text_.connection.teams_required, this->presentation.menu_.detail_font,
 		main.team_warning_position, this->presentation.menu_.detail_shadow_offset);
+    team_warning = RectangleF::union_of(team_warning, check_team_text(
+        "menu_text.connection.team_choice_required at main_menu.team_select.warning_position",
+        this->presentation.menu_text_.connection.team_choice_required, this->presentation.menu_.detail_font,
+        main.team_warning_position, this->presentation.menu_.detail_shadow_offset));
 	if (team_warning.y < team_heading.bottom())
 	{
 		throw std::runtime_error(this->presentation.source_path_ +

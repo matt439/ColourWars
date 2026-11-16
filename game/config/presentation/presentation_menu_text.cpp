@@ -142,7 +142,7 @@ namespace presentation_read
 		const JsonValue json = root.object("menu_text");
 		// stage_scan is optional, so a misspelt key must fail rather than be skipped.
 		content_value::require_known_keys(json, { "brand", "solo_practice_hint", "practice_tool",
-			"options_palette_timing", "title", "home_subtitle", "display_trial_countdown", "help",
+			"quick_match", "learn", "graphics", "options_palette_timing", "title", "home_subtitle", "display_trial_countdown", "help",
 			"keyboard_jump", "pad_buttons", "profiles", "status", "values", "confirmations", "end",
 			"results", "stage_scan", "stage", "stage_names", "records", "labels", "connection",
 			"stick_readouts", "hud", "subs", "countdown", "controls", "headings", "prompts", "items" });
@@ -168,6 +168,21 @@ namespace presentation_read
 		catch (const std::invalid_argument& error)
 		{ throw std::runtime_error(title.where() + ": build: " + error.what()); }
 		text.home_subtitle = read_menu_line(json, "home_subtitle");
+        const JsonValue quick = json.object("quick_match");
+        content_value::require_known_keys(quick, {"title", "body", "start", "customise"});
+        text.quick_title = read_menu_line(quick, "title");
+        text.quick_body = read_menu_block(quick, "body");
+        const auto duration_token=text.quick_body.find(L"{duration}");
+        if(duration_token==std::wstring::npos || text.quick_body.find(L"{duration}",duration_token+10)!=std::wstring::npos)
+            throw std::runtime_error(quick.where()+": body requires exactly one {duration} token");
+        text.quick_start = read_menu_line(quick, "start");
+        text.quick_customise = read_menu_line(quick, "customise");
+        const JsonValue learn = json.object("learn");
+        content_value::require_known_keys(learn, {"start", "controls", "finish", "next"});
+        text.learn_start = read_menu_block(learn, "start");
+        text.learn_controls = read_menu_block(learn, "controls");
+        text.learn_finish = read_menu_block(learn, "finish");
+        text.learn_next = read_menu_line(learn, "next");
 		// The control-label words and the in-match reminder, before the help
 		// and the Keys status that format with them. Each template is
 		// formatted once with the default controls, so a malformed token is
@@ -232,6 +247,18 @@ namespace presentation_read
 			catch (const std::invalid_argument& error)
 			{ throw std::runtime_error(jump.where() + ": " + field.first + ": " + error.what()); }
 		}
+
+        const JsonValue graphics = json.object("graphics");
+        content_value::require_known_keys(graphics, { "heading", "help", "pending", "saved", "saved_override", "save_failed",
+            "launch_on", "launch_off", "override_on", "override_off" });
+        for (const auto& field : { std::pair{ "heading", &GraphicsMenuText::heading },
+            std::pair{ "pending", &GraphicsMenuText::pending }, std::pair{ "saved", &GraphicsMenuText::saved },
+            std::pair{ "saved_override", &GraphicsMenuText::saved_override },
+            std::pair{ "save_failed", &GraphicsMenuText::save_failed }, std::pair{ "launch_on", &GraphicsMenuText::launch_on },
+            std::pair{ "launch_off", &GraphicsMenuText::launch_off }, std::pair{ "override_on", &GraphicsMenuText::override_on },
+            std::pair{ "override_off", &GraphicsMenuText::override_off } })
+        { text.graphics.*field.second = read_menu_line(graphics, field.first); }
+        text.graphics.help = read_menu_block(graphics, "help");
 		const JsonValue status = json.object("status");
 		const JsonValue pad_buttons = json.object("pad_buttons");
 		PadButtonsMenuText& buttons = text.pad_buttons;
@@ -328,6 +355,8 @@ namespace presentation_read
 		text.results.single_match_heading = read_menu_line(results, "single_match_heading");
 		text.results.proceed = read_menu_line(results, "proceed");
 		text.results.contribution_heading = read_menu_line(results, "contribution_heading");
+		text.results.share_basis = read_menu_line(results, "share_basis");
+		text.results.empty_share_basis = read_menu_line(results, "empty_share_basis");
 		text.results.series_team_a_wins = read_menu_line(results, "series_team_a_wins");
 		text.results.series_team_b_wins = read_menu_line(results, "series_team_b_wins");
 		text.results.draw_no_win = read_menu_line(results, "draw_no_win");
@@ -536,6 +565,7 @@ namespace presentation_read
 		text.connection.controller_lost = read_menu_line(connection, "controller_lost");
 		text.connection.all_connected = read_menu_line(connection, "all_connected");
 		text.connection.teams_required = read_menu_line(connection, "teams_required");
+		text.connection.team_choice_required = read_menu_line(connection, "team_choice_required");
 		try { std::ignore = format_label_template(text.connection.pause_player_title, { { L"{player}", L"1" } }); }
 		catch (const std::invalid_argument& error)
 		{ throw std::runtime_error(connection.where() + ": pause_player_title: " + error.what()); }

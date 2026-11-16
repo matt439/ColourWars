@@ -189,6 +189,7 @@ namespace
 		// PlayerBuilder chooses the match's person (FigurePerson) when it builds;
 		// Player takes the band with its baked face frames, so a tuned band only
 		// fits faces rebaked to it.
+		{ "presentation.figure.slips.slip_chance", TuneScope::rebuild },
 		{ "presentation.figure.slips.two_slip_chance", TuneScope::rebuild },
 		{ "presentation.figure.slips.band.**", TuneScope::rebuild },
 		// FigureAttachments borrows the geometry that the numeric tuner can edit;

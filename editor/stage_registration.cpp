@@ -113,6 +113,27 @@ namespace colourwars_editor
             return true;
         }
 
+        // The runtime file `base`.`extension` names under `content`. An
+        // entry of alternatives, "dds|png" (cmake/manifest_asset_kinds.cmake),
+        // is the one that exists, as the engine's texture loader reads it.
+        std::string runtime_file(const fs::path& content, const std::string& base, const std::string& extension)
+        {
+            if (extension.find('|') == std::string::npos) return base + "." + extension;
+            std::vector<std::string> found;
+            std::size_t start = 0;
+            while (start <= extension.size())
+            {
+                const std::size_t end = std::min(extension.find('|', start), extension.size());
+                const std::string file = base + "." + extension.substr(start, end - start);
+                if (fs::exists(content / utf8_path(file))) found.push_back(file);
+                start = end + 1;
+            }
+            if (found.empty()) fail("Missing runtime asset: " + base + "." + extension);
+            if (found.size() > 1) fail("Runtime asset " + base + " has more than one of " + extension +
+                "; the engine refuses a texture with two files");
+            return found.front();
+        }
+
         const Json& field(const Json& object, const char* name)
         {
             if (!object.IsObject()) fail("Manifest group is not an object");
@@ -573,7 +594,8 @@ namespace colourwars_editor
                     if (name != result.name) fail("Stage basename has different case from its manifest identifier");
                     ++registered;
                 }
-                for (const std::string& extension : extensions) expected.push_back(directory + name + "." + extension);
+                for (const std::string& extension : extensions)
+                    expected.push_back(runtime_file(content, directory + name, extension));
             }
         }
         if (level_groups != 1) fail("Registration requires exactly one existing manifest level group");

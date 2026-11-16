@@ -1,8 +1,9 @@
 # Preparing a release
 
 The Release ZIP is the player download. Its version comes from
-`project(VERSION)` in [CMakeLists.txt](../CMakeLists.txt); the current first-release
-target is `v0.1.0`. [The development guide](development.md#release-zip) describes
+`project(VERSION)` in [CMakeLists.txt](../CMakeLists.txt). The first release,
+`v0.1.0`, is [published](#first-release-v010); `master` is now `0.1.1`, the
+next patch under the [versioning rule](#versioning-rule-rel6). [The development guide](development.md#release-zip) describes
 what it contains. [AGENTS.md](../AGENTS.md#commits-and-pull-requests) owns the
 branch, required `gate` and publication rules.
 
@@ -20,9 +21,13 @@ and issue guidance (`REV#15`). The README links to the source-build and
 maintainer material in [development.md](development.md). The packaged
 [HOW-TO-PLAY.txt](HOW-TO-PLAY.txt) now explains the existing paint-underfoot rule,
 and the Movement Course's refill lesson says it too (2026-11-12): own paint
-refills faster, enemy paint stops it. A live cue for standing on enemy paint, on
-the paint meter or the step sound, remains `REV#10` and is the author's
-presentation call.
+refills faster, enemy paint stops it. A live cue for standing on enemy paint
+([`REV#10`](review/2026-11-10-project-review.md#paint-underfoot-has-no-player-cue-rev10))
+is deferred (2026-11-13): that text and lesson stand as the explanation. If
+attended play or a player report shows people cannot tell why they slowed or
+stopped refilling, the author chooses between a cue and milder amounts (or
+none) under `POL#30`'s reopen rule; a cue would start with the visual tank
+state, since a step sound is a new cue hook.
 
 The author's calls for this release aim (2026-11-13):
 
@@ -43,13 +48,30 @@ The author's calls for this release aim (2026-11-13):
 - **Versioning (`REL#6`):** the [rule below](#versioning-rule-rel6).
 - **Engine pin (`ENG#36`):** the next pin bump lands **after** `v0.1.0`, so the
   first release ships the pin the candidate checks ran on.
-- **First tag (`FTR#1`):** authorized. After publication, replace the README's
-  artifact fallback with a link to the release's tag page; every `0.x` release
-  is a pre-release, which GitHub's `/releases/latest` does not return.
+- **First tag (`FTR#1`):** authorized, and [done](#first-release-v010). The
+  README's step 1 links the release's tag page; every `0.x` release is a
+  pre-release, which GitHub's `/releases/latest` does not return.
 
-Other design calls stay indexed in [TODO.md](../TODO.md), including `REV#1`'s
-out-of-bounds handling. They have not been accepted by selecting this
-documentation/package pass. Arena artwork (`POL#16`) remains deferred.
+## First release (`v0.1.0`)
+
+**Published 2026-11-13.** Pull request #82 merged on a green `gate` as
+`9e7dbaa`, and the annotated tag `v0.1.0` on that commit ran full CI. Every
+Windows leg passed, and `publish` created
+[ColourWars v0.1.0](https://github.com/matt439/ColourWars/releases/tag/v0.1.0)
+as a pre-release with two assets: `ColourWars-0.1.0-windows-x64.zip`
+(21,986,443 bytes, SHA256
+`fa3f8244277cebd2660509b4a447d2ac87982d88f8b5565fae06aeabf2c50896`) and
+`ColourWars.pdb`. The downloaded ZIP's `build-info.txt` names version `0.1.0`,
+`ColourWars: 9e7dbaaf128b…`, `Labrador: e7fc50e3…` and `Release`, with no
+`-dirty`. That was the first end-to-end run of the publish job (`REL#4`).
+The tree matches the candidate checked under `REL#1` and `REL#2`, apart from the
+record of those checks. The ZIP differs from the candidate's by a few bytes
+because the build line names a different commit.
+
+The next commit moved `project(VERSION)` to `0.1.1`, as `REL#6` says.
+
+Other design calls stay indexed in [TODO.md](../TODO.md). Selecting this
+documentation/package pass did not accept them. Arena artwork (`POL#16`) remains deferred.
 
 ## Build a clean candidate
 
@@ -112,7 +134,10 @@ It passes when the receipt's ZIP hash matches the host's, the window opens, the
 save is created and `WM_CLOSE` exits 0. It proves the loader and runtime
 requirements, not a player's GPU.
 
-Check that the packaged guide and runtime assets match the committed sources.
+`check-release-package.ps1` checks that the extracted guide and every runtime
+asset match the reviewed source byte-for-byte, using the packager's allow-list.
+It also refuses unreviewed files in runtime directories. Run it from the source
+revision that produced the ZIP; an older released ZIP needs its matching checkout.
 Evidence under `out/validation/` is local, not a public download or a hosted
 CI result.
 
@@ -170,8 +195,21 @@ fits only the executable it was linked with.
 
 After publication, point the README's download step at the release, verify the
 asset name and player instructions, and close `FTR#1` in the same commit that
-finishes the remaining documentation work. Additional channels (`REV#67`) and
-remote-streaming guidance (`REV#69`) remain separate choices.
+finishes the remaining documentation work.
+
+The author's distribution calls (2026-11-13):
+
+- **Signing and channels
+  ([`REV#67`](review/2026-11-10-project-review.md#distribution-is-one-unsigned-github-zip-rev67)):
+  deferred.** The GitHub ZIP stays unsigned, with no separate checksum file;
+  the release page and its run are the record. itch.io waits for the first
+  non-pre-release tag, or for the author to want a public store page. Steam
+  ([`REV#68`](review/2026-11-10-project-review.md#steam-release-is-not-scoped-rev68))
+  stays deferred behind it.
+- **Remote streaming
+  ([`REV#69`](review/2026-11-10-project-review.md#stream-based-online-play-is-undocumented-rev69)):
+  declined.** No Parsec paragraph. Reopen when someone has played a streamed
+  session with a remote pad.
 
 ## Release work items (`REL`)
 
@@ -324,5 +362,8 @@ path. The ZIP still installs only the executable;
 reads the executable's debug directory and requires exactly that name. CI's
 Release leg uploads the PDB as `ColourWars-symbols-<commit>`, and `publish`
 attaches it to the GitHub Release. [The development guide](development.md#release-zip)
-says where the symbols are. The crash-dump half, which is the privacy
-question, stays `REV#63` and the author's call.
+says where the symbols are. The crash half of `REV#63` was decided on
+2026-11-13: no minidump. Instead, since 2026-11-14, a controlled-fields crash
+record goes to `last-error.log`, its `crash_rva` symbolicated against this PDB;
+the [failure-reporting guide](failure-reporting.md#crash-record-rev63)
+describes it.

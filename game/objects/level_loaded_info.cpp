@@ -276,8 +276,8 @@ void LevelLoadedInfo::validate_position(const JsonValue& root,
 	throw std::runtime_error(root.where() + " puts " + what + " at (" +
 		std::to_string(position.x) + ", " +
 		std::to_string(position.y) + "), outside its own "
-		"out_of_bounds rectangle - a player built there stops the match with "
-		"a player-out-of-bounds failure on its first tick.");
+		"out_of_bounds rectangle - a player built there is eliminated on its "
+		"first tick and respawns there again.");
 }
 
 void LevelLoadedInfo::validate_stations(const RectangleF& out_of_bounds) const

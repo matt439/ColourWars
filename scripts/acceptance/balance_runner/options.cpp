@@ -391,7 +391,8 @@ namespace balance_runner
             const std::string option = ascii(arguments[at]);
             if (option != "--stage" && option != "--seed" && option != "--players" &&
                 option != "--duration" && option != "--tools" && option != "--bot" && option != "--difficulty" &&
-                option != "--csv" && option != "--paint-csv" && option != "--subs" && option != "--tuning-patch")
+                option != "--csv" && option != "--paint-csv" && option != "--subs" && option != "--tuning-patch" &&
+                option != "--round-shots")
             { throw std::invalid_argument("Unknown option: " + option); }
             if (at + 1 >= arguments.size()) { throw std::invalid_argument("Missing value for " + option); }
             if (option != "--stage" && option != "--seed" && !seen.insert(option).second)
@@ -434,6 +435,12 @@ namespace balance_runner
                     if (!sub) { throw std::invalid_argument("Unknown sub: " + name); }
                     options.subs.push_back(*sub);
                 }
+            }
+            else if (option == "--round-shots")
+            {
+                if (value == "rectangle") { options.round_shots = RoundShotShape::rectangle; }
+                else if (value == "circle") { options.round_shots = RoundShotShape::circle; }
+                else { throw std::invalid_argument("Round shots are rectangle or circle: " + value); }
             }
             else if (option == "--tools") { options.tools = parse_tools(value); }
             else if (option == "--bot") { options.bot = value; }

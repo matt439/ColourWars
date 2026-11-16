@@ -49,7 +49,7 @@ namespace level_editor_acceptance
         const auto original = parse(read_text(course));
         LevelDocument document(tuning);
         document.load(course);
-        require(station_count(document) == 10, "The Movement Course does not list its ten stations");
+        require(station_count(document) == 11, "The Movement Course does not list its eleven stations");
         const Entry drop = station_named(document, "drop_through");
         require(equal(document.rectangle(drop), { 559.0, 715.0, 52.0, 120.0 }),
             "A station is not a character-sized marker at its top-left");
@@ -128,9 +128,9 @@ namespace level_editor_acceptance
         require(second.label == "Station high_step_copy_2", "A second station copy repeated a name");
         document.erase(second);
         document.erase(station_named(document, "high_step_copy"));
-        require(station_count(document) == 10, "Deleting the copies left the wrong stations");
-        require(document.undo() && station_count(document) == 11, "Undo did not restore a deleted station");
-        require(document.redo() && station_count(document) == 10, "Redo did not delete the station again");
+        require(station_count(document) == 11, "Deleting the copies left the wrong stations");
+        require(document.undo() && station_count(document) == 12, "Undo did not restore a deleted station");
+        require(document.redo() && station_count(document) == 11, "Redo did not delete the station again");
 
         // Add from the palette, to a stage with none: station_1, then
         // station_2; deleting both leaves no stations array. File > New has

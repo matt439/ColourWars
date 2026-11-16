@@ -305,7 +305,11 @@ void MainMenuHome::init()
 		style.detail_font, look.home_subtitle_position, this->render_resources(), look.art.ink);
 	this->play_ = std::make_unique<UiText>("play", this->text().item(MenuItem::play), style.item_font,
 		this->calculate_widget_position(0, 2), this->render_resources(), look.art.focus_ink);
-	this->options_ = std::make_unique<UiText>("options", this->text().item(MenuItem::options), style.item_font,
+	this->learn_ = std::make_unique<UiText>("how_to_play", this->text().item(MenuItem::how_to_play), style.item_font,
+        look.home_help_position, this->render_resources(), look.art.ink);
+    this->quick_ = std::make_unique<UiText>("quick-match", this->text().quick_title, style.detail_font,
+        look.home_quick_position, this->render_resources(), look.art.ink);
+    this->options_ = std::make_unique<UiText>("options", this->text().item(MenuItem::options), style.item_font,
 		this->calculate_widget_position(0, 3), this->render_resources(), look.art.ink);
 	this->credits_ = std::make_unique<UiText>("credits", this->text().item(MenuItem::credits), style.item_font,
 		this->calculate_widget_position(0, 4), this->render_resources(), look.art.ink);
@@ -323,6 +327,8 @@ void MainMenuHome::init()
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->subtitle_.get());
 	this->text_container_->add_child(this->play_.get());
+	this->text_container_->add_child(this->learn_.get());
+    this->text_container_->add_child(this->quick_.get());
 	this->text_container_->add_child(this->options_.get());
 	this->text_container_->add_child(this->credits_.get());
 	this->text_container_->add_child(this->exit_.get());
@@ -333,7 +339,10 @@ void MainMenuHome::init()
 			this->play_wave(this->confirm_sound_);
 			this->go_to(MainMenuScreen::mode_select);
 		});
-	this->focus_.add(this->options_.get(), [this]
+	this->focus_.add(this->learn_.get(), [this]
+        { this->play_wave(this->confirm_sound_); this->go_to(MainMenuScreen::how_to_play); });
+    this->focus_.add(this->quick_.get(), [this] { this->go_to(MainMenuScreen::quick_match); });
+    this->focus_.add(this->options_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
 			this->go_to(MainMenuScreen::options);
@@ -352,6 +361,9 @@ void MainMenuHome::init()
 	// Child pages return to their entry row; fresh entry and Mode return use Play.
 	switch (this->initial_focus_)
 	{
+	case InitialFocus::how_to_play:
+        this->focus_.set_focused(0, this->learn_.get());
+        break;
 	case InitialFocus::options:
 		this->focus_.set_focused(0, this->options_.get());
 		break;

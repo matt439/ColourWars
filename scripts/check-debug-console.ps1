@@ -537,7 +537,7 @@ finally {
 #       autoexec runs before the launch statements; six PNGs, each -on pair
 #       differs from its -off (the strip is off, so only the world can);
 #       three checksums, each with bursts on screen at the expected spacing.
-#   q2. +exec station_tour +quit: twelve PNGs.
+#   q2. +exec station_tour +quit: thirteen PNGs.
 #   q3. +exec bots_4p +quit: one PNG.
 #   q4. one launch on an isolated profile and TEMP: bind shift+f5 at the
 #       console, Shift+F5, F5 still restarts; a tune edit writes no candidate
@@ -613,8 +613,8 @@ try {
     Remove-Item -LiteralPath $tourProfile -Recurse -Force -ErrorAction SilentlyContinue
     $null = New-Item -ItemType Directory -Path $tourProfile -Force
     $folder = Start-ScriptRun 'station_tour' $tourProfile 120
-    if (@(Get-ChildItem -LiteralPath $folder -Filter '*.png').Count -ne 12) { throw 'station_tour did not write 12 PNGs.' }
-    Assert-Transcript @('station_tour: done (12 stations, including both spawns)') 'station tour'
+    if (@(Get-ChildItem -LiteralPath $folder -Filter '*.png').Count -ne 13) { throw 'station_tour did not write 13 PNGs.' }
+    Assert-Transcript @('station_tour: done (13 stations, including both spawns)') 'station tour'
     $botsProfile = Join-Path $output 'p4-bots-profile'
     Remove-Item -LiteralPath $botsProfile -Recurse -Force -ErrorAction SilentlyContinue
     $null = New-Item -ItemType Directory -Path $botsProfile -Force
@@ -708,7 +708,7 @@ try {
     Wait-Exit $process 15 'The relaunched game (history Up, Enter: quit)'
     Assert-Transcript @('] quit') 'relaunch'
 
-    Write-Host "PASS debug console driven, phase 4: +exec review_feedback_ab (6 PNGs, on/off differ, bursts on screen; autoexec first), station_tour (12), bots_4p (1); bind Shift+F5 and F5; tune writes nothing to TEMP; live console (P1 still, match running, Escape without a pause menu); perf; binds.cfg and history.txt across a restart. Evidence: $output"
+    Write-Host "PASS debug console driven, phase 4: +exec review_feedback_ab (6 PNGs, on/off differ, bursts on screen; autoexec first), station_tour (13), bots_4p (1); bind Shift+F5 and F5; tune writes nothing to TEMP; live console (P1 still, match running, Escape without a pause menu); perf; binds.cfg and history.txt across a restart. Evidence: $output"
 }
 finally {
     if ($process -ne $null -and -not $process.HasExited) { $process.Kill() }

@@ -12,7 +12,8 @@
 // section 9, decisions 3, 5 and 8): which of figure.slips they made, chosen
 // from the match's hand (MatchRandom::hand). One person drew both teams, so
 // every figure in the match shares it. The house hand, 0, made no slip and
-// draws the authored figure.
+// draws the authored figure; a match's hand draws it too unless the person
+// slipped (figure.slips.slip_chance).
 //
 // It holds positions in figure.slips.list, never pointers into it, because
 // `tune` rebuilds that list; every read takes the presentation again and

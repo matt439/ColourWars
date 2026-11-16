@@ -121,6 +121,58 @@ namespace
             "Authored team assets changed their A/centre/B order or readiness defaults");
     }
 
+    void check_quick_review(Variants& variants, World& world)
+    {
+        for(const char* body : {"No duration", "{duration} and {duration}"})
+            variants.rejects("quick_match","body",[body](rapidjson::Document& d) {
+                d["menu_text"]["quick_match"]["body"].SetString(body,d.GetAllocator()); });
+        variants.rejects("quick_match","body",[](rapidjson::Document& d) {
+            std::string long_body(2000,'W'); long_body+="{duration}";
+            d["menu_text"]["quick_match"]["body"].SetString(long_body.c_str(),d.GetAllocator()); },&world);
+        for(const char* key : {"heading_position","body_position","start_position","customise_position","back_position"})
+        {
+            variants.rejects("quick_match",key,[key](rapidjson::Document& d) { d["main_menu"]["quick_match"].RemoveMember(key); });
+            variants.rejects("quick_match",key,[key](rapidjson::Document& d) { d["main_menu"]["quick_match"][key]["x"].SetDouble(1e100); });
+        }
+        variants.rejects("home_quick_position","overlaps",[](rapidjson::Document& d) {
+            d["main_menu"]["home_quick_position"]["y"].SetFloat(420); }, &world);
+        variants.rejects("quick_match","customise_position",[](rapidjson::Document& d) {
+            d["main_menu"]["quick_match"]["customise_position"]["y"].SetFloat(650); }, &world);
+        variants.rejects("quick_match","body_position",[](rapidjson::Document& d) {
+            d["main_menu"]["quick_match"]["body_position"]["y"].SetFloat(649); }, &world);
+        // Literal authored paper right edge (1840) and padding (28), with
+        // independently measured Back glyphs: inclusive edge then 0.25 outside.
+        const auto defaults=variants.load([](rapidjson::Document&){});
+        const float width=world.render.measure_text(world.render.resolve_sprite_font(defaults.menu().item_font),
+            defaults.menu_text().item(MenuItem::back)).x;
+        const auto at=[width](float extra) { return [width,extra](rapidjson::Document& d) {
+            d["main_menu"]["quick_match"]["back_position"]["x"].SetFloat(1840.0f-28.0f-width+extra); }; };
+        variants.load(at(0)).validate_resources(world.render,world.audio);
+        variants.rejects("quick_match","back_position",at(0.25f),&world);
+    }
+
+    void check_score_basis(Variants& variants, World& world)
+    {
+        variants.rejects("results_menu","score_basis_y",[](rapidjson::Document& d){d["results_menu"].RemoveMember("score_basis_y");});
+        for(const char* key:{"share_basis","empty_share_basis"})
+        {
+            variants.rejects("results",key,[key](rapidjson::Document& d){d["menu_text"]["results"].RemoveMember(key);});
+            variants.rejects("results",key,[key](rapidjson::Document& d){
+                d["menu_text"]["results"][key].SetString(std::string(500,'W').c_str(),d.GetAllocator());},&world);
+        }
+        for(float y:{255.0f,404.75f,490.0f,635.0f})
+            variants.rejects("results_menu","score_basis_y",[y](rapidjson::Document& d){d["results_menu"]["score_basis_y"].SetFloat(y);},&world);
+        const auto defaults=variants.load([](rapidjson::Document&){});
+        const auto font=world.render.resolve_sprite_font(defaults.results_menu().contribution_font);
+        const float height=std::max(world.render.measure_text(font,defaults.menu_text().results.share_basis).y,
+            world.render.measure_text(font,defaults.menu_text().results.empty_share_basis).y);
+        // Shipped percentage plate top: panel110 + fill offset380 + border10 - padding18 = 482.
+        const auto at=[height](float extra){return [height,extra](rapidjson::Document& d){
+            d["results_menu"]["score_basis_y"].SetFloat(482.0f-height+extra);};};
+        variants.load(at(0)).validate_resources(world.render,world.audio);
+        variants.rejects("results_menu","score_basis_y",at(0.25f),&world);
+    }
+
     void check_gate_permission(Variants& variants)
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
@@ -633,6 +685,8 @@ int main(int argc, char** argv)
         const Presentation defaults((content / "presentation.json").string().c_str());
         check_defaults(defaults);
         defaults.validate_resources(world.render, world.audio);
+        check_quick_review(variants, world);
+        check_score_basis(variants, world);
         check_camera_options(variants);
         check_practice_row_spacing(variants);
         check_figure_cross_checks(variants);

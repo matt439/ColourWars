@@ -12,7 +12,7 @@
   ],
 
   "team_palette": {
-    "_comment": "Fixed preference keys are stable save identifiers. Additional pairs join the Random draw. Every pair except pink_green and blue_yellow must pass the team_palette colour-vision check.",
+    "_comment": "Fixed preference keys are stable save identifiers. Additional pairs join the Random draw unless in_random is false. pink_green and blue_yellow fail the team_palette colour-vision check, so they stay fixed Options choices out of Random (REV#14); every other pair must pass.",
     "colours": [
       { "name": "blue", "colour": "0634CC" },
       { "name": "yellow", "colour": "FFFF00" },
@@ -28,8 +28,8 @@
     ],
     "pairs": [
       { "key": "blue_orange", "label": "A: Blue / B: Orange", "team_a": "blue", "team_b": "orange" },
-      { "key": "pink_green", "label": "A: Pink / B: Green", "team_a": "pink", "team_b": "green" },
-      { "key": "blue_yellow", "label": "A: Blue / B: Yellow", "team_a": "blue", "team_b": "yellow" },
+      { "key": "pink_green", "label": "A: Pink / B: Green", "team_a": "pink", "team_b": "green", "in_random": false },
+      { "key": "blue_yellow", "label": "A: Blue / B: Yellow", "team_a": "blue", "team_b": "yellow", "in_random": false },
       { "key": "purple_gold", "label": "A: Purple / B: Gold", "team_a": "purple", "team_b": "gold" },
       { "key": "red_azure", "label": "A: Red / B: Azure", "team_a": "red", "team_b": "azure" },
       { "key": "magenta_forest", "label": "A: Magenta / B: Forest", "team_a": "magenta", "team_b": "forest" }
@@ -106,6 +106,18 @@
   },
 
   "menu_text": {
+    "graphics": {
+      "heading": "Graphics",
+      "help": "CRT monitor adds texture to the\nopening and result monitor.\nOff by default. Restart after saving.\nReduce effects turns the texture off.\nGameplay and score text stay clear.",
+      "pending": "Apply saves the next launch. Back discards changes.",
+      "saved": "Saved. Restart the game to apply CRT monitor changes.",
+      "saved_override": "Saved. Remove the developer override and restart to use this choice.",
+      "save_failed": "Could not save CRT monitor. Next launch is unchanged.",
+      "launch_on": "This launch: CRT On",
+      "launch_off": "This launch: CRT Off",
+      "override_on": "Developer override: CRT On",
+      "override_off": "Developer override: CRT Off"
+    },
     "brand": "C O L O U R W A R S   /   LOCAL PAINT BATTLES",
     "solo_practice_hint": "Solo practice: choose Single Match",
     "practice_tool": "Tool:  < {tool} >",
@@ -117,10 +129,22 @@
       "no_controller": "Connect a controller",
       "build": "v{version} / Build {revision} / {configuration}"
     },
+    "quick_match": {
+      "title": "Play a bot",
+      "body": "P1: this controller, Team A. P2: Normal bot, Team B.\nSprayer + Grenade. Your active profile's Boost applies.\nSingle Match, Standard rules, {duration}.\nYour active controls, colours and accessibility settings apply.\nJoin lets you choose a profile before choosing an arena.\nChoose Customise to edit teams, tools, bot or match settings.",
+      "start": "Continue to Join",
+      "customise": "Customise"
+    },
+    "learn": {
+      "start": "1 / 3  YOUR FIRST MATCH\nPaint more of the arena than the other team.\nSplats interrupt opponents; painted territory decides the winner.\nStart with Play > Single Match > 1 Player (practice).\nChoose a tool, then Movement Course to learn at your own pace.\nFor a local match, choose 2-4 players and join each seat.\nThe host can fill spare seats with bots.\nChoose teams, tools and an arena; each human confirms their choice.",
+      "controls": "2 / 3  YOUR SAVED CONTROLS\nHold Jump for height. Aim in a direction, then shoot to paint.\nChange bindings in Options > Controls / audio.\nPad numbers follow their slots; menu A/B and Enter/Esc stay fixed.",
+      "finish": "3 / 3  FINISH, THEN PLAY AGAIN\nThe final reveal shows each team's painted territory.\nThe larger painted share wins; a tied share is a draw.\nResults show the round and, in a series, the team win tally.\nChoose Rematch to replay a single match.\nNext Round continues a series; Replay Draw repeats a tied round.\nChange tools or arena from the end menu, or return to the main menu.\nPause to review controls/settings. Back discards unapplied changes.",
+      "next": "Next page"
+    },
     "home_subtitle": "Paint the arena. Claim the win.",
     "display_trial_countdown": "Reverting in {seconds}s",
     "help": {
-      "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: {pad_shoot}\nJump: {pad_jump} (hold for height)\nPause: {pad_pause}    Sub: {pad_sub}\nDebug: Back / View\nKEYBOARD + MOUSE\nMove: {left} / {right}    Drop: {drop} / Down\nAim: mouse cursor    Shoot: {shoot}\nJump: {jump} (hold for height)\nPause: {pause}    Sub: {sub}\nDebug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
+      "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: {pad_shoot}\nJump: {pad_jump} (hold for height)\nPause: {pad_pause}    Sub: {pad_sub}\nKEYBOARD + MOUSE\nMove: {left} / {right}    Drop: {drop} / Down\nAim: mouse cursor    Shoot: {shoot}\nJump: {jump} (hold for height)\nPause: {pause}    Sub: {sub}\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
       "pad_association": "Profiles follow Pad 1-4 slots,\nnot the player number or device.\nAfter reconnecting, check the slot.\nKeyboard/mouse is unchanged.",
       "aim_cutoff": "Right stick: radial cutoff"
     },
@@ -227,6 +251,8 @@
       "single_match_heading": "Results",
       "proceed": "Press A/Enter to proceed",
       "contribution_heading": "Surface held (% of arena)",
+      "share_basis": "Team share of painted surface",
+      "empty_share_basis": "No surface painted. Equal shares mean a draw.",
       "series_team_a_wins": "Team A wins the series!",
       "series_team_b_wins": "Team B wins the series!",
       "draw_no_win": "Draw - no win awarded",
@@ -323,7 +349,8 @@
       "pause_player_title": "Pause Menu P{player}",
       "controller_lost": "Controller lost",
       "all_connected": "All players connected.",
-      "teams_required": "Both teams need a player"
+      "teams_required": "Both teams need a player",
+      "team_choice_required": "Choose a team with Left/Right, then Ready."
     },
     "stick_readouts": {
       "connected": "{device} - connected",
@@ -459,7 +486,10 @@
       "series_stage": "Series stage",
       "variant": "Variant",
       "vsync": "Vsync",
-      "toggle_fire": "Toggle fire"
+      "toggle_fire": "Toggle fire",
+      "graphics": "Graphics",
+      "crt_monitor": "CRT monitor (restart)",
+      "how_to_play": "How to play"
     }
   },
 
@@ -490,6 +520,15 @@
     "title_start_y": 680.0,
     "title_no_pad_y": 800.0,
     "home_position": { "x": 460.0, "y": 180.0 },
+    "home_help_position": { "x": 1000.0, "y": 420.0 },
+    "home_quick_position": { "x": 1000.0, "y": 540.0 },
+    "quick_match": {
+      "heading_position": { "x": 180.0, "y": 100.0 },
+      "body_position": { "x": 180.0, "y": 240.0 },
+      "start_position": { "x": 180.0, "y": 590.0 },
+      "customise_position": { "x": 180.0, "y": 710.0 },
+      "back_position": { "x": 180.0, "y": 830.0 }
+    },
     "home_subtitle_position": { "x": 460.0, "y": 315.0 },
     "home_spacing": { "x": 250.0, "y": 120.0 },
     "options_heading_position": { "x": 280.0, "y": 60.0 },
@@ -515,7 +554,7 @@
       "home": "B0B0A8"
     },
     "options_warning_colour": "8A301C",
-    "options_spacing": { "x": 540.0, "y": 82.0 },
+    "options_spacing": { "x": 540.0, "y": 80.0 },
     "display_trial_seconds": 15.0,
     "weapon_description": {
       "colour": "1B1C20",
@@ -695,6 +734,7 @@
     "winner_y": 255.0,
     "session_score_y": 340.0,
     "session_result_y": 405.0,
+    "score_basis_y": 405.0,
     "record_y": 635.0,
     "proceed_y": 880.0,
     "art": {
@@ -1058,8 +1098,10 @@
       "_comment": [
         "The person's face and head-outline slips (docs/drawing-mistakes-research.md",
         "section 9, decisions 5 and 8). Each match's person, chosen from its hand",
-        "(MatchRandom::hand), drew one slip or, with two_slip_chance, two that are not",
-        "exclusive; hand 0, the house hand, drew none. The cells are",
+        "(MatchRandom::hand), slipped with slip_chance (otherwise it drew the house figure)",
+        "and then drew one slip or, with two_slip_chance, two that are not exclusive;",
+        "hand 0, the house hand, drew none. Both chances were lowered on 2026-11-14 to",
+        "about half the slips per match. The cells are",
         "game/art/painter/slips.json; build-painter-art.ps1 bakes each person's band",
         "(canvas texels) as frames named <band_frame>.<person>.<strip>.<frame>, where",
         "<person> is one id or two joined by '+' in list order and <strip> is a body",
@@ -1070,7 +1112,8 @@
       ],
       "band_frame": "face",
       "band": { "x": 12.0, "y": 20.0, "width": 44.0, "height": 24.0 },
-      "two_slip_chance": 0.5,
+      "slip_chance": 0.6,
+      "two_slip_chance": 0.25,
       "list": [
         { "id": "smirk_line_overshoot", "strokes": [
           { "stroke": 11, "points": [ { "x": 28, "y": 40 }, { "x": 32, "y": 40 } ] },
@@ -1189,6 +1232,13 @@
     "fill_frame": "pixel",
     "bezel_shades": [ "D9D0B6", "CFC5A6", "E4DDC8", "C2B796", "D6C9A3", "BDB8AA" ],
     "bezel_shadow": "00000059",
+    "crt_trial": {
+      "scanline_count": 90,
+      "scanline_strength": 0.12,
+      "mask_strength": 0.08,
+      "vignette": 0.06,
+      "brightness": 1.04
+    },
     "monitor_art": {
       "_comment": "Static Paint.exe monitor body: coarse black pen, stepped corners and layered airbrush shade. Widths use screen height; hardware rectangles use screen fractions and stay outside the unchanged glass.",
       "ink": "000000",

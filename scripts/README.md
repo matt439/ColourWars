@@ -81,19 +81,20 @@ to `cases.psd1`.
 
 | Script | What |
 |---|---|
-| [check-startup.ps1](check-startup.ps1) | starts a hidden game process and checks DPI awareness, an isolated save and its `stages` folder, diagnostics and graceful shutdown; `-Locale` starts it in a locale |
+| [check-startup.ps1](check-startup.ps1) | starts a hidden game process and checks DPI awareness, an isolated fresh save (its window fit and Reduce effects from Windows' Animation effects) and its `stages` folder, diagnostics and graceful shutdown; `-Locale` starts it in a locale |
 | [check-failure-reporting.ps1](check-failure-reporting.ps1) | the caught-failure report ([failure-reporting.md](../docs/failure-reporting.md)) |
 | [check-display-awake.ps1](check-display-awake.ps1) | `GameLevel`'s display-idle request over a match's lifetime, with a recording adapter |
 | [check-debug-console.ps1](check-debug-console.ps1), [check-debug-console/](check-debug-console/) | drives the Debug console with real key events; phase 3 compiles a CPU menu-navigation probe against the game's model (`-CompileOnly` builds/queries it without a GUI); the full driver needs a foreground desktop, so it is local only (`CI#1`) |
 | [check-finish-details.ps1](check-finish-details.ps1) | runs the `review_finish_details` console script and requires equal checksums across its variants |
-| [check-movement-feedback.ps1](check-movement-feedback.ps1) | renders and checks movement-feedback frames ([polish-feedback.md](../docs/polish-feedback.md)) |
+| [check-movement-feedback.ps1](check-movement-feedback.ps1) | renders and checks movement-feedback frames ([polish-feedback.md](../docs/polish-feedback.md)); hardware-only by default; `-HostedSoftwareFunctional` requires software classification and runs the same assertions without hardware/performance claims (see [adapter evidence policy](../docs/crt-trial.md#adapter-evidence-policy)) |
 | [check-paint-fx.ps1](check-paint-fx.ps1) | renders and checks projectile and fresh-paint frames ([polish-paint-effects.md](../docs/polish-paint-effects.md)); `-CompileOnly` builds the probe without a window, as CI does |
 | [check-painter.ps1](check-painter.ps1), [check-painter/](check-painter/) | the painter visual probe and its focused leaves, evidence records and contact sheets; a passing run deletes the probe it compiled and records that in `result.json` (`removed_after_pass`), a failed one keeps it |
+| [compare-crt-captures.py](compare-crt-captures.py) | compares focused CRT off/on captures for neutral gameplay and Reduce effects, glass containment and unchanged score interiors; requires Pillow/numpy; run from the repository root (see [CRT validation](../docs/crt-trial.md#reproduction)) |
 | [check-painter-sweep.ps1](check-painter-sweep.ps1) | runs every focused painter leaf or one shard of them, one `check-painter.ps1` run each; [nightly.yml](../.github/workflows/nightly.yml) runs it with [check-painter/hosted-known-failures.txt](check-painter/hosted-known-failures.txt) |
 | [check-painter-selection.ps1](check-painter-selection.ps1) | checks the painter probe's selectors and routing without a compiler or GPU |
 | [check-painter-evidence.ps1](check-painter-evidence.ps1) | checks the shared painter PPM, finite-number, key-set, CSV, save and PNG evidence helpers without the game or a GPU |
 | [check-frame-pacing.ps1](check-frame-pacing.ps1) | frame-pacing capture ([polish-frame-pacing.md](../docs/polish-frame-pacing.md)); analysed by [perf/](perf/) |
-| [run-balance.ps1](run-balance.ps1) | headless seeded bot matches, per-seat subs and an in-memory numeric/boolean tuning patch, with bot counters ([gameplay-tuning.md](../docs/gameplay-tuning.md)) |
+| [run-balance.ps1](run-balance.ps1) | headless seeded bot matches, per-seat subs, an in-memory numeric/boolean tuning patch and the `ROAD#44` round-shot shape (`-RoundShots`), with bot counters ([gameplay-tuning.md](../docs/gameplay-tuning.md)) |
 | [run-balance-matrix.ps1](run-balance-matrix.ps1) | one compile, bounded parallel jobs, hashed resume and byte-identity repeat; `balance/shipped.psd1`, `balance/bot-ladder.psd1` and `balance/sight-ladder.psd1` designs (`-PlanOnly` previews the count) |
 
 ## Editor checks
@@ -153,3 +154,13 @@ scripts/clean-validation.ps1 -Keep 2 -Apply
 | [perf/](perf/) | frame-pacing analysis and its test |
 | [colour_vision/](colour_vision/paint_colour_vision.py) | measures the paint in unfiltered captures under the `team_palette` case's colour-vision simulation (Machado protan/deutan/tritan, CIEDE2000): the team pair and every edge the paint shares with the picture, optionally recoloured to each shipped pair ([polish-match-accents.md](../docs/polish-match-accents.md#paint-under-colour-vision-simulation-rev34)), and its test |
 | [studies/](studies/README.md) | the kits for the drawing-mistake human studies ([drawing-mistakes-research.md](../docs/drawing-mistakes-research.md#8-human-tests)): Study A's references, sheets and analysis, Study B's stimulus capture, test page and analysis |
+
+### Hosted visual evidence
+
+`check-painter.ps1`, `check-painter-sweep.ps1` and `check-paint-fx.ps1` take
+`-HostedSoftwareFunctional` for the scheduled runner's D3D11 software adapter.
+This is a separate evidence lane, not an automatic fallback: hardware, null and
+unknown devices are refused there. Without the switch the default remains
+hardware-only. All pixel assertions and tolerances remain unchanged; receipts
+name the policy and actual device. See the
+[adapter evidence policy](../docs/crt-trial.md#adapter-evidence-policy).

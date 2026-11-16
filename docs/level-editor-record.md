@@ -938,7 +938,7 @@ the `ED#23` shared rules refuse what the game refuses, in the game's words.
 It places no station in any shipped stage.
 
 Acceptance (`scripts/acceptance/level_editor/station_editing_checks.cpp`, in
-`check-level-editor`): the Movement Course lists its ten stations, with
+`check-level-editor`): the Movement Course lists its eleven stations (ten before `REV#56`), with
 `drop_through` a 52 by 120 marker at (559, 715) and no lesson rows; a
 `lesson/title` edit and a mirror copy of it are refused. Renaming it
 is accepted; `Drop`, `spawn_a`, `spawn_b`, `high_step`, an empty name and a

@@ -15,8 +15,9 @@ outlines, neutral worn hardware and explicit team-paint materials. Each tool has
 four same-canvas poses, each split into complementary neutral and grayscale paint
 layers. The runtime atlas contains 44 named frames: 20 pose pairs and four preserved
 utility frames, plus the two reservoir supply strips described below. Its
-premultiplied RGBA8 DDS has one mip and four-texel packed-rectangle gutters.
-Only the DDS and frame JSON enter staging and Release; sources, PNGs, preview and
+runtime PNG, premultiplied to RGBA8 with one mip by the engine as it loads (a DDS
+before [`PIN#3`](review/engine-reports.md#png-atlases-and-texconv-pin3)), has
+four-texel packed-rectangle gutters. Only that PNG and the frame JSON enter staging and Release; sources, the working PNG, preview and
 tools remain under `game/art/`.
 
 | Tool | Design and mechanism |
@@ -210,7 +211,7 @@ origins. Drawing remains const and introduces no simulation state or randomness.
 
 The atlas grows from 2048x1280 to 2560x1280 (2.5 MiB additional uncompressed
 RGBA8 texture memory), retaining all original tool silhouettes, grips, muzzles
-and utility pixels. Only the reviewed DDS and JSON enter staging and Release.
+and utility pixels. Only the reviewed atlas (a PNG since `PIN#3`) and JSON enter staging and Release.
 
 Run the focused renderer check from an x64 VS Developer shell:
 

@@ -11,9 +11,9 @@ from the repository root. Windows System.Drawing draws the integer-cell recipe
 without antialiasing. Each of the 32x32 cells expands to exactly 4x4 source
 texels, producing a 1024x2048 working atlas at
 `../sources/textures/paint_fx.png`, runtime
-`../../content/textures/paint_fx.json` and `.dds`, and the review
-[`lineup.png`](lineup.png). Ordinary builds need neither System.Drawing nor
-Python; they stage only the DDS and JSON.
+`../../content/textures/paint_fx.json` and `.png` (a copy of the working PNG),
+and the review [`lineup.png`](lineup.png). Ordinary builds need neither
+System.Drawing nor Python; they stage only the PNG and JSON.
 
 Each frame lists `lobes`, which are merged before outlining, and `tones`,
 which are clipped to that union. Shapes are `["ellipse", x, y, w, h]` and
@@ -61,8 +61,8 @@ then every frame in all five team hues at the actual 720p gameplay scale,
 `paint.thickness * paint.visual.splash_scale` canvas (currently 16 pixels at
 720p). Grey review panels are preview backgrounds only.
 
-The DDS is premultiplied RGBA8 UNORM with one mip. Metadata-free source PNGs
-preserve authored UNORM bytes through texconv. Strip order and coordinates are
-fixed, and rebuilding the same source produces byte-identical PNG, JSON, DDS
-and lineup. This authoring review is separate from runtime composition,
+The runtime PNG has straight alpha; the engine's PNG loader premultiplies it
+into RGBA8 UNORM with one mip as it loads, and the metadata-free PNG keeps the
+authored UNORM bytes. Strip order and coordinates are fixed, and rebuilding the
+same source produces byte-identical PNG, JSON and lineup. This authoring review is separate from runtime composition,
 split-screen performance and human readability acceptance.

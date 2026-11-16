@@ -203,24 +203,25 @@ performed (decision 9).
   drawn by hand and is unchanged.
 - **Brick slips.** `brick_slip` in
   [terrain_material_drawings.cpp](../game/objects/terrain_material_drawings.cpp)
-  moves about one joint in five by one cell, left or right, keyed on the joint's
+  moves about one joint in ten (one in five until decision 10) by one cell, left or right, keyed on the joint's
   world position with splitmix64 and the match's hand (below). A slip that would break the
   3-cell clearance keeps the joint in place. The 2-cell variant for Study B is
   `brick_slip_cells = 2`, a rebuild (`BRICK_SLIP_CELLS` in the historical
   revisions the capture tool also supports).
 - **Mortar strokes** (added 2026-11-01, from the author's sketch below). Each
   course line is drawn as several strokes in 40-cell world bands, and about one
-  band in three lands a row off, in a direction fixed for that line. Where two
+  band in six (one in three until decision 10) lands a row off, in a direction fixed for that line. Where two
   strokes meet at different rows they overlap by up to two cells or touch only
   at a corner, so a 4-connected bucket fill could not leak through: the
   author's rule for gaps is **diagonal only**. Joints meet the lines where the
-  lines were drawn, and about one joint in four runs one or two cells past an
-  interior line. A drift or overshoot that would come within 3 cells of the
+  lines were drawn, and about one joint in eight (one in
+  four until decision 10) runs one or two cells past an interior line. A drift or overshoot that would come within 3 cells of the
   outline is not drawn. Same keying as the slips.
 - **Doubled edges** (added 2026-11-01, the author's second example). Each brick
   is its own rectangle, and a few missed the edge they should have shared, so it
-  came out twice: about one joint in eight gets a twin one or two cells to one
-  side, and about one brick in ten between two joints gets its top edge again a
+  came out twice: about one joint in sixteen (one in eight until
+  decision 10) gets a twin one or two cells to one side, and about one brick in
+  twenty (one in ten) between two joints gets its top edge again a
   row under the line or two rows under it. A one-cell gap leaves a sliver of
   brick between the two lines. This is F4's "doubled joint". The "doubled
   keyline weight" exclusion in section 4 still holds for outlines.
@@ -253,8 +254,10 @@ performed (decision 9).
 
 - **Who draws what.** `FigurePerson` ([figure_person.h](../game/objects/figure_person.h))
   picks the match's person from `MatchRandom::hand()`, with its own salt, so the
-  bricks' draws do not move. A person has one slip or, half the time
-  (`two_slip_chance`), two that are not exclusive. That gives 54 people: 11
+  bricks' draws do not move. A person slips at all with
+  `slip_chance` (0.6) and otherwise draws the house figure; a slipping person
+  has one slip or, with `two_slip_chance` (0.25), two that are not exclusive.
+  Until decision 10 every match slipped and half drew two. That gives 54 people: 11
   singles and 43 pairs. Every figure in the match shares the person, both teams
   alike. Hand 0, the house hand, draws the authored figure. `LevelBuilder` passes
   the hand through `PlayerBuilder::build_players`. Probes that build players
@@ -285,8 +288,9 @@ performed (decision 9).
   strokes. All three read the presentation on every draw, so `tune` stays live.
 - **Checks.** Startup validation requires a band for every person and every body
   frame. The `figure_slips` acceptance case checks:
-  - which person a hand draws (every allowed person turns up, and about half the
-    rounds draw two slips);
+  - which person a hand draws (every allowed person turns up, about `1 - slip_chance` of
+    rounds draw the house figure and about `slip_chance` x `two_slip_chance`
+    draw two slips);
   - that every band resolves at the band's size;
   - the strokes and blink eyes.
 - **The flip rule is relaxed by the author's pick.** Several of the eleven are
@@ -466,6 +470,16 @@ This is a screen for gross failures, not a measurement.
    Nothing ships or comes out on its account. The kit in
    [scripts/studies/](../scripts/studies/README.md) stays ready if the mistakes
    are ever questioned.
+
+10. **About half the mistakes** (2026-11-14). The author judged the wall
+    excessive and obviously artificial, bricks above all, and asked for about
+    half as many mistakes. Every brick rate was halved: joint slips one in ten,
+    mortar drift one band in six, overshoots one joint in eight, doubled joints
+    one in sixteen and doubled brick tops one in twenty. Sizes and rules are
+    unchanged. The figure went from 1.5 slips a match on average to 0.75: a
+    match's person now slips with `slip_chance` 0.6 (otherwise it draws the
+    house figure, as hand 0 does) and draws two with `two_slip_chance` 0.25.
+    The one authored mistake per backdrop prop is unchanged.
 
 Nothing in this research is open now. Stage 1 has shipped, with per-match hands
 since 2026-11-02, and stage 2 is built from the authored pool (stage 2, "as

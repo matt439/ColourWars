@@ -20,3 +20,11 @@ InitialDisplay initial_display_for_primary_monitor();
 // Finish fitting to the monitor Windows actually selected, including its DPI
 // and the default cascaded position. Called only for Save::first_run().
 void fit_initial_window(labrador::Application& app, Save& save);
+
+// POL#49: a fresh save's shared Reduce effects follows Windows' Animation
+// effects (client-area animation). Read before the save loads and passed to
+// Save's first-run constructor, so existing, imported and unreadable saves
+// keep their own value and the per-seat comfort switches follow Shared.
+bool choose_initial_reduce_effects(bool client_area_animation);
+// A failed query keeps the authored default, Off.
+bool initial_reduce_effects_from_system();

@@ -396,6 +396,16 @@ namespace menu_text_acceptance
         limited->set_stand_in(U'?');
         world.render.add_font("menu_text_limited", std::move(limited));
         world.render.add_font("menu_text_tall", std::make_unique<Font>(TextureHandle{}, font.glyphs, 1081.0f));
+        // A globally tall detail font now fails first at Home's optional bot
+        // action. Give only the hint's sentinel glyph a tall ink extent so the
+        // hint-specific assertion remains independent of other detail consumers.
+        auto hint_glyphs=font.glyphs;
+        for(auto& glyph:hint_glyphs) if(glyph.character==U'~') {
+            glyph.y_offset=0; glyph.subrect.height=1081;
+        }
+        world.render.add_font("menu_hint_tall",std::make_unique<Font>(TextureHandle{},std::move(hint_glyphs),font.line_spacing));
+        require(world.render.measure_text(world.render.resolve_sprite_font("menu_hint_tall"),L"~").y==1081.0f,
+            "Hint-only height fixture did not retain its 1081px ink extent");
         for (const auto& role : categories)
         {
             const std::string field = role.group == nullptr ? role.key : std::string(role.group) + '.' + role.key;
@@ -412,7 +422,24 @@ namespace menu_text_acceptance
                 select_font(d, role, "menu_text_limited");
                 text_field(d, role.group, role.key).SetString("Glyph~");
             }, &world);
-            variants.rejects(field, [role](rapidjson::Document& d)
+            if(role.group==nullptr && std::string(role.key)=="solo_practice_hint")
+            {
+                const auto tall_path=variants.write([role](rapidjson::Document& d)
+                    { select_font(d,role,"menu_text_tall"); });
+                bool home_refused=false;
+                try { Presentation(tall_path.string().c_str()).validate_resources(world.render,world.audio); }
+                catch(const std::runtime_error& error) {
+                    const std::string message=error.what();
+                    home_refused=message.find(tall_path.filename().string())!=std::string::npos &&
+                        message.find("main_menu.home_quick_position")!=std::string::npos;
+                }
+                require(home_refused,"Globally tall detail font did not refuse Home quick row with source context");
+                variants.rejects(field,[role](rapidjson::Document& d) {
+                    select_font(d,role,"menu_hint_tall");
+                    text_field(d,role.group,role.key).SetString("~");
+                },&world);
+            }
+            else variants.rejects(field, [role](rapidjson::Document& d)
                 { select_font(d, role, "menu_text_tall"); }, &world);
         }
         // The Random mark draws in the announcement font.

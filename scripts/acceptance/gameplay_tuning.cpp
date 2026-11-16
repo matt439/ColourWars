@@ -37,8 +37,9 @@ namespace
             return GameTuning(path.string().c_str());
         }
 
+        // `reason`, when given, must also appear: it pins which check refused.
         template<class Edit>
-        void rejects(const char* owner, const char* field, Edit edit)
+        void rejects(const char* owner, const char* field, Edit edit, const char* reason = nullptr)
         {
             const auto path = write(edit);
             bool contextual = false;
@@ -47,7 +48,8 @@ namespace
             {
                 const std::string message = error.what();
                 contextual = message.find(path.filename().string()) != std::string::npos &&
-                    message.find(owner) != std::string::npos && message.find(field) != std::string::npos;
+                    message.find(owner) != std::string::npos && message.find(field) != std::string::npos &&
+                    (reason == nullptr || message.find(reason) != std::string::npos);
             }
             require(contextual, std::string("Invalid ") + owner + '.' + field +
                 " did not fail at load with its source file and key");
@@ -319,9 +321,13 @@ namespace
         require(angle_upper.weapon(WeaponType::roller).aim_tilt < pi / 2.0f &&
             angle_upper.projectile(ProjectileType::mist).spread_step == pi / 4.0f,
             "The valid upper angle boundaries were rejected or changed");
-        const auto max_factor = fixtures.load([](rapidjson::Document& d)
+        // The largest float below FLT_MAX: the engine parses without full
+        // precision, so FLT_MAX itself, written as its exact double, reads back
+        // one double step above the range and is refused (engine report 39).
+        const float boundary_factor = std::nextafter(std::numeric_limits<float>::max(), 0.0f);
+        const auto max_factor = fixtures.load([&](rapidjson::Document& d)
         {
-            d["projectiles"]["wind_stop_factor"].SetFloat(std::numeric_limits<float>::max());
+            d["projectiles"]["wind_stop_factor"].SetFloat(boundary_factor);
             for (const char* name : projectile_names) { d["projectiles"][name]["wind_resistance"].SetInt(1); }
             // A sub's two records share the factor (ROAD#11).
             for (const char* name : sub_names)
@@ -330,7 +336,7 @@ namespace
                 d["subs"][name]["burst"]["wind_resistance"].SetInt(1);
             }
         });
-        require(max_factor.projectile(ProjectileType::spray).wind_stop_factor == std::numeric_limits<float>::max(),
+        require(max_factor.projectile(ProjectileType::spray).wind_stop_factor == boundary_factor,
             "Finite wind product at the float boundary was rejected");
 
         for (const char* field : { "aim_tilt", "spread_step", "wind_stop_factor" })
@@ -356,16 +362,21 @@ namespace
             { d["weapons"]["roller"]["aim_tilt"].SetFloat(pi / 2.0f); });
         fixtures.rejects("mist", "spread_step", [](rapidjson::Document& d)
             { d["projectiles"]["mist"]["spread_step"].SetFloat(std::nextafter(pi / 4.0f, pi)); });
-        fixtures.rejects("projectiles", "wind_stop_factor", [](rapidjson::Document& d)
-            { d["projectiles"]["wind_stop_factor"].SetFloat(std::numeric_limits<float>::max()); });
+        // The largest float that reads back (report 39): finite alone, but its
+        // product with a default wind_resistance is not, so the game's own
+        // product check refuses it.
+        const float largest_readable = std::nextafter(std::numeric_limits<float>::max(), 0.0f);
+        const char* const stop_speed = "finite horizontal stop speed";
+        fixtures.rejects("projectiles", "wind_stop_factor", [&](rapidjson::Document& d)
+            { d["projectiles"]["wind_stop_factor"].SetFloat(largest_readable); }, stop_speed);
         for (const char* name : projectile_names)
         {
             fixtures.rejects(name, "wind_resistance", [name](rapidjson::Document& d)
                 { d["projectiles"][name]["wind_resistance"].SetDouble(-1.0); });
             fixtures.rejects(name, "wind_resistance", [name](rapidjson::Document& d)
                 { d["projectiles"][name]["wind_resistance"].SetDouble(1e100); });
-            fixtures.rejects(name, "wind_resistance", [name](rapidjson::Document& d)
-                { d["projectiles"][name]["wind_resistance"].SetFloat(std::numeric_limits<float>::max()); });
+            fixtures.rejects(name, "wind_resistance", [&, name](rapidjson::Document& d)
+                { d["projectiles"][name]["wind_resistance"].SetFloat(largest_readable); }, stop_speed);
             fixtures.rejects(name, "wind_resistance", [name](rapidjson::Document& d)
                 { d["projectiles"][name].RemoveMember("wind_resistance"); });
             fixtures.rejects(name, "wind_resistance", [name](rapidjson::Document& d)

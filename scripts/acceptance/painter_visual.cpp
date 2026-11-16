@@ -1,4 +1,6 @@
 #include "game/pch.h"
+#include "game/config/crt_trial.h"
+#include "game/config/locale.h"
 #include "game/config/sound_groups.h"
 #include "game/carried/removed_members.h"
 #include "engine/app/application.h"
@@ -127,7 +129,26 @@ using namespace labrador;
 
 namespace
 {
+    constexpr bool admits_adapter(RenderDeviceKind kind, bool hosted_software)
+    {
+        return kind == (hosted_software ? RenderDeviceKind::software : RenderDeviceKind::hardware);
+    }
+    static_assert(admits_adapter(RenderDeviceKind::hardware, false));
+    static_assert(!admits_adapter(RenderDeviceKind::software, false));
+    static_assert(admits_adapter(RenderDeviceKind::software, true));
+    static_assert(!admits_adapter(RenderDeviceKind::hardware, true));
+    static_assert(!admits_adapter(RenderDeviceKind::null_device, false));
+    static_assert(!admits_adapter(RenderDeviceKind::null_device, true));
+    static_assert(!admits_adapter(static_cast<RenderDeviceKind>(99), false));
+    static_assert(!admits_adapter(static_cast<RenderDeviceKind>(99), true));
+
 #include "scripts/acceptance/painter_visual/painter_fixtures.h"
+#include "scripts/acceptance/painter_visual/graphics_settings_checks.h"
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+#include "scripts/acceptance/painter_visual/how_to_play_checks.h"
+#include "scripts/acceptance/painter_visual/first_match_flow_checks.h"
+#include "scripts/acceptance/painter_visual/duel_flow_checks.h"
+#endif
 #include "scripts/acceptance/painter_visual/scripted_menu_owner.h"
 #include "scripts/acceptance/painter_visual/action_combat_checks.h"
 #include "scripts/acceptance/painter_visual/tool_checks.h"
@@ -143,6 +164,7 @@ namespace
 #include "scripts/acceptance/painter_visual/miniature_reference_checks.h"
 #include "scripts/acceptance/painter_visual/miniature_terrain_checks.h"
 #include "scripts/acceptance/painter_visual/countdown_checks.h"
+#include "scripts/acceptance/painter_visual/crt_trial_checks.h"
 #include "scripts/acceptance/painter_visual/cq_blockout_checks.h"
 #include "scripts/acceptance/painter_visual/crossfeed_checks.h"
 #include "scripts/acceptance/painter_visual/gate_permission_checks.h"
@@ -281,10 +303,15 @@ int wmain(int argc, wchar_t** argv)
 {
     return acceptance::run_probe("painter visual", [&]
     {
+        // Consume only the explicit final policy flag; leave the existing
+        // matrix/trial argument validation and every pixel assertion intact.
+        const bool hosted_software = argc > 1 &&
+            std::wstring(argv[argc - 1]) == L"--hosted-software-functional";
+        if (hosted_software) --argc;
         require(argc == 3 || (argc == 5 && (std::wstring(argv[3]) == L"turbulence-mover" || std::wstring(argv[3]) == L"turbulence-shoulder" || std::wstring(argv[3]) == L"turbulence-slab") && !std::wstring(argv[4]).empty()) || (argc == 4 && (std::wstring(argv[3]) == L"hud-paper-tune-colours" || std::wstring(argv[3]) == L"hud-closing-shade" || std::wstring(argv[3]) == L"hud-closing-materials" || std::wstring(argv[3]) == L"stage-preview-background-tune-colour" || std::wstring(argv[3]) == L"hud-label-tune-colours" || std::wstring(argv[3]) == L"hud-timer-tune-colour" ||
             std::wstring(argv[3]) == L"identity" ||
             std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"landmark" || std::wstring(argv[3]) == L"parallax" || std::wstring(argv[3]) == L"miniature-terrain" || std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"press-tower" || std::wstring(argv[3]) == L"turbulence-blockout" || std::wstring(argv[3]) == L"gate-permission" || std::wstring(argv[3]) == L"ferry-direction" || std::wstring(argv[3]) == L"surface-finish" || std::wstring(argv[3]) == L"route-warning" || std::wstring(argv[3]) == L"tune-colours" || std::wstring(argv[3]) == L"monitor" ||
-            std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"closing" ||
+            std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"crt-trial" || std::wstring(argv[3]) == L"graphics-settings" || std::wstring(argv[3]) == L"first-match-flow" || std::wstring(argv[3]) == L"how-to-play" || std::wstring(argv[3]) == L"closing" ||
             std::wstring(argv[3]) == L"supply" || std::wstring(argv[3]) == L"hud" ||
             std::wstring(argv[3]) == L"practice-replay" || std::wstring(argv[3]) == L"resume" || std::wstring(argv[3]) == L"end-menu" ||
             std::wstring(argv[3]) == L"pause-menu" || std::wstring(argv[3]) == L"results-menu" ||
@@ -420,7 +447,7 @@ int wmain(int argc, wchar_t** argv)
         require(!crack_tune_colour_only, "CrackTuneColourOnly requires the normal gamepad reader");
         require(!limb_tune_colours_only, "LimbTuneColoursOnly requires the normal gamepad reader");
 
-        require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || bot_players_only || remembered_setup_only || connection_text_only || stick_readouts_only || team_focus_only || team_tune_colours_only || weapon_tune_colours_only || stage_summary_only || stage_preview_background_tune_colour_only || menu_labels_only || menu_text_only || keyboard_jump_only || rumble_only ||
+        require(argc == 4 && (std::wstring(argv[3]) == L"first-match-flow" || std::wstring(argv[3]) == L"how-to-play" || std::wstring(argv[3]) == L"team-setup" || bot_players_only || remembered_setup_only || connection_text_only || stick_readouts_only || team_focus_only || team_tune_colours_only || weapon_tune_colours_only || stage_summary_only || stage_preview_background_tune_colour_only || menu_labels_only || menu_text_only || keyboard_jump_only || rumble_only ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options")),
             "The scripted gamepad backend is restricted to focused team/setup/menu-text acceptance");
 #else
@@ -437,7 +464,13 @@ int wmain(int argc, wchar_t** argv)
         Registry<LevelLoadedInfo> levels("Level");
         StageList stages;
         GameTuning tuning((content / "tuning.json").string().c_str());
-        Presentation presentation((content / "presentation.json").string().c_str());
+        // First-match qualification follows the standalone game's selected locale.
+        // Other historical exact-raster leaves retain their authored base locale.
+        const bool localized_flow=argc==4 && (std::wstring(argv[3])==L"first-match-flow" || std::wstring(argv[3])==L"results-menu");
+        const ActiveLocale active_locale(Locales::read((content/"locales").string()),
+            localized_flow ? locale_selection::requested_from_environment() : std::string{});
+        Presentation presentation(active_locale.presentation((content/"presentation.json").string()));
+        if(localized_flow) std::cout << "FLOW locale=" << active_locale.tag() << '\n';
         Save saved_preferences; SettingsSession saved_preferences_session(saved_preferences);
         saved_preferences_session.load_save_file();
         require(!saved_preferences_session.play_settings().aim_marker, "Isolated visual save did not preserve aim_marker=false");
@@ -447,6 +480,7 @@ int wmain(int argc, wchar_t** argv)
         // Existing comparisons isolate their own visual feature. The marker
         // matrix enables its preference explicitly at identical match state.
         preferences.aim_marker = false;
+        const crt_trial::Runtime crt_runtime(preferences.crt_monitor);
         ApplicationOptions options;
         options.window_class_name = L"ColourWarsPainterProbe";
         options.window_title = L"ColourWars painter validation";
@@ -455,15 +489,21 @@ int wmain(int argc, wchar_t** argv)
         options.max_threads = 4;
         if (stage_scan_only || turbulence_mover_only || turbulence_shoulder_only || turbulence_slab_only || (argc == 4 && (std::wstring(argv[3]) == L"miniature-terrain" ||
             std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"press-tower" || std::wstring(argv[3]) == L"turbulence-blockout" || std::wstring(argv[3]) == L"gate-permission" || std::wstring(argv[3]) == L"ferry-direction" || std::wstring(argv[3]) == L"surface-finish" || std::wstring(argv[3]) == L"route-warning" || keyboard_jump_only))) { options.view_capacity = 5; }
+        if (crt_runtime.enabled()) { options.view_capacity = crt_runtime.view_capacity(); }
         options.visible = false;
         Application app(options);
         app.initialize();
+        crt_runtime.initialize(*app.renderer());
         const auto& device = app.renderer()->device_info();
         std::cout << "DEVICE backend=" << device.backend << " api=" << device.api
             << " name=" << device.device_name << " vendor=" << device.vendor_id
-            << " device=" << device.device_id << '\n';
-        require(device.backend == "d3d11" && device.kind == RenderDeviceKind::hardware,
-            "visual evidence requires a D3D11 hardware device");
+            << " device=" << device.device_id
+            << " kind=" << (device.kind == RenderDeviceKind::hardware ? "hardware" :
+                device.kind == RenderDeviceKind::software ? "software" : "unknown") << '\n';
+        std::cout << "ADAPTER_POLICY " << (hosted_software ?
+            "hosted_software_functional_only" : "hardware_only") << '\n';
+        require(device.backend == "d3d11" && admits_adapter(device.kind, hosted_software),
+            "adapter does not match D3D11 hardware-default or explicit hosted-software-functional policy");
         app.resource_loader()->register_kind("level", {
             [&](const std::string& directory, const std::string& name, bool) {
                 auto info = std::make_unique<LevelLoadedInfo>((directory + name + ".json").c_str());
@@ -480,8 +520,38 @@ int wmain(int argc, wchar_t** argv)
         presentation.validate_resources(*app.render_resources(), *app.audio_resources());
         LevelBuilder builder(app.viewport_manager(), app.render_resources(),
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
-            app.resolution_manager(), app.thread_pool(), app.partitioner());
+            app.resolution_manager(), app.thread_pool(), app.partitioner(), nullptr, &crt_runtime);
         const Canvas canvas(app.render_resources());
+        if (argc == 4 && std::wstring(argv[3]) == L"first-match-flow")
+        {
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+            first_match_flow(app, tuning, presentation, content, output, crt_runtime);
+            duel_flow(app,tuning,presentation,content,output,crt_runtime);
+#else
+            throw std::runtime_error("First flow requires scripted gamepads");
+#endif
+            return 0;
+        }
+        if (argc == 4 && std::wstring(argv[3]) == L"how-to-play")
+        {
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+            how_to_play_matrix(app, canvas, tuning, presentation, output);
+#else
+            throw std::runtime_error("How to play checks require scripted gamepads");
+#endif
+            return 0;
+        }
+        if (argc == 4 && std::wstring(argv[3]) == L"graphics-settings")
+        {
+            graphics_settings_matrix(app, canvas, tuning, presentation, output);
+            return 0;
+        }
+        if (argc == 4 && std::wstring(argv[3]) == L"crt-trial")
+        {
+            crt_trial_capture(app, builder, preferences, output);
+            std::cout << "PASS focused CRT story captures; pixel A/B comparison is a separate gate\n";
+            return 0;
+        }
         if (result_percentage_only)
         {
             result_percentage_checks(app, levels, tuning, presentation, output);

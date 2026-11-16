@@ -8,6 +8,12 @@
   ],
   "presentation": {
     "menu_text": {
+      "quick_match": {
+  "title": "[Play a bot]",
+  "body": "[P1: this controller, Team A. P2: Normal bot, Team B.]\n[Sprayer + Grenade. Your active profile's Boost applies.]\n[Single Match, Standard rules, {duration}.]\n[Your active controls, colours and accessibility settings apply.]\n[Join lets you choose a profile before choosing an arena.]\n[Choose Customise to edit teams, tools, bot or match settings.]",
+  "start": "[Continue to Join]",
+  "customise": "[Customise]"
+},
       "brand": "[C O L O U R W A R S   /   LOCAL PAINT BATTLES]",
       "solo_practice_hint": "[Solo practice: choose Single Match]",
       "practice_tool": "[Tool:  < {tool} >]",
@@ -22,7 +28,7 @@
       "home_subtitle": "[Paint the arena. Claim the win.]",
       "display_trial_countdown": "[Reverting in {seconds}s]",
       "help": {
-        "controls": "[CONTROLLER]\n[Move / drop: left stick]\n[Aim: right stick    Shoot: {pad_shoot}]\n[Jump: {pad_jump} (hold for height)]\n[Pause: {pad_pause}    Sub: {pad_sub}]\n[Debug: Back / View]\n[KEYBOARD + MOUSE]\n[Move: {left} / {right}    Drop: {drop} / Down]\n[Aim: mouse cursor    Shoot: {shoot}]\n[Jump: {jump} (hold for height)]\n[Pause: {pause}    Sub: {sub}]\n[Debug: F1]\n[MENUS]\n[Navigate: stick / D-pad / arrows]\n[Select: A / Enter    Back: B / Esc]\n[AIM / READINESS]\n[Direction only; roller aim is fixed.]\n[Ready: chevron / Cooldown: bars]\n[No paint: cross]\n[Pad sticks: movement / aim deadzones.]\n[REDUCE EFFECTS]\n[Less shake, flashes and idle detail.]",
+        "controls": "[CONTROLLER]\n[Move / drop: left stick]\n[Aim: right stick    Shoot: {pad_shoot}]\n[Jump: {pad_jump} (hold for height)]\n[Pause: {pad_pause}    Sub: {pad_sub}]\n[KEYBOARD + MOUSE]\n[Move: {left} / {right}    Drop: {drop} / Down]\n[Aim: mouse cursor    Shoot: {shoot}]\n[Jump: {jump} (hold for height)]\n[Pause: {pause}    Sub: {sub}]\n[MENUS]\n[Navigate: stick / D-pad / arrows]\n[Select: A / Enter    Back: B / Esc]\n[AIM / READINESS]\n[Direction only; roller aim is fixed.]\n[Ready: chevron / Cooldown: bars]\n[No paint: cross]\n[Pad sticks: movement / aim deadzones.]\n[REDUCE EFFECTS]\n[Less shake, flashes and idle detail.]",
         "pad_association": "[Profiles follow Pad 1-4 slots,]\n[not the player number or device.]\n[After reconnecting, check the slot.]\n[Keyboard/mouse is unchanged.]",
         "aim_cutoff": "[Right stick: radial cutoff]"
       },
@@ -129,6 +135,8 @@
         "single_match_heading": "[Results]",
         "proceed": "[Press A/Enter to proceed]",
         "contribution_heading": "[Surface held (% of arena)]",
+        "share_basis": "[Team share of painted surface]",
+        "empty_share_basis": "[No surface painted. Equal shares mean a draw.]",
         "series_team_a_wins": "[Team A wins the series!]",
         "series_team_b_wins": "[Team B wins the series!]",
         "draw_no_win": "[Draw - no win awarded]",

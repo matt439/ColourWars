@@ -221,73 +221,30 @@ void drift_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Can
 
     // Real builder-owned arena contexts supplement the isolated raster proof.
     // These are review captures; moving players/clock must not stand in for
-    // the cloud-only pixel differences checked above.
-    for (const char* stage : { "close_quarters", "king_of_the_hill", "turbulence", "movement_course" })
+    // the cloud-only pixel differences checked above. Close Quarters left
+    // this list when it became an interior under POL#16 (2026-11-14): its sky
+    // is drawn inside static windows and it has no drifting cloud to frame,
+    // so its former four-player sky composition has no subject.
+    for (const char* stage : { "king_of_the_hill", "turbulence", "movement_course" })
     {
         require(levels.contains(stage), "cloud context stage was absent from the manifest");
-        for (const int count : { 1, 4 })
-        {
-            if (count == 4 && std::string(stage) != "close_quarters") { continue; }
-            MatchSetup settings;
-            settings.set_player_count(count);
-            settings.set_stage(stage);
-            settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
-            settings.begin_input_claims(3);
-            for (int view = 1; view < count; ++view)
-            {
-                require(settings.claim_input_slot(view - 1), "cloud context input claim failed");
-            }
-            for (int view = 0; view < count; ++view)
-            {
-                settings.set_player_team(view, view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);
-                settings.set_player_weapon(view, WeaponType::sprayer);
-            }
-            app.viewport_manager()->set_layout(settings.screen_layout());
-            auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
-            const auto inputs = neutral_inputs();
-            settle(*level, inputs);
-            resize(app, *level, count == 1 ? Vector2I(1280, 720) : Vector2I(1920, 1080));
-            const auto compose_sky = [&]()
-            {
-                if (count != 4) { return; }
-                // Deliberately place the real roster above the platforms, to
-                // the right of Close Quarters cloud_4, so normal player-camera
-                // following shows that cloud at native 4P size clear of the
-                // roster. Repeat after advancing time to retain the
-                // composition. This is an art fixture, not a route or
-                // jump-reachability claim; no camera is replaced or edited.
-                // The 4P minimum world width (presentation camera, da041c60)
-                // shows 720 world units of height per 1080p pane, so with the
-                // camera_bounds top at y 4300 no sky cloud can project lower
-                // than (y - 4300) * 0.75; cloud_1/3/5 always sit within the top
-                // 120 px. cloud_4 (y 4551) is the framable big cloud.
-                for (int view = 0; view < count; ++view)
-                {
-                    require(level->place_player(view, Vector2F(
-                        3840.0f + 120.0f * static_cast<float>(view), 4470.0f)),
-                        "could not place the four-player sky composition fixture");
-                }
-                // Independent authored cloud_4 rectangle, widened by its
-                // complete 32-unit drift, must remain fully inside pane 1
-                // and below its HUD rather than merely intersecting a view.
-                const RectangleF cloud_span(3461, 4551, 320, 96);
-                const Viewport pane = app.viewport_manager()->player_viewport(0);
-                const Camera camera = level->view_camera(0);
-                require(camera.visible_rectangle(pane).contains(cloud_span),
-                    "four-player sky composition did not fully frame cloud_4's drift");
-                const RectangleF projected = camera.calculate_view_rectangle(cloud_span);
-                require(projected.y >= 120.0f && projected.bottom() <= pane.height - 100.0f,
-                    "four-player cloud composition placed cloud_4 behind HUD or pane edges");
-            };
-            const std::string stem = "drift-arena-" + std::string(stage) + '-' + std::to_string(count) +
-                "p" + (count == 4 ? "-sky-composition" : "");
-            compose_sky();
-            drift_context_capture(app, *level, output, stem + "-early");
-            for (int tick = 0; tick < 720; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
-            compose_sky();
-            drift_context_capture(app, *level, output, stem + "-later");
-        }
+        MatchSetup settings;
+        settings.set_player_count(1);
+        settings.set_stage(stage);
+        settings.set_screen_layout(ScreenLayout::one_player);
+        settings.begin_input_claims(3);
+        settings.set_player_team(0, PlayerTeam::a);
+        settings.set_player_weapon(0, WeaponType::sprayer);
+        app.viewport_manager()->set_layout(settings.screen_layout());
+        auto level = builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::off, MatchRandom());
+        const auto inputs = neutral_inputs();
+        settle(*level, inputs);
+        resize(app, *level, Vector2I(1280, 720));
+        const std::string stem = "drift-arena-" + std::string(stage) + "-1p";
+        drift_context_capture(app, *level, output, stem + "-early");
+        for (int tick = 0; tick < 720; ++tick) { level->update(acceptance::slot_seats(*level, inputs), dt); }
+        drift_context_capture(app, *level, output, stem + "-later");
     }
     require(records.good(), "cloud drift record write failed");
-    std::cout << "PASS drift-only actual D3D11 cloud Scene matrix and all four arena contexts; 4P Close Quarters uses explicit player placement for sky composition, no gameplay acceptance; human motion/readability review remains separate\n";
+    std::cout << "PASS drift-only actual D3D11 cloud Scene matrix and the three sky arena contexts, no gameplay acceptance; human motion/readability review remains separate\n";
 }

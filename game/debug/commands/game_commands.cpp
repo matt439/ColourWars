@@ -13,6 +13,7 @@
 #include "game/debug/capture/debug_screenshot.h"
 #include "game/game_data.h"
 #include "game/config/sound_groups.h"
+#include "game/objects/round_shot_shape.h"
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -182,6 +183,19 @@ void DebugDirectorImpl::register_commands()
 		{
 			this->intro_ = choice == "auto" ? std::string() : choice;
 			return DebugStatus::success("intro = " + choice + " (from the next build)");
+		}), DebugMenuTraits::of("match", Form::variable));
+
+	registry.add(std::make_unique<ChoiceVariable>("shots.round",
+		"ROAD#44: the collision shape of round shots (the bucket's ball, the grenade "
+		"and their drops) fired from now on: rectangle (shipped) or circle; restart for "
+		"a clean match, and a tape replays only under the shape it was recorded with",
+		"rectangle", std::vector<std::string>{ "rectangle", "circle" },
+		std::vector<std::pair<std::string, std::string>>{},
+		[] { return std::string(round_shot_shape() == RoundShotShape::circle ? "circle" : "rectangle"); },
+		[](const std::string& choice)
+		{
+			set_round_shot_shape(choice == "circle" ? RoundShotShape::circle : RoundShotShape::rectangle);
+			return DebugStatus::success("shots.round = " + choice + " (shots fired from now on)");
 		}), DebugMenuTraits::of("match", Form::variable));
 
 	registry.add_command("restart", "rebuild the match with its current settings (keeps the session)", {},

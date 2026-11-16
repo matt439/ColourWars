@@ -11,6 +11,8 @@ param(
     [ValidateSet('easy','normal','hard')][string[]] $Difficulty,
     [ValidateSet('grenade','sprinkler','wall')][string[]] $Subs,
     [string] $TuningPatch,
+    # ROAD#44: the collision shape every round shot is built with (default rectangle, as shipped).
+    [ValidateSet('rectangle','circle')][string] $RoundShots = 'rectangle',
     # Reuse a runner compiled once by the matrix driver.
     [string] $RunnerExecutable,
     [string] $Csv,
@@ -183,7 +185,7 @@ $receipt = Join-Path $run 'run-info.json'
 $result = [ordered]@{
     outcome='running'; started_utc=[DateTime]::UtcNow.ToString('o'); preset=$Preset
     stages=$Stage; seeds=$Seed; players=$Players; requested_duration=$Duration
-    tools=$Tools; subs=$Subs; tuning_patch=$TuningPatch; bot=$Bot; difficulty=$Difficulty; csv=$csvPath; paint_csv=$paintPath; executable=$exe
+    tools=$Tools; subs=$Subs; tuning_patch=$TuningPatch; round_shots=$RoundShots; bot=$Bot; difficulty=$Difficulty; csv=$csvPath; paint_csv=$paintPath; executable=$exe
     main_schema=3; main_columns=101; paint_schema=1; paint_columns=29
     publication_convention='companion-first-main-last-completion-marker'; joint_physical_atomicity=$false
     device_free=$true; human_acceptance=$false; failure=$null
@@ -206,6 +208,7 @@ try {
     if ($Bot -eq 'match') { $arguments += @('--difficulty',(($Difficulty | ForEach-Object { $_.ToLowerInvariant() }) -join ',')) }
     if ($Subs) { $arguments += @('--subs', (($Subs | ForEach-Object { $_.ToLowerInvariant() }) -join ',')) }
     if ($TuningPatch) { $arguments += @('--tuning-patch', $TuningPatch) }
+    $arguments += @('--round-shots', $RoundShots.ToLowerInvariant())
     $result.arguments=$arguments
     $result.input_pins=@((Get-Pin (Join-Path $content 'tuning.json')),(Get-Pin (Join-Path $content 'presentation.json')),
         (Get-Pin (Join-Path $content 'manifest.json')),(Get-Pin (Join-Path $build 'generated/build-info.txt')),

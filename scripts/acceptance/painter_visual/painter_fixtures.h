@@ -559,7 +559,7 @@
 
     std::vector<float> opening_style(const OpeningPresentation& p)
     {
-        static_assert(field_count<OpeningPresentation>() == 34, "opening_style: add the new OpeningPresentation field");
+        static_assert(field_count<OpeningPresentation>() == 35, "opening_style: add the new OpeningPresentation field");
         static_assert(field_count<MonitorArtPresentation>() == 10, "opening_style: add the new MonitorArtPresentation field");
         static_assert(field_count<SilhouetteArtPresentation>() == 5, "opening_style: add the new SilhouetteArtPresentation field");
         static_assert(field_count<CursorArtPresentation>() == 7, "opening_style: add the new CursorArtPresentation field");
@@ -570,6 +570,9 @@
             p.sticky_notes, p.stickers, p.scribble, p.coffee, p.crack, p.silhouette, p.adult_height, p.child_height,
             p.cursor_size, p.preview_strength, p.figure_grey, p.percent_font, p.percent_height, p.face, p.sweat,
             p.hop, p.shake, p.slump);
+        static_assert(field_count<CrtTrialPresentation>() == 5);
+        add_styles(v, p.crt_trial.scanline_count, p.crt_trial.scanline_strength,
+            p.crt_trial.mask_strength, p.crt_trial.vignette, p.crt_trial.brightness);
         const auto& m = p.monitor_art;
         add_styles(v, m.ink, m.highlight, m.power_light, m.pen_width, m.corner_step, m.shadow_width, m.vent_area,
             m.vent_count, m.power_button, m.power_indicator);
@@ -634,7 +637,8 @@
         {
             if (a.pairs[i].key != b.pairs[i].key || a.pairs[i].label != b.pairs[i].label ||
                 a.pairs[i].colours.team_a != b.pairs[i].colours.team_a ||
-                a.pairs[i].colours.team_b != b.pairs[i].colours.team_b) { return false; }
+                a.pairs[i].colours.team_b != b.pairs[i].colours.team_b ||
+                a.pairs[i].in_random != b.pairs[i].in_random) { return false; }
         }
         return true;
     }

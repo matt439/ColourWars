@@ -93,9 +93,10 @@ namespace turbulence_slab_tools_acceptance
                 "Lower-approach input lost its non-random trial role");
             for (const auto& member : registered.GetObject())
             {
-                // The registered stage has since joined Random; the private input predates that.
+                // The registered stage has since joined Random and gained its
+                // POL#16 backdrop; the private input predates both.
                 const std::string name = member.name.GetString();
-                if (name == "display_name" || name == "include_in_random") { continue; }
+                if (name == "display_name" || name == "include_in_random" || name == "non_collision_objects") { continue; }
                 require(source.HasMember(member.name) && source[member.name] == member.value,
                     "Lower-approach input differs from the qualified stage outside its display name and Random role");
             }

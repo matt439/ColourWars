@@ -16,15 +16,15 @@ set(COLOURWARS_RUNTIME_ASSETS
     fonts/bowlby_one_144.spritefont
     textures/sprite_sheet_1.dds
     textures/sprite_sheet_1.json
-    textures/painter.dds
+    textures/painter.png
     textures/painter.json
-    textures/menu_paint.dds
+    textures/menu_paint.png
     textures/menu_paint.json
-    textures/weapon_paint.dds
+    textures/weapon_paint.png
     textures/weapon_paint.json
-    textures/paint_fx.dds
+    textures/paint_fx.png
     textures/paint_fx.json
-    textures/terrain.dds
+    textures/terrain.png
     textures/terrain.json
     levels/king_of_the_hill.json
     levels/turbulence.json

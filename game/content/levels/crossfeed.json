@@ -637,6 +637,45 @@
             "colour": "WHITE"
         },
         {
+            "name": "cf_pencil_cup",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cf_pencil_cup",
+            "rectangle": {
+                "x": 136,
+                "y": 680,
+                "width": 160,
+                "height": 288
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "cf_paint_tube",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cf_paint_tube",
+            "rectangle": {
+                "x": 856,
+                "y": 688,
+                "width": 128,
+                "height": 256
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "cf_palette",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cf_palette",
+            "rectangle": {
+                "x": 3136,
+                "y": 712,
+                "width": 384,
+                "height": 256
+            },
+            "colour": "WHITE"
+        },
+        {
             "name": "hill_a",
             "type": "Visual",
             "sheet_name": "terrain",

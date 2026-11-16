@@ -264,10 +264,13 @@ time (`-Parallel 4`), and every event runs every case: `crossfeed`,
 checked iterators, and `-SkipSlowDebug` leaves them out of a local Debug run,
 but a pull request runs them because its merge is not built again. Startup is
 required in both presets. The runner has no GPU: its Microsoft Basic Render
-Driver is a software rasteriser that DXGI does not flag, so the engine reports
-it as hardware and Release starts on it (`ENG#34`). If that ever changes, CI
-fails rather than skips. Content failures, crashes and other startup errors fail
-CI. Release also builds and inspects the redistributable ZIP.
+Driver is now correctly classified as software (`ENG#34`). Movement feedback
+uses the explicitly named hosted-software functional lane in both presets,
+with all pixel assertions intact; it is not hardware or performance acceptance.
+The default probe remains hardware-only, and pin/renderer changes require
+separate strict Debug/Release real-GPU qualification before merge (see
+[adapter evidence policy](docs/crt-trial.md#adapter-evidence-policy)). Content
+failures, crashes and other startup errors fail CI, never skip. Release also builds and inspects the redistributable ZIP.
 
 [nightly.yml](.github/workflows/nightly.yml) runs what is too long or too exact
 for a pull request on `master`'s tip: the painter (plain matrix and leaves, through
@@ -279,7 +282,11 @@ cannot fail.
 It is not a required check. A scheduled failure opens or updates one issue,
 `Nightly sweep failed`, which the next green scheduled night closes, and its Configure keeps `master`'s vcpkg cache current for
 pull requests. `scripts/check-painter/hosted-known-failures.txt` names any leaf
-whose exact pins hold only on a real GPU. The runner has no audio endpoint, so
+whose exact pins hold only on a real GPU. Painter and paint-fx use `-HostedSoftwareFunctional`: every existing pixel
+assertion runs on a truthfully classified D3D11 software adapter. This is not
+hardware acceptance; the default local probes still require hardware. The
+scheduled issue lifecycle records functional CI health only, not hardware
+qualification. The runner has no audio endpoint, so
 the job sets `COLOURWARS_NO_AUDIO_ENDPOINT` and the painter skips its music flow,
 which therefore runs only on a machine with one.
 

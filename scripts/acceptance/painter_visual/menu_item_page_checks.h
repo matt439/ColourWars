@@ -6,8 +6,8 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
     constexpr std::array<const wchar_t*, 10> legacy{ L"Play", L"Options", L"Credits", L"Exit",
         L"Resolution", L"Fullscreen", L"Team palette", L"Controls / audio", L"Apply", L"Back" };
     static_assert(legacy.size() == static_cast<size_t>(MenuItem::single_match));
-    constexpr std::array<MenuItem, 8> options_items{ MenuItem::resolution, MenuItem::fullscreen, MenuItem::vsync,
-        MenuItem::team_palette, MenuItem::controls_audio, MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
+    constexpr std::array<MenuItem, 9> options_items{ MenuItem::resolution, MenuItem::fullscreen, MenuItem::vsync,
+        MenuItem::team_palette, MenuItem::controls_audio, MenuItem::graphics, MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
     using ItemLabels = std::array<std::wstring, static_cast<size_t>(MenuItem::count)>;
     const Presentation original = presentation;
     ItemLabels defaults = original.menu_text().items;

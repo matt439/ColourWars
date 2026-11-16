@@ -1509,8 +1509,13 @@ pass, including extracted Release with its published bank and optional-bank
 fallback under a system-only PATH. The 53-file ZIP contains all 26 reviewed
 runtime assets byte for byte and excludes source, debug and private audio.
 
-Accepted-arena artwork remains `POL#16`: the arenas were settled on 2026-11-05,
-so it no longer waits on selection, but it stays deferred as a later art pass.
+Accepted-arena artwork is `POL#16`. On 2026-11-14 each of the four Random arenas
+was given its own backdrop in the approved kit
+([per-arena backdrops](polish-terrain.md#per-arena-backdrops-pol16-2026-11-14)):
+a printworks for Press Tower, a loading yard for Slab Yard, a paint warehouse
+for Close Quarters and painter's-kit landmarks for Crossfeed. What remains is
+the author's look at them on a real GPU and in play; the later UI art pass
+stays deferred.
 The human presentation/readability review it would have folded in (`POL#24`)
 was waived on 2026-11-05 and not performed. The current material/prop kit is
 approved for this development stage.
@@ -1826,9 +1831,9 @@ marker's cross, recovery the team bead, sniper readiness the aim marker's
 chevron, low paint the blinking tag and tank (`POL#38`), the closing seconds the
 closing-clock card, a lost pad the **Controller lost** pause, and the countdown
 and count-in their cards. Time up rests on the camera's pull back and the clock
-running out, which is `REV#41`; the shooter's side of a hit is `REV#37`. Both
-are cited there, not filed again, and the declined `player.hit_confirm`
-(`POL#23`) is not reopened.
+running out, and the author declined a time-up banner (`REV#41`, 2026-11-13);
+the shooter's side of a hit is `REV#37`. Both are cited there, not filed again,
+and the declined `player.hit_confirm` (`POL#23`) is not reopened.
 
 Two cases have no counterpart, and the audit files neither: sniper readiness
 for a seat that has turned **Aim marker** Off, which removes the one readiness
@@ -1883,19 +1888,40 @@ one has looked at the game with this question in mind.
 
 ### Reduce effects default from Windows (`POL#49`)
 
-**Decision for the author (2026-11-12).** Should a fresh save start with Reduce
-effects On when Windows' **Animation effects** setting is off? Today the shared
-default is fixed: `bool reduce_effects = false;`
-([play_settings.h](../game/config/play_settings.h) line 95), and nothing in
-`game/` or `editor/` reads the Windows setting (`SystemParametersInfo` with
-`SPI_GETCLIENTAREAANIMATION`). Engine `REV#60` on Labrador's `master` proposes
-a read-only reduced-motion fact and notes that no native client reads the
-setting today; a read here would also be the client exhibit that row lacks.
+**Done 2026-11-13.** The author said yes: a fresh save starts with Reduce
+effects On when Windows' **Animation effects** setting is off. The authored
+default is still `bool reduce_effects = false;`
+([play_settings.h](../game/config/play_settings.h)).
 
-If yes: read the setting only where `Save` writes its own defaults on first run,
-so an existing save keeps its value and nothing seeds a save. The per-seat
-comfort switch keeps following the shared value. Add a check to the save case.
-If no, record the answer here and close the row.
+`initial_reduce_effects_from_system()` in
+[initial_display.cpp](../game/config/initial_display.cpp) reads
+`SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, ...)` beside the
+monitor-fit read, before the save loads, and [main.cpp](../game/main.cpp)
+passes the answer to `Save`'s first-run constructor with the display defaults.
+Only a missing save without a legacy file uses it, so the first-run write
+records it and `SettingsSession` sees it at once. Existing, legacy-imported and
+unreadable saves keep their own value or the authored default, and a failed
+query keeps Off. Nothing seeds a save, and the per-seat comfort switches keep
+following Shared. This was done before the save loads, not in
+`fit_initial_window`, because the read needs no window and a second write would
+add nothing.
+
+The `initial_display` acceptance case checks both Windows values, a fresh save
+written and reread with each, the seats following Shared, an existing save and
+an unreadable one keeping their value, and the live read against the probe's
+own query. It never sets the system value. `check-startup.ps1` checks that the
+real executable's fresh save holds the negation of the runner's setting, in
+both presets, whichever way the setting is. No probe that pins the default Off
+calls the read, so a runner with animations off moves no pin. The startup-check
+scripts that launch the real executable with a fresh save would start it with
+Reduce effects On on such a runner. That changes presentation only, never the
+simulation or a seeded replay.
+
+The read is the client exhibit for engine `REV#60` on Labrador's `master`,
+which proposes a read-only reduced-motion fact and notes that no native client
+reads the setting. The note for that row, citing this call, is drafted in the
+[engine reports](review/engine-reports.md#what-is-deliberately-not-here) and
+waits for the author to post it.
 
 ### Help players read the tool and the fight
 
@@ -2070,6 +2096,17 @@ paint underfoot was answered "yes".
     ignore enemy paint;
   - towards a recheck of Press Tower or the Turbulence slab trial if their
     crossings, chosen with underfoot off, stop working with it on.
+
+  **No live enemy-paint cue (`REV#10`, deferred 2026-11-13).** The
+  [2026-11-10 review](review/2026-11-10-project-review.md#paint-underfoot-has-no-player-cue-rev10)
+  asked for a cue when enemy paint slows a player or stops their refill. The
+  author deferred it; the HOW-TO-PLAY line and the Movement Course refill lesson
+  stand as the explanation. Trigger: attended play or a player report shows
+  people cannot tell why they slowed or stopped refilling. That is the first
+  reopen condition above, and it reopens one choice under it: a cue, or milder
+  amounts (or "no"). If a cue is chosen, the visual tank state comes first,
+  because a step sound would be a new cue hook and so new work under the audio
+  rule.
 - **A special charged by painting. Answered 2026-11-03: no special.** There are
   five primaries and nothing else, and that absence is deliberate. Splatoon uses
   a special to answer "why keep painting when nobody is here"; here the arenas
@@ -2091,6 +2128,28 @@ paint underfoot was answered "yes".
 
 The decision may be "no" for any of them. Record it here either way, so a later
 gap list reads the absence as intended.
+
+**Further Splatoon borrowings declined, 2026-11-13.** The 2026-11-10 review
+named three more. The author declined each; they are recorded beside the
+answers above for the same reason.
+
+- **No burst of the attacker's paint on elimination (`REV#50`).** An
+  elimination keeps its team-coloured fragments
+  ([combat feedback](polish-combat-feedback.md)) and paints nothing
+  ([record](review/2026-11-10-project-review.md#elimination-leaves-a-burst-of-attacker-paint-rev50)).
+  Reopen if attended play shows kills feel unrewarded.
+- **No own-colour wall slide or wall jump (`REV#51`).** Walls stay paintable
+  surface, not a traversal mechanic
+  ([record](review/2026-11-10-project-review.md#own-colour-wall-climb-or-wall-jump-rev51)).
+  Reopen if a new arena is themed on vertical traversal, and then only as a
+  default-off trial on that arena.
+- **No Sniper charge (`REV#57`).** The Sniper stays as accepted on 2026-11-05:
+  a 1.0 s interval, a 2000 jet and the shooter-only `sniper.ready` cue. No
+  problem with it has been observed, and the attended play that could show one
+  was waived
+  ([record](review/2026-11-10-project-review.md#sniper-charge-or-readable-warning-rev57)).
+  This also removes the splatling option from `ROAD#13`'s Q1. Reopen if attended
+  play shows Sniper eliminations reading as unfair.
 
 **Paint-underfoot prototype (`POL#36`, implemented 2026-10-26; shipped on
 2026-11-05).** It was built as a default-off trial for an isolated Debug match

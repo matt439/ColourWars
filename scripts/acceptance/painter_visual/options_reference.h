@@ -21,8 +21,8 @@ struct OptionsReference
 };
 
 // The independent shipped Options labels, in row order.
-constexpr std::array<const wchar_t*, 8> options_reference_labels{ L"Resolution", L"Fullscreen", L"Vsync",
-    L"Team palette", L"Controls / audio", L"Restore defaults", L"Apply", L"Back" };
+constexpr std::array<const wchar_t*, 9> options_reference_labels{ L"Resolution", L"Fullscreen", L"Vsync",
+    L"Team palette", L"Controls / audio", L"Graphics", L"Restore defaults", L"Apply", L"Back" };
 
 // A settled independent Options frame. Call after motion has settled, or while
 // Reduce effects suppresses it. It uses the independently implemented
@@ -41,7 +41,7 @@ Frame options_reference(Application& app, const Canvas& canvas, const Presentati
     require(row_height > 0.0f && value_width > 0.0f,
         "Independent Options has no fitted value budget");
     std::vector<std::unique_ptr<UiText>> text;
-    std::array<RectangleF, 8> bounds;
+    std::array<RectangleF, 9> bounds;
     const auto add = [&](const std::wstring& copy, const std::string& font,
         const Vector2F& position, const Colour& colour)
     {
@@ -58,7 +58,7 @@ Frame options_reference(Application& app, const Canvas& canvas, const Presentati
         require(paper.contains(caption->bounds()) && heading->bounds().right() <= caption->bounds().x,
             "Independent Options heading and palette timing caption overlap or escape paper");
     }
-    for (int index = 0; index < 8; ++index)
+    for (int index = 0; index < 9; ++index)
     {
         const Vector2F position = look.options_position +
             Vector2F(0.0f, look.options_spacing.y * static_cast<float>(index));

@@ -62,6 +62,15 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 			}
 			// Continue so other players can act in the same frame.
 		}
+		else if (inputs[i].action == MenuInputAction::proceed && team == PlayerTeam::none)
+        {
+            // A fresh row has no team. Do not silently ignore Ready or choose
+            // for the player: explain the input that can satisfy the gate.
+            this->play_wave(this->error_sound_);
+            this->team_choice_warning_player_ = i;
+            this->both_teams_needed_->set_text(this->text().connection.team_choice_required);
+            this->both_teams_needed_->set_hidden(false);
+        }
 		else if (inputs[i].action == MenuInputAction::proceed &&
 			team != PlayerTeam::none)
 		{
@@ -71,6 +80,8 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 				!this->roster_is_playable())
 			{
 				this->play_wave(this->error_sound_);
+                this->team_choice_warning_player_ = -1;
+                this->both_teams_needed_->set_text(this->text().connection.teams_required);
 				this->both_teams_needed_->set_hidden(false);
 			}
 			else
@@ -112,8 +123,13 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 			}
 		}
 	}
-	// Clear the warning as soon as the roster becomes playable.
-	if (this->roster_is_playable())
+	// A playable roster does not satisfy a neutral player's Ready press.
+    // Retain that row's instruction until it chooses a team, including solo
+    // play and rosters whose other rows already cover both teams.
+    const bool choice_resolved = this->team_choice_warning_player_ >= 0 &&
+        this->selected_team(this->team_choice_warning_player_) != PlayerTeam::none;
+    if (choice_resolved) { this->team_choice_warning_player_ = -1; }
+    if (choice_resolved || (this->team_choice_warning_player_ < 0 && this->roster_is_playable()))
 	{
 		this->both_teams_needed_->set_hidden(true);
 	}
@@ -138,6 +154,7 @@ void MainMenuTeamSelect::shuffle_teams()
 		this->team_focus_.set_focused(i, this->team_widget(i, shuffled.player_team(i)));
 		this->confirmations_[i] = ConfirmationState::unconfirmed;
 	}
+	this->team_choice_warning_player_ = -1;
 	this->both_teams_needed_->set_hidden(true);
 	this->play_wave(this->direction_sound_);
 	this->update_team_select_visuals();

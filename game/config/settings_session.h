@@ -39,6 +39,8 @@ public:
 	// Takes effective preferences. A worn slot's per-pad values go to its
 	// profile; the slot's own values stay as they were.
 	bool set_play_settings_and_save(const PlaySettings& settings);
+	// Restart-only graphics preference: failed writes restore the prior saved choice.
+	bool set_crt_monitor_and_save(bool enabled);
 	// Like play preferences, a valid choice becomes active before the write;
 	// failure keeps it active and leaves the previous disk file intact. A
 	// worn slot's buttons go to its profile.

@@ -84,7 +84,11 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         const int staged_row = page == 0 ? 3 : page == 1 ? 4 : 1;
         for (int row = 0; row < staged_row; ++row) { tap(Key::down); }
         tap(Key::right);
-        const int remaining = page == 0 ? 3 : page == 1 ? 5 : 7;
+        // Independent Options order: Resolution, Fullscreen, VSync, Team
+        // palette, Controls/audio, Graphics, Restore defaults, Apply, Back.
+        // Stage must finish on Apply, not the preceding Restore defaults row.
+        constexpr int options_apply_row = 7;
+        const int remaining = page == 0 ? options_apply_row - staged_row : page == 1 ? 5 : 7;
         for (int row = 0; row < remaining; ++row) { tap(Key::down); }
     };
     const auto apply = [&](int page)

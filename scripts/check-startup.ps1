@@ -94,6 +94,16 @@ namespace ColourWars
         private static extern bool GetMonitorInfo(IntPtr monitor, ref MonitorInfo info);
         [DllImport("user32.dll")]
         private static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
+        [DllImport("user32.dll")]
+        private static extern bool SystemParametersInfoW(uint action, uint param, out bool value, uint winIni);
+
+        // Windows' Animation effects (SPI_GETCLIENTAREAANIMATION, 0x1042). A
+        // failed query reads as on, which is what the game assumes too.
+        public static bool ClientAreaAnimation()
+        {
+            bool value;
+            return !SystemParametersInfoW(0x1042, 0, out value, 0) || value;
+        }
 
         public static bool FitsMonitor(IntPtr window, bool fullscreen)
         {
@@ -178,6 +188,7 @@ $result = [ordered]@{
     dpi_awareness = $null
     stages_folder_created = $false
     first_window_fits_monitor = $false
+    first_save_reduce_effects_follows_windows = $false
     locale = $(if ($Locale) { $Locale } else { 'base' })
     audio_expectation = $(if ($RequireAudio) { 'published-bank' } elseif ($RequireNoAudio) { 'missing-bank' } else { 'optional' })
     outcome = 'failed'
@@ -263,6 +274,12 @@ try {
         throw 'The fresh-save window extends beyond its monitor work area (or fullscreen monitor).'
     }
     $result.first_window_fits_monitor = $true
+    # POL#49: a fresh save starts with Reduce effects On exactly when Windows'
+    # Animation effects is off.
+    if ([bool]$initialSave.reduce_effects -ne (-not [ColourWars.StartupWindow]::ClientAreaAnimation())) {
+        throw "The fresh save's reduce_effects ($($initialSave.reduce_effects)) does not follow Windows' Animation effects."
+    }
+    $result.first_save_reduce_effects_follows_windows = $true
     [string]$stderr = Read-StartupError
     Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context startup -RequireAudio:$RequireAudio -RequireNoAudio:$RequireNoAudio -AllowedPattern $userStageRefusal
     if ($userStageRefusal -and @($stderr -split '\r?\n' | Where-Object { $_ -match $userStageRefusal }).Count -ne 1) {

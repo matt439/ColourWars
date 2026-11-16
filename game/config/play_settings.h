@@ -98,6 +98,7 @@ struct PlaySettings
 	bool view_shake = true;
 	bool aim_marker = true;
 	bool reduce_effects = false;
+	bool crt_monitor = false; // Saved graphics choice; applies on the next launch.
 	std::array<StickSettings, input_slots::pad_count> sticks{};
 	std::array<bool, input_slots::pad_count> pad_rumble = input_slots::per_pad(true);
 	std::array<SeatComfort, input_slots::pad_count> pad_comfort{};

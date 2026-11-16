@@ -81,6 +81,8 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         };
         label(L"Make your mark.", style.heading_font, look.home_position, art.ink);
         label(L"Paint the arena. Claim the win.", style.detail_font, look.home_subtitle_position, art.ink);
+        label(L"How to play", style.item_font, look.home_help_position, art.ink);
+        label(L"Play a bot", style.detail_font, look.home_quick_position, art.ink);
         const std::array<std::wstring, 4> actions{ L"Play", L"Options", L"Credits", L"Exit" };
         std::array<RectangleF, 4> rows;
         for (int row = 0; row < 4; ++row)
@@ -183,7 +185,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
             tap(GamepadButton::b); still("back-action-" + std::to_string(selected), selected, true);
             // No direction is sent: the newly restored cursor must reopen its origin.
             tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]); tick();
-            if (selected == 1) { for (int row = 0; row < 7; ++row) { tap(GamepadButton::dpad_down); } }
+            if (selected == 1) { for (int row = 0; row < 8; ++row) { tap(GamepadButton::dpad_down); } }
             tap(GamepadButton::a); still("back-row-" + std::to_string(selected), selected, true);
             tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]);
             tap(GamepadButton::b); still("repeat-back-" + std::to_string(selected), selected);
@@ -212,7 +214,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
             if (selected != 0)
             {
                 tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]); tick();
-                if (selected == 1) { for (int row = 0; row < 7; ++row) { tap(GamepadButton::dpad_down); } }
+                if (selected == 1) { for (int row = 0; row < 8; ++row) { tap(GamepadButton::dpad_down); } }
                 tap(GamepadButton::a); still("repeat-back-row-" + std::to_string(selected), selected);
             }
         }

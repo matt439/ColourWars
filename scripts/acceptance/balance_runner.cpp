@@ -16,7 +16,7 @@ int wmain(int argc, wchar_t* argv[])
         {
             std::cerr << "usage: balance_runner <content> [--stage id ... --seed uint32 ... "
                 "--players 1..4 --duration 0.05..600 --tools sprayer,sniper,... "
-                "--bot match|paint|chase|walk|jump|idle|skirmish --subs grenade,wall,... --tuning-patch file --csv new-file [--paint-csv new-file]]\n"
+                "--bot match|paint|chase|walk|jump|idle|skirmish --subs grenade,wall,... --tuning-patch file --round-shots rectangle|circle --csv new-file [--paint-csv new-file]]\n"
                 "With <content> only, run bounded device-free self-tests.\n";
             return 2;
         }
@@ -36,6 +36,8 @@ int wmain(int argc, wchar_t* argv[])
         outputs.publish();
         // REV#37's shooter-pane tally, one line per 1v1 seat; never in the CSVs.
         for (const balance_runner::Result& result : results) { std::cout << balance_runner::hit_view_lines(result); }
+        // ROAD#44's round-shot contact tally, four lines per match; never in the CSVs.
+        for (const balance_runner::Result& result : results) { std::cout << balance_runner::shot_contacts_lines(result); }
         std::cout << "PASS balance runner: " << results.size() << " completed matches; "
             << labrador::path_to_utf8(options.csv) << '\n'
             << "Paint companion: " << labrador::path_to_utf8(options.paint_csv) << '\n'

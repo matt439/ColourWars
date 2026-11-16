@@ -97,16 +97,16 @@ Anywhere (a match or any menu page):
 | hold pad **Back+Start** for 0.5 s | open / close the debug menu from any pad |
 | **`** | open / close the console |
 
-F1 (per-player debug overlay), Escape (pause menu) and the gameplay keys are
-unchanged. A small strip in the bottom-right corner names any non-default state
+F1 (per-player debug overlay, Debug builds only since `REV#13`), Escape
+(pause menu) and the gameplay keys are unchanged. A small strip in the bottom-right corner names any non-default state
 (`x0.25`, `PAUSED`, `feedback off`, `GOD`, `AMMO INF`,
 `BOTS 3x paint`, `REC drive 240`, `PLAY drive 240/600`, `PLAY drive done
 (MATCH)`, `TUNED 2`, `ovl collision camera paint`, and `SCRIPT
 review.cfg:14 wait 30 updates (12 left)` while a script waits). It keeps clear
 of the paint and perf panels and, during the countdown, of the opening cards.
 
-**The chord and its buttons.** Back alone still toggles a player's F1 overlay
-and Start alone still pauses. Once a pad has both down, both buttons belong to
+**The chord and its buttons.** In Debug, Back alone still toggles a player's
+F1 overlay (in Release it does nothing) and Start alone still pauses. Once a pad has both down, both buttons belong to
 the chord until both are up again: their releases neither toggle the overlay
 nor pause the match or a menu, and that holds for a chord let go before
 0.5 s. On a menu page only the chording pad's presses are forgotten; the
@@ -161,6 +161,7 @@ running.
 | `ammo <normal\|inf>` | `inf` keeps every tank full (variable; `infinite` too) |
 | `restart` | rebuild the current match, same session |
 | `menu` | leave the match for the main menu |
+| `shots.round <rectangle\|circle>` | the collision shape of round shots (the bucket's ball, the grenade and their drops) fired from now on: `rectangle` as shipped, or the [`ROAD#44`](feature-roadmap.md#circle-shapes-for-round-projectiles-road44) circle the author is deciding on. A shot keeps the shape it was fired with, so `restart` for a clean match. Not a tuning value and not saved; it goes back to `rectangle` when the game closes (variable) |
 | `timescale [0.25-4\|next\|prev]` | match speed (variable). Updates are stepped at the fixed 1/60 s (0.25 = one update every fourth frame, 2 = two per frame), never stretched; audio is not scaled. `next`/`prev` walk 0.25, 0.5, 1, 2, 4. No argument prints it |
 | `pause [on\|off\|toggle]` | pause or resume the match clock |
 | `step [n]` | pause, then run n single updates (1-600), one per frame; closes the console so they run |
@@ -205,7 +206,7 @@ fonts). On an error it prints the reason and keeps the current values. In a matc
 with the new values; in a menu it says the values apply to the next match, and
 they are swapped in before that match is built. Reloading replaces a live
 `feedback` toggle with the file's value, and says so. Rebuilding with new tuning
-can still fail during play (for example a player knocked out of bounds); the
+can still fail during play (for example a value the simulation cannot use); the
 console only guarantees that the *commands* themselves never throw into the game.
 
 ## Unwinding
@@ -302,10 +303,11 @@ names are lower-case letters, digits and `_`, unique, not `spawn_a`/`spawn_b`,
 and inside the level's out-of-bounds rectangle; a bad one fails at startup like
 any other level content bug.
 
-The Movement Course names ten, each with its feet 5 units above its surface:
+The Movement Course names eleven, each with its feet 5 units above its surface:
 `drop_through`, `short_gap`, `long_gap`, `running_gap` (680 units of run-up),
 `low_ceiling`, `steps`, `high_step`, `recovery_lane`, `workshop` (beside the
-left spawn) and `refill` (on the right runway).
+left spawn), `refill` (on the right runway) and `sub` (at the right
+runway's far end).
 Each also carries the lesson untimed solo practice shows there
 ([polish-movement-course.md](polish-movement-course.md#practice-workshop));
 `goto` lands inside it. A developer start (`+stage movement_course`) is the
@@ -388,7 +390,7 @@ the live F9 feedback toggle.
 |---|---|---|
 | live | `tuning.input.*`, `tuning.player.*` (not `size`), `tuning.match.sounds.*.volume`, `tuning.weapons.*`, `tuning.projectiles.*` (except sizes and mist `spread_step`), `tuning.match.opening.*`, `tuning.match.reveal.*`, `presentation.movement_feedback/respawn_redraw/opening/debug_overlay/hud/camera.*` | at once |
 | new shots | `tuning.projectiles.*.size`, `*.collision_size`, `tuning.projectiles.mist.spread_step` | the next projectile |
-| rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, `presentation.figure.slips.two_slip_chance` and `.band.*` (the band is baked art: a tuned band that no longer fits the face frames draws the authored face), anything else not listed | the next build: `restart`, or add `restart` to the tune |
+| rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, `presentation.figure.slips.slip_chance`, `.two_slip_chance` and `.band.*` (the band is baked art: a tuned band that no longer fits the face frames draws the authored face), anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
 **Colours.** These fifty-eight existing string fields are supported; numeric path
@@ -604,6 +606,18 @@ check below verifies exposed program adoption/restoration in one retained
 two-player Crossfeed full-opening checkpoint at 1280x720. Direct-Monitor alpha
 evidence remains separate; other story phases/rosters and human story acceptance
 remain open.
+
+The covered-paper control is the 16x16 rectangle `(480,242)` with literal RGB
+`C9D3D9`. The former `(392,242)` site was covered by POL#16's authored
+`cf_paint_tube`, causing nightly issue #88. On 2026-11-15 the retained local
+RTX 5080 frame reproduced the first mismatch at `(394,242)` (`8E958C`).
+Removing only that decorative object from staged test content made the original
+witness pass; production content was restored before validating the new site.
+This is a fixture correction, not a renderer workaround: patch size, literal
+colour, whole-frame repeats/restoration, mask-only delta and six-readback budget
+are unchanged. Native failures now retain the first mismatching coordinate,
+expected/observed RGB and patch rectangle as JSON as well as stderr, so the
+nightly's existing JSON/log upload preserves actionable evidence without PPMs.
 
 Monitor borrows `opening.glass_colour` at four writes: initial glass, palette
 repaint, picker panel and close-button face. Each premultiplies base RGBA once,
@@ -1046,17 +1060,21 @@ command or shipping bot policy.
   `weapon all random` are re-seeded for each plan, so every one draws the
   same, and the Debug bots take the seed directly.
 
-`+seed 7` before `+stage` makes the whole launch repeat. `seed` alone prints
+`+seed 7` before `+stage` makes the whole launch repeat. A recording
+replays bit for bit only under the `shots.round` shape it was recorded with
+(rectangle unless set), since every round shot is built with it. `seed` alone prints
 it, and `status` shows the running round's seed (`round seed n`): `seed n` then
 `restart` builds that round again, palette and persona included.
 
 With the save's palette on Random, the round seed picks the pair. Against the
 shipped `presentation.json` list (`blue_orange`, `pink_green`, `blue_yellow`,
-`purple_gold`, `red_azure`, `magenta_forest`):
+`purple_gold`, `red_azure`, `magenta_forest`), whose Random pool is
+`blue_orange`, `purple_gold`, `red_azure` and `magenta_forest` (`pink_green` and
+`blue_yellow` say `in_random: false`, `REV#14`):
 
 | `+seed` | Team pair |
 |---|---|
-| 0 | `blue_yellow` |
+| 0 | `purple_gold` |
 | 1 | `blue_orange` |
 | 2 | `magenta_forest` |
 | 3 | `red_azure` |
@@ -1064,12 +1082,13 @@ shipped `presentation.json` list (`blue_orange`, `pink_green`, `blue_yellow`,
 | 5 | `magenta_forest` |
 | 6 | `blue_orange` |
 | 7 | `purple_gold` |
-| 211 | `pink_green` |
-| 4242 | `pink_green` |
+| 211 | `blue_orange` |
+| 4242 | `blue_orange` |
 
 The draw is plain integer arithmetic, so the table holds on any build, and the
-`team_palette` acceptance case pins it. Adding or reordering a pair moves it:
-update this table and that pin together.
+`team_palette` acceptance case pins it. A draw that lands on a pair out of
+Random redraws from the same stream, so adding or reordering a pair, or changing
+an `in_random` flag, moves it: update this table and that pin together.
 
 **`record [name] [updates]`** records every seat's input on every logic step,
 from a fresh build: in a match it restarts the match (and closes the console),
@@ -1325,8 +1344,9 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
   a shown window that is not in front, for an unattended review such as
   `ColourWars.exe +script.background 1 +stage movement_course +bot all paint +wait 300 +quit`.
   Physical input stays out, music and SFX are muted without touching the saved
-  preferences, and rumble stays at zero; hidden, minimised and power-suspended
-  windows still stop the script. Turning it off while inactive restores the
+  preferences, and rumble stays at zero. A lost pad is noticed only on return,
+  because the engine reads no pad while the window is inactive. Hidden,
+  minimised and power-suspended windows still stop the script. Turning it off while inactive restores the
   normal hold. How it was qualified is in
   [the work record](debug-console-record.md#background-script-work-dbg6).
 - **Typed or bound.** A typed or bound `exec` closes the console and starts on
@@ -1351,7 +1371,7 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 | Script | Does |
 |---|---|
 | `review_feedback_ab` | the movement feedback A/B below |
-| `station_tour` | one player on the Movement Course, god and the collision overlay on, a screenshot at each of the ten stations and both spawns, into `screens\station-tour-<time>\` |
+| `station_tour` | one player on the Movement Course, god and the collision overlay on, a screenshot at each of the eleven stations and both spawns, into `screens\station-tour-<time>\` |
 | `bots_4p` | four paint bots on Close Quarters, seed 7, 20 match seconds at x4, then a paused screenshot with the paint overlay and the checksum, into `screens\bots-4p-<time>\` |
 | `feedback_ab_pass`, `feedback_ab_shot` | helpers of `review_feedback_ab` |
 | `review_finish_details` | the [finish-review detail A/B](polish-plan.md#finish-review-detail-ab-script-pol43): seed 7, four seats on Crossfeed (seat 4 idle with a sprayer), frames `t07s`, `t17s` and `t54s` with every presentation detail on, then once per `enabled` flag off (`tune ... off restart`), each with its checksum, into `screens\review-finish-details-<time>\`; ends with `tune.reset presentation`. `scripts/check-finish-details.ps1` runs it and requires equal checksums across the eleven variants |
@@ -1546,8 +1566,7 @@ The per-player F1/Back text also uses the current measured draw-to-draw interval
 1/60. The main thread snapshots it once before view workers start; every pane
 reads the same value and drawing advances no clock. The first draw, focus/menu
 gaps, screenshot redraws and other unavailable timing show `render fps: n/a`.
-Release has no developer timing service, so its legacy F1/Back text also shows
-`n/a`, without inferring a frame rate from the simulation step. This closes
+The panel is Debug-only (`REV#13`), so Release never shows it. This closes
 `GAP#5.4`; visible, uncontended qualification and the hardware baseline remain
 `POL#25`.
 
@@ -1618,8 +1637,8 @@ as the game. In Release:
 
 - `+` arguments are ignored; if any are present, one line goes to stderr:
   `developer arguments ignored: Release build`. Without them nothing is printed.
-- The grave key, F2-F9, F11 and the pad chord do nothing (pad Back still
-  toggles F1, Start still pauses). There is no debug clock: `GameLevel::update`
+- The grave key, F1-F9, F11, pad Back and the pad chord do nothing (Start
+  still pauses). There is no debug clock: `GameLevel::update`
   runs its own `step_match` (one `Level::update` through the shipping
   instant-replay recorder) once a frame, because the director's step hooks are
   inline and answer one step with no developer seat filter. No script, bind,
@@ -1627,6 +1646,22 @@ as the game. In Release:
   F10 does nothing either; like a lone Alt, it no longer enters the system
   menu loop, because the engine treats both as plain keys
   ([engine report 11](review/engine-reports.md#11-f10-and-a-lone-alt-belong-to-the-system-menu-with-no-opt-out--accepted-narrowed-0f3b283)).
+- The per-player F1/Back text is a developer tool and does not appear
+  (`REV#13`, taken by the author on 2026-11-13 and landed the same day;
+  [record](review/2026-11-10-project-review.md#developer-text-panel-ships-in-release-rev13)).
+  `fixed_action_bindings()` binds `GameAction::debug` to F1 and pad Back only
+  under `COLOURWARS_DEV_TOOLS`, so in Release the action has no source and
+  `PlayerInputData::toggle_debug` is always false. The draw path,
+  `Player::showing_debug_` and the input field stay (always off), so no class
+  layout depends on the gate, and F1 stays outside the rebinding domain in both
+  builds. The Controls help, `presentation.json`, `qps-ploc.json` and the
+  README carry no "Debug" row any more; this page is the panel's only
+  documentation. The `action_bindings` and `input_bindings` probes check the
+  binding in each build (F1 and Back toggle in Debug, nothing in Release), and
+  the `ControlsMenuOnly` painter leaf was re-qualified on MattPC in Debug and
+  Release against the shorter help (Debug `42c7d2d1304f48fc9662a2de71162f59`, Release
+  `2b76f2e339b44c78a380ce156f00498a`; StickSettingsOnly and KeyboardJumpOnly
+  also pass in both).
 - What does ship, by design, so no class layout depends on `_DEBUG`: the
   `DebugPageTarget` interface and `DebugMatchTarget` with its three bases,
   `DebugMatchView`, `DebugMatchControl` and `DebugMatchEdits` (their RTTI names

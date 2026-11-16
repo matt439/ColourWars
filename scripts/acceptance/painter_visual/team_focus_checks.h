@@ -11,7 +11,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     const StageCatalog stage_catalog = acceptance::catalog_of(levels, stages, { "movement_course" }); data.set_stage_catalog(&stage_catalog); data.set_tuning(&tuning); data.set_presentation(&presentation);
     MenuInput input(app.gamepads(), app.keyboard(), &tuning); MatchSetup settings, initial;
     MenuContext context(&data, &input, &settings); StateContext& stack = app;
-    bool closed = false, warning = false; int ticks = 0, captures = 0, records_written = 0;
+    bool closed = false, warning = false, choice_warning = false; int ticks = 0, captures = 0, records_written = 0;
     std::wstring expected_title = L"Team Select";
     std::vector<PlayerTeam> teams; std::vector<bool> ready;
     struct RestoreTeamFocus
@@ -73,7 +73,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         for (int seat = 1; seat < count; ++seat) { require(settings.claim_input_slot(slots[static_cast<size_t>(seat)]), "Team focus claim failed"); }
         settings.set_stage("movement_course"); settings.set_duration(73.0f); settings.set_best_of(3);
         settings.set_screen_layout(players_layout(count));
-        teams.clear(); ready.assign(static_cast<size_t>(count), false); warning = closed = false;
+        teams.clear(); ready.assign(static_cast<size_t>(count), false); warning = choice_warning = closed = false;
         for (int seat = 0; seat < count; ++seat)
         {
             teams.push_back(one_team || seat % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);
@@ -146,7 +146,8 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         }
         const colourwars::UiTextDropShadow title("independent-team-focus-title", expected_title, style.heading_font,
             position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
-        const colourwars::UiTextDropShadow message("independent-team-focus-warning", L"Both teams need a player", style.detail_font,
+        const colourwars::UiTextDropShadow message("independent-team-focus-warning",
+            choice_warning ? L"Choose a team with Left/Right, then Ready." : L"Both teams need a player", style.detail_font,
             look.team_warning_position, app.render_resources(), art.ink, Colour{}, style.detail_shadow_offset);
         list.set_filter(TextureFilter::linear); title.draw(list);
         for (const auto& label : labels) { label->draw(list); }
@@ -176,7 +177,13 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         // Lettering and its fonts are captured when widgets are constructed.
         check(title.bounds(), stem + "-title");
         for (size_t seat = 0; seat < labels.size(); ++seat) { check(labels[seat]->bounds(), stem + "-label" + std::to_string(seat)); }
-        RectangleF warning_bounds = message.bounds(); warning_bounds.inflate(Vector2F(2.0f)); check(warning_bounds, stem + "-warning");
+        // Always inspect both messages' full footprint, including after the
+        // longer choice instruction clears. A stale tail must not escape the oracle.
+        const colourwars::UiTextDropShadow choice_message("independent-team-focus-choice-bounds",
+            L"Choose a team with Left/Right, then Ready.", style.detail_font,
+            look.team_warning_position, app.render_resources(), art.ink, Colour{}, style.detail_shadow_offset);
+        RectangleF warning_bounds = RectangleF::union_of(message.bounds(), choice_message.bounds());
+        warning_bounds.inflate(Vector2F(2.0f)); check(warning_bounds, stem + "-warning");
         if (capture) { require(captures < 8, "Team focus exceeded eight compact crops");
             camera.calculate_view_rectangle(evidence);
             save(foreground_crop(actual, pixel_bounds(evidence), 0), output / (stem + "-detail.ppm")); ++captures; }
@@ -193,8 +200,8 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             open(count); compare("initial", {}, size.x == 1280 || count == 4);
             tap(0, GamepadButton::dpad_left); compare("A-left-endpoint");
             tap(0, GamepadButton::dpad_right); teams[0] = PlayerTeam::none; compare("A-to-none", { inset });
-            tap(0, GamepadButton::a); compare("none-confirm-refused", { inset });
-            tap(0, GamepadButton::dpad_right); teams[0] = PlayerTeam::b; compare("none-to-B", { inset });
+            tap(0, GamepadButton::a); warning = choice_warning = true; compare("none-confirm-refused", { inset });
+            tap(0, GamepadButton::dpad_right); teams[0] = PlayerTeam::b; warning = choice_warning = false; compare("none-to-B", { inset });
             tap(0, GamepadButton::dpad_right); compare("B-right-endpoint", { inset });
             tap(0, GamepadButton::dpad_left); teams[0] = PlayerTeam::none; compare("B-to-none", { inset });
             tap(0, GamepadButton::dpad_left); teams[0] = PlayerTeam::a; tick(settle); compare("none-to-A-rest");

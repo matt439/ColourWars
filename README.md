@@ -7,15 +7,10 @@ arena, and a scoreboard that counts painted surface rather than kills.
 
 ## Play
 
-1. Get `ColourWars-<version>-windows-x64.zip` from the
-   [releases page](https://github.com/matt439/ColourWars/releases) when a
-   release is listed. Until the first release, a signed-in GitHub account can
-   download the `ColourWars-windows-x64` artifact from a passing
-   [pull-request CI run](https://github.com/matt439/ColourWars/actions/workflows/ci.yml?query=event%3Apull_request+is%3Asuccess):
-   open a run and look under **Artifacts** at the bottom of its summary. The
-   artifact download wraps the game ZIP in another ZIP. Only runs that built
-   the game have one, and GitHub deletes it after 14 days. If none is
-   available, follow [Easy build](docs/development.md#easy-build).
+1. Download `ColourWars-0.1.0-windows-x64.zip` from the
+   [v0.1.0 release](https://github.com/matt439/ColourWars/releases/tag/v0.1.0).
+   Later versions appear on the
+   [releases page](https://github.com/matt439/ColourWars/releases).
 2. Right-click the game ZIP and choose **Extract All**. Running the game from
    inside the ZIP doesn't work.
 3. Open the extracted folder and run `ColourWars.exe`. If Windows says
@@ -45,7 +40,8 @@ into an Easy, Normal or Hard bot with **Left/Right**. Choose **1 Player** for
 solo practice.
 
 New? Select **Single Match > 1 Player > Movement Course** for lesson cards on
-moving, jumping, dropping through platforms and refilling your paint.
+moving, jumping, dropping through platforms, refilling your paint and using
+your sub.
 
 Choose teams, a tool and a sub weapon for each player, then an arena. Random
 uses Crossfeed, Press Tower, Close Quarters and Slab Yard, which Stage Select
@@ -82,7 +78,6 @@ rebinding pages.
 | Sub | Right bumper (RB) | Right mouse button |
 | Drop through a platform | Left stick down | S or Down |
 | Pause/resume | Start | Escape |
-| Debug overlay | Back/View | F1 |
 | Menu navigation | Left stick or D-pad | Arrow keys or WASD |
 | Menu confirm | A | Enter, Space or left click |
 | Menu back | B | Escape, Backspace or right click |
@@ -116,6 +111,12 @@ the pad's label on Join, Team, Weapon, Pause and Results wherever the longer
 label fits.
 Profile edits save immediately. Other settings pages use **Apply** to save
 and **Back** to discard unapplied changes.
+
+Options > **Graphics** offers **CRT monitor (restart)**, Off by default.
+Apply saves the next launch; restart to add texture only to the opening and
+result monitor glass. Gameplay and score text stay clear. **Reduce effects**
+suppresses the texture. The Graphics page separately shows this launch's state;
+Back discards unapplied changes and a failed save leaves the next launch unchanged.
 
 Options > **Team palette** offers Random or a fixed pair. Purple/gold,
 red/azure and magenta/forest are checked under protan, deutan and tritan
@@ -160,7 +161,9 @@ back to player count to choose a new roster.
   `build-info.txt` from beside the executable and, if it was saved,
   `%LOCALAPPDATA%\ColourWars\last-error.log`. That short report records build
   and failure categories; it does not contain the message, so include the
-  copied dialog too. For a build failure, attach the build log instead.
+  copied dialog too. If the game closes with no dialog at all, the same file
+  may hold a short crash report; attach it. For a build failure, attach the
+  build log instead.
 
 The [player guide](docs/HOW-TO-PLAY.txt), included beside the executable,
 covers starting the game, controls, where settings are saved and removing it.
@@ -182,9 +185,9 @@ creates beside its save the first time it saves, or use the editor's
 **File > Save to My Stages**. They appear after the built-in stages, marked
 "Built by you." The game rereads the folder when Stage Select opens from the
 main menu. A refused file does not stop the others loading: press **Down**
-while browsing arenas to read scan issues. Enclose a stage with solid walls,
-floor and ceiling: a player who leaves the arena currently closes the game
-([Seal the arena](docs/level-format.md#coordinates-bounds-and-spawns)).
+while browsing arenas to read scan issues. A player who leaves a stage's
+bounds is eliminated and respawns, so a gap in the walls or floor is a pit
+([Leaving the arena](docs/level-format.md#coordinates-bounds-and-spawns)).
 
 The editor needs a source build and is not included in the game ZIP.
 See [the editor guide](docs/level-editor.md#play-the-level) for naming,

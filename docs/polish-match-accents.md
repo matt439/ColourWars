@@ -102,6 +102,10 @@ almost no paint in it. These are the first heavily painted four-player reveals:
 a full 240-second round, Debug build, D3D11 on MattPC's RTX 5080, on Crossfeed
 and on Close Quarters (the widest Random arena), each with seed 7
 (`purple_gold`) and seed 0 (`blue_yellow`), at 1280x720 and 1920x1080.
+These captures predate `REV#14`: Random now skips `blue_yellow`, and seed 0
+draws `purple_gold` under a Random save, so reproducing the `blue_yellow` runs
+needs the save's palette set to `blue_yellow` in Options. Their checksums are
+unchanged, because the match fingerprint hashes team indices, not colours.
 
 There is no window-size launch argument; the size came from the `resolution`
 of a save in an isolated profile (`LOCALAPPDATA` set for the game process
@@ -181,11 +185,14 @@ normal viewing distance. Bot paint is not human paint (a 95% painted Crossfeed
 is more than a played round is likely to leave), there is one seed per pair,
 and only two of the four window sizes were captured.
 
-A reveal-only minimum weight or body tint was not built. It is the author's
-call, and the objection in
+**Deferred, 2026-11-13: the strips are left as drawn.** The author kept the
+reveal's paint as it is, with no reveal-only minimum weight or body tint. The
+objection in
 [the record](review/2026-11-10-project-review.md#paint-strips-are-hairline-thin-in-the-reveal-rev38)
 stands: the reveal would then show a picture that differs from the one fought
-over.
+over, and the cards already carry the verdict. The trigger is the `POL#16` art
+pass changing how paint is drawn, or someone watching a real reveal at couch
+distance being unable to tell where the paint is.
 
 ## Paint under colour-vision simulation (`REV#34`)
 

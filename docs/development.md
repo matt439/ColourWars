@@ -251,7 +251,9 @@ the executable names it as plain `ColourWars.pdb`, with no build path. The PDB
 is never in the ZIP; the package check refuses one and checks that name. CI's
 Release leg uploads it as the `ColourWars-symbols-<commit>` artifact (14 days)
 and `publish` attaches it to the GitHub Release beside the ZIP, so a crash in a
-published build can be read against the PDB of the same tag. A debugger
+published build, and the `crash_rva` of its
+[crash record](failure-reporting.md#crash-record-rev63), can be read against
+the PDB of the same tag. A debugger
 matches the two by the signature in the executable, not by the file name alone:
 a PDB from any other build does not fit.
 

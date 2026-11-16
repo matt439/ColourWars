@@ -1,10 +1,12 @@
 #include "game/pch.h"
+#include "game/config/crt_trial.h"
 #include "engine/app/application.h"
 #include "engine/app/content_root.h"
 #include "engine/core/file_path.h"
 #include "game/config/content_validation.h"
 #include "game/states/menu_content_validation.h"
 #include "game/directory_consts.h"
+#include "game/crash_record.h"
 #include "game/fatal_report.h"
 #include "game/debug/debug_director.h"
 #include "game/game_data.h"
@@ -44,7 +46,16 @@ extern "C"
 
 int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 {
+	// Before anything can fail: an unhandled structured exception or a
+	// terminate on this thread still leaves a record (REV#63).
+	install_crash_handlers();
 	FailurePhase phase = FailurePhase::preferences;
+	// The crash record's phase moves with the caught one.
+	const auto advance = [&phase](FailurePhase next) noexcept
+	{
+		phase = next;
+		set_crash_phase(next);
+	};
 	try
 	{
 		// Seed the menus' Random picks (teams, weapon, stage) and the draw of
@@ -52,12 +63,17 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
 		const InitialDisplay initial_display = initial_display_for_primary_monitor();
-		Save save(initial_display.resolution, initial_display.fullscreen);
+		// Reduce effects from Windows applies only to a fresh save (POL#49).
+		Save save(initial_display.resolution, initial_display.fullscreen,
+			initial_reduce_effects_from_system());
 		save.load_save_file();
 		// This run's settings: the save's, with any worn profiles laid over them.
 		SettingsSession settings_session(save);
+        const crt_trial::Runtime crt_runtime(save.saved_play_settings().crt_monitor);
 
 		ApplicationOptions options;
+        // Four player views plus the crisp physical foreground, only for the trial.
+        options.view_capacity = crt_runtime.view_capacity();
 		options.window_class_name = L"ColourWarsWindowClass";
 		options.window_title = L"Colour Wars";
 		options.resolution = save.resolution();
@@ -81,7 +97,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		// are validated after the manifest loads; both objects outlive Application.
 		// Mutable only through the developer director (Debug `reload`, `tune`
 		// and `feedback`); GameData hands everything else const pointers.
-		phase = FailurePhase::definitions;
+		advance(FailurePhase::definitions);
 		GameTuning tuning(
 			resolved_under(content_root, tuning_path).c_str());
 
@@ -100,10 +116,11 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 
 		GameData data;
 
-		phase = FailurePhase::initialization;
+		advance(FailurePhase::initialization);
 		Application app(std::move(options));
 		app.initialize();
 		fit_initial_window(app, save);
+        crt_runtime.initialize(*app.renderer());
 
 		// Register the game's level resource kind. Level definitions survive device
 		// restoration, so this kind has no reload callback.
@@ -119,7 +136,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 			});
 
 		// Asset directories resolve relative to the manifest.
-		phase = FailurePhase::manifest;
+		advance(FailurePhase::manifest);
 		app.load_manifest(manifest_path);
 
 		// The player's own stages join after the manifest's, each checked on its
@@ -132,7 +149,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 
 		// Check every name, stage and authored string against the loaded assets
 		// before the first menu. The Debug `reload` command runs the same checks.
-		phase = FailurePhase::validation;
+		advance(FailurePhase::validation);
 		// A shipped stage's title is presentation.json's menu_text.stage_names,
 		// whose English must stay its level file's display_name; judged on the
 		// base file, whatever the run's locale.
@@ -149,6 +166,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		sound_groups::apply(*app.audio_resources(), settings_session.play_settings());
 
 		data.set_application(&app);
+        data.set_crt_runtime(&crt_runtime);
 		data.set_save(&save);
 		data.set_settings_session(&settings_session);
 		data.set_stage_catalog(&stage_catalog);
@@ -168,10 +186,10 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 				arguments.emplace_back(__wargv[i]);
 			}
 		}
-		phase = FailurePhase::launch;
+		advance(FailurePhase::launch);
 		debug.run_launch_arguments(arguments);
 
-		phase = FailurePhase::running;
+		advance(FailurePhase::running);
 		return app.run(std::make_unique<GameMenu>(&data, &user_stages));
 	}
 	catch (...)

@@ -407,12 +407,17 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     require(game->resume_remaining() == remaining, "Inactive resume count-in aged"); note("resume-countin-hard-gate");
     stack.notify_activation(true); finish_count();
     stack.notify_activation(false);
+    // The engine reads every pad disconnected while the window is inactive,
+    // so presence is checked on the first focused update, not in background.
     painter_scripted_pads::states[1].connected = false; tick();
-    require(stack.depth() == 3 && !app.gamepads()->connected(1),
-        "Absent occupied pad did not retain truthful presence and pause actual GameLevel");
-    frozen("Missing occupied pad lost match time in background"); note("missing-pad-real-pause");
+    require(stack.depth() == 2 && !app.gamepads()->connected(1),
+        "An inactive update acted on pad presence it cannot read");
+    note("missing-pad-not-judged-in-background");
+    stack.notify_activation(true); tick();
+    require(stack.depth() == 3, "Absent occupied pad did not pause actual GameLevel on return");
+    frozen("Missing occupied pad lost match time after return"); note("missing-pad-real-pause");
     painter_scripted_pads::states[1].connected = true; tick(0.0f);
-    stack.notify_activation(true); pad(GamepadButton::a, 1);
+    pad(GamepadButton::a, 1);
     require(stack.depth() == 2 && game->resume_remaining() > 0.0f,
         "Reconnected pause owner did not resume its actual menu");
     finish_count();

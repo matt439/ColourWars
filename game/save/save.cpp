@@ -241,6 +241,8 @@ namespace
             read_switch("view_shake", data.play.view_shake);
             read_switch("aim_marker", data.play.aim_marker);
             read_switch("reduce_effects", data.play.reduce_effects);
+            data.play.crt_monitor = false;
+            read_switch("crt_monitor", data.play.crt_monitor);
         }
 
         void write(SaveWriter& writer, const SaveData& data) const override
@@ -285,6 +287,8 @@ namespace
             writer.boolean(data.play.aim_marker);
             writer.key("reduce_effects");
             writer.boolean(data.play.reduce_effects);
+            writer.key("crt_monitor");
+            writer.boolean(data.play.crt_monitor);
         }
     };
 
@@ -437,7 +441,8 @@ SaveData Save::load_from_json(const char* json_path, int& saved_version) const
     }
     return data;
 }
-Save::Save(ScreenResolution initial_resolution, bool initial_fullscreen)
+Save::Save(ScreenResolution initial_resolution, bool initial_fullscreen,
+    bool initial_reduce_effects)
 {
     if (convert_resolution_to_ivec(initial_resolution).x <= 0)
     {
@@ -445,6 +450,7 @@ Save::Save(ScreenResolution initial_resolution, bool initial_fullscreen)
     }
     this->save_data_.resolution = initial_resolution;
     this->save_data_.fullscreen = initial_fullscreen;
+    this->save_data_.play.reduce_effects = initial_reduce_effects;
 }
 
 // Only a file that is not there is missing. One that is there but will not

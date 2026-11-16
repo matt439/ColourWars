@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/config/crt_trial.h"
 #include "game/objects/level.h"
 #include "game/config/presentation/presentation.h"
 #include "game/debug/debug_overlay_draw.h"
@@ -15,6 +16,7 @@ using namespace labrador;
 
 void Level::draw(Renderer& renderer) const
 {
+	crt_trial::clear(renderer, this->crt_runtime_);
 	if (this->intro_showing() || this->reveal_showing())
 	{
 		// The countdown's number and cards show in the picture as they do in the panes.

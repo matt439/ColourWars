@@ -97,9 +97,9 @@ namespace menu_text_acceptance
     struct HelpText { const char* key; const wchar_t* text; std::wstring MenuHelpText::* field; bool multiline; };
     constexpr HelpText help_text[]{
         { "controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: {pad_shoot}\n"
-            L"Jump: {pad_jump} (hold for height)\nPause: {pad_pause}    Sub: {pad_sub}\nDebug: Back / View\nKEYBOARD + MOUSE\n"
+            L"Jump: {pad_jump} (hold for height)\nPause: {pad_pause}    Sub: {pad_sub}\nKEYBOARD + MOUSE\n"
             L"Move: {left} / {right}    Drop: {drop} / Down\nAim: mouse cursor    Shoot: {shoot}\n"
-            L"Jump: {jump} (hold for height)\nPause: {pause}    Sub: {sub}\nDebug: F1\nMENUS\n"
+            L"Jump: {jump} (hold for height)\nPause: {pause}    Sub: {sub}\nMENUS\n"
             L"Navigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
             L"Direction only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\n"
             L"Pad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
@@ -186,7 +186,8 @@ namespace menu_text_acceptance
         { "pause_player_title", L"Pause Menu P{player}", &MenuConnectionText::pause_player_title },
         { "controller_lost", L"Controller lost", &MenuConnectionText::controller_lost },
         { "all_connected", L"All players connected.", &MenuConnectionText::all_connected },
-        { "teams_required", L"Both teams need a player", &MenuConnectionText::teams_required }
+        { "teams_required", L"Both teams need a player", &MenuConnectionText::teams_required },
+        { "team_choice_required", L"Choose a team with Left/Right, then Ready.", &MenuConnectionText::team_choice_required }
     };
     struct LabelText { const char* key; const wchar_t* text; std::wstring MenuLabelText::* field; };
     constexpr LabelText label_text[]{
@@ -409,7 +410,8 @@ namespace menu_text_acceptance
         { "keyboard_jump", L"Keyboard Keys" }, { "pad_buttons", L"Pad Buttons" }, { "rumble", L"Rumble" },
         { "watch_replay", L"Watch Replay" },
         { "profiles", L"Profiles" }, { "series_stage", L"Series stage" }, { "vsync", L"Vsync" },
-        { "variant", L"Variant" }, { "toggle_fire", L"Toggle fire" }
+        { "variant", L"Variant" }, { "toggle_fire", L"Toggle fire" },
+        { "graphics", L"Graphics" }, { "crt_monitor", L"CRT monitor (restart)" }, { "how_to_play", L"How to play" }
     };
 
     using World = acceptance::ContentWorld;
@@ -440,6 +442,14 @@ namespace menu_text_acceptance
             catch (const std::runtime_error& error)
             {
                 diagnostic = error.what();
+                // A value past float's range is refused by the engine's
+                // JsonValue::number before this reader runs; that refusal
+                // names the file and the value's JSON path, not the field label.
+                if (diagnostic.find(path.filename().string()) != std::string::npos &&
+                    diagnostic.find(" is out of range for a float") != std::string::npos)
+                {
+                    return;
+                }
                 contextual = diagnostic.find(path.filename().string()) != std::string::npos &&
                     diagnostic.find("menu_text") != std::string::npos;
                 size_t begin = 0;

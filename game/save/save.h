@@ -52,12 +52,15 @@ public:
 	// first free pad control), which is where older builds put it.
 	// 10 adds "toggle_fire" to each "pad_comfort" entry and each "profiles"
 	// entry; absent reads as false, hold to fire, as older builds played.
-	static constexpr int version = 10;
+	// 11 adds default-off restart-only CRT monitor preference.
+	static constexpr int version = 11;
 
 	Save() = default;
-	// Only a missing save without a legacy file uses these first-run display
-	// defaults. The shell chooses them from the monitor before loading.
-	Save(labrador::ScreenResolution initial_resolution, bool initial_fullscreen);
+	// Only a missing save without a legacy file uses these first-run defaults.
+	// The shell chooses the display from the monitor and the shared Reduce
+	// effects from Windows' Animation effects (POL#49) before loading.
+	Save(labrador::ScreenResolution initial_resolution, bool initial_fullscreen,
+		bool initial_reduce_effects = false);
 	// Reads the file, or a legacy one, or keeps the defaults. A SettingsSession
 	// borrowing this Save rereads through its own load_save_file instead.
 	void load_save_file();

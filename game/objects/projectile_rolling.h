@@ -33,9 +33,11 @@ public:
 
 	const labrador::Shape* shape() const override;
 protected:
-	// It never moves, so only moving surfaces passing through it are resolved.
+	// It never moves, so only moving surfaces passing through it are resolved;
+	// planted subs strike its volume after contacts, not here.
 	void resolve_travel(std::span<labrador::CollisionObject* const> objects,
-		std::optional<ProjectileTargetFlags> known) override;
+		std::optional<ProjectileTargetFlags> known,
+		std::span<Projectile* const> breakables) override;
 	// Enemies between owner and muzzle belong to its ordinary contacts.
 	bool launch_hits_players() const override { return false; }
 	// Touching bare geometry leaves it active to reach exposed paint.

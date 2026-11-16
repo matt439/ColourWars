@@ -219,6 +219,10 @@ struct MainMenuPresentation
 	float title_no_pad_y = 0.0f;
 	labrador::Vector2F home_position;
 	labrador::Vector2F home_subtitle_position;
+	labrador::Vector2F home_help_position;
+	labrador::Vector2F home_quick_position;
+	labrador::Vector2F quick_heading_position, quick_body_position;
+	labrador::Vector2F quick_start_position, quick_customise_position, quick_back_position;
 	labrador::Vector2F home_spacing;
 	std::string title_font;
 	std::string announcement_font;
@@ -310,6 +314,7 @@ struct ResultsMenuPresentation
 	labrador::Vector2F box_size = { 0.0f, 0.0f };
 	float session_score_y = 0.0f;
 	float session_result_y = 0.0f;
+	float score_basis_y = 0.0f;
 	// The stage record line, right-aligned to the score bar, below it.
 	float record_y = 0.0f;
 	labrador::Vector2F contribution_position = { 0.0f, 0.0f };

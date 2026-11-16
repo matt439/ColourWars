@@ -90,7 +90,7 @@ Level also borrows pointers to the Scene's players. Its
 borrows the stage's translating structures, team gates and projectile targets,
 collected once when the match's objects are admitted. Its
 [LevelBotWorld](../game/objects/level_bot_world.h) borrows the scene, the
-player vector and that part by reference, and answers the shipping bots'
+player vector, that part and the admitted shot list by reference, and answers the shipping bots'
 [BotWorld](../game/ai/bot_world.h) queries with values, so the bots never see
 a `Level` or a `Player`. Its [PaperCard](../game/objects/paper_card.h),
 [PracticeLessons](../game/objects/practice_lessons.h) and
@@ -213,12 +213,15 @@ colour and one frame, so it is not used here.
 5. [Level::update_level_logic](../game/objects/level.cpp) coordinates Scene's
    update/contact phases and the game's swept projectile movement.
    [Projectile::resolve_movement_contacts](../game/objects/projectile_contacts.cpp)
-   prevents a fast flying shot from passing through intervening cover. The
+   prevents a fast flying shot from passing through intervening cover. Level
+   also hands it the planted sprinklers and walls standing as the tick began
+   (its breakables), so an enemy shot whose path enters one before cover or a
+   player is spent on it there. The
    engine calls each party's `on_contact`, and
    [Collider](../game/objects/collider.h) dispatches it a second time on the
    other party's class; the engine does not know what painting means.
    After the tick's contacts, `Level::strike_breakables` spends each enemy
-   shot that reached a planted sprinkler or wall on it, and `Level::burst_projectiles`
+   roller whose unswept volume reached a planted sub on it, and `Level::burst_projectiles`
    asks each projectile for the drops it releases this tick
    (`Projectile::take_burst`: a retiring grenade's ring, a planted
    [ProjectileSprinkler](../game/objects/projectile_sprinkler.h)'s spray, a
@@ -455,8 +458,10 @@ below are what the sprinkler and the wall needed after the grenade.
    [ProjectilePlanted](../game/objects/projectile_planted.h) and overrides
    `spray(release)`, making each drop with `drop`; planting, the emptied mask,
    zero damage, the interval, the lifetime and the `hits` count are the
-   base's. `Level::strike_breakables` spends enemy shots on any projectile
-   whose `takes_hits` is true, and `Level::burst_projectiles` admits whatever
+   base's. Level hands every projectile whose `takes_hits` is true to the
+   swept movement step as a breakable (and `Level::strike_breakables` to the
+   roller's volume), so enemy shots are spent on it along their path, and
+   `Level::burst_projectiles` admits whatever
    `take_burst` returns like a fresh launch, so neither gains a case. Override
    `launch_origin` only for a sub set down beside the player rather than
    thrown from their centre, as [ProjectileWall](../game/objects/projectile_wall.h)
@@ -475,10 +480,13 @@ below are what the sprinkler and the wall needed after the grenade.
 7. Teach the bots. `MatchBot::sub_use` in
    [match_bot.cpp](../game/ai/match_bot.cpp) switches on the bot's own
    `SubType` to decide when and where to use it; a sub with no case there is
-   thrown at a visible enemy like the grenade. `BotWorld` tells a bot its own
-   sub and whether it is ready, but has no query for an enemy's planted sub,
-   so bots neither shoot an enemy sprinkler nor see a wall (`REV#21`). A new
-   planted sub inherits that gap.
+   thrown at a visible enemy like the grenade. A new planted sub overrides
+   `ProjectilePlanted::sub_type`, and `BotWorld::planted_subs` then lists it
+   while it stands; decide whether an enemy's blocks a bot's sight (as the
+   wall does, in `MatchBotDriver::clear_sight`) and whether bots shoot it (as
+   the sprinkler is shot, through `MatchBotObservation::enemy_sprinklers`),
+   which is `REV#21`'s answer in
+   [the roadmap](feature-roadmap.md#sub-weapons-road11).
 8. Extend the `sub_weapons` acceptance case
    ([sub_weapons.cpp](../scripts/acceptance/sub_weapons.cpp)), which names each
    sub and checks its tuning, its use and a seat that carries it, then build

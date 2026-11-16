@@ -38,7 +38,7 @@ enum class MenuItem
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
 	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
-	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, series_stage, vsync, variant, toggle_fire, count
+	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, series_stage, vsync, variant, toggle_fire, graphics, crt_monitor, how_to_play, count
 };
 
 struct MenuTitleText
@@ -95,6 +95,11 @@ struct ProfilesMenuText
 	std::wstring heading, profile, none, name, boost, worn_by, nobody, new_profile, delete_profile, help;
 	std::wstring idle_status, saved_status, editing_status, name_taken_status, full_status,
 		delete_confirm_status, deleted_status;
+};
+
+struct GraphicsMenuText
+{
+	std::wstring heading, help, pending, saved, saved_override, save_failed, launch_on, launch_off, override_on, override_off;
 };
 
 struct MenuStatusText
@@ -155,6 +160,8 @@ struct MenuResultsText
 	std::wstring single_match_heading;
 	std::wstring proceed;
 	std::wstring contribution_heading;
+	std::wstring share_basis;
+	std::wstring empty_share_basis;
 	std::wstring series_team_a_wins;
 	std::wstring series_team_b_wins;
 	std::wstring draw_no_win;
@@ -266,6 +273,7 @@ struct MenuConnectionText
 	std::wstring controller_lost;
 	std::wstring all_connected;
 	std::wstring teams_required;
+	std::wstring team_choice_required;
 };
 
 // Pad Sticks preview copy. Percent signs and authored line breaks are literal;
@@ -328,12 +336,15 @@ struct MenuText
 	std::wstring practice_tool;
 	MenuTitleText title;
 	std::wstring home_subtitle;
+	std::wstring learn_start, learn_controls, learn_finish, learn_next;
+    std::wstring quick_title, quick_body, quick_start, quick_customise;
 	std::wstring display_trial_countdown;
 	std::wstring options_palette_timing;
 	MenuHelpText help;
 	KeyboardKeysMenuText keyboard_jump;
 	PadButtonsMenuText pad_buttons;
 	ProfilesMenuText profiles;
+	GraphicsMenuText graphics;
 	MenuStatusText status;
 	MenuValueText values;
 	MenuConfirmationText confirmations;

@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/input/action_bindings.h"
 #include "game/config/tuning.h"
+#include "game/debug/dev_tools.h"
 
 using namespace labrador;
 
@@ -95,10 +96,16 @@ const ActionBindings& fixed_action_bindings()
 		// Escape and Down sit beside the keyboard's Pause and Drop choices.
 		desktop(GameAction::drop).keys = { drop_key_alternate };
 		desktop(GameAction::pause).keys = { pause_key };
-		desktop(GameAction::debug).keys = { debug_key };
 		desktop(GameAction::skip_intro).keys = { jump_key, pause_key, confirm_key };
 
-		pad(GameAction::debug).buttons = { GamepadButton::back };
+		// The per-player panel is a developer tool (REV#13): Release gives
+		// GameAction::debug no source, so toggle_debug never fires there. F1
+		// stays reserved in both builds; the rebinding domain never offers it.
+		if constexpr (dev_tools::enabled)
+		{
+			desktop(GameAction::debug).keys = { debug_key };
+			pad(GameAction::debug).buttons = { GamepadButton::back };
+		}
 		pad(GameAction::skip_intro).buttons =
 			{ GamepadButton::a, GamepadButton::b, GamepadButton::start };
 

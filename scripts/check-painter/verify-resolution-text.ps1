@@ -39,7 +39,7 @@ $painterSaveCounts = Get-PainterSaveCounts $run
             elseif ($caseIndex -eq 19) { $expectedWidth = 1600; $expectedHeight = 900 }
             elseif ($caseIndex -ge 20) { $expectedWidth = 1001; $expectedHeight = 777 }
             $expectedFocus = if ($caseIndex -in @(19, 20, 22, 24)) { '1' }
-                elseif ($caseIndex -eq 21) { '7' } elseif ($caseIndex -eq 23) { '5' } else { '0' }
+                elseif ($caseIndex -eq 21) { '8' } elseif ($caseIndex -eq 23) { '6' } else { '0' }
             $expectedPreset = if ($caseIndex -ge 19) { '3840x2160' } else { '1920x1080' }
             $expectedSavedFullscreen = if ($caseIndex -ge 19 -and $caseIndex -le 24) { 'true' } else { 'false' }
             $expectedPendingFullscreen = if ($caseIndex -in @(6, 7, 19, 22, 24)) { 'true' } else { 'false' }

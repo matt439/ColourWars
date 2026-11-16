@@ -402,6 +402,14 @@ The whole acceptance would be redrafted if the main audience turns out not to
 be a couch group, or if a planned release ships the editor, which changes P5,
 J4, F6 and F7 materially.
 
+**The editor stays source-only** (the author, 2026-11-13;
+[`REV#64`](review/2026-11-10-project-review.md#level-editor-is-not-shipped-to-players-rev64)).
+No release aim ships it, so P5 remains the game's author and J4, F6 and F7
+stand as written. `REV#65`'s Play Stage and Open My Stages commands
+([record](review/2026-11-10-project-review.md#editor-has-no-test-play-command-rev65))
+close with it. *Reopen* both when players other than the author ask to make
+stages, or when the author sets the editor as a release aim.
+
 ## Traceability and gap pass (`DES#2`)
 
 **Done 2026-11-03.** One pass over all 49 accepted stories, each mapped against
@@ -621,13 +629,13 @@ rest are developer tools.
   feedback; menu and match music, the results coda and cues; the error dialog
   and `last-error.log`;
   `HOW-TO-PLAY.txt`; the save's per-user location, migration and version
-  handling; the display held awake during a match; the hybrid-GPU request; and
-  the F1/Back per-player debug panel, which ships in Release.
+  handling; the display held awake during a match; and the hybrid-GPU request.
 - **Content and premise:** the backstory opening and reveal, the drawing
   mistakes and figure slips, the quiet character and idle drip, and the
   Paint.exe terrain, backdrops and crude shapes.
 - **Developer-only:** the Debug console, launch arguments, debug menu,
-  overlays, F-key controls, cheats, live tuning, scripted bots, seeded record
+  overlays, F-key controls, the F1/Back per-player debug panel (Debug-only
+  since `REV#13`), cheats, live tuning, scripted bots, seeded record
   and play, screenshots, scripts and binds; Release ignoring developer
   arguments; startup content validation; the silent-bank fallback; build
   identity; the balance and bot-trial harnesses; the level editor's core

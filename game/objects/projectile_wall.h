@@ -13,6 +13,8 @@ class ProjectileWall final : public ProjectilePlanted
 public:
 	using ProjectilePlanted::ProjectilePlanted;
 
+	SubType sub_type() const override { return SubType::wall; }
+
 	// Swept sideways from its owner at its own height, so cover between the
 	// two stops it there, and a tall wall is not swept through their floor.
 	labrador::Vector2F launch_origin(const labrador::Vector2F& owner_centre) const override;

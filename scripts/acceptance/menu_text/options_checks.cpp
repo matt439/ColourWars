@@ -322,9 +322,9 @@ namespace menu_text_acceptance
         const auto art = options_art(main);
         const auto back_size = world.render.measure_text(world.render.resolve_sprite_font(main.options_font),
             original.menu_text().item(MenuItem::back));
-        // Back is row 7. The shipped status sits below it, so the fixture
+        // Back is row 8. The shipped status sits below it, so the fixture
         // lifts the status into the padded row to test horizontal contact.
-        const float back_top = main.options_position.y + main.options_spacing.y * 7.0f;
+        const float back_top = main.options_position.y + main.options_spacing.y * 8.0f;
         const float overlapping_status_y = back_top + back_size.y / 2.0f;
         const float back_right = main.options_position.x + back_size.x + art.focus_padding.x;
         const auto back_edge = [&](rapidjson::Document& d)

@@ -316,6 +316,14 @@ void ResultsMenuInitial::init()
 			this->text_container_->add_child(this->details_.back().get());
 			return this->details_.back().get();
 		};
+    if (!end_info.one_team_only() && !this->session_.is_series())
+    {
+        // Team plates divide painted surface; contribution rows divide the
+        // entire arena. Explain that distinction without changing either score.
+        const bool empty = end_info.team_a_area == 0.0f && end_info.team_b_area == 0.0f;
+        center_text(*add_detail(empty ? this->text().results.empty_share_basis :
+            this->text().results.share_basis, Vector2F::zero, look.contribution_font), look.score_basis_y);
+    }
 	if (this->session_.is_series())
 	{
 		center_text(*add_detail(this->session_.score_string(this->text().results), Vector2F::zero, style.detail_font),

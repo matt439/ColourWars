@@ -27,6 +27,7 @@ add_library(colourwars_game STATIC
     config/locale.cpp
     config/initial_display.cpp
     fatal_report.cpp
+    crash_record.cpp
     game_data.cpp
     save/last_match_setup.cpp
     save/match_records.cpp
@@ -168,6 +169,8 @@ add_library(colourwars_game STATIC
     objects/projectile.cpp
     objects/projectile_contacts.cpp
     objects/projectile_ball.cpp
+    objects/round_shot_shape.cpp
+    objects/shot_retirements.cpp
     objects/projectile_builder.cpp
     objects/projectile_grenade.cpp
     objects/projectile_planted.cpp
@@ -211,6 +214,7 @@ add_library(colourwars_game STATIC
     states/resume_countdown.cpp
     states/match_suspension.cpp
     states/controls_settings_menu.cpp
+    states/graphics_settings_menu.cpp
     states/keyboard_key_capture.cpp
     states/keyboard_keys_menu.cpp
     states/loadout_choice.cpp
@@ -223,6 +227,8 @@ add_library(colourwars_game STATIC
     states/game_level_replay.cpp
     states/game_level_rumble.cpp
     states/main_menu.cpp
+    states/main_menu_how_to_play.cpp
+    states/main_menu_quick_match.cpp
     states/main_menu_credits.cpp
     states/main_menu_exit.cpp
     states/main_menu_mode_select.cpp

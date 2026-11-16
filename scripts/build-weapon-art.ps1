@@ -336,8 +336,10 @@ try {
     $legacy.Dispose();$atlas.Dispose()
 }
 
-# Premultiplied UNORM RGBA8, one mip; metadata-free PNG preserves authored bytes.
-& (Join-Path $repo 'game/art/tools/texconv.exe') (Join-Path $working 'weapon_paint.png') `
-    -pmalpha -m 1 -f R8G8B8A8_UNORM -y -o $textures
-if($LASTEXITCODE -ne 0){throw "texconv failed with exit code $LASTEXITCODE"}
-Write-Output 'Built 20 tool poses, complementary wet masks, two full-canvas supply strips, retained utility frames, DDS and source lineup.'
+# The runtime atlas is this PNG itself: straight alpha and metadata-free, so
+# the engine's PNG loader premultiplies exactly what was authored (PIN#3).
+# A DDS of the same name beside it would make the engine refuse the texture.
+Copy-Item -LiteralPath (Join-Path $working 'weapon_paint.png') -Destination (Join-Path $textures 'weapon_paint.png') -Force
+$staleDds = Join-Path $textures 'weapon_paint.dds'
+if (Test-Path -LiteralPath $staleDds) { Remove-Item -LiteralPath $staleDds }
+Write-Output 'Built 20 tool poses, complementary wet masks, two full-canvas supply strips, retained utility frames, runtime PNG and source lineup.'

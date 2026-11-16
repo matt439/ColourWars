@@ -37,7 +37,7 @@ class TeamColourTools
 public:
 	TeamColourTools() = default;
 
-	// One pair from the round's palette stream (HYG#39).
+	// One in_random pair from the round's palette stream (HYG#39, REV#14).
 	static TeamColour generate_random_team_colour(const TeamPalettePresentation& palette,
 		const MatchRandom& random);
 

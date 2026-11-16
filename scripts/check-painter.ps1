@@ -72,6 +72,11 @@ param(
     [switch] $ResultPercentageOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
+    [switch] $CrtTrialOnly,
+    [switch] $CrtSavedOn,
+    [switch] $GraphicsSettingsOnly,
+    [switch] $HowToPlayOnly,
+    [switch] $FirstMatchFlowOnly,
     [switch] $ClosingOnly,
     [switch] $SupplyOnly,
     [switch] $HudOnly,
@@ -114,6 +119,8 @@ param(
     [switch] $StageSummaryOnly,
     [switch] $StageCountsOnly,
     [switch] $StageScanOnly,
+    # Software-only functional evidence, never hardware acceptance.
+    [switch] $HostedSoftwareFunctional,
     [string] $OutputDirectory
 )
 
@@ -163,7 +170,7 @@ if ($CompileOnly -and $focusedSelectors.Count -gt 0) {
 }
 # Each entry is one compile: $true selects the scripted gamepad reader.
 $painterCompileVariants = if ($CompileOnly) { @($false, $true) } else {
-    @([bool]($RumbleOnly -or $KeyboardJumpOnly -or $StageSummaryOnly -or $WeaponTuneColoursOnly -or $MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $BotPlayersOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $StagePreviewBackgroundTuneColourOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly))
+    @([bool]($FirstMatchFlowOnly -or $HowToPlayOnly -or $RumbleOnly -or $KeyboardJumpOnly -or $StageSummaryOnly -or $WeaponTuneColoursOnly -or $MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $BotPlayersOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $StagePreviewBackgroundTuneColourOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly))
 }
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
@@ -213,7 +220,9 @@ $null = New-Item -ItemType Directory -Path $run, $captures, $working, $privatePr
 $saveDirectory = Join-Path $privateProfile 'ColourWars'
 $null = New-Item -ItemType Directory -Path $saveDirectory -Force
 $saveFixture = Join-Path $saveDirectory 'save_data.json'
-[IO.File]::WriteAllText($saveFixture, '{"aim_marker":false}', [Text.UTF8Encoding]::new($false))
+if ($CrtSavedOn -and -not ($CrtTrialOnly -or $FirstMatchFlowOnly)) { throw 'CrtSavedOn requires CrtTrialOnly or FirstMatchFlowOnly.' }
+$saveJson = if ($CrtSavedOn) { '{"aim_marker":false,"crt_monitor":true}' } else { '{"aim_marker":false}' }
+[IO.File]::WriteAllText($saveFixture, $saveJson, [Text.UTF8Encoding]::new($false))
 $saveFixtureHash = (Get-FileHash -LiteralPath $saveFixture).Hash
 
 foreach ($command in 'cmake', 'cl', 'git') {
@@ -323,9 +332,9 @@ try {
         'manifest.json', 'tuning.json', 'presentation.json', 'levels/movement_course.json',
         'levels/close_quarters.json', 'levels/king_of_the_hill.json', 'levels/turbulence.json', 'levels/crossfeed.json',
         'levels/press_tower.json', 'levels/turbulence_blockout.json',
-        'textures/painter.dds', 'textures/painter.json',
-        'textures/weapon_paint.dds', 'textures/weapon_paint.json',
-        'textures/terrain.dds', 'textures/terrain.json' |
+        'textures/painter.png', 'textures/painter.json',
+        'textures/weapon_paint.png', 'textures/weapon_paint.json',
+        'textures/terrain.png', 'textures/terrain.json' |
         ForEach-Object {
             [ordered]@{ path = $_; sha256 = (Get-FileHash -LiteralPath (Join-Path $gameDirectory $_)).Hash }
         }
@@ -333,6 +342,7 @@ try {
     $env:PATH = "$gameDirectory;$previousPath"
     $env:LOCALAPPDATA = $privateProfile
     $probeArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures)) + $probeArguments
+    if ($HostedSoftwareFunctional) { $probeArguments += '--hosted-software-functional' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -345,10 +355,21 @@ try {
         if ($timer.Elapsed.TotalSeconds -gt 2400) { throw 'Visual probe exceeded its 2400-second runtime limit.' }
     }
     $process.WaitForExit()
-    Get-Content -LiteralPath (Join-Path $run 'run.log') | ForEach-Object { Write-Host $_ }
+    $runLines = @(Get-Content -LiteralPath (Join-Path $run 'run.log'))
+    $runLines | ForEach-Object { Write-Host $_ }
+    $deviceLines = @($runLines | Where-Object { $_ -match '^DEVICE ' })
+    $result.device_line = $deviceLines -join '\n'
     if ($process.ExitCode -ne 0) {
         Get-Content -LiteralPath (Join-Path $run 'run.err') | ForEach-Object { Write-Host $_ }
         throw "Visual probe exited with $($process.ExitCode)."
+    }
+    $expectedKind = if ($HostedSoftwareFunctional) { 'software' } else { 'hardware' }
+    if ($deviceLines.Count -ne 1 -or $deviceLines[0] -notmatch "(?:^| )kind=$expectedKind(?: |$)") {
+        throw 'The probe did not report one adapter matching the requested policy.'
+    }
+    $policyLines = @($runLines | Where-Object { $_ -match '^ADAPTER_POLICY ' })
+    if ($policyLines.Count -ne 1 -or $policyLines[0] -cne "ADAPTER_POLICY $($result.adapter_policy)") {
+        throw 'The probe did not report the requested adapter policy.'
     }
     if ($PracticeReplayOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-practice-replay.ps1') }
     if ($RememberedSetupOnly) {
@@ -360,6 +381,7 @@ try {
         $env:PATH = "$gameDirectory;$previousPath"
         $env:LOCALAPPDATA = $privateProfile
         $readerArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures), 'remembered-setup-read')
+        if ($HostedSoftwareFunctional) { $readerArguments += '--hosted-software-functional' }
         try {
             $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
                 -WorkingDirectory $working -ArgumentList $readerArguments `
@@ -376,10 +398,21 @@ try {
             if ($readerTimer.Elapsed.TotalSeconds -gt 120) { throw 'Remembered setup reader exceeded its 120-second runtime limit.' }
         }
         $process.WaitForExit()
-        Get-Content -LiteralPath (Join-Path $run 'reader.log') | ForEach-Object { Write-Host $_ }
+        $runLines = @(Get-Content -LiteralPath (Join-Path $run 'reader.log'))
+        $runLines | ForEach-Object { Write-Host $_ }
+        $deviceLines = @($runLines | Where-Object { $_ -match '^DEVICE ' })
+        $result.device_line = $deviceLines -join '\n'
         if ($process.ExitCode -ne 0) {
             Get-Content -LiteralPath (Join-Path $run 'reader.err') | ForEach-Object { Write-Host $_ }
             throw "Remembered setup reader exited with $($process.ExitCode)."
+        }
+        $expectedKind = if ($HostedSoftwareFunctional) { 'software' } else { 'hardware' }
+        if ($deviceLines.Count -ne 1 -or $deviceLines[0] -notmatch "(?:^| )kind=$expectedKind(?: |$)") {
+            throw 'The probe did not report one adapter matching the requested policy.'
+        }
+        $policyLines = @($runLines | Where-Object { $_ -match '^ADAPTER_POLICY ' })
+        if ($policyLines.Count -ne 1 -or $policyLines[0] -cne "ADAPTER_POLICY $($result.adapter_policy)") {
+            throw 'The probe did not report the requested adapter policy.'
         }
         Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'reader.err')) -Context 'remembered setup reader'
         $result['process_relaunch'] = [ordered]@{

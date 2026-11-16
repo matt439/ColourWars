@@ -8,18 +8,21 @@ namespace labrador
     class Scene;
 }
 class Player;
+class Projectile;
 class LevelStructures;
 
 // A Level's world as its shipping bots see it (HYG#40). Every member is a
 // borrow from the owning Level, which never moves: the scene, its player
-// vector (indexed by roster participant, never resized) and its structures,
-// whose projectile targets are admitted after this is built. Reads go
-// through the borrows on each call, so nothing here is a copy.
+// vector (indexed by roster participant, never resized), its structures,
+// whose projectile targets are admitted after this is built, and its admitted
+// shots in scene order, which retire_projectiles prunes before anything is
+// destroyed, so no pointer there is dead. Reads go through the borrows on
+// each call, so nothing here is a copy.
 class LevelBotWorld final : public BotWorld
 {
 public:
     LevelBotWorld(const labrador::Scene& scene, const std::vector<Player*>& players,
-        const LevelStructures& structures);
+        const LevelStructures& structures, const std::vector<Projectile*>& projectiles);
     LevelBotWorld(const LevelBotWorld&) = delete;
     LevelBotWorld& operator=(const LevelBotWorld&) = delete;
     LevelBotWorld(LevelBotWorld&&) = delete;
@@ -34,6 +37,7 @@ public:
     std::vector<MatchBotSupport> supports(PlayerTeam permitted) const override;
     std::vector<MatchBotRamp> ramps() const override;
     std::optional<PlayerTeam> top_paint_team(labrador::Vector2F foot) const override;
+    std::vector<BotPlantedSub> planted_subs() const override;
     bool line_of_sight(labrador::Vector2F from, labrador::Vector2F to) const override;
     bool traversal_line_of_sight(labrador::Vector2F from, labrador::Vector2F to,
         PlayerTeam team) const override;
@@ -42,4 +46,5 @@ private:
     const labrador::Scene& scene_;
     const std::vector<Player*>& players_;
     const LevelStructures& structures_;
+    const std::vector<Projectile*>& projectiles_;
 };

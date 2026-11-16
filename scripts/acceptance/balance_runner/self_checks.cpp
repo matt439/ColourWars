@@ -337,6 +337,8 @@ namespace balance_runner
             { L"--duration", L"0.05x" }, { L"--tools", L"sprayer" },
             { L"--subs", L"grenade" }, { L"--subs", L"grenade,unknown" },
             { L"--subs", L"grenade,wall," }, { L"--tools", L"sprayer,random" }, { L"--bot", L"not_a_bot" },
+            { L"--round-shots", L"oval" }, { L"--round-shots", L"Circle" },
+            { L"--round-shots", L"circle", L"--round-shots", L"circle" },
             { L"--stage", L"crossfeed", L"--stage", L"crossfeed" },
             { L"--seed", L"0", L"--seed", L"0" },
             { L"--players", L"2", L"--players", L"2" }, { L"--unknown", L"value" }, { L"--duration" },
@@ -358,6 +360,10 @@ namespace balance_runner
             std::vector<BotDifficulty>{ BotDifficulty::normal, BotDifficulty::normal },
             "The match policy does not default every seat to Normal");
         refuses([&] { (void)parse_options(content, { L"--seed", L"1" }); }, "A CLI run without a CSV path was accepted");
+        require(parsed({}).round_shots == RoundShotShape::rectangle &&
+            parsed({ L"--round-shots", L"circle" }).round_shots == RoundShotShape::circle &&
+            parsed({ L"--round-shots", L"rectangle" }).round_shots == RoundShotShape::rectangle,
+            "--round-shots did not default to rectangle or parse its two shapes");
 
         Options short_match;
         short_match.content = content; short_match.duration = 1.0f; short_match.seeds = { 12345 };
@@ -411,6 +417,25 @@ namespace balance_runner
         require(std::count(views.begin(), views.end(), '\n') == 2 && views.starts_with("hit-view stage=crossfeed ") &&
             shipped_row.pane_height_pixels > 0.0f && shipped_row.pane_body_pixels > 0.0f,
             "A 1v1 row did not print its two shooter-pane hit-view lines");
+        // ROAD#44: four shot-contacts lines per row whatever the roster, the
+        // shape named, and a circle sweep leaves the shipped shape behind it,
+        // so the rectangle match after it repeats the first byte for byte.
+        const std::string contacts = shot_contacts_lines(shipped_row);
+        require(std::count(contacts.begin(), contacts.end(), '\n') == 4 &&
+            contacts.starts_with("shot-contacts stage=crossfeed seed=12345 shape=rectangle phase=flight kind=ball "),
+            "A row did not print its four rectangle shot-contacts lines");
+        Options circles = short_match;
+        circles.round_shots = RoundShotShape::circle;
+        circles.tools = { WeaponType::bucket, WeaponType::bucket };
+        circles.duration = 4.0f;
+        const std::vector<Result> circle_rows = run_sweep(circles);
+        require(round_shot_shape() == RoundShotShape::rectangle,
+            "A circle sweep left round shots built as circles");
+        result_invariants(circle_rows.front());
+        require(shot_contacts_lines(circle_rows.front()).find(" shape=circle phase=launch kind=grenade ") != std::string::npos,
+            "A circle row did not name its shape");
+        require(csv_text(run_sweep(short_match)) == csv_text(first),
+            "A rectangle match after a circle sweep did not repeat the first");
 
         Options sweep = zero;
         sweep.duration = 0.25f; sweep.seeds = { 0, std::numeric_limits<std::uint32_t>::max() };
@@ -437,7 +462,7 @@ namespace balance_runner
         require(!evidence.empty(), "Cannot allocate a fresh private CSV receipt directory");
         publication_checks(evidence, rows);
         resolved_alias_check(content);
-        std::cout << "PASS balance runner: 9 real CPU matches (5 under the shipping MatchBotDriver), nontrivial active state, whole-row seeded byte identity, "
+        std::cout << "PASS balance runner: 11 real CPU matches (5 under the shipping MatchBotDriver, 1 with circle round shots), nontrivial active state, whole-row seeded byte identity, "
             "2/4-player device-less owner mapping, 0/uint32-max seeds, bounded Crossfeed sweep, CLI refusals, "
             "exact Unicode paired-file publication, no-overwrite and actual partial-failure preservation. "
             "Metrics are held paint, pre-step full-shot empty readiness, sampled death edges and validated enemy credit; "

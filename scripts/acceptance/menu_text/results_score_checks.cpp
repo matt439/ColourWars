@@ -196,7 +196,13 @@ namespace menu_text_acceptance
             // The preserved countdown0..15 check already owns these shared-font
             // missing digits before the new score's exhaustive resource loop.
             variants.rejects("display_trial_countdown", [&](rapidjson::Document& d)
-                { d["menu_style"]["fonts"]["detail"].SetString(name.c_str(), d.GetAllocator()); }, &world);
+                {
+                    d["menu_style"]["fonts"]["detail"].SetString(name.c_str(), d.GetAllocator());
+                    // The starter review shares detail font and names P1/P2.
+                    // Keep it digit-free here so generated countdown digits,
+                    // not unrelated static roster copy, own this refusal.
+                    d["menu_text"]["quick_match"]["body"].SetString("Fit {duration}");
+                }, &world);
         }
         variants.rejects("results.series_score", [](rapidjson::Document& d)
         {

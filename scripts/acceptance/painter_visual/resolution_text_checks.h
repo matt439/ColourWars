@@ -3,6 +3,10 @@
 void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
+    // Independent shipped row positions: Graphics sits between Controls and
+    // Restore defaults. Keep the full ornament comparison on these actions,
+    // not the old eight-row page's Graphics/Apply positions.
+    constexpr int restore_defaults_row = 6, back_row = 8;
     const Presentation original = presentation;
     const MatchTuning original_match = tuning.match();
     require(!app.fullscreen(), "Resolution text probe requires its ordinary hidden windowed application");
@@ -148,10 +152,10 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         RectangleF focus = focused == 0 ? metrics.row :
             RectangleF::union_of(fullscreen_label.bounds(), fullscreen_value.bounds());
         std::unique_ptr<UiText> extra;
-        if (focused == 5 || focused == 7)
+        if (focused == restore_defaults_row || focused == back_row)
         {
             extra = std::make_unique<UiText>("independent-resolution-extra-focus",
-                focused == 5 ? L"Restore defaults" : L"Back", font,
+                focused == restore_defaults_row ? L"Restore defaults" : L"Back", font,
                 position + Vector2F(0.0f, look.options_spacing.y * static_cast<float>(focused)),
                 app.render_resources(), art.focus_ink);
             focus = extra->bounds();
@@ -211,7 +215,7 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
                 ") local_delta=(" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << ")\n";
             throw std::runtime_error("Actual resolution/fullscreen rows differ from the independent complete fitted fixture");
         }
-        if (focused == 5 || focused == 7)
+        if (focused == restore_defaults_row || focused == back_row)
         {
             RectangleF bounds = measured.focus_ornament; bounds.inflate(2.0f);
             const RectangleI extra_area = project(bounds);
@@ -313,9 +317,9 @@ void resolution_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     compare("fullscreen-retained-size", next, L"Next real studio display pixels: 1600x900.", 1, true);
     presentation = original; tap(Key::right);
     compare("pending-off-disabled", next, L"Next real studio display pixels: 1600x900.", 1, false);
-    tap(Key::up); compare("disabled-skip-back", next, L"Next real studio display pixels: 1600x900.", 7, false);
+    tap(Key::up); compare("disabled-skip-back", next, L"Next real studio display pixels: 1600x900.", back_row, false);
     tap(Key::up); tap(Key::up); tap(Key::enter);
-    compare("fullscreen-defaults-refresh", next, L"Next real studio display pixels: 1001x777.", 5, false);
+    compare("fullscreen-defaults-refresh", next, L"Next real studio display pixels: 1001x777.", restore_defaults_row, false);
     open(); compare("fullscreen-reopened-client", original, L"1001x777", 1, true);
     seed(ScreenResolution::s_3840_2160, false, "3840x2160"); open();
     compare("metadata-windowed-preset", original, L"3840x2160", 0, false);

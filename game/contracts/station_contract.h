@@ -51,15 +51,15 @@ namespace station_contract
         seen.push_back(name);
     }
 
-    // A player built outside out_of_bounds stops the match on its first tick.
+    // A player built outside out_of_bounds is eliminated on its first tick.
     inline void validate_position(const std::string& name, const Point& station,
         const Rectangle& out_of_bounds)
     {
         if (contains(out_of_bounds, station)) { return; }
         throw std::invalid_argument("puts a station '" + name + "' at (" +
             std::to_string(station.x) + ", " + std::to_string(station.y) + "), outside its own "
-            "out_of_bounds rectangle - a player built there stops the match with "
-            "a player-out-of-bounds failure on its first tick.");
+            "out_of_bounds rectangle - a player built there is eliminated on its "
+            "first tick and respawns there again.");
     }
 
     // The lesson area's own geometry; the message follows the area's location.

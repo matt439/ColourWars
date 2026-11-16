@@ -1093,13 +1093,11 @@ Move / drop: left stick
 Aim: right stick    Shoot: RT
 Jump: A / LT (hold for height)
 Pause: Start    Sub: RB
-Debug: Back / View
 KEYBOARD + MOUSE
 Move: A / D    Drop: S / Down
 Aim: mouse cursor    Shoot: Left click
 Jump: Space (hold for height)
 Pause: Esc    Sub: Right click
-Debug: F1
 MENUS
 Navigate: stick / D-pad / arrows
 Select: A / Enter    Back: B / Esc

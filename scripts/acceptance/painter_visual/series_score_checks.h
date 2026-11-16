@@ -163,6 +163,18 @@ void series_score_checks(Application& app, const Canvas& canvas, GameTuning& tun
         colourwars::UiTextDropShadow outcome("independent-session-outcome", fixture.outcome, style.detail_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !visible);
         outcome.set_position({ (menu_consts::design_resolution.x - outcome.bounds().width) / 2.0f, look.session_result_y });
+        // Single matches have no series ledger, but their revealed score band
+        // explains the percentage denominator. This literal is independent of
+        // ResultsMenu and the mutable copy source, just like score/outcome.
+        require(fixture.info.team_a_played && fixture.info.team_b_played &&
+            fixture.info.team_a_area + fixture.info.team_b_area > 0.0f,
+            "Independent score-band fixture requires two teams with painted surface");
+        colourwars::UiTextDropShadow basis("independent-single-match-basis", L"Team share of painted surface",
+            look.contribution_font, Vector2F::zero, app.render_resources(), look.art.ink,
+            Colour(), Vector2F::zero, fixture.session.is_series() || !details_visible);
+        basis.set_position({ (menu_consts::design_resolution.x - basis.bounds().width) / 2.0f, look.score_basis_y });
+        require(row_region.contains(basis.bounds()),
+            "Independent single-match denominator caption escaped the complete score-band comparison");
         colourwars::UiTextDropShadow heading("independent-session-round", fixture.heading, style.heading_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero);
         heading.set_position({ (menu_consts::design_resolution.x - heading.bounds().width) / 2.0f, look.heading_y });
@@ -179,7 +191,7 @@ void series_score_checks(Application& app, const Canvas& canvas, GameTuning& tun
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup empty_focus;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &look.art, &empty_focus);
         paper.draw(list); list.set_filter(TextureFilter::linear);
-        heading.draw(list); score.draw(list); outcome.draw(list);
+        heading.draw(list); score.draw(list); outcome.draw(list); basis.draw(list);
         require(readbacks < 97, "Series score reference exceeded its fixed readback budget");
         ++readbacks; return read(renderer);
     };

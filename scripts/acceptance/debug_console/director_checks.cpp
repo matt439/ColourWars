@@ -7,6 +7,7 @@
 #include "game/debug/debug_overlay_draw.h"
 #include "game/objects/fixed_slab_geometry.h"
 #include "game/objects/level_loaded_info.h"
+#include "game/objects/round_shot_shape.h"
 #include <chrono>
 #include <fstream>
 #include <iterator>
@@ -161,6 +162,15 @@ namespace debug_console_acceptance
 			"timescale sets the clock");
 		require(!impl.execute("timescale 9").ok && impl.clock().timescale() == 0.5f,
 			"timescale outside 0.25-4 fails and changes nothing");
+		// ROAD#44: shots.round sets the shape round shots are built with,
+		// refuses any other word, and is left as shipped.
+		require(round_shot_shape() == RoundShotShape::rectangle, "Round shots do not start as rectangles");
+		require(impl.execute("shots.round circle").ok && round_shot_shape() == RoundShotShape::circle,
+			"shots.round circle does not build circles");
+		require(!impl.execute("shots.round oval").ok && round_shot_shape() == RoundShotShape::circle,
+			"shots.round accepted an unknown shape or changed on one");
+		require(impl.execute("shots.round rectangle").ok && round_shot_shape() == RoundShotShape::rectangle,
+			"shots.round rectangle does not restore the shipped shape");
 		require(impl.execute("pause on").ok && impl.clock().paused(), "pause on pauses");
 		require(impl.execute("pause").ok && !impl.clock().paused(), "pause toggles by default");
 		require(!impl.execute("step 2").ok, "step needs a match");
@@ -773,9 +783,9 @@ namespace debug_console_acceptance
 		for (const LevelStation& station : stations) { names.push_back(station.name); }
 		require(names == std::vector<std::string>{ "drop_through", "short_gap", "long_gap",
 			"running_gap", "low_ceiling", "steps", "high_step", "recovery_lane",
-			"workshop", "refill", "spawn_a", "spawn_b" }, "The course lists its ten stations, then the spawns");
-		require(stations[10].position == info.team_a_spawns()[0] &&
-			stations[11].position == info.team_b_spawns()[0], "spawn_a and spawn_b are the first spawns");
+			"workshop", "refill", "sub", "spawn_a", "spawn_b" }, "The course lists its eleven stations, then the spawns");
+		require(stations[11].position == info.team_a_spawns()[0] &&
+			stations[12].position == info.team_b_spawns()[0], "spawn_a and spawn_b are the first spawns");
 
 		struct Surface { std::string name; labrador::RectangleF rectangle; bool jump_through; };
 		std::vector<Surface> surfaces;

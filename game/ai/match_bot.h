@@ -14,8 +14,9 @@
 #include <vector>
 
 // Value observations for the shipping decision policy. The driver includes
-// only living enemies within the shared sight range and with a clear sight
-// line. No unseen enemy position survives as a pursuit target.
+// only living enemies and standing enemy sprinklers within the shared sight
+// range and with a clear sight line, which an enemy paint wall also blocks
+// (REV#21). No unseen enemy position survives as a pursuit target.
 struct MatchBotObservation
 {
 	struct Enemy
@@ -58,6 +59,9 @@ struct MatchBotObservation
 	std::optional<SubType> sub;
 	bool sub_ready = false;
 	std::vector<Enemy> enemies;
+	// Visible enemy sprinklers' centres: shot at in this tool's reach while no
+	// enemy is engaged, never pursued (REV#21).
+	std::vector<labrador::Vector2F> enemy_sprinklers;
 	// Sampled visible non-team scoring tiles, refreshed only for a replan.
 	std::vector<labrador::Vector2F> territory;
 	// Non-team paint beyond a permitted gate: useful route destinations, but

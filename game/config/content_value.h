@@ -21,7 +21,8 @@
 // read, at the end of that reader.
 //
 // Every comparison is written so a non-finite value fails it. JSON has no NaN,
-// but a literal past float's range (1e100) arrives as infinity.
+// and the engine's JsonValue::number refuses a literal past float's range
+// (1e100), naming the file and the key, before these readers see it.
 namespace content_value
 {
 	// The value as a diagnostic shows it: without trailing decimal zeroes.

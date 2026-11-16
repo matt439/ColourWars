@@ -22,10 +22,10 @@ the accepted drawing language; composition review remains in the polish plan.
 ## Painter artwork
 
 The [painter source](painter/README.md) begins the accepted gameplay character
-pass. Its editable coarse-cell drawing, deterministic System.Drawing/texconv
+pass. Its editable coarse-cell drawing, deterministic System.Drawing
 recipe and all-palette pose preview live outside runtime content. Rebuild it with
 `powershell -ExecutionPolicy Bypass -File scripts/build-painter-art.ps1`.
-Only `game/content/textures/painter.{json,dds}` is staged and packaged.
+Only `game/content/textures/painter.{json,png}` is staged and packaged.
 The [implementation and review record](../../docs/polish-painter.md) states
 what this increment covers and which character work remains open.
 
@@ -54,9 +54,8 @@ powershell -ExecutionPolicy Bypass -File scripts/build-weapon-art.ps1
 This rasterises and packs the five tools, copies the legacy
 utility frames from `sources/textures/sprite_sheet_1.png`, and regenerates
 `sources/textures/weapon_paint.png` here and
-`game/content/textures/weapon_paint.{json,dds}`, plus the authoring
-[lineup](weapons/lineup.png). This uses Windows System.Drawing and the retained
-`tools/texconv.exe`.
+`game/content/textures/weapon_paint.{json,png}`, plus the authoring
+[lineup](weapons/lineup.png). This uses Windows System.Drawing alone.
 No image service or Python dependency is needed to reproduce the runtime atlas.
 
 Gameplay frames have four texels per world unit. Their aim pivots are at the
@@ -82,12 +81,14 @@ gauges and hardware stay neutral outside the explicit wet/team regions.
 The [tool implementation and review record](../../docs/polish-tools.md) describes
 the motion, fixed grips, preserved gameplay and renderer evidence.
 
-The PNG uses straight alpha. The DDS is RGBA8 with premultiplied alpha and one
-mip level, as required by Labrador's sprite blend. Do not replace it with a
-straight-alpha DDS. The packer omits colour-space metadata from the runtime PNG
-so the bundled texconv preserves its channel values while premultiplying for
-the engine's UNORM pipeline. Runtime packaging includes only the DDS and frame
-JSON.
+The runtime file is the PNG itself, with straight alpha. Labrador's sprite
+blend is premultiplied, and the engine's PNG loader premultiplies each channel
+as it reads the file, into RGBA8 with one mip level, so nothing converts it
+first. The packer omits colour-space metadata so the loader reads the authored
+channel values unchanged. Runtime packaging includes only the PNG and frame
+JSON. Until 2026-11-13 the runtime file was a DDS premultiplied by the bundled
+texconv; the PNG decodes to the same bytes, which is why it could replace it
+([`PIN#3`](../../docs/review/engine-reports.md#png-atlases-and-texconv-pin3)).
 
 ## Projectile and paint artwork
 
@@ -95,7 +96,7 @@ The [effects source and recipe](paint-fx/README.md) supply distinct liquid shot
 and surface-impact strips for all five tools, including the roller's contact
 swash. Rebuild the grayscale atlas and team-colour lineup with
 `powershell -ExecutionPolicy Bypass -File scripts/build-paint-fx-art.ps1`.
-Only `game/content/textures/paint_fx.{json,dds}` enters runtime content.
+Only `game/content/textures/paint_fx.{json,png}` enters runtime content.
 The [implementation and validation record](../../docs/polish-paint-effects.md)
 describes exact surface ownership, paint keylines, wet settling and culling.
 
@@ -246,7 +247,7 @@ drawings (hills, trees, a house, clouds, a sun, birds, a brush pot and a tape
 roll) and the four airbrush
 speckle tiles, as editable cell shapes and grids. Rebuild it with
 `powershell -ExecutionPolicy Bypass -File scripts/build-terrain-art.ps1`; only
-`game/content/textures/terrain.{json,dds}` is staged and packaged. The walkable
+`game/content/textures/terrain.{json,png}` is staged and packaged. The walkable
 materials themselves are drawn by code from the sheet's palette swatches; the
 [terrain kit](../../docs/polish-terrain.md) owns their rules.
 
@@ -263,13 +264,13 @@ is retained here:
 | `sources/textures/` | Sprite-sheet PNG/XCF, generated menu, painter, weapon, paint-effects and terrain PNGs, and the legacy texture conversion command |
 | `sources/levels/` | Publisher layouts and historical movement notes; playable JSONs remain runtime content |
 | `sources/fonts/` | The [font recipe](#sprite-font-recipe-gap87) `fonts.json`, its three TTF faces and licences, and the historical font command example `cmd.txt` |
-| `tools/` | Existing texconv and MakeSpriteFont executables |
+| `tools/` | Existing texconv (now used only for `sprite_sheet_1`'s BC3 DDS) and MakeSpriteFont executables |
 | `archive/textures/` | Old texture kit and unused player-frame experiment |
 | `archive/levels/` | Unused historical level JSONs |
 
 The 138 relocated files were byte-checked before recipe edits. The weapon packer
-uses the relocated utility source and tool; its DDS, JSON and working PNG still
-reproduce byte for byte. The legacy texture command and historical font example
+uses the relocated utility source; its JSON and PNG still reproduce byte for
+byte. The legacy texture command and historical font example
 now use repository-root paths; neither adds a new build dependency.
 
 [`stage_runtime_assets.cmake`](../../cmake/stage_runtime_assets.cmake) runs on

@@ -460,7 +460,7 @@
         {
             "name": "centre_cover",
             "type": "StructurePaintable",
-            "material": "eraser",
+            "material": "paint_tin",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -590,232 +590,296 @@
             "colour": "WHITE"
         },
         {
-            "name": "sun",
+            "name": "works_wall",
             "type": "Visual",
             "sheet_name": "terrain",
-            "frame_name": "sun",
-            "rectangle":
-            {
-                "x": 4700.0,
-                "y": 4330.0,
-                "width": 224.0,
-                "height": 224.0
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "cloud_1",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "cloud_big",
-            "rectangle":
-            {
-                "x": 160.0,
-                "y": 4380.0,
-                "width": 256.0,
-                "height": 96.0
-            },
-            "colour": "WHITE",
-            "drift": { "distance": 32, "period": 48, "phase": 0.0 }
-        },
-        {
-            "name": "cloud_2",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "cloud_small",
-            "rectangle":
-            {
-                "x": 1060.0,
-                "y": 4517.0,
-                "width": 160.0,
-                "height": 64.0
-            },
-            "colour": "WHITE",
-            "drift": { "distance": 32, "period": 60, "phase": 0.17 }
-        },
-        {
-            "name": "cloud_3",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "cloud_big",
-            "rectangle":
-            {
-                "x": 2171.0,
-                "y": 4414.0,
-                "width": 256.0,
-                "height": 96.0
-            },
-            "colour": "WHITE",
-            "drift": { "distance": 48, "period": 72, "phase": 0.33 }
-        },
-        {
-            "name": "cloud_4",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "cloud_big",
-            "rectangle":
-            {
-                "x": 3493.0,
-                "y": 4551.0,
-                "width": 256.0,
-                "height": 96.0
-            },
-            "colour": "WHITE",
-            "drift": { "distance": 32, "period": 54, "phase": 0.51 }
-        },
-        {
-            "name": "cloud_5",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "cloud_small",
-            "rectangle":
-            {
-                "x": 4526.0,
-                "y": 4448.0,
-                "width": 160.0,
-                "height": 64.0
-            },
-            "colour": "WHITE",
-            "drift": { "distance": 48, "period": 66, "phase": 0.68 }
-        },
-        {
-            "name": "cloud_6",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "cloud_big",
-            "rectangle":
-            {
-                "x": 5770.0,
-                "y": 4585.0,
-                "width": 256.0,
-                "height": 96.0
-            },
-            "colour": "WHITE",
-            "drift": { "distance": 32, "period": 58, "phase": 0.84 }
-        },
-        {
-            "name": "birds_1",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "birds",
-            "rectangle":
-            {
-                "x": 1900.0,
-                "y": 4480.0,
-                "width": 96.0,
-                "height": 32.0
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "birds_2",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "birds",
-            "rectangle":
-            {
-                "x": 3700.0,
-                "y": 4420.0,
-                "width": 96.0,
-                "height": 32.0
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "hill_1",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "hill_wide",
+            "frame_name": "swatch_bg_far",
             "rectangle":
             {
                 "x": -100.0,
-                "y": 4930.0,
-                "width": 1536.0,
-                "height": 320.0
+                "y": 4200.0,
+                "width": 6200.0,
+                "height": 1050.0
             },
             "colour": "WHITE"
         },
         {
-            "name": "hill_2",
+            "name": "roof_beam",
             "type": "Visual",
             "sheet_name": "terrain",
-            "frame_name": "hill_small",
+            "frame_name": "swatch_bg_mid",
             "rectangle":
             {
-                "x": 1276.0,
-                "y": 5058.0,
-                "width": 768.0,
+                "x": -100.0,
+                "y": 4168.0,
+                "width": 6200.0,
+                "height": 36.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_edge_top",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_bg_line",
+            "rectangle":
+            {
+                "x": -100.0,
+                "y": 4168.0,
+                "width": 6200.0,
+                "height": 4.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_edge_bottom",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_bg_line",
+            "rectangle":
+            {
+                "x": -100.0,
+                "y": 4200.0,
+                "width": 6200.0,
+                "height": 4.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "window_1",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_window",
+            "rectangle":
+            {
+                "x": 96.0,
+                "y": 4332.0,
+                "width": 256.0,
+                "height": 160.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "window_2",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_window",
+            "rectangle":
+            {
+                "x": 1180.0,
+                "y": 4332.0,
+                "width": 256.0,
+                "height": 160.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "window_3",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_window",
+            "rectangle":
+            {
+                "x": 2116.0,
+                "y": 4332.0,
+                "width": 256.0,
+                "height": 160.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "window_4",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_window",
+            "rectangle":
+            {
+                "x": 3628.0,
+                "y": 4332.0,
+                "width": 256.0,
+                "height": 160.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "window_5",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_window",
+            "rectangle":
+            {
+                "x": 4564.0,
+                "y": 4332.0,
+                "width": 256.0,
+                "height": 160.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "window_6",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_window",
+            "rectangle":
+            {
+                "x": 5648.0,
+                "y": 4332.0,
+                "width": 256.0,
+                "height": 160.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "pipe_run",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_pipes",
+            "rectangle":
+            {
+                "x": 2388.0,
+                "y": 4204.0,
+                "width": 640.0,
                 "height": 192.0
             },
             "colour": "WHITE"
         },
         {
-            "name": "hill_3",
+            "name": "paint_tank",
             "type": "Visual",
             "sheet_name": "terrain",
-            "frame_name": "hill_wide",
+            "frame_name": "cq_tank",
             "rectangle":
             {
-                "x": 1884.0,
-                "y": 4930.0,
-                "width": 1536.0,
+                "x": 2872.0,
+                "y": 4370.0,
+                "width": 256.0,
                 "height": 320.0
             },
             "colour": "WHITE"
         },
         {
-            "name": "hill_4",
+            "name": "loading_door_a",
             "type": "Visual",
             "sheet_name": "terrain",
-            "frame_name": "hill_small",
+            "frame_name": "cq_door",
             "rectangle":
             {
-                "x": 3260.0,
-                "y": 5058.0,
-                "width": 768.0,
-                "height": 192.0
+                "x": 420.0,
+                "y": 4600.0,
+                "width": 384.0,
+                "height": 400.0
             },
             "colour": "WHITE"
         },
         {
-            "name": "hill_5",
+            "name": "loading_door_b",
             "type": "Visual",
             "sheet_name": "terrain",
-            "frame_name": "hill_wide",
+            "frame_name": "cq_door",
             "rectangle":
             {
-                "x": 3868.0,
-                "y": 4930.0,
-                "width": 1536.0,
-                "height": 320.0
+                "x": 5196.0,
+                "y": 4600.0,
+                "width": 384.0,
+                "height": 400.0
             },
             "colour": "WHITE"
         },
         {
-            "name": "hill_6",
+            "name": "rack_a",
             "type": "Visual",
             "sheet_name": "terrain",
-            "frame_name": "hill_small",
+            "frame_name": "cq_rack",
             "rectangle":
             {
-                "x": 5244.0,
-                "y": 5058.0,
-                "width": 768.0,
-                "height": 192.0
+                "x": 1200.0,
+                "y": 4546.0,
+                "width": 288.0,
+                "height": 384.0
             },
             "colour": "WHITE"
         },
         {
-            "name": "hill_7",
+            "name": "rack_b",
             "type": "Visual",
             "sheet_name": "terrain",
-            "frame_name": "hill_wide",
+            "frame_name": "cq_rack",
             "rectangle":
             {
-                "x": 5852.0,
-                "y": 4930.0,
-                "width": 1536.0,
-                "height": 320.0
+                "x": 4512.0,
+                "y": 4546.0,
+                "width": 288.0,
+                "height": 384.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "timber_bay",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_timber",
+            "rectangle":
+            {
+                "x": 960.0,
+                "y": 5090.0,
+                "width": 224.0,
+                "height": 160.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "timber_lane",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_timber",
+            "rectangle":
+            {
+                "x": 3740.0,
+                "y": 5090.0,
+                "width": 224.0,
+                "height": 160.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "drums_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_drums",
+            "rectangle":
+            {
+                "x": 40.0,
+                "y": 5074.0,
+                "width": 256.0,
+                "height": 176.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "drums_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_drums",
+            "rectangle":
+            {
+                "x": 5704.0,
+                "y": 5074.0,
+                "width": 256.0,
+                "height": 176.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "workbench",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_bench",
+            "rectangle":
+            {
+                "x": 1900.0,
+                "y": 5122.0,
+                "width": 384.0,
+                "height": 128.0
             },
             "colour": "WHITE"
         },
@@ -844,76 +908,6 @@
                 "y": 4812.0,
                 "width": 256.0,
                 "height": 160.0
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "house",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "house",
-            "rectangle":
-            {
-                "x": 520.0,
-                "y": 4898.0,
-                "width": 384.0,
-                "height": 352.0
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "tree_1",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "tree_round",
-            "rectangle":
-            {
-                "x": 1000.0,
-                "y": 5026.0,
-                "width": 128.0,
-                "height": 224.0
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "tree_2",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "tree_tall",
-            "rectangle":
-            {
-                "x": 4880.0,
-                "y": 4994.0,
-                "width": 96.0,
-                "height": 256.0
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "tree_3",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "tree_round",
-            "rectangle":
-            {
-                "x": 5150.0,
-                "y": 5026.0,
-                "width": 128.0,
-                "height": 224.0
-            },
-            "colour": "WHITE"
-        },
-        {
-            "name": "tree_4",
-            "type": "Visual",
-            "sheet_name": "terrain",
-            "frame_name": "tree_tall",
-            "rectangle":
-            {
-                "x": 5420.0,
-                "y": 4994.0,
-                "width": 96.0,
-                "height": 256.0
             },
             "colour": "WHITE"
         }

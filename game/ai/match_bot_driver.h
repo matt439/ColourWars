@@ -26,6 +26,11 @@ public:
 	const MatchBot* bot(int participant) const;
 	// `seats` has one entry per participant, in roster order.
 	void drive(std::vector<PlayerInputData>& seats, const BotWorld& world);
+	// A bot's sight from `from` to `to`: the world's line of sight, which an
+	// enemy paint wall in `planted` also stops (REV#21). The viewer's own
+	// team's walls never do, since only enemy shots are spent on a wall.
+	static bool clear_sight(const BotWorld& world, const std::vector<BotPlantedSub>& planted,
+		PlayerTeam viewer, labrador::Vector2F from, labrador::Vector2F to);
 
 private:
 	const GameTuning* tuning_;

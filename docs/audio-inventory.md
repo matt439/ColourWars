@@ -391,7 +391,7 @@ detection logic is needed. Every new slot must be added to startup validation
 | `ui.confirm` | Proceed or select | no | exists | 1 | `UI_Clicks01` |
 | `ui.cancel` | Back or quit | no | exists | 1 | `UI_Clicks17` |
 | `ui.error` | Refused, e.g. a one-team roster (`main_menu_team_select.cpp:59`) | no | exists | 1 | `UIerror2` |
-| `ui.ready` | A seat joined; a stage marked READY | no | exists. Consider per-seat pitch (`play_wave` takes pitch) | 1 | `Whoosh2` |
+| `ui.ready` | A seat joined; a stage marked READY | no | exists. Plays at its authored pitch for every seat; a per-seat pitch was declined with `REV#43` (6.3) | 1 | `Whoosh2` |
 | `ui.pause_open` | Pause pushed (`pause_menu.cpp:342`) | no | exists: stop it firing again on returns (trap 5) | 1 | `UI_Clicks01` |
 | `ui.unready` | A seat leaves (`main_menu_players.cpp:272-276`) | no | exists as cancel | 3 | — |
 | `ui.pad_lost`, `ui.pad_back` | Controller lost or back (`pause_menu.cpp:215-227`) | no | slot | 2 | — |
@@ -427,7 +427,7 @@ out of scope. Lines are in `game/`.
 | `match.count_beat`, `match.go` | `objects/level.cpp:231, 249` | The 3-2-1 and GO cards (`objects/countdown_cards.cpp:371`) |
 | `ui.count_in` | the resume count-in (`states/resume_audio.h`) | The resume cards (`objects/level_opening.cpp:106`) |
 | `match.last_ten` | `objects/level.cpp:280` | The closing-clock card from ten seconds, with a tick pair on each second (`interface_gameplay.cpp:293, 315`); Reduce effects keeps the card and drops the ticks |
-| `match.time_up`, `match.glass_out` | `objects/level.cpp:306-309` | The camera's pull back through the glass and the closing clock running out; no time-up text. Already `REV#41` ([record](review/2026-11-10-project-review.md#no-on-screen-time-up-signal-rev41)), not filed again |
+| `match.time_up`, `match.glass_out` | `objects/level.cpp:306-309` | The camera's pull back through the glass and the closing clock running out; no time-up text. `REV#41` ([record](review/2026-11-10-project-review.md#no-on-screen-time-up-signal-rev41)) asked for one; the author declined a time-up banner on 2026-11-13 |
 | `ui.pad_lost`, `ui.pad_back` | `states/connection_audio.cpp`, from a match (`states/game_states.cpp:428`) or a menu page (`states/menu_page.cpp:69`) | In a match the loss opens Pause headed **Controller lost** over the missing seats, and **All players connected.** when they return (`states/pause_menu.cpp:236-240`). The Players page marks a reserved, absent pad with **- Reconnect** (`states/main_menu_players.cpp:293`). Other menu pages show nothing: see below |
 | `player.hurt` | `objects/player.cpp:1027` | The victim's hurt pose and keylined ticks, drawn in every view, and its pane's shake ([combat feedback](polish-combat-feedback.md)). The shooter's side is `REV#37`, not filed again |
 | `player.pop` | `objects/player.cpp:1081` | The elimination burst (`objects/combat_feedback.cpp:73`) and the figure leaving play |
@@ -594,7 +594,26 @@ Answered by the author on 2026-10-14:
 - **The Movement Course is silent.** It is the movement test stage, where
   footsteps and landings should be heard alone. Done the same day (trap 7).
 
-Nothing is still open here.
+Answered by the author on 2026-11-13:
+
+- **Player cues stay centred at their authored pitch (`REV#43`, declined).**
+  No per-seat pan and no per-seat pitch offset for player-owned cues, and the
+  per-seat `ui.ready` pitch once floated in 4.5 goes with it. The masters are
+  mono and mastered against the music, panning does nothing useful in 2P or on
+  a soundbar, and nobody would hear the result before it shipped
+  ([record](review/2026-11-10-project-review.md#per-seat-pan-and-pitch-for-player-cues-rev43)).
+  Reopen if an attended 3P or 4P session finds players cannot tell their own
+  sounds apart; that would be a mix defect, which reopens audio under the rule
+  in `TODO.md`.
+- **Crossfeed's own music is deferred with `POL#16` (`REV#42`).** Crossfeed keeps
+  `music.close_quarters` and its sting, shared with Close Quarters
+  ([record](review/2026-11-10-project-review.md#crossfeed-shares-the-close-quarters-music-rev42)).
+  A new arrangement would enter the accepted bank unheard, so it waits for the
+  art and presentation pass. The collision is narrower than the record put it:
+  under the default Rotate pick the two arenas are never played back to back,
+  but a Random first pick or a Loser's pick can still put them together.
+
+Nothing else is still open here.
 
 The sourced pop, sigh and chair-creak (`STORY#1`, `STORY#2`) were accepted with
 the set in section 7 and integrated on 2026-10-15.
