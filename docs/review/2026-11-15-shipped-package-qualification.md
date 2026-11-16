@@ -1,7 +1,8 @@
 # Shipped first-run package qualification (2026-11-15)
 
-This bounded CW-2 check qualifies the shipped v0.1.0 package, not current master,
-CRT, a controller session, or a complete first match.
+This record covers package integrity and isolated startup of the published
+v0.1.0 download on 2026-11-15. It does not qualify later source builds, CRT,
+controller recovery or a complete first match.
 
 ## Exact input
 
@@ -21,30 +22,26 @@ of development payload, and executable symbol-path conventions.
 `check-startup.ps1 -SystemOnlyPath -RequireAudio -StartupSeconds 5` passed on
 MattPC with a new disposable profile and unrelated working directory. The
 hidden process created its window, save and stages folder; first window fit
-and per-monitor v2 DPI awareness passed. Reduce effects followed Windows'
-animation preference. Graceful close and diagnostics checks passed. Sound was
-muted by the harness; this does not establish listening quality. The extracted
-package did not need developer-tool directories on PATH.
+and per-monitor v2 DPI awareness passed. Graceful close and diagnostics checks
+passed. Sound was muted by the harness; this does not establish listening
+quality. The extracted package did not need developer-tool directories on PATH.
 
-Retained evidence on the test machine is under the current user's TEMP folder,
+Evidence was retained locally on the test machine under the user's TEMP folder,
 `colourwars-first-match-20261115`: `extract` and
 `startup/955702f068f14eb28aa7802ffa7e8528/result.json`.
+This temporary evidence directory is not a durable or public artifact.
 
 ## First-match and recovery boundary
 
 The packaged HOW-TO-PLAY gives extraction, menu route, keyboard/bot/roster entry,
-Movement Course, settings location and update/removal guidance. Current source
-README also describes Apply versus discard and disconnect/reclaim rules.
-Those directions were inspected, not enacted with real participants.
+Movement Course, settings location and update/removal guidance. Those directions
+were inspected on 2026-11-15, not enacted with real participants.
 
-Existing source probes cover menu navigation, input bindings, held-action
-reconnect and toggle-fire recovery. They were not rebuilt or executed here:
-this run deliberately avoided competing with scheduled native qualification.
-Do not convert source coverage into a claim that this shipped executable
-completed controller recovery or a first match.
+Source probes were not rebuilt or executed for this check. This shipped
+executable was not taken through controller recovery or a first match.
 
-The next first-match gate is an actual keyboard/pad session: new profile,
-Movement Course, complete round, Apply/Back persistence, unplug/reclaim/Resume,
-then quit and restart. A hidden packaged Release startup cannot demonstrate
+An attended first-match check would need an actual keyboard/pad session: new
+profile, Movement Course, complete round, Apply/Back persistence,
+unplug/reclaim/Resume, then quit and restart. A hidden packaged Release startup cannot demonstrate
 that input sequence by itself. No SmartScreen bypass, installer, foreground
 input, live profile, or remote publication occurred in this check.
