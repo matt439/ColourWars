@@ -436,8 +436,9 @@ private:
 	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<colourwars::UiTextDropShadow> heading_ = nullptr;
 
-	// Shown when completing a multiplayer roster would leave a team empty.
+	// Shared feedback for a neutral Ready press or an incomplete team roster.
 	std::unique_ptr<colourwars::UiTextDropShadow> both_teams_needed_ = nullptr;
+	int team_choice_warning_player_ = -1;
 
 	std::vector<std::unique_ptr<PlayerWidgets>> player_widgets_;
 	// Roster seats are cursor slots, independent of each seat's input device.
