@@ -294,14 +294,14 @@ namespace menu_text_acceptance
             { true, 2, MenuItem::vsync, &MenuValueText::on },
             { true, 2, MenuItem::vsync, &MenuValueText::off },
             { true, 3, MenuItem::team_palette, &MenuValueText::random },
-            { false, 5, MenuItem::view_shake, &MenuValueText::on },
-            { false, 5, MenuItem::view_shake, &MenuValueText::off },
-            { false, 6, MenuItem::aim_marker, &MenuValueText::on },
-            { false, 6, MenuItem::aim_marker, &MenuValueText::off },
-            { false, 7, MenuItem::reduce_effects, &MenuValueText::on },
-            { false, 7, MenuItem::reduce_effects, &MenuValueText::off },
-            { false, 3, MenuItem::rumble, &MenuValueText::on },
-            { false, 3, MenuItem::rumble, &MenuValueText::off }
+            { false, settings_rows::controls_view_shake, MenuItem::view_shake, &MenuValueText::on },
+            { false, settings_rows::controls_view_shake, MenuItem::view_shake, &MenuValueText::off },
+            { false, settings_rows::controls_aim_marker, MenuItem::aim_marker, &MenuValueText::on },
+            { false, settings_rows::controls_aim_marker, MenuItem::aim_marker, &MenuValueText::off },
+            { false, settings_rows::controls_reduce_effects, MenuItem::reduce_effects, &MenuValueText::on },
+            { false, settings_rows::controls_reduce_effects, MenuItem::reduce_effects, &MenuValueText::off },
+            { false, settings_rows::sticks_rumble, MenuItem::rumble, &MenuValueText::on },
+            { false, settings_rows::sticks_rumble, MenuItem::rumble, &MenuValueText::off }
         };
         const auto check_rows = [&](const Presentation& look, bool width_limited, bool height_limited)
         {
@@ -323,7 +323,7 @@ namespace menu_text_acceptance
                     paper.right() - art.shadow_offset - art.focus_padding.x - value_position.x :
                     controls.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset - value_position.x,
                     spacing.y - art.focus_padding.y * 2.0f);
-                require(limit == (use.options ? labrador::Vector2F(930.0f, 58.0f) : labrador::Vector2F(332.0f, 48.0f)),
+                require(limit == (use.options ? labrador::Vector2F(930.0f, 66.0f) : labrador::Vector2F(332.0f, 48.0f)),
                     "Authored value fixture no longer exercises the shipped Options/Controls fitting limits");
                 const auto font = world.render.resolve_sprite_font(style.item_font);
                 std::wstring authored = look.menu_text().values.*use.field;

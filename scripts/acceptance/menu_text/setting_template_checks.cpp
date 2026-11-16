@@ -354,7 +354,7 @@ namespace menu_text_acceptance
             const labrador::Vector2F value_position(main.options_value_x, main.options_position.y);
             const labrador::Vector2F limit(paper.right() - art.shadow_offset - art.focus_padding.x - value_position.x,
                 main.options_spacing.y - art.focus_padding.y * 2.0f);
-            require(value_position == labrador::Vector2F(820.0f, 220.0f) && limit == labrador::Vector2F(930.0f, 58.0f),
+            require(value_position == labrador::Vector2F(820.0f, 220.0f) && limit == labrador::Vector2F(930.0f, 66.0f),
                 "Resolution fixture no longer exercises the actual Options value column and row");
             // Options rows draw in the page's own font (main_menu.fonts.options).
             MenuStyle row_style = style; row_style.item_font = main.options_font;
@@ -364,9 +364,9 @@ namespace menu_text_acceptance
             float expected_scale = 1.0f;
             if (measured.x > 930.0f) { expected_scale = 930.0f / measured.x; }
             require(width_limited == (expected_scale < 1.0f) &&
-                height_limited == (measured.y * expected_scale > 58.0f),
+                height_limited == (measured.y * expected_scale > 66.0f),
                 "Resolution font does not independently exercise its claimed width-then-height fitting path");
-            if (measured.y * expected_scale > 58.0f) { expected_scale = 58.0f / measured.y; }
+            if (measured.y * expected_scale > 66.0f) { expected_scale = 66.0f / measured.y; }
             int adjustments = 0;
             OptionRow row("resolution", L"Resolution", main.options_position, value_position, row_style, art.ink, &world.render,
                 [&](Direction direction) { adjustments += direction == Direction::right ? 1 : -1; }, &art, limit);
@@ -380,12 +380,12 @@ namespace menu_text_acceptance
             require(value->text() == expected && bounds.position() == value_position && label->bounds() == retained_label &&
                 std::abs(bounds.width - measured.x * expected_scale) <= 0.01f &&
                 std::abs(bounds.height - measured.y * expected_scale) <= 0.01f &&
-                bounds.width > 0.0f && bounds.height > 0.0f && bounds.width <= 930.01f && bounds.height <= 58.01f,
+                bounds.width > 0.0f && bounds.height > 0.0f && bounds.width <= 930.01f && bounds.height <= 66.01f,
                 "Resolution OptionRow lost copied text, its fixed column/label or proportional fitting");
             auto padded = bounds; padded.inflate(art.focus_padding);
             require(paper.contains(padded) && bounds.height + art.focus_padding.y * 2.0f <= main.options_spacing.y + 0.01f,
                 "Resolution value or focus padding escaped the actual Options paper/row");
-            if (height_limited) { require(std::abs(bounds.height - 58.0f) <= 0.01f, "Resolution height fitting lost inclusive row contact"); }
+            if (height_limited) { require(std::abs(bounds.height - 66.0f) <= 0.01f, "Resolution height fitting lost inclusive row contact"); }
             else if (width_limited) { require(std::abs(bounds.width - 930.0f) <= 0.01f, "Resolution width fitting lost inclusive column contact"); }
             else { require(bounds == labrador::RectangleF(value_position, measured), "Short resolution value was enlarged"); }
             row.set_value(look.menu_text().setting_resolution(1, 1));
@@ -444,12 +444,14 @@ namespace menu_text_acceptance
         });
         long_supported.validate_resources(world.render, world.audio);
         const MenuPaperArtPresentation art = options_art(long_supported.main_menu());
+        MenuStyle long_row_style = long_supported.menu();
+        long_row_style.item_font = long_supported.main_menu().options_font;
         OptionRow long_row("long_resolution", L"Resolution", { 280.0f, 220.0f }, { 820.0f, 220.0f },
-            long_supported.menu(), art.ink, &world.render, {}, &art, { 930.0f, 86.0f });
+            long_row_style, art.ink, &world.render, {}, &art, { 930.0f, 66.0f });
         long_row.set_value(long_supported.menu_text().setting_resolution(1, 1));
         const UiText* long_value = row_text(long_row, "long_resolution_value");
         require(long_value != nullptr && long_value->text() == std::wstring(512, L'W') + L"1x1" &&
-            std::abs(long_value->bounds().width - 930.0f) <= 0.01f && long_value->bounds().height < 86.0f,
+            std::abs(long_value->bounds().width - 930.0f) <= 0.01f && long_value->bounds().height < 66.0f,
             "Long supported resolution template was truncated or failed width-only fitting");
         // Preserve the existing value diagnostic before the appended resolution
         // guard when the shared item font cannot draw both authored literals.

@@ -244,13 +244,13 @@ try {
         $process.WaitForExit()
         $runLines = @(Get-Content -LiteralPath (Join-Path $run 'run.log'))
         $runLines | ForEach-Object { Write-Host $_ }
+        $deviceLines = @($runLines | Where-Object { $_ -match '^DEVICE ' })
+        $result.device_line = $deviceLines -join '\n'
         if ($process.ExitCode -ne 0) {
             Get-Content -LiteralPath (Join-Path $run 'run.err') | ForEach-Object { Write-Host $_ }
             throw "Visual probe exited with $($process.ExitCode)."
         }
-        $deviceLines = @($runLines | Where-Object { $_ -match '^DEVICE ' })
         $expectedKind = if ($HostedSoftwareFunctional) { 'software' } else { 'hardware' }
-        $result.device_line = $deviceLines -join '\n'
         if ($deviceLines.Count -ne 1 -or $deviceLines[0] -notmatch "(?:^| )kind=$expectedKind(?: |$)") {
             throw 'The probe did not report one adapter matching the requested policy.'
         }
