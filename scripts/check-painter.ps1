@@ -119,6 +119,8 @@ param(
     [switch] $StageSummaryOnly,
     [switch] $StageCountsOnly,
     [switch] $StageScanOnly,
+    # Software-only functional evidence, never hardware acceptance.
+    [switch] $HostedSoftwareFunctional,
     [string] $OutputDirectory
 )
 
@@ -340,6 +342,7 @@ try {
     $env:PATH = "$gameDirectory;$previousPath"
     $env:LOCALAPPDATA = $privateProfile
     $probeArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures)) + $probeArguments
+    if ($HostedSoftwareFunctional) { $probeArguments += '--hosted-software-functional' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -352,10 +355,21 @@ try {
         if ($timer.Elapsed.TotalSeconds -gt 2400) { throw 'Visual probe exceeded its 2400-second runtime limit.' }
     }
     $process.WaitForExit()
-    Get-Content -LiteralPath (Join-Path $run 'run.log') | ForEach-Object { Write-Host $_ }
+    $runLines = @(Get-Content -LiteralPath (Join-Path $run 'run.log'))
+    $runLines | ForEach-Object { Write-Host $_ }
     if ($process.ExitCode -ne 0) {
         Get-Content -LiteralPath (Join-Path $run 'run.err') | ForEach-Object { Write-Host $_ }
         throw "Visual probe exited with $($process.ExitCode)."
+    }
+    $deviceLines = @($runLines | Where-Object { $_ -match '^DEVICE ' })
+    $expectedKind = if ($HostedSoftwareFunctional) { 'software' } else { 'hardware' }
+    $result.device_line = $deviceLines -join '\n'
+    if ($deviceLines.Count -ne 1 -or $deviceLines[0] -notmatch "(?:^| )kind=$expectedKind(?: |$)") {
+        throw 'The probe did not report one adapter matching the requested policy.'
+    }
+    $policyLines = @($runLines | Where-Object { $_ -match '^ADAPTER_POLICY ' })
+    if ($policyLines.Count -ne 1 -or $policyLines[0] -cne "ADAPTER_POLICY $($result.adapter_policy)") {
+        throw 'The probe did not report the requested adapter policy.'
     }
     if ($PracticeReplayOnly) { . (Join-Path $PSScriptRoot 'check-painter/verify-practice-replay.ps1') }
     if ($RememberedSetupOnly) {
@@ -367,6 +381,7 @@ try {
         $env:PATH = "$gameDirectory;$previousPath"
         $env:LOCALAPPDATA = $privateProfile
         $readerArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures), 'remembered-setup-read')
+        if ($HostedSoftwareFunctional) { $readerArguments += '--hosted-software-functional' }
         try {
             $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
                 -WorkingDirectory $working -ArgumentList $readerArguments `
@@ -383,10 +398,21 @@ try {
             if ($readerTimer.Elapsed.TotalSeconds -gt 120) { throw 'Remembered setup reader exceeded its 120-second runtime limit.' }
         }
         $process.WaitForExit()
-        Get-Content -LiteralPath (Join-Path $run 'reader.log') | ForEach-Object { Write-Host $_ }
+        $runLines = @(Get-Content -LiteralPath (Join-Path $run 'reader.log'))
+        $runLines | ForEach-Object { Write-Host $_ }
         if ($process.ExitCode -ne 0) {
             Get-Content -LiteralPath (Join-Path $run 'reader.err') | ForEach-Object { Write-Host $_ }
             throw "Remembered setup reader exited with $($process.ExitCode)."
+        }
+        $deviceLines = @($runLines | Where-Object { $_ -match '^DEVICE ' })
+        $expectedKind = if ($HostedSoftwareFunctional) { 'software' } else { 'hardware' }
+        $result.device_line = $deviceLines -join '\n'
+        if ($deviceLines.Count -ne 1 -or $deviceLines[0] -notmatch "(?:^| )kind=$expectedKind(?: |$)") {
+            throw 'The probe did not report one adapter matching the requested policy.'
+        }
+        $policyLines = @($runLines | Where-Object { $_ -match '^ADAPTER_POLICY ' })
+        if ($policyLines.Count -ne 1 -or $policyLines[0] -cne "ADAPTER_POLICY $($result.adapter_policy)") {
+            throw 'The probe did not report the requested adapter policy.'
         }
         Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'reader.err')) -Context 'remembered setup reader'
         $result['process_relaunch'] = [ordered]@{

@@ -154,3 +154,13 @@ scripts/clean-validation.ps1 -Keep 2 -Apply
 | [perf/](perf/) | frame-pacing analysis and its test |
 | [colour_vision/](colour_vision/paint_colour_vision.py) | measures the paint in unfiltered captures under the `team_palette` case's colour-vision simulation (Machado protan/deutan/tritan, CIEDE2000): the team pair and every edge the paint shares with the picture, optionally recoloured to each shipped pair ([polish-match-accents.md](../docs/polish-match-accents.md#paint-under-colour-vision-simulation-rev34)), and its test |
 | [studies/](studies/README.md) | the kits for the drawing-mistake human studies ([drawing-mistakes-research.md](../docs/drawing-mistakes-research.md#8-human-tests)): Study A's references, sheets and analysis, Study B's stimulus capture, test page and analysis |
+
+### Hosted visual evidence
+
+`check-painter.ps1`, `check-painter-sweep.ps1` and `check-paint-fx.ps1` take
+`-HostedSoftwareFunctional` for the scheduled runner's D3D11 software adapter.
+This is a separate evidence lane, not an automatic fallback: hardware, null and
+unknown devices are refused there. Without the switch the default remains
+hardware-only. All pixel assertions and tolerances remain unchanged; receipts
+name the policy and actual device. See the
+[adapter evidence policy](../docs/crt-trial.md#adapter-evidence-policy).

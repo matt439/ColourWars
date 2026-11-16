@@ -129,6 +129,19 @@ using namespace labrador;
 
 namespace
 {
+    constexpr bool admits_adapter(RenderDeviceKind kind, bool hosted_software)
+    {
+        return kind == (hosted_software ? RenderDeviceKind::software : RenderDeviceKind::hardware);
+    }
+    static_assert(admits_adapter(RenderDeviceKind::hardware, false));
+    static_assert(!admits_adapter(RenderDeviceKind::software, false));
+    static_assert(admits_adapter(RenderDeviceKind::software, true));
+    static_assert(!admits_adapter(RenderDeviceKind::hardware, true));
+    static_assert(!admits_adapter(RenderDeviceKind::null_device, false));
+    static_assert(!admits_adapter(RenderDeviceKind::null_device, true));
+    static_assert(!admits_adapter(static_cast<RenderDeviceKind>(99), false));
+    static_assert(!admits_adapter(static_cast<RenderDeviceKind>(99), true));
+
 #include "scripts/acceptance/painter_visual/painter_fixtures.h"
 #include "scripts/acceptance/painter_visual/graphics_settings_checks.h"
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
@@ -290,6 +303,11 @@ int wmain(int argc, wchar_t** argv)
 {
     return acceptance::run_probe("painter visual", [&]
     {
+        // Consume only the explicit final policy flag; leave the existing
+        // matrix/trial argument validation and every pixel assertion intact.
+        const bool hosted_software = argc > 1 &&
+            std::wstring(argv[argc - 1]) == L"--hosted-software-functional";
+        if (hosted_software) --argc;
         require(argc == 3 || (argc == 5 && (std::wstring(argv[3]) == L"turbulence-mover" || std::wstring(argv[3]) == L"turbulence-shoulder" || std::wstring(argv[3]) == L"turbulence-slab") && !std::wstring(argv[4]).empty()) || (argc == 4 && (std::wstring(argv[3]) == L"hud-paper-tune-colours" || std::wstring(argv[3]) == L"hud-closing-shade" || std::wstring(argv[3]) == L"hud-closing-materials" || std::wstring(argv[3]) == L"stage-preview-background-tune-colour" || std::wstring(argv[3]) == L"hud-label-tune-colours" || std::wstring(argv[3]) == L"hud-timer-tune-colour" ||
             std::wstring(argv[3]) == L"identity" ||
             std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"landmark" || std::wstring(argv[3]) == L"parallax" || std::wstring(argv[3]) == L"miniature-terrain" || std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"press-tower" || std::wstring(argv[3]) == L"turbulence-blockout" || std::wstring(argv[3]) == L"gate-permission" || std::wstring(argv[3]) == L"ferry-direction" || std::wstring(argv[3]) == L"surface-finish" || std::wstring(argv[3]) == L"route-warning" || std::wstring(argv[3]) == L"tune-colours" || std::wstring(argv[3]) == L"monitor" ||
@@ -479,9 +497,13 @@ int wmain(int argc, wchar_t** argv)
         const auto& device = app.renderer()->device_info();
         std::cout << "DEVICE backend=" << device.backend << " api=" << device.api
             << " name=" << device.device_name << " vendor=" << device.vendor_id
-            << " device=" << device.device_id << '\n';
-        require(device.backend == "d3d11" && device.kind == RenderDeviceKind::hardware,
-            "visual evidence requires a D3D11 hardware device");
+            << " device=" << device.device_id
+            << " kind=" << (device.kind == RenderDeviceKind::hardware ? "hardware" :
+                device.kind == RenderDeviceKind::software ? "software" : "unknown") << '\n';
+        std::cout << "ADAPTER_POLICY " << (hosted_software ?
+            "hosted_software_functional_only" : "hardware_only") << '\n';
+        require(device.backend == "d3d11" && admits_adapter(device.kind, hosted_software),
+            "adapter does not match D3D11 hardware-default or explicit hosted-software-functional policy");
         app.resource_loader()->register_kind("level", {
             [&](const std::string& directory, const std::string& name, bool) {
                 auto info = std::make_unique<LevelLoadedInfo>((directory + name + ".json").c_str());

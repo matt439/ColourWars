@@ -12,6 +12,10 @@ function Invoke-PainterGit([string[]] $Arguments) {
 if (-not $OmitWorktreeStatus) { $worktreeStatus = @(Invoke-PainterGit @('status', '--short')) }
 
 $result = [ordered]@{
+    adapter_policy = if ($HostedSoftwareFunctional) { 'hosted_software_functional_only' } else { 'hardware_only' }
+    device_line = $null
+    hardware_acceptance = $false
+    rendering_scope = 'Scripted pixel assertions only. Hosted software is not hardware or performance acceptance; human review remains separate.'
     outcome = 'failed'
     scope = if ($FirstMatchFlowOnly) { 'first-match-flow-only' } elseif ($HowToPlayOnly) { 'how-to-play-only' } elseif ($GraphicsSettingsOnly) { 'graphics-settings-only' } elseif ($CrtTrialOnly) { 'crt-trial-captures-only' } elseif ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } elseif ($ResultsMenuOnly) { 'results-menu-only' } elseif ($MainMenuOnly) { 'main-menu-only' } elseif ($WeaponCatalogOnly) { 'weapon-catalog-only' } elseif ($MenuTextOnly) { 'menu-text-only' } elseif ($MenuMotionOnly) { 'menu-motion-only' } elseif ($SettingsMenuOnly) { 'settings-menu-only' } elseif ($ControlsMenuOnly) { 'controls-menu-only' } elseif ($StickSettingsOnly) { 'stick-settings-only' } elseif ($TeamSetupOnly) { 'team-setup-only' } else { 'full-painter-matrix' }
     preset = $Preset
