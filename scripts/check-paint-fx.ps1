@@ -5,6 +5,8 @@ param(
     [switch] $SkipBuild,
     # Compile the probe, then stop: no window, GPU or capture.
     [switch] $CompileOnly,
+    # Software-only functional evidence, never hardware acceptance.
+    [switch] $HostedSoftwareFunctional,
     [string] $OutputDirectory
 )
 
@@ -155,6 +157,10 @@ $previousLocalAppData = $env:LOCALAPPDATA
 $process = $null
 $failure = $null
 $result = [ordered]@{
+    adapter_policy = if ($HostedSoftwareFunctional) { 'hosted_software_functional_only' } else { 'hardware_only' }
+    device_line = $null
+    hardware_acceptance = $false
+    rendering_scope = 'Scripted pixel assertions only. Hosted software is not hardware or performance acceptance; human review remains separate.'
     outcome = 'failed'
     preset = $Preset
     game_revision = (& git rev-parse HEAD)
@@ -222,9 +228,10 @@ try {
         )
         $env:PATH = "$gameDirectory;$previousPath"
         $env:LOCALAPPDATA = $profile
+        $probeArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures))
+        if ($HostedSoftwareFunctional) { $probeArguments += '--hosted-software-functional' }
         $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
-            -WorkingDirectory $working -ArgumentList @((Quote-Path $gameDirectory),
-                (Quote-Path $captures)) `
+            -WorkingDirectory $working -ArgumentList $probeArguments `
             -RedirectStandardOutput (Join-Path $run 'run.log') `
             -RedirectStandardError (Join-Path $run 'run.err')
         $null = $process.Handle
@@ -235,10 +242,21 @@ try {
             if ($timer.Elapsed.TotalSeconds -gt 600) { throw 'Visual probe exceeded its 600-second runtime limit.' }
         }
         $process.WaitForExit()
-        Get-Content -LiteralPath (Join-Path $run 'run.log') | ForEach-Object { Write-Host $_ }
+        $runLines = @(Get-Content -LiteralPath (Join-Path $run 'run.log'))
+        $runLines | ForEach-Object { Write-Host $_ }
+        $deviceLines = @($runLines | Where-Object { $_ -match '^DEVICE ' })
+        $result.device_line = $deviceLines -join '\n'
         if ($process.ExitCode -ne 0) {
             Get-Content -LiteralPath (Join-Path $run 'run.err') | ForEach-Object { Write-Host $_ }
             throw "Visual probe exited with $($process.ExitCode)."
+        }
+        $expectedKind = if ($HostedSoftwareFunctional) { 'software' } else { 'hardware' }
+        if ($deviceLines.Count -ne 1 -or $deviceLines[0] -notmatch "(?:^| )kind=$expectedKind(?: |$)") {
+            throw 'The probe did not report one adapter matching the requested policy.'
+        }
+        $policyLines = @($runLines | Where-Object { $_ -match '^ADAPTER_POLICY ' })
+        if ($policyLines.Count -ne 1 -or $policyLines[0] -cne "ADAPTER_POLICY $($result.adapter_policy)") {
+            throw 'The probe did not report the requested adapter policy.'
         }
         Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'run.err'))
         if (Test-Path -LiteralPath (Join-Path $profile 'ColourWars/save_data.json')) {

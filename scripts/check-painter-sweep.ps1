@@ -21,6 +21,8 @@ param(
     # reported, not failed.
     [string] $KnownFailures,
     [switch] $DebugOnlyLeaves,
+    # Software-only functional evidence, never hardware acceptance.
+    [switch] $HostedSoftwareFunctional,
     [string] $OutputDirectory
 )
 
@@ -62,11 +64,15 @@ foreach ($leaf in $mine) {
     $log = Join-Path $root "$leaf.log"
     # A child shell: a leaf's failure throws, and its scope stays its own.
     $ErrorActionPreference = 'Continue'
-    & $shell -NoProfile -File $painter -Preset $Preset -SkipBuild "-$leaf" -OutputDirectory (Join-Path $root 'evidence') *>&1 |
+    $adapterArguments = @()
+    if ($HostedSoftwareFunctional) { $adapterArguments += '-HostedSoftwareFunctional' }
+    & $shell -NoProfile -File $painter -Preset $Preset -SkipBuild "-$leaf" @adapterArguments -OutputDirectory (Join-Path $root 'evidence') *>&1 |
         Out-File -LiteralPath $log -Encoding utf8
     $code = $LASTEXITCODE
     $ErrorActionPreference = 'Stop'
     $records.Add([ordered]@{
+        adapter_policy = if ($HostedSoftwareFunctional) { 'hosted_software_functional_only' } else { 'hardware_only' }
+        hardware_acceptance = $false
         leaf = $leaf
         outcome = if ($code -eq 0) { 'passed' } else { 'failed' }
         known = $leaf -cin $known

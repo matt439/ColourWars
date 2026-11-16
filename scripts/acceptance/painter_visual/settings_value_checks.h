@@ -4,6 +4,11 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
 {
     using Values = decltype(MenuText{}.values);
     const Presentation original = presentation;
+    // Independent Options order includes Graphics between Controls/audio and
+    // Restore defaults. Value callbacks must finish on Apply, not Restore.
+    constexpr int options_palette_row = 3;
+    constexpr int options_controls_row = 4;
+    constexpr int options_apply_row = 7;
     // Only On/Off/Random vary here. Every other value template (percentage,
     // durations, resolution) keeps its authored text, because the pages
     // format those through the same struct and reject a blank template.
@@ -190,7 +195,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
                 snapshot.team_palette().fixed_pair(TeamColourPair::blue_yellow).label, snapshot, true, custom ? 3 : 0);
             for (int pair = static_cast<int>(TeamColourPair::blue_yellow); pair < static_cast<int>(TeamColourPair::count); ++pair) { tap(Key::right); }
             compare(name + "-palette-random-cycle", false, 3, words.random, snapshot, true, custom ? (short_values ? 3 : 1) : 0);
-            tap(Key::down); tap(Key::down); tap(Key::down);
+            for (int row = options_palette_row; row < options_apply_row; ++row) { tap(Key::down); }
         }
     };
     const auto compare_pending = [&](const std::string& name, const Presentation& snapshot, const Values& words)
@@ -303,12 +308,15 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     }
     else
     {
-        tap(Key::up); tap(Key::up); presentation = next; tap(Key::enter); tick(); require(stack.depth() == 3, "Options value parent failed to open Controls");
+        for (int row = options_apply_row; row > options_controls_row; --row) { tap(Key::up); }
+        presentation = next; tap(Key::enter); tick(); require(stack.depth() == 3, "Options value parent failed to open Controls");
         for (int row = 0; row < 6; ++row) { tap(Key::down); }
         compare("new-child-on", true, 6, next_words.on, next, true); tap(Key::left);
         compare("new-child-off", true, 6, next_words.off, next, true); tap(Key::escape); tick();
         require(stack.depth() == 2, "Controls child Back lost its Options value parent");
-        compare_pending("old-parent-after-child", old, long_words); tap(Key::down); tap(Key::down); apply();
+        compare_pending("old-parent-after-child", old, long_words);
+        for (int row = options_controls_row; row < options_apply_row; ++row) { tap(Key::down); }
+        apply();
         Save reloaded; SettingsSession reloaded_session(reloaded); reloaded_session.load_save_file(); require(!reloaded.fullscreen() && reloaded.team_palette() == TeamColourPair::random,
             "Value parent Apply lost the retained windowed or Random choice");
     }

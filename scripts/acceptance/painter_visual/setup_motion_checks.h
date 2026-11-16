@@ -327,8 +327,25 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const Frame rapid_team = frame(); tick(settle_time);
         changed("team-rapid", rapid_team, frame(), { team_box(0, PlayerTeam::a) });
         tap(0, GamepadButton::dpad_right); tick(settle_time); const Frame no_team = frame();
-        tap(0, GamepadButton::a); require(no_team.pixels == frame().pixels,
-            "Confirming no team invented a readiness response");
+        // Neutral Ready is refused with a static instruction, not a readiness
+        // press. Build its expected pixels before sending the input: preserve
+        // the resting page and overlay only the independently authored text.
+        Renderer& renderer = *app.renderer(); renderer.begin_frame(); stack.draw(renderer);
+        const Viewport warning_viewport = app.viewport_manager()->fullscreen_viewport();
+        DrawList warning_list = renderer.view(0); warning_list.set_viewport(warning_viewport);
+        warning_list.set_camera(Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), warning_viewport));
+        warning_list.set_filter(TextureFilter::linear);
+        const colourwars::UiTextDropShadow choice_warning("independent-setup-motion-choice-warning",
+            L"Choose a team with Left/Right, then Ready.", style.detail_font,
+            look.team_warning_position, app.render_resources(), look.art.ink, Colour{}, style.detail_shadow_offset);
+        choice_warning.draw(warning_list); const Frame no_team_warning = read(renderer);
+        require(no_team_warning.pixels != no_team.pixels, "Neutral Team warning reference was invisible");
+        tap(0, GamepadButton::a); require(no_team_warning.pixels == frame().pixels,
+            "Neutral Ready differed from its static instruction or invented a readiness response");
+        tick(settle_time); require(no_team_warning.pixels == frame().pixels,
+            "Neutral Ready animated a refused readiness press or lost its instruction");
+        tap(0, GamepadButton::a); require(no_team_warning.pixels == frame().pixels,
+            "Repeated neutral Ready invented a response or changed its instruction");
         tap(0, GamepadButton::dpad_left); tick(settle_time); const Frame endpoint = frame();
         tap(0, GamepadButton::dpad_left); require(endpoint.pixels == frame().pixels,
             "A Team endpoint invented a selection response");

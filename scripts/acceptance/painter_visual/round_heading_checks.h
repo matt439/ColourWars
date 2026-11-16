@@ -166,6 +166,18 @@ void round_heading_checks(Application& app, const Canvas& canvas, GameTuning& tu
         colourwars::UiTextDropShadow outcome("independent-session-outcome", fixture.outcome, style.detail_font, Vector2F::zero,
             app.render_resources(), look.art.ink, Colour(), Vector2F::zero, !rows_visible);
         outcome.set_position({ (menu_consts::design_resolution.x - outcome.bounds().width) / 2.0f, look.session_result_y });
+        // Single matches have no series ledger, but their revealed score band
+        // explains the percentage denominator. This literal is independent of
+        // ResultsMenu and the mutable copy source, just like score/outcome.
+        require(fixture.info.team_a_played && fixture.info.team_b_played &&
+            fixture.info.team_a_area + fixture.info.team_b_area > 0.0f,
+            "Independent score-band fixture requires two teams with painted surface");
+        colourwars::UiTextDropShadow basis("independent-single-match-basis", L"Team share of painted surface",
+            look.contribution_font, Vector2F::zero, app.render_resources(), look.art.ink,
+            Colour(), Vector2F::zero, fixture.session.is_series() || !details_visible);
+        basis.set_position({ (menu_consts::design_resolution.x - basis.bounds().width) / 2.0f, look.score_basis_y });
+        require(row_region.contains(basis.bounds()),
+            "Independent single-match denominator caption escaped the complete score-band comparison");
         const RectangleF panel((menu_consts::design_resolution - look.box_size) / 2.0f, look.box_size);
         heading_bounds = heading.bounds();
         require(heading_bounds.width > 0.0f && heading_bounds.height > 0.0f && panel.contains(heading_bounds) &&
@@ -179,7 +191,7 @@ void round_heading_checks(Application& app, const Canvas& canvas, GameTuning& tu
         canvas.draw(list, camera.visible_rectangle(viewport)); FocusGroup empty_focus;
         const MenuPaperArtwork paper(panel, app.render_resources(), &style, &look.art, &empty_focus);
         paper.draw(list); list.set_filter(TextureFilter::linear);
-        heading.draw(list); score.draw(list); outcome.draw(list);
+        heading.draw(list); score.draw(list); outcome.draw(list); basis.draw(list);
         require(readbacks < 81, "Round heading reference exceeded its fixed readback budget");
         ++readbacks; return read(renderer);
     };
@@ -208,7 +220,7 @@ void round_heading_checks(Application& app, const Canvas& canvas, GameTuning& tu
         }
         const RectangleI neighbor_area = project(row_region);
         require(foreground_crop(actual, neighbor_area, 0).pixels == foreground_crop(wanted, neighbor_area, 0).pixels,
-            "Round heading extraction changed the unmodified score/outcome or the single-match row absence");
+            "Round heading extraction changed the unmodified score/outcome or the single-match ledger absence/denominator caption");
         if (negative_font)
         {
             const Frame wrong = reference(fixture, snapshot, literal, details_visible, true);

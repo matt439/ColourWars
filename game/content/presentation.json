@@ -554,7 +554,7 @@
       "home": "B0B0A8"
     },
     "options_warning_colour": "8A301C",
-    "options_spacing": { "x": 540.0, "y": 72.0 },
+    "options_spacing": { "x": 540.0, "y": 80.0 },
     "display_trial_seconds": 15.0,
     "weapon_description": {
       "colour": "1B1C20",

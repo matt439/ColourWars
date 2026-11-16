@@ -282,7 +282,11 @@ cannot fail.
 It is not a required check. A scheduled failure opens or updates one issue,
 `Nightly sweep failed`, which the next green scheduled night closes, and its Configure keeps `master`'s vcpkg cache current for
 pull requests. `scripts/check-painter/hosted-known-failures.txt` names any leaf
-whose exact pins hold only on a real GPU. The runner has no audio endpoint, so
+whose exact pins hold only on a real GPU. Painter and paint-fx use `-HostedSoftwareFunctional`: every existing pixel
+assertion runs on a truthfully classified D3D11 software adapter. This is not
+hardware acceptance; the default local probes still require hardware. The
+scheduled issue lifecycle records functional CI health only, not hardware
+qualification. The runner has no audio endpoint, so
 the job sets `COLOURWARS_NO_AUDIO_ENDPOINT` and the painter skips its music flow,
 which therefore runs only on a machine with one.
 

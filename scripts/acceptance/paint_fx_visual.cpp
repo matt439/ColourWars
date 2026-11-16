@@ -21,6 +21,19 @@ namespace
 {
     using acceptance::require;
 
+    constexpr bool admits_adapter(RenderDeviceKind kind, bool hosted_software)
+    {
+        return kind == (hosted_software ? RenderDeviceKind::software : RenderDeviceKind::hardware);
+    }
+    static_assert(admits_adapter(RenderDeviceKind::hardware, false));
+    static_assert(!admits_adapter(RenderDeviceKind::software, false));
+    static_assert(admits_adapter(RenderDeviceKind::software, true));
+    static_assert(!admits_adapter(RenderDeviceKind::hardware, true));
+    static_assert(!admits_adapter(RenderDeviceKind::null_device, false));
+    static_assert(!admits_adapter(RenderDeviceKind::null_device, true));
+    static_assert(!admits_adapter(static_cast<RenderDeviceKind>(99), false));
+    static_assert(!admits_adapter(static_cast<RenderDeviceKind>(99), true));
+
     const float dt = simulation::seconds_per_step;
     constexpr std::array<ProjectileType, 4> flying = {
         ProjectileType::spray, ProjectileType::jet, ProjectileType::mist, ProjectileType::ball };
@@ -592,7 +605,12 @@ int wmain(int argc, wchar_t** argv)
 {
     return acceptance::run_probe("paint fx visual", [&]
     {
-        require(argc == 3, "usage: paint_fx_visual <staged-content> <output>");
+        // Consume only the explicit final policy flag; leave the existing
+        // matrix/trial argument validation and every pixel assertion intact.
+        const bool hosted_software = argc > 1 &&
+            std::wstring(argv[argc - 1]) == L"--hosted-software-functional";
+        if (hosted_software) --argc;
+        require(argc == 3, "usage: paint_fx_visual <staged-content> <output> [--hosted-software-functional]");
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
         std::filesystem::create_directories(output);
@@ -617,9 +635,13 @@ int wmain(int argc, wchar_t** argv)
         const auto& device = app.renderer()->device_info();
         std::cout << "DEVICE backend=" << device.backend << " api=" << device.api
             << " name=" << device.device_name << " vendor=" << device.vendor_id
-            << " device=" << device.device_id << '\n';
-        require(device.backend == "d3d11" && device.kind == RenderDeviceKind::hardware,
-            "visual evidence requires a D3D11 hardware device");
+            << " device=" << device.device_id
+            << " kind=" << (device.kind == RenderDeviceKind::hardware ? "hardware" :
+                device.kind == RenderDeviceKind::software ? "software" : "unknown") << '\n';
+        std::cout << "ADAPTER_POLICY " << (hosted_software ?
+            "hosted_software_functional_only" : "hardware_only") << '\n';
+        require(device.backend == "d3d11" && admits_adapter(device.kind, hosted_software),
+            "adapter does not match D3D11 hardware-default or explicit hosted-software-functional policy");
         app.resource_loader()->register_kind("level", {
             [&](const std::string& directory, const std::string& name, bool) {
                 auto info = std::make_unique<LevelLoadedInfo>((directory + name + ".json").c_str());

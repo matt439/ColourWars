@@ -137,6 +137,16 @@ Before merging this pin/renderer change, strict hardware-default Debug and
 Release movement checks must pass on the final source and engine revisions,
 with recorded device identity and no software opt-in. This is separate local
 qualification, not a hosted check or a fabricated GitHub status. Hosted `gate`
-remains required and cannot be bypassed. The nightly painter/paint-fx hardware
-policies are unchanged and may still reject the hosted software adapter; this
-change does not claim a passing nightly or close its issue.
+remains required and cannot be bypassed. The nightly painter and paint-fx wrappers now also select an explicit
+`-HostedSoftwareFunctional` lane. It requires software, rejects hardware/null/
+unknown devices, retains all pixel assertions, and records the requested policy
+and observed device in each result. The sweep forwards it to every leaf and
+Remembered setup forwards it to its second process. Local calls without the
+switch still require D3D11 hardware. Existing known-failure exemptions are not
+expanded. A green scheduled sweep may close its functional-CI issue, but does
+not discharge the separate real-GPU obligation above. No manual close or
+hardware qualification follows from this policy change.
+
+This follow-up changes admission only. Native Debug/Release compilation,
+hosted painter/paint-fx pixels and strict hardware checks must be reported as
+separate results; source checks alone cannot establish any of them.

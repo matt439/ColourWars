@@ -89,25 +89,25 @@ jobs:
         run: |
           pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild -Parallel 4 -OptIn -OutputDirectory out/validation/opt-in
 
-      - name: Paint effects
+      - name: Paint effects (hosted software functional)
         if: matrix.paint_fx
         run: |
-          pwsh -NoProfile -File scripts/check-paint-fx.ps1 -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/paint-fx
+          pwsh -NoProfile -File scripts/check-paint-fx.ps1 -HostedSoftwareFunctional -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/paint-fx
 
-      - name: Painter plain matrix
+      - name: Painter plain matrix (hosted software functional)
         if: matrix.painter_plain
         run: |
-          pwsh -NoProfile -File scripts/check-painter.ps1 -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/painter-plain
+          pwsh -NoProfile -File scripts/check-painter.ps1 -HostedSoftwareFunctional -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/painter-plain
 
-      - name: Painter leaves
+      - name: Painter leaves (hosted software functional)
         if: matrix.sweep
         run: |
-          pwsh -NoProfile -File scripts/check-painter-sweep.ps1 -Preset ${{ matrix.preset }} -Shards 4 -Shard ${{ matrix.shard }} -KnownFailures scripts/check-painter/hosted-known-failures.txt -OutputDirectory out/validation/painter-sweep
+          pwsh -NoProfile -File scripts/check-painter-sweep.ps1 -HostedSoftwareFunctional -Preset ${{ matrix.preset }} -Shards 4 -Shard ${{ matrix.shard }} -KnownFailures scripts/check-painter/hosted-known-failures.txt -OutputDirectory out/validation/painter-sweep
 
-      - name: Painter Debug-only leaves
+      - name: Painter Debug-only leaves (hosted software functional)
         if: matrix.sweep_debug_only
         run: |
-          pwsh -NoProfile -File scripts/check-painter-sweep.ps1 -Preset ${{ matrix.preset }} -DebugOnlyLeaves -KnownFailures scripts/check-painter/hosted-known-failures.txt -OutputDirectory out/validation/painter-sweep
+          pwsh -NoProfile -File scripts/check-painter-sweep.ps1 -HostedSoftwareFunctional -Preset ${{ matrix.preset }} -DebugOnlyLeaves -KnownFailures scripts/check-painter/hosted-known-failures.txt -OutputDirectory out/validation/painter-sweep
 
       - name: Default cases under AddressSanitizer
         if: matrix.asan

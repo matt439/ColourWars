@@ -38,7 +38,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     struct ClearTeamPaper { StateContext& stack; Presentation& presentation; Presentation original; ~ClearTeamPaper() { this->stack.clear(); painter_scripted_pads::states = {}; this->presentation = this->original; } } clear{ stack, presentation, original };
     const std::array<int, 4> slots{ input_slots::keyboard_and_mouse, 3, 0, 2 };
     const std::array<WeaponType, 4> weapons{ WeaponType::sprayer, WeaponType::sniper, WeaponType::roller, WeaponType::bucket };
-    std::vector<PlayerTeam> teams; std::vector<bool> ready; bool warning = false, missing = false;
+    std::vector<PlayerTeam> teams; std::vector<bool> ready; bool warning = false, missing = false, choice_warning = false;
     const auto tick = [&](float elapsed = 0.0f) { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto bit = [](GamepadButton button) { return static_cast<uint16_t>(1u << static_cast<unsigned int>(button)); };
     const auto hold = [&](int player, GamepadButton button, bool down)
@@ -63,7 +63,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(3); settings.set_duration(73.0f); settings.set_stage("movement_course");
         settings.set_screen_layout(players_layout(count));
         settings.begin_input_claims(slots[0]); for (int player = 1; player < count; ++player) { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Team paper fixture claim failed"); }
-        teams.clear(); ready.assign(static_cast<size_t>(count), false); warning = missing = false;
+        teams.clear(); ready.assign(static_cast<size_t>(count), false); warning = missing = choice_warning = false;
         for (int player = 0; player < count; ++player) { teams.push_back(player % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); settings.set_player_team(player, teams.back()); settings.set_player_weapon(player, weapons[static_cast<size_t>(player)]); }
         initial = settings; stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         auto page = std::make_unique<MainMenuTeamSelect>(&context); active = page.get(); stack.push(std::move(page)); tick(); tick(); require(stack.depth() == 2, "Team paper did not retain neutral entry");
@@ -84,7 +84,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         const float edge = art.keyline_width * 3.0f; const RectangleF inside(paper.position() + Vector2F(edge), paper.size() - Vector2F(edge * 2.0f + art.shadow_offset));
         const auto position = [&](int column, int row) { return style.layout.position + Vector2F(look.team_select.spacing.x * static_cast<float>(column), look.team_select.spacing.y * static_cast<float>(row)); };
         const colourwars::UiTextDropShadow title("independent-team-title", heading, style.heading_font, position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
-        const colourwars::UiTextDropShadow message("independent-team-warning", L"Both teams need a player", style.detail_font, look.team_warning_position, app.render_resources(), art.ink, Colour{}, style.detail_shadow_offset);
+        const colourwars::UiTextDropShadow message("independent-team-warning", choice_warning ? L"Choose a team with Left/Right, then Ready." : L"Both teams need a player", style.detail_font, look.team_warning_position, app.render_resources(), art.ink, Colour{}, style.detail_shadow_offset);
         std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels; std::vector<RectangleF> rows, badges;
         const std::array<std::wstring, 4> devices{ L"Keyboard/mouse", L"Pad 4", L"Pad 1", L"Pad 3" };
         for (size_t i = 0; i < teams.size(); ++i)
@@ -156,7 +156,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         const int a = count / 2 + (count % 2 ? std::rand() % 2 : 0); const int next = std::rand(); std::srand(seed); tap(count - 1, GamepadButton::x);
         require(std::rand() == next, "Team paper shuffle changed its seeded RNG draw budget");
         for (int i = 0; i < count; ++i) { teams[static_cast<size_t>(order[static_cast<size_t>(i)])] = i < a ? PlayerTeam::a : PlayerTeam::b; }
-        ready.assign(teams.size(), false); warning = false;
+        ready.assign(teams.size(), false); warning = choice_warning = false;
     };
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440), Vector2I(1600, 1200), Vector2I(1920, 1200), Vector2I(2560, 1080) })
     {
@@ -165,8 +165,18 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         {
             const bool capture = count == 4 || size.x == 1280; open(count); compare("initial", original, L"Team Select", {}, capture);
             tap(0, GamepadButton::dpad_right); teams[0] = PlayerTeam::none; tick(settled); compare("unassigned", original, L"Team Select", {}, capture);
-            tap(0, GamepadButton::a); compare("no-team-confirm-refused", original, L"Team Select");
-            tap(0, GamepadButton::dpad_right); teams[0] = PlayerTeam::b; tick(settled); compare("team-b", original, L"Team Select");
+            tap(0, GamepadButton::a); warning = choice_warning = true;
+            compare("no-team-confirm-refused", original, L"Team Select");
+            tick(settled); compare("no-team-confirm-retained", original, L"Team Select");
+            if (count > 1)
+            {
+                tap(1, GamepadButton::dpad_left); teams[1] = PlayerTeam::none; tick(settled);
+                compare("neutral-warning-other-row", original, L"Team Select");
+                tap(1, GamepadButton::dpad_right); teams[1] = PlayerTeam::b; tick(settled);
+                compare("neutral-warning-other-row-restored", original, L"Team Select");
+            }
+            require(stack.depth() == 2, "Neutral Ready must retain Team Select"); plan();
+            tap(0, GamepadButton::dpad_right); teams[0] = PlayerTeam::b; warning = choice_warning = false; tick(settled); compare("team-b", original, L"Team Select");
             tap(0, GamepadButton::dpad_left); tap(0, GamepadButton::dpad_left); teams[0] = PlayerTeam::a; tick(settled);
             if (count == 1) { const Frame solo = compare("solo-restored", original, L"Team Select"); std::srand(437); const int next = std::rand(); std::srand(437); tap(0, GamepadButton::x); require(solo.pixels == frame().pixels && std::rand() == next, "Solo Team paper accepted shuffle or consumed RNG"); tap(0, GamepadButton::a); plan(true); require(frame().pixels == destination(true).pixels, "Solo Team paper failed its Weapon route"); continue; }
             tap(0, GamepadButton::a); ready[0] = true; tick(settled); compare("partly-ready", original, L"Team Select", {}, capture);

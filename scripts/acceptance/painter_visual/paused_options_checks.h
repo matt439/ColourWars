@@ -7,11 +7,12 @@ Frame paused_options_reference(Application& app, const Canvas& canvas,
     const std::wstring& expected_caption, const std::string& caption_font,
     const Vector2F& caption_position, bool canvas_underlay = false)
 {
-    require(selected >= 0 && selected < 8 && !(resolution_disabled && selected == 0),
-        "Independent paused Options requires an enabled selected row");
     constexpr std::array<MenuItem, 9> roles{ MenuItem::resolution, MenuItem::fullscreen,
         MenuItem::vsync, MenuItem::team_palette, MenuItem::controls_audio, MenuItem::graphics,
         MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
+    require(selected >= 0 && static_cast<size_t>(selected) < roles.size() &&
+        !(resolution_disabled && selected == 0),
+        "Independent paused Options requires an enabled selected row");
     require(words.heading(MenuHeading::options) == L"Options" &&
         !expected_caption.empty() && words.options_palette_timing == expected_caption,
         "Paused Options heading/caption drifted from the independent fixture copy");
