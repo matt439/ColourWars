@@ -75,7 +75,8 @@ namespace menu_text_acceptance
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& main = original.main_menu();
         const auto art = options_art(main);
-        require(main.options_spacing == labrador::Vector2F(540.0f, 72.0f) &&
+        // Nine rows keep a real gap between 58px glyphs and 7px focus padding.
+        require(main.options_spacing == labrador::Vector2F(540.0f, 80.0f) &&
             art.focus_padding == labrador::Vector2F(28.0f, 7.0f) && art.shadow_offset == 2.0f &&
             original.menu().item_font == "lato_black_48" && main.options_font == "lato_black_36",
             "Nine-row Options changed its reviewed compact geometry or its row font");
@@ -121,7 +122,7 @@ namespace menu_text_acceptance
                 main.options_position + labrador::Vector2F(0.0f, main.options_spacing.y * 6.0f), &world.render, art.ink);
             source = L"Changed after construction";
             auto card = text.bounds(); card.inflate(art.focus_padding);
-            require(text.text() == L"~" && text.bounds().width == 1470.0f && text.bounds().y == 652.0f &&
+            require(text.text() == L"~" && text.bounds().width == 1470.0f && text.bounds().y == 700.0f &&
                 card.right() == (1920.0f + main.options_box_size.x) / 2.0f - art.shadow_offset,
                 "Plain Restore defaults borrowed its copy, fitted its width or missed row6's inclusive paper-face edge");
             text.set_hidden(true); DrawList no_device; text.draw(no_device);
@@ -135,14 +136,14 @@ namespace menu_text_acceptance
             d["prompt_bar"]["font"].SetString("menu_text_exact");
             for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
             for (const auto& entry : status_text) { d["menu_text"]["status"][entry.key].SetString("Fit"); }
-            d["main_menu"]["options_position"]["y"].SetFloat(335.0f);
+            d["main_menu"]["options_position"]["y"].SetFloat(271.0f);
             d["main_menu"]["options_status_position"]["y"].SetFloat(914.0f);
         };
         variants.load(back_bottom).validate_resources(world.render, world.audio);
         variants.rejects("items.back", [&](rapidjson::Document& d)
         {
             back_bottom(d);
-            d["main_menu"]["options_position"]["y"].SetFloat(335.25f);
+            d["main_menu"]["options_position"]["y"].SetFloat(271.25f);
         }, &world);
     }
 
