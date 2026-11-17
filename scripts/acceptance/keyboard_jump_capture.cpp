@@ -4,6 +4,7 @@
 #include "game/input/input_bindings.h"
 #include "game/input/input_slots.h"
 #include "engine/input/gamepad_reader.h"
+#include "engine/input/scripted_gamepad_source.h"
 #include "engine/input/mouse.h"
 #include "scripts/acceptance/support/probe.h"
 #include <algorithm>
@@ -16,24 +17,6 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
-
-// The concrete reader seam used by input_bindings acceptance. Every pad is
-// absent; these checks need no XInput device, window, renderer or player's save.
-namespace labrador
-{
-    struct GamepadReader::Impl {};
-    GamepadReader::GamepadReader() : impl_(std::make_unique<Impl>()) {}
-    GamepadReader::~GamepadReader() = default;
-    GamepadReader::GamepadReader(GamepadReader&&) noexcept = default;
-    GamepadReader& GamepadReader::operator=(GamepadReader&&) noexcept = default;
-    void GamepadReader::sample() {}
-    GamepadState GamepadReader::read(int) const { return {}; }
-    void GamepadReader::suspend() {}
-    void GamepadReader::resume() {}
-    // Engine v0.3.0 reader members Gamepads calls; a fake pad has no motors.
-    bool GamepadReader::vibrate(int, const Vibration&) { return false; }
-    void GamepadReader::stop_vibration(int) {}
-}
 
 using namespace labrador;
 
@@ -389,7 +372,9 @@ namespace
         const GameTuning tuning((std::filesystem::path(content) / "tuning.json").string().c_str());
         for (const Key key : { Key::space, Key::r, Key::w })
         {
-            GamepadReader reader;
+            // Every scripted pad is absent; no physical backend is constructed.
+            ScriptedGamepadSource source;
+            GamepadReader reader(source);
             Gamepads pads(&reader);
             CaptureHarness h;
             MenuInput menu(&pads, &h.keyboard, &tuning);

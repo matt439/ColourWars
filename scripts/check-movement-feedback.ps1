@@ -182,7 +182,7 @@ try {
         ($result.adapter_kind -eq 'software' -and -not ($AllowSoftwareAdapter -or $HostedSoftwareFunctional))) {
         throw 'The probe did not report one adapter matching the requested policy.'
     }
-    Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'run.err'))
+    Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'run.err')) -AllowDebugAdapter:$debug
     if (Test-Path -LiteralPath (Join-Path $profile 'ColourWars/save_data.json')) {
         throw 'The visual probe unexpectedly created a save.'
     }

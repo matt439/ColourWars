@@ -258,7 +258,7 @@ try {
         if ($policyLines.Count -ne 1 -or $policyLines[0] -cne "ADAPTER_POLICY $($result.adapter_policy)") {
             throw 'The probe did not report the requested adapter policy.'
         }
-        Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'run.err'))
+        Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'run.err')) -AllowDebugAdapter:$debug
         if (Test-Path -LiteralPath (Join-Path $profile 'ColourWars/save_data.json')) {
             throw 'The visual probe unexpectedly created a save.'
         }

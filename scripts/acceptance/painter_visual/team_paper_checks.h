@@ -39,7 +39,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     const std::array<int, 4> slots{ input_slots::keyboard_and_mouse, 3, 0, 2 };
     const std::array<WeaponType, 4> weapons{ WeaponType::sprayer, WeaponType::sniper, WeaponType::roller, WeaponType::bucket };
     std::vector<PlayerTeam> teams; std::vector<bool> ready; bool warning = false, missing = false, choice_warning = false;
-    const auto tick = [&](float elapsed = 0.0f) { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
+    const auto tick = [&](float elapsed = 0.0f) { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto bit = [](GamepadButton button) { return static_cast<uint16_t>(1u << static_cast<unsigned int>(button)); };
     const auto hold = [&](int player, GamepadButton button, bool down)
     {
@@ -59,7 +59,7 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (Key key : { Key::enter, Key::escape, Key::r, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; for (int player = 1; player < count; ++player) { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(player)])].connected = true; }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(3); settings.set_duration(73.0f); settings.set_stage("movement_course");
         settings.set_screen_layout(players_layout(count));
         settings.begin_input_claims(slots[0]); for (int player = 1; player < count; ++player) { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Team paper fixture claim failed"); }

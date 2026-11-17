@@ -24,7 +24,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     std::vector<RectangleF> initial_rows;
     const auto bit = [](GamepadButton button) { return static_cast<uint16_t>(1u << static_cast<unsigned int>(button)); };
     const auto tick = [&](float elapsed = 0.0f)
-        { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
+        { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto hold = [&](int slot, GamepadButton button, bool down)
     {
         if (slot == input_slots::keyboard_and_mouse)
@@ -79,7 +79,7 @@ void join_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         connected[input_slots::keyboard_and_mouse] = true;
         slots = pad_first ? std::array<int, 4>{ 3, input_slots::keyboard_and_mouse, 0, 2 } :
             std::array<int, 4>{ input_slots::keyboard_and_mouse, 3, 0, 2 };
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(1);
         settings.set_stage("movement_course"); settings.set_duration(73.0f);

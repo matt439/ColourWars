@@ -115,6 +115,27 @@ Assert-Refused { Assert-CheckDiagnostics -Lines @('no audio: fixture. The manife
 Assert-Refused { Assert-CheckDiagnostics -Lines @($fallback.ToUpperInvariant()) } 'Unexpected probe diagnostic'
 Assert-Refused { Assert-CheckDiagnostics -Lines @('startup failure: fixture') } 'Unexpected probe diagnostic'
 
+$adapter = 'Direct3D Adapter (0): VID:10DE, PID:2C02 - NVIDIA GeForce RTX 5080'
+Assert-CheckDiagnostics -Lines @($adapter) -AllowDebugAdapter
+Assert-CheckDiagnostics -Lines @($adapter, $fallback) -AllowDebugAdapter -RequireNoAudio
+$checks += 2
+Assert-Refused { Assert-CheckDiagnostics -Lines @($adapter) } 'Unexpected probe diagnostic'
+foreach ($line in @(
+    'Direct3D Adapter (0): VID:10de, PID:2C02 - adapter',
+    'Direct3D Adapter (0): VID:10DE, PID:2C02 - ',
+    'Direct3D Adapter (0): VID:10DE - adapter',
+    ' Direct3D Adapter (0): VID:10DE, PID:2C02 - adapter',
+    "${adapter}`ttrailing control",
+    'WARNING: Direct3D Debug Device is not available',
+    'INFO: Flip swap effects not supported',
+    'startup failure: fixture'
+)) {
+    Assert-Refused { Assert-CheckDiagnostics -Lines @($line) -AllowDebugAdapter } 'Unexpected probe diagnostic'
+}
+Assert-Refused { Assert-CheckDiagnostics -Lines @($adapter, 'content failure: broken stage') -AllowDebugAdapter } 'Unexpected probe diagnostic'
+Assert-Refused { Assert-CheckDiagnostics -Lines @($adapter, $fallback) -AllowDebugAdapter -RequireAudio } 'unexpectedly used a silent bank'
+Assert-Refused { Assert-CheckDiagnostics -Lines @($adapter) -AllowDebugAdapter -RequireNoAudio } 'fallback was not reported'
+
 # Create only invisible native windows; destroy exactly those handles afterwards.
 if (-not ('ColourWars.CheckOwnedWindowsFixture' -as [type])) {
     Add-Type -TypeDefinition (@'

@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "scripts/acceptance/turbulence_blockout/fixtures.h"
 #include "game/objects/level_builder.h"
 #include "game/input/input_bindings.h"
@@ -28,7 +29,7 @@ namespace turbulence_blockout_acceptance
                 const std::string name = names.at(entry).as_identifier();
                 if (kind == "sprite_sheet")
                 {
-                    render.add_sprite_sheet(name, read_sprite_sheet(path_to_utf8(directory /
+                    render.add_sprite_sheet(name, acceptance::read_cpu_sprite_sheet(path_to_utf8(directory /
                         path_from_utf8(name + ".json")).c_str(), TextureHandle{}));
                 }
                 else if (kind == "font")

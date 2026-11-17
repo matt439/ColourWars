@@ -281,7 +281,9 @@ try {
     }
     $result.first_save_reduce_effects_follows_windows = $true
     [string]$stderr = Read-StartupError
-    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context startup -RequireAudio:$RequireAudio -RequireNoAudio:$RequireNoAudio -AllowedPattern $userStageRefusal
+    # resource.rc stamps VS_FF_DEBUG only for the Debug executable; a Release
+    # package still refuses all adapter traces. Raw stderr remains evidence.
+    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context startup -RequireAudio:$RequireAudio -RequireNoAudio:$RequireNoAudio -AllowDebugAdapter:$version.IsDebug -AllowedPattern $userStageRefusal
     if ($userStageRefusal -and @($stderr -split '\r?\n' | Where-Object { $_ -match $userStageRefusal }).Count -ne 1) {
         throw 'The broken user stage was not refused with exactly one line.'
     }
@@ -295,7 +297,7 @@ try {
     }
     # Destruction can report errors too, after the last running-process read.
     [string]$stderr = Read-StartupError
-    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context shutdown -RequireAudio:$RequireAudio -AllowedPattern $userStageRefusal
+    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context shutdown -RequireAudio:$RequireAudio -AllowDebugAdapter:$version.IsDebug -AllowedPattern $userStageRefusal
     $result.outcome = 'passed'
     $result.diagnostic = 'Game window, per-monitor v2 DPI awareness, content startup, isolated save with its stages folder and graceful shutdown passed.'
     Write-Output $result.diagnostic

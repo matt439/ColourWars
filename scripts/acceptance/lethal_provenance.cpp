@@ -6,7 +6,7 @@
 #include "game/objects/projectile_rolling.h"
 #include "game/objects/weapon_builder.h"
 #include "game/config/presentation/presentation.h"
-#include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "engine/core/file_path.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/probe.h"
@@ -40,7 +40,7 @@ namespace
         {
             for (const char* name : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx", "terrain" })
             {
-                render.add_sprite_sheet(name, read_sprite_sheet(path_to_utf8(content / "textures" /
+                render.add_sprite_sheet(name, acceptance::read_cpu_sprite_sheet(path_to_utf8(content / "textures" /
                     path_from_utf8(std::string(name) + ".json")).c_str(), TextureHandle{}));
             }
             audio.add_sound_bank("paint_exe", SoundBank::silent());

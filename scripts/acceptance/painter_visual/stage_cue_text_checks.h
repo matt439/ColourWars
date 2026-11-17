@@ -24,7 +24,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         ~RestoreCuePads()
         {
             painter_scripted_pads::states = this->previous;
-            this->app.gamepads()->poll(); this->app.gamepads()->poll();
+            poll_gamepads(this->app); poll_gamepads(this->app);
         }
     } restore_pads{ app, painter_scripted_pads::states };
 #endif
@@ -38,7 +38,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         }
     } restore{ stack, context, presentation, original };
     const auto tick = [&](float elapsed = 0.0f)
-        { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
+        { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto tap = [&](Key key)
     {
         app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
@@ -63,7 +63,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
         painter_scripted_pads::states = {};
 #endif
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         settings = MatchSetup(); settings.set_player_count(1);
         settings.begin_input_claims(input_slots::keyboard_and_mouse); settings.set_player_team(0, PlayerTeam::a);

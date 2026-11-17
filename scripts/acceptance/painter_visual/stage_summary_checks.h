@@ -86,7 +86,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         require(saved_bytes() == saved, "Summary formatting/navigation persisted private preferences");
     };
     const auto tick = [&]
-    { require(++ticks <= 120, "Stage summary exceeded 120 bounded page updates"); app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
+    { require(++ticks <= 120, "Stage summary exceeded 120 bounded page updates"); poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
     const auto tap = [&](Key key)
     {
         std::srand(3581); const int random = std::rand(); std::srand(3581);
@@ -106,7 +106,7 @@ void stage_summary_matrix(Application& app, Registry<LevelLoadedInfo>& levels, c
         settings.set_screen_layout(players_layout(fixture.players));
         for (int seat = 0; seat < fixture.players; ++seat)
         { settings.set_player_team(seat, seat % 2 == 0 ? PlayerTeam::a : PlayerTeam::b); settings.set_player_weapon(seat, tools[static_cast<size_t>(seat)]); }
-        expected = settings; app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
+        expected = settings; poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick(); unchanged();
     };
     std::ofstream records(output / "stage-summary.csv"); records << "case,context,role,random_slot,locked,width,height,font,x,y,text_width,text_height,shadow_x,shadow_y,scale,fixture_matches,refresh_state_verified\n";

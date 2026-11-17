@@ -90,7 +90,7 @@ void paused_options_matrix(Application& app, Registry<LevelLoadedInfo>& levels, 
             "Paused Options showed, activated or fullscreened its private window"); };
     const auto resize = [&](Vector2I size) { app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y); };
-    const auto tick = [&](float elapsed = 0.0f) { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
+    const auto tick = [&](float elapsed = 0.0f) { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto hold = [&](int slot, GamepadButton button, bool down)
     {
         if (slot == keyboard)

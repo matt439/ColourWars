@@ -35,7 +35,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
             button == GamepadButton::dpad_left ? Key::left : Key::right;
     };
     const auto tick = [&](float elapsed = 0.0f)
-        { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
+        { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto hold = [&](int slot, GamepadButton button, bool down)
     {
         if (slot == input_slots::keyboard_and_mouse)
@@ -149,7 +149,7 @@ void join_stage_motion_matrix(Application& app, Registry<LevelLoadedInfo>& level
         for (const Key value : { Key::enter, Key::escape, Key::left, Key::right }) { app.keyboard()->on_key_up(value); }
         painter_scripted_pads::states = {};
         for (auto& state : painter_scripted_pads::states) { state.connected = true; }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         settings = MatchSetup(); settings.set_player_count(4); settings.begin_input_claims(initiating_slot);
         settings.set_stage("movement_course"); settings.set_best_of(3); settings.set_duration(73.0f);

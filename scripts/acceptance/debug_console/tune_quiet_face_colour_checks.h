@@ -66,7 +66,7 @@ void check_quiet_face_colour_tunes(const std::filesystem::path& game_directory)
     const std::string tuning_before = read_text(scratch.source / L"tuning.json");
     labrador::RenderResources resources;
     for (const auto& name : { fill->sprite_sheet, look->sprite_sheet })
-        { resources.add_sprite_sheet(name, labrador::read_sprite_sheet((game_directory / L"textures" / (name + ".json")).string().c_str(), labrador::TextureHandle{})); }
+        { resources.add_sprite_sheet(name, acceptance::read_cpu_sprite_sheet((game_directory / L"textures" / (name + ".json")).string().c_str(), labrador::TextureHandle{})); }
     const FigureAttachments attachment(fill, look, &resources);
     const auto* const art_sheet = resources.sprite_sheet(look->sprite_sheet);
     const auto* const fill_sheet = resources.sprite_sheet(fill->sprite_sheet);

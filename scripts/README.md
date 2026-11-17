@@ -32,7 +32,7 @@ full.
 | [drawing-references.ps1](drawing-references.ps1) | dot-sourced helper giving `check-paint-fx.ps1` and the debug-console driver the `Add-Type` references System.Drawing code needs under pwsh as well as Windows PowerShell |
 | [probe-build.ps1](probe-build.ps1) | dot-sourced helper for the configured build's compiler arguments, game and adapter libraries, dependency includes and Windows libraries; for `x64-asan` also the sanitizer flags and the folder of its runtime DLL |
 | [report-analyze.ps1](report-analyze.ps1) | builds the `x64-analyze` preset from clean and writes `analyze-warnings.log` and `analyze-summary.json`, the `/analyze` warnings counted by code for this repository and for the engine; a report that fails only if the build does. `-Baseline` [report-analyze-baseline.json](report-analyze-baseline.json), as the nightly passes it, lists this repository's warnings that are new or gone against the nine accepted ones; `-WarningsLog` recounts an earlier `analyze-warnings.log` without building |
-| [check-diagnostics.ps1](check-diagnostics.ps1) | shared stderr checks; only the exact optional-bank fallback or a caller's explicit fixture diagnostic is allowed |
+| [check-diagnostics.ps1](check-diagnostics.ps1) | shared stderr checks; exact optional-bank fallback, Debug's adapter-identity line when explicitly enabled, or a caller's explicit fixture diagnostic; warnings and other engine notices still fail |
 | [check-windows.ps1](check-windows.ps1) | shared Win32 source for enumerating a child process's top-level windows, finding a class and closing those windows |
 | [check-probe-helpers.ps1](check-probe-helpers.ps1) | checks build preflights, diagnostics and owned-window enumeration with synthetic files and an invisible native window; no CMake, MSVC or GPU |
 
@@ -42,6 +42,9 @@ has one, and [acceptance/support/probe.h](acceptance/support/probe.h)
 (`acceptance::require` and `acceptance::run_probe`). A probe that builds game
 objects loads the manifest's sheets, fonts and banks with
 [support/content_world.h](acceptance/support/content_world.h), and one that
+reads a sprite sheet directly uses
+[support/sprite_sheet.h](acceptance/support/sprite_sheet.h) to decode the real
+DDS/PNG atlas dimensions for the engine's frame-bounds checks. A probe that
 claims every stage walks `manifest_level_paths` in
 [support/stage_catalog.h](acceptance/support/stage_catalog.h), not a list of its
 own. A probe that touches the save points `LOCALAPPDATA` at a private root with
@@ -52,7 +55,10 @@ checks a reader refuses bad JSON writes edited copies with
 scratch by [support/scratch.h](acceptance/support/scratch.h), whose checked
 `read_text` and `write_text` the probes use for whole files. A probe that reads what
 the game prints to stderr captures it with
-[support/stderr_capture.h](acceptance/support/stderr_capture.h). The opt-in
+[support/stderr_capture.h](acceptance/support/stderr_capture.h). Pad fixtures
+use Labrador's `ScriptedGamepadSource` beside the configured backend; only
+`rumble_adapter` keeps a reader-member replacement, to inject transport
+exceptions the supported source cannot supply. The opt-in
 `reader_mutations` case feeds fixed-seed mutants of every staged level to
 `load_user_stages` and of three saves to `Save`, in one private root, and
 requires that each loads or is refused; its own watchdog thread fails it on a

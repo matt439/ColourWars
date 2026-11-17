@@ -6,7 +6,7 @@
 #include "game/objects/weapon_builder.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/json.h"
-#include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "engine/core/file_path.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/player_course.h"
@@ -62,7 +62,7 @@ namespace fixed_slab_acceptance
             {
                 for (const char* sheet : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx", "terrain" })
                 {
-                    render.add_sprite_sheet(sheet, read_sprite_sheet(path_to_utf8(content / "textures" /
+                    render.add_sprite_sheet(sheet, acceptance::read_cpu_sprite_sheet(path_to_utf8(content / "textures" /
                         (std::string(sheet) + ".json")).c_str(), TextureHandle{}));
                 }
                 audio.add_sound_bank("paint_exe", SoundBank::silent());

@@ -13,9 +13,11 @@ results go in their owners, and `git log` is the changelog.
 was published as a pre-release on 2026-11-13 ([record](docs/releasing.md#first-release-v010));
 `master` is now `0.1.1` (`REL#6`).
 
-The engine pin moved to master `1dc8533c` on 2026-11-13 (`ENG#36`, `PIN#2` and `PIN#3` done,
-[record](docs/review/engine-reports.md#what-the-2026-11-13-bump-changed)); five atlases now ship
-as PNG through the engine's loader ([`PIN#3`](docs/review/engine-reports.md#png-atlases-and-texconv-pin3)).
+The engine pin moved to `v0.4.0` on 2026-11-17, consuming its atlas-dimension
+contract and supported scripted-pad source
+([record](docs/review/engine-reports.md#what-the-2026-11-17-bump-changed)). The earlier
+`ENG#36`, `PIN#2` and `PIN#3` work remains done; five atlases ship as PNG
+through the engine's loader ([`PIN#3`](docs/review/engine-reports.md#png-atlases-and-texconv-pin3)).
 
 Next actions: none open. `HYG#96` waits on the first green scheduled nightly after the
 2026-11-13 ASan link fix reaches `master`; that night should close issue #72 itself. The required `gate` and up-to-date `master` rule still apply. The author's
@@ -79,15 +81,16 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 ## Engine reports
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
-engine master before filing, not the pin. The pin is master `1dc8533c` (2026-11-13, 129
-commits past `v0.3.0` plus vsync; no tag since `v0.3.0`). On 2026-11-05 the owed reports were
-filed and 28 was closed as declined; on 2026-11-13 35 and 38 were parked, 36 spent at the bump
-and 37 withdrawn. A pin bump that answers one is when its workaround is deleted.
+engine master before filing, not the pin. The pin is `v0.4.0` (2026-11-17).
+At this bump 26 closed on the engine's declined Registry rider, and 27's supported
+scripted source replaced five reader fixtures; the exception-injection fixture remains.
+30 has an exception category but no backend migration yet. The tracker responses
+remain open. A pin bump that answers one is when its workaround is deleted.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#PARKED` | DECISION | LOW | S | Asks waiting for a vehicle: window presence (was 38), `window_size_changed`, desktop size (exhibit for engine `REV#83`), atomic JSON write, registry forgetting, install facts, listener/voice cap, display-awake owner, non-XInput reader (`ROAD#23`), colour transforms (was `GAP#F10`), engine `GAP#6`, sound-group lookup (was `ENG#35`). Author: approve the drafted mouse-button comment for labrador#122 and the engine `REV#60` note, then post them. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
-| `ENG#26`, `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed 2026-11-05 as [labrador#122](https://github.com/matt439/Labrador/issues/122) (27 with the 26 rider), #123, #124 and #125 (the Bug). Waits on the engine. When one is answered, spend it at the next pin bump; for 34, also settle what CI's strict gates accept. [Ledger](docs/review/engine-reports.md#live) |
+| `ENG#PARKED` | DECISION | LOW | S | Asks waiting for a vehicle: window presence (was 38), `window_size_changed`, desktop size (exhibit for engine `REV#83`), atomic JSON write, install facts, listener/voice cap, display-awake owner, non-XInput reader (`ROAD#23`), colour transforms (was `GAP#F10`), engine `GAP#6`, sound-group lookup (was `ENG#35`). Author: approve the drafted mouse-button comment for labrador#122 and the engine `REV#60` note, then post them. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
+| `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed as [labrador#122](https://github.com/matt439/Labrador/issues/122), #123, #124 and #125. At `v0.4.0`, 27 is partly spent (only the throwing rumble transport keeps a reader link fixture); 30's category exists but backends still need it; 33's mutable contact and 34's Release software refusal remain planned. 34's truthful classification and explicit hosted/strict hardware lanes were already consumed. Tracker responses remain open. [Ledger](docs/review/engine-reports.md#live) |
 | `ENG#39` | DECISION | LOW | S | `FLT_MAX` written to JSON reads back one double step above it, so `gameplay_tuning` tests one float below. Drafted 2026-11-13, not filed. Author: issue route or engine fix. [Report](docs/review/engine-reports.md#39-a-float-written-as-flt_max-does-not-read-back---draft-not-filed) |
 
 ## Developer console

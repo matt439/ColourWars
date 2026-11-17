@@ -4,27 +4,6 @@
 #include <cstdlib>
 #include <iostream>
 
-// The concrete reader link seam used by action_bindings.cpp: no XInput,
-// window, graphics/audio device, physical keyboard or player's save.
-namespace binding_test_pads { std::array<labrador::GamepadState, 4> states{}; }
-namespace labrador
-{
-    struct GamepadReader::Impl { std::array<GamepadState, 4> states{}; bool suspended = false; };
-    GamepadReader::GamepadReader() : impl_(std::make_unique<Impl>()) {}
-    GamepadReader::~GamepadReader() = default;
-    GamepadReader::GamepadReader(GamepadReader&&) noexcept = default;
-    GamepadReader& GamepadReader::operator=(GamepadReader&&) noexcept = default;
-    void GamepadReader::sample()
-    { this->impl_->states = this->impl_->suspended ? std::array<GamepadState, 4>{} : binding_test_pads::states; }
-    GamepadState GamepadReader::read(int slot) const
-    { return slot >= 0 && slot < 4 ? this->impl_->states[static_cast<size_t>(slot)] : GamepadState{}; }
-    void GamepadReader::suspend() { this->impl_->suspended = true; }
-    void GamepadReader::resume() { this->impl_->suspended = false; }
-    // Engine v0.3.0 reader members Gamepads calls; a fake pad has no motors.
-    bool GamepadReader::vibrate(int, const Vibration&) { return false; }
-    void GamepadReader::stop_vibration(int) {}
-}
-
 using namespace input_bindings_acceptance;
 
 int main(int argc, char** argv)

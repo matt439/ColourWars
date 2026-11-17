@@ -5,7 +5,7 @@
 #include "game/objects/level_object_builder.h"
 #include "game/objects/projectile_builder.h"
 #include "game/objects/structure.h"
-#include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "engine/collision/tunnelling.h"
 #include "scripts/acceptance/support/json_fixture.h"
 #include "scripts/acceptance/support/probe.h"
@@ -39,7 +39,7 @@ namespace
 		{
 			for (const char* sheet : { "sprite_sheet_1", "paint_fx", "terrain" })
 			{
-				render.add_sprite_sheet(sheet, read_sprite_sheet(
+				render.add_sprite_sheet(sheet, acceptance::read_cpu_sprite_sheet(
 					(content / "textures" / (std::string(sheet) + ".json")).string().c_str(),
 					TextureHandle{}));
 			}

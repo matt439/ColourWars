@@ -4,7 +4,7 @@
 #include "game/objects/structure.h"
 #include "game/objects/weapon_builder.h"
 #include "game/config/presentation/presentation.h"
-#include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/player_course.h"
 #include "scripts/acceptance/support/probe.h"
@@ -60,7 +60,7 @@ namespace
         {
             for (const char* sheet : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx", "terrain" })
             {
-                this->render.add_sprite_sheet(sheet, read_sprite_sheet(
+                this->render.add_sprite_sheet(sheet, acceptance::read_cpu_sprite_sheet(
                     (content / "textures" / (std::string(sheet) + ".json")).string().c_str(),
                     TextureHandle{}));
             }

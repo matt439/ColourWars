@@ -47,7 +47,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     const auto tick = [&](float elapsed = 0.0f)
     {
         require(++ticks <= 120, "Menu labels exceeded the bounded 120-update budget");
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto key = [&](Key value)
         { app.keyboard()->on_key_down(value); tick(); app.keyboard()->on_key_up(value); tick(); };
@@ -79,7 +79,7 @@ void menu_label_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             { app.keyboard()->on_key_up(value); }
         painter_scripted_pads::states = {};
         for (auto& state : painter_scripted_pads::states) { state.connected = kind != 3; }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         settings = MatchSetup(); settings.set_player_count(kind == 0 ? 3 : 4);
         settings.begin_input_claims(3); const auto& slots = kind == 3 ? pads : sparse;

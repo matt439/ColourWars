@@ -29,7 +29,7 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
         painter_scripted_pads::states = {}; painter_scripted_pads::states[0].connected = pad;
         for (Key key : {Key::enter,Key::escape,Key::up,Key::down,Key::left,Key::right,Key::d}) app.keyboard()->on_key_up(key);
         const auto tick = [&](float elapsed = 1.0f/60.0f)
-        { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
+        { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
         tick(); tick();
         stack.push(std::make_unique<GameMenu>(&data)); tick(); tick();
         int confirmations = 0, directions = 0;

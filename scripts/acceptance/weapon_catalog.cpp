@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/config/presentation/presentation.h"
 #include "game/states/menu_panel.h"
-#include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/math/vector2i.h"
 #include "engine/render/sprite_font_file.h"
@@ -351,7 +351,8 @@ namespace
         require(removed, "Legacy error-frame fixture disappeared from the authored weapon atlas");
         const auto path = variants.folder() / "weapon-sheet-without-error.json";
         write_document(sheet, path);
-        world.render.add_sprite_sheet("weapon_paint", read_sprite_sheet(path.string().c_str(), TextureHandle{}));
+        world.render.add_sprite_sheet("weapon_paint", acceptance::read_cpu_sprite_sheet(
+            path.string().c_str(), TextureHandle{}, content / "textures/weapon_paint.json"));
         const auto defaults = variants.load([](rapidjson::Document&) {});
         defaults.validate_resources(world.render, world.audio);
     }

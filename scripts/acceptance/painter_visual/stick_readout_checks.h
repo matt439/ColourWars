@@ -66,7 +66,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const auto tick = [&]
     {
         require(++ticks <= 180, "Stick readouts exceeded the bounded 180 update budget");
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f);
     };
     const auto tap = [&](Key key)
         { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); };
@@ -77,7 +77,7 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
             { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {};
         for (auto& state : painter_scripted_pads::states) { state.connected = true; }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); selected = 0;
         stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         stack.push(std::make_unique<StickSettingsMenu>(&context)); tick(); tick();
@@ -226,14 +226,14 @@ void stick_readout_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         const auto recovery_tick = [&]
         {
             require(++recovery_ticks <= 96, "Recovered stick readouts exceeded their bounded 96-update budget");
-            app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f);
+            poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f);
         };
         const auto recovery_open = [&](int owner)
         {
             stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
             for (const Key key : { Key::enter, Key::space, Key::escape, Key::up, Key::down, Key::left, Key::right })
                 { app.keyboard()->on_key_up(key); }
-            app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+            poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
             app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); selected = owner >= 0 ? owner : 0;
             stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
             stack.push(std::make_unique<StickSettingsMenu>(&recovery_context, owner)); recovery_tick(); recovery_tick();

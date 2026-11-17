@@ -24,7 +24,7 @@ void duel_flow(Application& app, GameTuning& tuning, Presentation& presentation,
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         painter_scripted_pads::states={}; painter_scripted_pads::states[pad].connected=true;
         for(Key k:{Key::enter,Key::escape,Key::left,Key::right,Key::up,Key::down,Key::d}) app.keyboard()->on_key_up(k);
-        const auto tick=[&]{app.gamepads()->poll();app.keyboard()->poll();app.mouse()->poll();stack.update(1.0f/60);};
+        const auto tick=[&]{poll_gamepads(app);app.keyboard()->poll();app.mouse()->poll();stack.update(1.0f/60);};
         int confirms=0,directions=0;
         std::ofstream log(output/(prefix+"-actions.csv"));log<<"phase,confirmations,directions\n";
         const auto snap=[&](const std::string& phase){save(stack_frame(app),output/(prefix+"-"+phase+".ppm"));log<<phase<<','<<confirms<<','<<directions<<'\n';log.flush();};

@@ -3,6 +3,7 @@
 #include "game/states/resume_countdown.h"
 #include "game/input/input_slots.h"
 #include "engine/input/gamepad_reader.h"
+#include "engine/input/scripted_gamepad_source.h"
 #include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <filesystem>
@@ -11,28 +12,6 @@
 
 // REV#31: a pad's Toggle fire turns Shoot into a latch. Scripted pad
 // snapshots through the real PlayerInput; no XInput, window or player save.
-namespace toggle_fire_pads { std::array<labrador::GamepadState, 4> states{}; }
-namespace labrador
-{
-	struct GamepadReader::Impl { std::array<GamepadState, 4> states{}; bool suspended = false; };
-	GamepadReader::GamepadReader() : impl_(std::make_unique<Impl>()) {}
-	GamepadReader::~GamepadReader() = default;
-	GamepadReader::GamepadReader(GamepadReader&&) noexcept = default;
-	GamepadReader& GamepadReader::operator=(GamepadReader&&) noexcept = default;
-	void GamepadReader::sample()
-	{
-		this->impl_->states = this->impl_->suspended ? std::array<GamepadState, 4>{} : toggle_fire_pads::states;
-	}
-	GamepadState GamepadReader::read(int slot) const
-	{
-		return slot >= 0 && slot < 4 ? this->impl_->states[static_cast<size_t>(slot)] : GamepadState{};
-	}
-	void GamepadReader::suspend() { this->impl_->suspended = true; }
-	void GamepadReader::resume() { this->impl_->suspended = false; }
-	bool GamepadReader::vibrate(int, const Vibration&) { return false; }
-	void GamepadReader::stop_vibration(int) {}
-}
-
 using namespace labrador;
 
 namespace
@@ -43,7 +22,9 @@ namespace
 
 	struct Harness
 	{
-		GamepadReader reader;
+		ScriptedGamepadSource source;
+		std::array<GamepadState, 4> states{};
+		GamepadReader reader{ source };
 		Gamepads pads{ &reader };
 		Keyboard keyboard;
 		Mouse mouse;
@@ -57,17 +38,23 @@ namespace
 			tuning((content / "tuning.json").string().c_str()),
 			players(&pads, &keyboard, &mouse, &tuning, &preferences, &bindings)
 		{
-			toggle_fire_pads::states = {};
-			for (GamepadState& pad : toggle_fire_pads::states) { pad.connected = true; }
+			for (int slot = 0; slot < 4; ++slot)
+			{
+				states[static_cast<size_t>(slot)].connected = true;
+				source.set_vibration_available(slot, false);
+			}
 			keyboard.set_focused(true);
 			mouse.set_focused(true);
 			this->step();
 			this->step();
 		}
-		GamepadState& pad(int slot) { return toggle_fire_pads::states[static_cast<size_t>(slot)]; }
+		GamepadState& pad(int slot) { return states[static_cast<size_t>(slot)]; }
 		void step()
 		{
+			source.clear_records();
+			for (int slot = 0; slot < 4; ++slot) { source.set_state(slot, states[static_cast<size_t>(slot)]); }
 			pads.poll();
+			require(!source.records_overflowed(), "Scripted pad records overflowed");
 			keyboard.poll();
 			mouse.poll();
 			inputs = players.player_inputs();

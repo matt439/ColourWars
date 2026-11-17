@@ -77,7 +77,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     const auto bit = [](GamepadButton button)
         { return static_cast<uint16_t>(1u << static_cast<unsigned int>(button)); };
     const auto tick = [&](float elapsed = 0.0f)
-        { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
+        { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto hold = [&](int slot, GamepadButton button, bool down)
     {
         if (slot == input_slots::keyboard_and_mouse)
@@ -108,7 +108,7 @@ void remembered_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels
         for (const Key key : { Key::enter, Key::space, Key::escape, Key::up, Key::down, Key::left, Key::right })
             { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = pad_present;
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll();
     };
     const auto open = [&](bool pad_present)

@@ -8,6 +8,7 @@
 #include "game/objects/player_input.h"
 #include "game/states/menu_input.h"
 #include "engine/input/gamepad_reader.h"
+#include "engine/input/scripted_gamepad_source.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/isolated_save.h"
 #include <objbase.h>
@@ -22,8 +23,6 @@
 #include <string_view>
 #include <tuple>
 #include <vector>
-
-namespace binding_test_pads { extern std::array<labrador::GamepadState, 4> states; }
 
 namespace input_bindings_acceptance
 {
@@ -84,18 +83,24 @@ namespace input_bindings_acceptance
 
     struct ReaderHarness
     {
-        GamepadReader reader; Gamepads pads{ &reader }; Keyboard keyboard; Mouse mouse;
+        ScriptedGamepadSource source;
+        std::array<GamepadState, 4> states{};
+        GamepadReader reader{ source }; Gamepads pads{ &reader }; Keyboard keyboard; Mouse mouse;
         GameTuning tuning; PlaySettings play; InputBindings bindings{ Key::j };
         PlayerInput player; MenuInput menu; std::vector<ProcessedMenuInput> menus;
         explicit ReaderHarness(const char* content) : tuning((std::filesystem::path(content) / "tuning.json").string().c_str()),
             player(&pads, &keyboard, &mouse, &tuning, &play, &bindings), menu(&pads, &keyboard, &tuning)
         {
-            binding_test_pads::states = {}; keyboard.set_focused(true); mouse.set_focused(true);
+            for (int slot = 0; slot < 4; ++slot) { source.set_vibration_available(slot, false); }
+            keyboard.set_focused(true); mouse.set_focused(true);
             std::ignore = this->sample(); std::ignore = this->sample();
         }
         std::vector<SlotInput> sample()
         {
+            source.clear_records();
+            for (int slot = 0; slot < 4; ++slot) { source.set_state(slot, states[static_cast<size_t>(slot)]); }
             pads.poll(); keyboard.poll(); mouse.poll(); menu.update_directions(0.0f, 0.4f, 0.1f, false);
+            require(!source.records_overflowed(), "Scripted pad records overflowed");
             auto result = player.player_inputs(); const auto repeated = player.player_inputs();
             require(result.size() == input_slots::count && repeated.size() == result.size(), "Actual input reader changed slot count");
             for (size_t slot = 0; slot < result.size(); ++slot)

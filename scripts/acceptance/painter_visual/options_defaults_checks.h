@@ -47,7 +47,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     const int keyboard = input_slots::keyboard_and_mouse; int device = keyboard, row = 0, status = 0;
     bool staged = false, saved_fullscreen = false, shown_vsync = false; std::string before_bytes;
     const float settled = std::max(style.motion.focus_duration, style.motion.press_duration) + 0.01f;
-    const auto tick = [&](float elapsed = 0.0f) { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
+    const auto tick = [&](float elapsed = 0.0f) { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto hold = [&](GamepadButton button, bool down)
     {
         if (device == keyboard)
@@ -82,7 +82,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (Key key : { Key::up, Key::down, Key::right, Key::enter, Key::escape, Key::space }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = device == 3;
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); auto page = std::make_unique<MainMenuOptions>(&context); active = page.get(); stack.push(std::move(page));
         row = saved_fullscreen ? 1 : 0; status = 0; shown_vsync = preferences.vsync(); tick(); tick();
         require(stack.depth() == 2 && !app.fullscreen() && IsWindowVisible(static_cast<HWND>(app.window())) == FALSE, "Options defaults exposed its hidden window or failed to open");

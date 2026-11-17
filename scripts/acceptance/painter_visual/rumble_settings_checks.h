@@ -30,7 +30,7 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
         ~ClearRumbleSettings()
         {
             this->stack.clear(); painter_scripted_pads::states = {};
-            this->app.gamepads()->poll(); this->app.gamepads()->poll();
+            poll_gamepads(this->app); poll_gamepads(this->app);
             this->blocked.release();
         }
     } clear{ stack, app, blocked };
@@ -42,7 +42,7 @@ void rumble_settings_checks(Application& app, const Canvas& canvas, GameTuning& 
     };
     const auto tick = [&](float elapsed = 0.0f)
     {
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto pad = [&](int slot, GamepadButton button)
     {

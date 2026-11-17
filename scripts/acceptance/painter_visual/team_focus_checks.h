@@ -26,7 +26,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
     const auto tick = [&](float elapsed = 0.0f)
     {
         require(++ticks <= 240, "Team focus exceeded its bounded 240 update budget");
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto hold = [&](int seat, GamepadButton button, bool down)
     {
@@ -67,7 +67,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         for (const Key key : { Key::enter, Key::escape, Key::r, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {};
         for (int slot : { 3, 0, 2 }) { painter_scripted_pads::states[static_cast<size_t>(slot)].connected = true; }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         settings = MatchSetup(); settings.set_player_count(count); settings.begin_input_claims(slots[0]);
         for (int seat = 1; seat < count; ++seat) { require(settings.claim_input_slot(slots[static_cast<size_t>(seat)]), "Team focus claim failed"); }
@@ -356,12 +356,12 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
     stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
     for (const Key key : { Key::enter, Key::escape, Key::r, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
     painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = true;
-    app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+    poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
     app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); int ticks = 0;
     const auto tick = [&](float elapsed = 0.0f)
     {
         require(++ticks <= 12, "Team tune exceeded twelve bounded page updates");
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuTeamSelect>(&context)); tick(); tick();
     const auto confirm = static_cast<uint16_t>(1u << static_cast<unsigned int>(GamepadButton::a));

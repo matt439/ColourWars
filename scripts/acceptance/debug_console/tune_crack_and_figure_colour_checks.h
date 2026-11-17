@@ -18,7 +18,7 @@
 		const auto* const reveal = &opening->reveal_art;
 		labrador::RenderResources resources;
 		for (const auto& sheet : { opening->sprite_sheet, opening->palette_sheet })
-			{ resources.add_sprite_sheet(sheet, labrador::read_sprite_sheet((game_directory / L"textures" / (sheet + ".json")).string().c_str(), labrador::TextureHandle{})); }
+			{ resources.add_sprite_sheet(sheet, acceptance::read_cpu_sprite_sheet((game_directory / L"textures" / (sheet + ".json")).string().c_str(), labrador::TextureHandle{})); }
 		MonitorPersona persona;persona.shade = 0;persona.mug = true;
 		persona.coffee_ring = { .2f, .7f };
 		persona.sticky_notes = { { { .015f, .47f }, 0, 0.0f } };
@@ -167,7 +167,7 @@
 		const std::string fill_sheet_name = fill->sprite_sheet, fill_frame_name = fill->fill_frame;
 		labrador::RenderResources resources;
 		for (const auto& sheet_name : { fill_sheet_name, original.sprite_sheet })
-			{ resources.add_sprite_sheet(sheet_name, labrador::read_sprite_sheet((game_directory / L"textures" / (sheet_name + ".json")).string().c_str(), labrador::TextureHandle{})); }
+			{ resources.add_sprite_sheet(sheet_name, acceptance::read_cpu_sprite_sheet((game_directory / L"textures" / (sheet_name + ".json")).string().c_str(), labrador::TextureHandle{})); }
 		const FigureAttachments attachments(fill, look, &resources);
 		const auto* const fill_sheet = resources.sprite_sheet(fill_sheet_name);
 		const auto* const art_sheet = resources.sprite_sheet(original.sprite_sheet);
@@ -343,7 +343,7 @@
 		const OpeningPresentation original = *opening;
 		const RespawnRedrawPresentation original_redraw = *redraw;
 		labrador::RenderResources resources;
-		resources.add_sprite_sheet(opening->sprite_sheet, labrador::read_sprite_sheet(
+		resources.add_sprite_sheet(opening->sprite_sheet, acceptance::read_cpu_sprite_sheet(
 			(game_directory / L"textures" / (opening->sprite_sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
 		const FigureActing acting(opening, redraw, &resources);
 		static_cast<void>(acting);

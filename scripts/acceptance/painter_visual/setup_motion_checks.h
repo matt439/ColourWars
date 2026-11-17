@@ -35,7 +35,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         motion.selection_inset_fraction > 0.0f, "Shipped setup-motion responses must be visible");
     const auto tick = [&](float elapsed = 0.0f)
     {
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto bit = [](GamepadButton button)
         { return static_cast<uint16_t>(1u << static_cast<unsigned int>(button)); };
@@ -197,7 +197,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         painter_scripted_pads::states = {};
         for (int player = 1; player < count; ++player)
             { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(player)])].connected = true; }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll();
         settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(best_of);
         settings.begin_input_claims(slots[0]);

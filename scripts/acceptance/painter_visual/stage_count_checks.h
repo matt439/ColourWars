@@ -105,7 +105,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
             record->best_coverage_percentage == 62.5f && record->versus_played == 0, "Count display mutated a private stage record"); }
     };
     const auto tick = [&]
-    { require(++ticks <= 120, "Stage counts exceeded 120 bounded updates"); app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
+    { require(++ticks <= 120, "Stage counts exceeded 120 bounded updates"); poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
     const auto tap = [&](Key key)
     {
         std::srand(7183); const int random = std::rand(); std::srand(7183); app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
@@ -118,7 +118,7 @@ void stage_count_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         presentation.validate_stage_counts(*app.render_resources(), stages.size(), random_stage_indices(stages).size());
         stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : { Key::enter, Key::escape, Key::left, Key::right, Key::up, Key::down }) { app.keyboard()->on_key_up(key); }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         settings = MatchSetup(); settings.set_player_count(1); settings.begin_input_claims(input_slots::keyboard_and_mouse);
         settings.set_stage(stage); settings.set_player_team(0, PlayerTeam::a); settings.set_player_weapon(0, WeaponType::bucket); settings.set_duration(83.0f); settings.set_screen_layout(ScreenLayout::one_player); expected = settings;
         stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuStageSelect>(&context)); tick(); tick(); unchanged();
