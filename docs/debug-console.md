@@ -342,6 +342,14 @@ Both cheats are kept by the director and re-applied to every build. While a
 recording or a replay runs, `goto`, `respawn`, `kill`, `god`, `ammo`, `bot` and `tune`
 are refused (they would change the match outside the recorded input).
 
+## Shader playground
+
+An opt-in Debug launch with `COLOURWARS_SHADER_PLAYGROUND=1` enables
+`shader [off|posterise|ink|halftone] [strength] [detail]`. Bare `shader`
+reports the current look; look parameters change immediately. The
+[playground guide](shader-playground.md) covers launch, ranges and shader
+editing. It processes the whole picture and disables CRT for that session.
+
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the

@@ -40,6 +40,8 @@ game/                  the game executable and the colourwars_game library
                        The director and the three seam headers sit at its root;
                        commands/, console/, input/, script/, replay/, tune/
                        and capture/ hold its subsystems
+  shaders/             game-authored HLSL post materials; the opt-in Debug
+                       shader playground is compiled into the executable
   content/             runtime assets staged beside the exe: manifest, tuning,
                        presentation, levels, fonts, textures, the sound bank
   art/, audio/         sources, recipes and provenance for that content; never staged
@@ -73,6 +75,12 @@ effects, read before the save loads (`POL#49`); `initial_display` covers it and
 library, `input/rumble_gamepads.cpp` into `colourwars_rumble_gamepads`,
 `display_awake.cpp` into `colourwars_display_awake`, and links the three into
 the `ColourWars` executable. The acceptance probes link the same library.
+
+The [shader playground](shader-playground.md) registers one game-authored
+post material during an opt-in Debug launch. Its console controls change
+parameters on that material; selection stays fixed for the session. The
+shell disables CRT for that launch because the renderer supports one post
+pass. The experiment does not change the state stack or gameplay objects.
 
 The role folders date from `HYG#51`:
 

@@ -81,6 +81,8 @@ namespace debug_console_acceptance
 		// while the unconditional size assertion above checks the shared API.
 		require((text.find("script.background") != std::string::npos) == dev_tools::enabled,
 			"script.background command/observer diagnostic must be Debug-only");
+		require((text.find("COLOURWARS_SHADER_PLAYGROUND") != std::string::npos) == dev_tools::enabled,
+			"Shader playground registration and opt-in must be Debug-only");
 	}
 
 #if !COLOURWARS_DEV_TOOLS

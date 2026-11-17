@@ -15,6 +15,7 @@
 #include "game/debug/script/debug_script_runner.h"
 #include "game/debug/debug_targets.h"
 #include "game/debug/console/debug_text_field.h"
+#include "game/debug/shader_playground.h"
 #include "game/debug/replay/match_plan.h"
 #include "game/debug/replay/match_fingerprint.h"
 #include <array>
@@ -261,6 +262,7 @@ private:
 	DebugClock clock_;
 	DebugChord chord_;
 	DebugTextField field_;
+	DebugShaderPlayground shader_playground_;
 
 	DebugMatchTarget* match_ = nullptr;
 	MatchRequest request_;

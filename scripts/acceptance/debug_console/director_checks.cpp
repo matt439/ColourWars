@@ -152,6 +152,9 @@ namespace debug_console_acceptance
 		DebugDirectorImpl& impl = *director.impl();
 		impl.log().set_mirror_to_debugger(false);
 		require(impl.registry().find("visual") == nullptr, "The retired art-mode command is absent");
+		require(impl.execute("shader").ok && !impl.execute("shader ink").ok &&
+			any_line(impl.log(), "COLOURWARS_SHADER_PLAYGROUND=1"),
+			"Shader controls must explain the opt-in and refuse to select a material without a device");
 		const bool before = presentation.movement_feedback().enabled;
 		require(impl.execute("feedback toggle").ok &&
 			presentation.movement_feedback().enabled != before,

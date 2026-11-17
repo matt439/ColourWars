@@ -53,6 +53,9 @@ public:
 
 	// A director with no implementation, for a GameData that was never given one.
 	static DebugDirector& inert();
+	// Read before renderer creation: an opt-in Debug launch reserves its one
+	// post pass for the playground and suppresses the built-in CRT trial.
+	static bool shader_playground_requested();
 
 	bool enabled() const { return this->impl_ != nullptr; }
 
@@ -183,6 +186,7 @@ private:
 };
 
 #if !COLOURWARS_DEV_TOOLS
+inline bool DebugDirector::shader_playground_requested() { return false; }
 inline void DebugDirector::attach(labrador::Application*, GameData*) {}
 inline void DebugDirector::attach_match(DebugMatchTarget&) {}
 inline void DebugDirector::detach_match(const DebugMatchTarget&) {}

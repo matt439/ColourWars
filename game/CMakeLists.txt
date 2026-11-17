@@ -95,6 +95,7 @@ add_library(colourwars_game STATIC
     debug/script/debug_script.cpp
     debug/script/debug_script_runner.cpp
     debug/debug_status_text.cpp
+    debug/shader_playground.cpp
     debug/console/debug_text_field.cpp
     debug/commands/debug_tokenizer.cpp
     debug/commands/debug_variable.cpp
@@ -272,6 +273,13 @@ target_link_libraries(colourwars_game
         labrador_settings
 )
 target_precompile_headers(colourwars_game PRIVATE pch.h)
+
+# The playground and its embedded shader are absent from non-Debug builds.
+# Presets use single-config Ninja; the C++ gate still comes from _DEBUG.
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    labrador_add_material(colourwars_game colourwars_shader_playground
+        SOURCE shaders/shader_playground.hlsl)
+endif()
 
 # The platform adapters are libraries of their own, so a probe chooses each by
 # linking it or supplying its own definitions: make_rumble_sink() for the motor
