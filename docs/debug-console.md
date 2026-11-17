@@ -345,10 +345,15 @@ are refused (they would change the match outside the recorded input).
 ## Shader playground
 
 An opt-in Debug launch with `COLOURWARS_SHADER_PLAYGROUND=1` enables
-`shader [off|posterise|ink|halftone] [strength] [detail]`. Bare `shader`
-reports the current look; look parameters change immediately. The
+`shader <look> [strength] [detail]`. Looks are `off`, `crt`, `highcolour`,
+`dither`, `paint90`, `posterise`, `ink` and `halftone`. Bare `shader`
+reports the current look; parameters change immediately. `highcolour` uses
+fixed RGB565 channel depths and accepts strength only. The
 [playground guide](shader-playground.md) covers launch, ranges and shader
-editing. It processes the whole picture and disables CRT for that session.
+editing. It processes the whole picture, including gameplay. Its `crt` and
+combined `paint90` modes keep mouse aim aligned and use stationary display
+texture. The playground replaces the saved monitor-glass CRT effect for that
+session; it does not change that preference.
 
 ## Live tuning
 

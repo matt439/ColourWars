@@ -1,6 +1,9 @@
 // Debug playground: material_value(0) = mode, strength, detail, unused.
-// Modes: 0 identity, 1 posterise, 2 ink edges, 3 halftone dots.
+// Modes: 0 identity, 1 posterise, 2 ink edges, 3 halftone dots,
+// 4 CRT, 5 RGB565 high colour, 6 ordered dither, 7 Paint.exe desktop.
 // The engine supplies the frame contract and sampling helpers.
+
+#include "desktop_90s.hlsli"
 
 float largest_channel(float3 colour)
 {
@@ -64,9 +67,25 @@ float4 material(MaterialInput input)
 		{
 			processed = ink_edges(input, picture.rgb, settings.z);
 		}
-		else
+		else if (settings.x < 3.5)
 		{
 			processed = halftone(input, picture.rgb, settings.z);
+		}
+		else if (settings.x < 4.5)
+		{
+			processed = desktop_crt(input, picture.rgb, settings.z);
+		}
+		else if (settings.x < 5.5)
+		{
+			processed = desktop_highcolour(picture);
+		}
+		else if (settings.x < 6.5)
+		{
+			processed = desktop_dither(input, picture, settings.z);
+		}
+		else
+		{
+			processed = desktop_paint90(input, picture, settings.z);
 		}
 		result = float4(lerp(picture.rgb, processed, saturate(settings.y)), picture.a);
 	}

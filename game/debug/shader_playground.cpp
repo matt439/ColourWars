@@ -7,6 +7,37 @@
 #include "materials/colourwars_shader_playground.h"
 #include <cstdlib>
 
+namespace
+{
+	struct ShaderLook
+	{
+		const char* name;
+		int mode;
+		float strength;
+		int detail;
+		int minimum;
+		int maximum;
+	};
+
+	constexpr ShaderLook looks[] = {
+		{ "off", 0, 0.0f, 6, 0, 0 },
+		{ "posterise", 1, 0.75f, 6, 2, 16 },
+		{ "ink", 2, 0.65f, 1, 1, 4 },
+		{ "halftone", 3, 0.65f, 6, 3, 24 },
+		{ "crt", 4, 0.5f, 4, 4, 12 },
+		{ "highcolour", 5, 1.0f, 0, 0, 0 },
+		{ "dither", 6, 0.6f, 8, 2, 16 },
+		{ "paint90", 7, 0.5f, 4, 4, 12 },
+	};
+
+	std::vector<std::string> look_names()
+	{
+		std::vector<std::string> result;
+		for (const ShaderLook& look : looks) { result.emplace_back(look.name); }
+		return result;
+	}
+}
+
 bool DebugShaderPlayground::requested()
 {
 	size_t size = 0;
@@ -31,9 +62,8 @@ void DebugShaderPlayground::initialize(labrador::Renderer& renderer)
 
 void DebugShaderPlayground::register_command(DebugRegistry& registry)
 {
-	registry.add_command("shader", "Debug shader playground; strength 0-1, detail: colour levels, ink radius or dot cell pixels",
-		{ { "off|posterise|ink|halftone", true,
-			[] { return std::vector<std::string>{ "off", "posterise", "ink", "halftone" }; } },
+	registry.add_command("shader", "Debug shader playground; strength 0-1, detail: colour levels, pixel radius/cell size or CRT scanline pitch",
+		{ { "look", true, look_names },
 			{ "strength", true, {} }, { "detail", true, {} } },
 		[this](const DebugArgs& args, DebugLog&) { return this->command(args); },
 		DebugMenuTraits::of("view", DebugMenuTraits::Form::pick));
@@ -46,7 +76,7 @@ std::string DebugShaderPlayground::status() const
 		return "shader playground disabled; restart Debug with COLOURWARS_SHADER_PLAYGROUND=1";
 	}
 	return "shader " + this->look_ + " strength " + std::to_string(this->strength_) +
-		" detail " + std::to_string(this->detail_);
+		(this->look_ == "highcolour" ? " RGB565" : " detail " + std::to_string(this->detail_));
 }
 
 DebugStatus DebugShaderPlayground::command(const DebugArgs& args)
@@ -55,31 +85,35 @@ DebugStatus DebugShaderPlayground::command(const DebugArgs& args)
 	if (this->renderer_ == nullptr) { return DebugStatus::failure(this->status()); }
 
 	const std::string& look = args.text(0);
-	int mode = 0;
-	float strength = 0.0f;
-	int detail = 6;
-	int minimum = 2;
-	int maximum = 16;
-	if (look == "posterise") { mode = 1; strength = 0.75f; }
-	else if (look == "ink") { mode = 2; strength = 0.65f; detail = 1; minimum = 1; maximum = 4; }
-	else if (look == "halftone") { mode = 3; strength = 0.65f; minimum = 3; maximum = 24; }
-	else if (look != "off")
+	const ShaderLook* selected = nullptr;
+	for (const ShaderLook& candidate : looks)
 	{
-		return DebugStatus::failure("shader: expected off, posterise, ink or halftone");
+		if (look == candidate.name) { selected = &candidate; break; }
+	}
+	if (selected == nullptr)
+	{
+		return DebugStatus::failure("shader: expected " + join_words(look_names(), ", ", " or "));
 	}
 	if (look == "off" && args.has(1)) { return DebugStatus::failure("usage: shader off"); }
+	if (look == "highcolour" && args.has(2))
+	{
+		return DebugStatus::failure("shader highcolour: RGB565 is fixed; usage: shader highcolour [strength]");
+	}
+	float strength = selected->strength;
+	int detail = selected->detail;
 	if (args.has(1) && (!DebugArgs::parse_float(args.text(1), strength) || strength < 0.0f || strength > 1.0f))
 	{
 		return DebugStatus::failure("shader: strength must be a finite number from 0 to 1");
 	}
-	if (args.has(2) && (!DebugArgs::parse_int(args.text(2), detail) || detail < minimum || detail > maximum))
+	if (args.has(2) && (!DebugArgs::parse_int(args.text(2), detail) ||
+		detail < selected->minimum || detail > selected->maximum))
 	{
 		return DebugStatus::failure("shader " + look + ": detail must be a whole number from " +
-			std::to_string(minimum) + " to " + std::to_string(maximum));
+			std::to_string(selected->minimum) + " to " + std::to_string(selected->maximum));
 	}
 
 	labrador::PostValues values;
-	values.values[0] = static_cast<float>(mode);
+	values.values[0] = static_cast<float>(selected->mode);
 	values.values[1] = strength;
 	values.values[2] = static_cast<float>(detail);
 	this->renderer_->set_post_values(this->material_, values);
