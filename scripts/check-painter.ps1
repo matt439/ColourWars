@@ -414,7 +414,7 @@ try {
         if ($policyLines.Count -ne 1 -or $policyLines[0] -cne "ADAPTER_POLICY $($result.adapter_policy)") {
             throw 'The probe did not report the requested adapter policy.'
         }
-        Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'reader.err')) -Context 'remembered setup reader'
+        Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'reader.err')) -Context 'remembered setup reader' -AllowDebugAdapter:$debug
         $result['process_relaunch'] = [ordered]@{
             outcome = 'passed'; writer_pid = $writerProcessId; reader_pid = $process.Id; reader_exit_code = $process.ExitCode
             writer_log = Join-Path $run 'run.log'; reader_log = Join-Path $run 'reader.log'
@@ -478,7 +478,8 @@ try {
         }
         if ($line -eq $expectedSaveTail) { ++$saveTailCount; continue }
         if ($line.Trim() -ne '' -and
-            -not (Test-OptionalBankDiagnostic $line)) {
+            -not (Test-OptionalBankDiagnostic $line) -and
+            -not ($debug -and (Test-DebugAdapterDiagnostic $line))) {
             throw "Unexpected probe diagnostic: $line"
         }
     }

@@ -15,7 +15,7 @@
 		labrador::RenderResources resources;
 		for (const std::string& sheet_name : { opening->sprite_sheet, opening->palette_sheet })
 		{
-			resources.add_sprite_sheet(sheet_name, labrador::read_sprite_sheet(
+			resources.add_sprite_sheet(sheet_name, acceptance::read_cpu_sprite_sheet(
 				(game_directory / L"textures" / (sheet_name + ".json")).string().c_str(), labrador::TextureHandle{}));
 		}
 		const Silhouette person(opening, &resources);
@@ -207,7 +207,7 @@
 		labrador::RenderResources resources;
 		for (const std::string& sheet_name : { opening->sprite_sheet, opening->palette_sheet })
 		{
-			resources.add_sprite_sheet(sheet_name, labrador::read_sprite_sheet(
+			resources.add_sprite_sheet(sheet_name, acceptance::read_cpu_sprite_sheet(
 				(game_directory / L"textures" / (sheet_name + ".json")).string().c_str(), labrador::TextureHandle{}));
 		}
 		const std::array<MonitorPersona, 2> personas = []

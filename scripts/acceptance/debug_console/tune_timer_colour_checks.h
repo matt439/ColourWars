@@ -111,7 +111,7 @@ void check_timer_colour_tunes_for_field(const std::filesystem::path& game_direct
             { if (std::find(sheets.begin(), sheets.end(), name) == sheets.end()) { sheets.emplace_back(name); } }
     }
     for (const auto& name : sheets)
-        { resources.add_sprite_sheet(name, labrador::read_sprite_sheet((game_directory / L"textures" / (name + ".json")).string().c_str(), labrador::TextureHandle{})); }
+        { resources.add_sprite_sheet(name, acceptance::read_cpu_sprite_sheet((game_directory / L"textures" / (name + ".json")).string().c_str(), labrador::TextureHandle{})); }
     const std::array<std::string, 3> fonts{ original.meter_label_font, original.timer_font, original.player_identity_font };
     std::vector<std::string> loaded_fonts(fonts.begin(), fonts.end());
     if (complete_resources)

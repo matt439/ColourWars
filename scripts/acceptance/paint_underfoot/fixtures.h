@@ -8,7 +8,7 @@
 #include "game/objects/weapon_builder.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/json.h"
-#include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "engine/core/file_path.h"
 #include "engine/scene/scene.h"
 #include "scripts/acceptance/support/player_course.h"
@@ -52,7 +52,7 @@ namespace paint_underfoot_acceptance
             source.assign(std::istreambuf_iterator<char>(stream), {});
             for (const char* name : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx", "terrain" })
             {
-                render.add_sprite_sheet(name, labrador::read_sprite_sheet(labrador::path_to_utf8(
+                render.add_sprite_sheet(name, acceptance::read_cpu_sprite_sheet(labrador::path_to_utf8(
                     content / "textures" / labrador::path_from_utf8(std::string(name) + ".json")).c_str(),
                     labrador::TextureHandle{}));
             }

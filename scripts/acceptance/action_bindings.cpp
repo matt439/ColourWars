@@ -6,6 +6,7 @@
 #include "game/states/menu_input.h"
 #include "game/match/match_setup.h"
 #include "engine/input/gamepad_reader.h"
+#include "engine/input/scripted_gamepad_source.h"
 #include "scripts/acceptance/support/probe.h"
 #include <array>
 #include <cmath>
@@ -14,30 +15,6 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
-
-// The existing concrete reader link seam: no XInput, window or player save.
-namespace action_test_pads { std::array<labrador::GamepadState, 4> states{}; }
-namespace labrador
-{
-	struct GamepadReader::Impl { std::array<GamepadState, 4> states{}; bool suspended = false; };
-	GamepadReader::GamepadReader() : impl_(std::make_unique<Impl>()) {}
-	GamepadReader::~GamepadReader() = default;
-	GamepadReader::GamepadReader(GamepadReader&&) noexcept = default;
-	GamepadReader& GamepadReader::operator=(GamepadReader&&) noexcept = default;
-	void GamepadReader::sample()
-	{
-		this->impl_->states = this->impl_->suspended ? std::array<GamepadState, 4>{} : action_test_pads::states;
-	}
-	GamepadState GamepadReader::read(int slot) const
-	{
-		return slot >= 0 && slot < 4 ? this->impl_->states[static_cast<size_t>(slot)] : GamepadState{};
-	}
-	void GamepadReader::suspend() { this->impl_->suspended = true; }
-	void GamepadReader::resume() { this->impl_->suspended = false; }
-	// Engine v0.3.0 reader members Gamepads calls; a fake pad has no motors.
-	bool GamepadReader::vibrate(int, const Vibration&) { return false; }
-	void GamepadReader::stop_vibration(int) {}
-}
 
 using namespace labrador;
 using labrador::Vector2F;
@@ -354,18 +331,25 @@ namespace
 	};
 	struct Harness
 	{
-		GamepadReader reader; Gamepads pads{ &reader }; Keyboard keyboard; Mouse mouse;
+		// The source outlives the reader; both link the game's ordinary engine.
+		ScriptedGamepadSource source;
+		std::array<GamepadState, 4> states{};
+		GamepadReader reader{ source }; Gamepads pads{ &reader }; Keyboard keyboard; Mouse mouse;
 		GameTuning tuning; PlaySettings preferences; InputBindings input_bindings;
 		PlayerInput players; MenuInput menu; LegacyMenu legacy;
 		std::vector<SlotInput> gameplay; std::vector<ProcessedMenuInput> menus;
 		explicit Harness(const char* directory) : tuning((std::filesystem::path(directory) / "tuning.json").string().c_str()),
 			players(&pads, &keyboard, &mouse, &tuning, &preferences, &input_bindings), menu(&pads, &keyboard, &tuning)
 		{
-			action_test_pads::states = {}; keyboard.set_focused(true); mouse.set_focused(true);
+			for (int slot = 0; slot < 4; ++slot) { source.set_vibration_available(slot, false); }
+			keyboard.set_focused(true); mouse.set_focused(true);
 		}
 		void step(const std::string& name, float dt = 0.0f, bool use_stick = true)
 		{
+			source.clear_records();
+			for (int slot = 0; slot < 4; ++slot) { source.set_state(slot, states[static_cast<size_t>(slot)]); }
 			pads.poll(); keyboard.poll(); mouse.poll(); menu.update_directions(dt, 0.4f, 0.1f, use_stick);
+			require(!source.records_overflowed(), name + ": scripted pad records overflowed");
 			gameplay = players.player_inputs();
 			require(gameplay.size() == 5, name + ": gameplay slot count changed");
 			for (int slot = 0; slot < 4; ++slot)
@@ -398,7 +382,7 @@ namespace
 	{
 		Harness h(directory);
 		h.step("first neutral focus"); h.step("neutral");
-		auto& pad = action_test_pads::states[3];
+		auto& pad = h.states[3];
 		pad.connected = true; pad.buttons = static_cast<uint16_t>(button(GamepadButton::a) | button(GamepadButton::start) | button(GamepadButton::back));
 		pad.left_trigger = pad.right_trigger = 1.0f;
 		h.step("connect with held actions");
@@ -476,7 +460,7 @@ namespace
 		h.keyboard.on_key_up(Key::up); h.keyboard.on_key_up(Key::w); h.step("keyboard neutral");
 		for (int slot = 0; slot < 4; ++slot)
 		{
-			auto& state = action_test_pads::states[static_cast<size_t>(slot)];
+			auto& state = h.states[static_cast<size_t>(slot)];
 			state.connected = true; state.left_stick = { 0.625f, 0.0f }; state.right_stick = { 0.375f, 0.5f };
 			h.preferences.sticks[static_cast<size_t>(slot)] = { slot * 25, slot * 20 };
 		}
@@ -496,9 +480,9 @@ namespace
 		live.trigger_jump_threshold = 0.7f; live.trigger_shoot_threshold = 0.3f; h.step("same raw triggers new thresholds");
 		require(!h.gameplay[3].jump_pressed && !h.gameplay[3].jump_held && h.gameplay[3].primary_shoot,
 			"Threshold changes must recompute both snapshots without inventing an edge");
-		pad.buttons = button(GamepadButton::a); action_test_pads::states[1].buttons = button(GamepadButton::x);
+		pad.buttons = button(GamepadButton::a); h.states[1].buttons = button(GamepadButton::x);
 		h.keyboard.on_key_down(Key::enter); h.step("three independent menu owners"); h.reset_pad(3);
-		pad.buttons = 0; action_test_pads::states[1].buttons = 0; h.keyboard.on_key_up(Key::enter); h.step("reset one owner only");
+		pad.buttons = 0; h.states[1].buttons = 0; h.keyboard.on_key_up(Key::enter); h.step("reset one owner only");
 		require(h.menus[3].action == MenuInputAction::none && h.menus[1].action == MenuInputAction::shuffle &&
 			h.menus[4].action == MenuInputAction::proceed, "Resetting one pad must preserve other pad and keyboard owners");
 		MatchSetup roster; roster.set_player_count(2); roster.begin_input_claims(3); require(roster.claim_input_slot(4), "Roster setup failed");

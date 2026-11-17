@@ -47,7 +47,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         ~RestoreBriefingPads()
         {
             painter_scripted_pads::states = this->previous;
-            this->app.gamepads()->poll(); this->app.gamepads()->poll();
+            poll_gamepads(this->app); poll_gamepads(this->app);
         }
     } restore_pads{ app, painter_scripted_pads::states };
     constexpr size_t case_count = cases.size();
@@ -66,7 +66,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         }
     } restore{ stack, context, presentation, original };
     const auto tick = [&](float elapsed = 0.0f)
-        { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
+        { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto tap = [&](Key key)
     {
         app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
@@ -97,7 +97,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         painter_scripted_pads::states = {};
         if (fixture.players == 2) { painter_scripted_pads::states[0].connected = true; }
 #endif
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll();
         settings = MatchSetup(); settings.set_player_count(fixture.players);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);

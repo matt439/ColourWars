@@ -20,7 +20,7 @@
 		if (original.sprite_sheet != "sprite_sheet_1") { sheets.push_back("sprite_sheet_1"); }
 		for (const std::string& sheet : sheets)
 		{
-			resources.add_sprite_sheet(sheet, labrador::read_sprite_sheet(
+			resources.add_sprite_sheet(sheet, acceptance::read_cpu_sprite_sheet(
 				(game_directory / L"textures" / (sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
 		}
 		const std::array<std::string, 3> fonts{ original.meter_label_font,
@@ -237,7 +237,7 @@
 		if (original.sprite_sheet != "sprite_sheet_1") { sheets.push_back("sprite_sheet_1"); }
 		for (const std::string& sheet : sheets)
 		{
-			resources.add_sprite_sheet(sheet, labrador::read_sprite_sheet(
+			resources.add_sprite_sheet(sheet, acceptance::read_cpu_sprite_sheet(
 				(game_directory / L"textures" / (sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
 		}
 		const std::array<std::string, 3> fonts{ original.meter_label_font,

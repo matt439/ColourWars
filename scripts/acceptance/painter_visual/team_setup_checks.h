@@ -27,7 +27,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         { return static_cast<uint16_t>(1u << static_cast<unsigned int>(button)); };
     const auto tick = [&]
     {
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(dt);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(dt);
     };
     const auto key_for = [](GamepadButton button)
     {
@@ -53,7 +53,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     {
         hold(player, button, true); tick(); hold(player, button, false); tick();
         // This existing setup fixture observes settled choices/readiness.
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
     };
     const auto frame = [&]
     {
@@ -115,7 +115,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     };
     const auto verify_team_page = [&](const MatchSetup& plan, const char* reason)
     {
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
         require(frame().pixels == reference(plan).pixels, reason);
     };
     const auto open = [&](int count)
@@ -126,7 +126,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         painter_scripted_pads::states = {};
         for (int i = 1; i < count; ++i)
             { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(i)])].connected = true; }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         settings = MatchSetup(); settings.set_player_count(count);
         settings.begin_input_claims(slots[0]);
         for (int i = 1; i < count; ++i) { require(settings.claim_input_slot(slots[static_cast<size_t>(i)]), "Scripted setup seat claim failed"); }
@@ -336,7 +336,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     });
     const auto game_tick = [&](float elapsed = dt)
     {
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto game_tap = [&](Key key)
     {

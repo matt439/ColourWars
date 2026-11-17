@@ -12,7 +12,7 @@ void how_to_play_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
     MenuContext context(&data, &input, &setup); StateContext& stack = app;
     struct ClearLearn { StateContext& stack; ~ClearLearn() { stack.clear(); painter_scripted_pads::states = {}; } } clear{stack};
     bool pad = false;
-    const auto tick = [&] { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f); };
+    const auto tick = [&] { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f); };
     const auto tap = [&](Key key, GamepadButton button)
     {
         const auto bit = static_cast<uint16_t>(1u << static_cast<unsigned int>(button));
@@ -28,7 +28,7 @@ void how_to_play_matrix(Application& app, const Canvas& canvas, GameTuning& tuni
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (Key key : {Key::enter, Key::escape, Key::left, Key::right, Key::up, Key::down}) app.keyboard()->on_key_up(key);
         painter_scripted_pads::states = {}; painter_scripted_pads::states[0].connected = pad;
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); input.reset_actions();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll(); input.reset_actions();
         stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         if (help) stack.push(std::make_unique<MainMenuHowToPlay>(&context));
         else stack.push(std::make_unique<MainMenuHome>(&context,

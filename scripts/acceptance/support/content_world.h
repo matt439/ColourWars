@@ -7,7 +7,7 @@
 // or font added to the game reaches every probe the day it lands.
 
 #include "scripts/acceptance/support/stage_catalog.h"
-#include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/audio/sound_bank.h"
 #include "engine/core/file_path.h"
@@ -53,7 +53,7 @@ namespace acceptance
             bool skipped = false;
             for (const std::string_view name : without_sheets) { skipped = skipped || sheet.name == name; }
             if (skipped) { continue; }
-            render.add_sprite_sheet(sheet.name, labrador::read_sprite_sheet(
+            render.add_sprite_sheet(sheet.name, acceptance::read_cpu_sprite_sheet(
                 labrador::path_to_utf8(sheet.path).c_str(), labrador::TextureHandle{}));
         }
         for (const ManifestEntry& font : manifest_entries(content, "font", ".spritefont"))

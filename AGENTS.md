@@ -304,9 +304,11 @@ change touches it, and is not a reason to rerun anything:
   `check-finish-details`, `CI#1`);
 - how it plays.
 
-`build.cmd` and Windows PowerShell 5.1 runs of the acceptance runner are
-unexercised beyond the selection and process checks, by choice. A failing
-scheduled nightly is the signal to look; the rest of the time, nothing is owed.
+`build.cmd` remains unexercised, by choice. The
+[2026-11-17 pin qualification](docs/review/engine-reports.md#verification-of-the-2026-11-17-bump)
+ran default acceptance in both presets and the selected optional checks under
+Windows PowerShell 5.1. A failing scheduled nightly is the signal to look;
+the rest of the time, nothing is owed.
 
 ## Audio: accepted replacement bank and optional fallback
 

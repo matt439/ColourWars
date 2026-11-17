@@ -39,12 +39,12 @@ void weapon_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& leve
     stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
     for (const Key key : { Key::enter, Key::escape, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
     painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = true;
-    app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
+    poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
     input.reset_actions(); int ticks = 0; bool pad_connected = true;
     const auto tick = [&](float elapsed = 0.0f)
     {
         require(++ticks <= 16, "Weapon tint probe exceeded sixteen bounded page updates");
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuWeaponSelect>(&context)); tick(); tick();
     // P1 readies on its second A: the tool, then its sub (ROAD#11).

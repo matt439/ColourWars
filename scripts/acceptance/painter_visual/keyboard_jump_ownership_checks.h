@@ -39,7 +39,7 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
         ~RestoreJumpOwnership()
         {
             this->stack.clear(); painter_scripted_pads::states = {};
-            this->app.gamepads()->poll(); this->app.gamepads()->poll();
+            poll_gamepads(this->app); poll_gamepads(this->app);
             this->app.keyboard()->set_focused(true);
             for (unsigned int key = 1; key < static_cast<unsigned int>(Key::count); ++key)
                 { this->app.keyboard()->on_key_up(static_cast<Key>(key)); }
@@ -52,7 +52,7 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
     const auto tick = [&](float elapsed = 0.0f)
     {
         require(++updates <= 240, "Jump ownership exceeded its bounded update budget");
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto tap_key = [&](Key key)
         { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); };
@@ -78,7 +78,7 @@ void keyboard_jump_ownership_matrix(Application& app, Registry<LevelLoadedInfo>&
         app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (unsigned int key = 1; key < static_cast<unsigned int>(Key::count); ++key)
             { app.keyboard()->on_key_up(static_cast<Key>(key)); }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         input.reset_actions(); stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         auto owned = std::make_unique<KeyboardKeysMenu>(&context, owner); page = owned.get(); stack.push(std::move(owned));
         tick();

@@ -6,18 +6,20 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Five are live (26, 27, 30, 33 and 34), all filed on 2026-11-05** after a
+> **Four are live (27, 30, 33 and 34), all filed on 2026-11-05** after a
 > recheck against upstream master `6189072`: 27 as
 > [labrador#122](https://github.com/matt439/Labrador/issues/122) with 26 as its
 > rider, 30 as [#123](https://github.com/matt439/Labrador/issues/123), 33 as
 > [#124](https://github.com/matt439/Labrador/issues/124) and 34 as the Bug
-> [#125](https://github.com/matt439/Labrador/issues/125). Each waits on the
-> engine's answer. A sixth, **39**, is an unfiled draft from the 2026-11-13
+> [#125](https://github.com/matt439/Labrador/issues/125). At `v0.4.0`, 27 is partly
+> spent, 30 has a category awaiting backend migration, and 33 and 34 retain
+> pending implementation. The tracker responses remain open. **26 is closed**
+> on the engine's declined Registry rider. A fifth live report, **39**, is an unfiled draft from the 2026-11-13
 > pin bump. On 2026-11-13 the author moved **35** to the
 > [parked list](#what-is-deliberately-not-here), to ride with the next audio
 > report, and withdrew **37**; the bump that day spent **36**, and `PIN#2`
 > parked **38** beside 35.
-> **Thirty-one are closed** (1–25, 28, 29, 31, 32, 36 and 37) and kept below as one paragraph
+> **Thirty-two are closed** (1–26, 28, 29, 31, 32, 36 and 37) and kept below as outcomes
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
 > on, if anything. A report is closed when it is answered, whether or not the
@@ -166,6 +168,15 @@ run. It carries the answer to 36, which was spent at the bump; issues #122 to
 26, 27, 30, 33 or 34. `PIN#2` parked 38 and the bump drafted 39. See
 [What the 2026-11-13 bump changed](#what-the-2026-11-13-bump-changed).
 
+**Moved 2026-11-17 to `v0.4.0` (`f525bc6c`)**, 105 commits past the previous
+pin `d44101a0`. Report 26 closes on the local upstream decision declining
+name forgetting; report 27's supported scripted source replaces five reader
+fixtures, while the throwing rumble transport retains its link fixture.
+Report 30 has an exception type but no backend migration, so its message
+match stays; 33, 34's remaining selection change and 39 remain open. These
+local decisions do not claim tracker responses or closure. See
+[What the 2026-11-17 bump changed](#what-the-2026-11-17-bump-changed).
+
 ## The rule that governs this file
 
 **Check the engine's master before filing, not the pin.** `external/labrador`
@@ -261,12 +272,13 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 
 | # | Report | Exhibit | Status |
 |---|---|---|---|
-| 26 | `Registry` cannot forget a name | [`StageCatalog`](../../game/config/stage_catalog.h) keeps a vanished user stage's definition registered after a rescan | narrowed 2026-10-30 to reclaiming memory (`HYG#47`); filed 2026-11-05 as the rider on [labrador#122](https://github.com/matt439/Labrador/issues/122); awaiting an answer |
-| 27, 30, 33 | Three still live from the 2026-10-30 architecture review (28 declined, 29 withdrawn; 31 and 32 answered in `v0.3.0`) | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | filed 2026-11-05 as [#122](https://github.com/matt439/Labrador/issues/122), [#123](https://github.com/matt439/Labrador/issues/123) and [#124](https://github.com/matt439/Labrador/issues/124); awaiting answers |
-| 34 | `RenderDeviceKind::hardware` describes a software rasteriser | [the hosted runner's Basic Render Driver](#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit) logged as `kind=hardware`, which the strict painter, paint-fx and frame-pacing gates rely on | filed 2026-11-05 as the Bug [#125](https://github.com/matt439/Labrador/issues/125), saying this client will adapt its gates to the engine's answer; what those gates accept is settled when it lands |
-| 39 | A float written as `FLT_MAX` does not read back | the [`boundary_factor`](../../scripts/acceptance/gameplay_tuning.cpp) check, moved one float below `FLT_MAX` | found 2026-11-12 by `PIN#1`, rechecked at the 2026-11-13 bump to `1dc8533c`; drafted, not filed; the author chooses the issue route or an engine fix (`ENG#39`) |
+| 27 | Scripted pad input without replacing engine members | [`rumble_adapter.cpp`](../../scripts/acceptance/rumble_adapter.cpp) retains a throwing transport fixture; the other five reader fixtures use the supported source | `v0.4.0`'s `ScriptedGamepadSource` spent 2026-11-17 for snapshots and the Application path; exception injection has no supported equivalent. [#122](https://github.com/matt439/Labrador/issues/122) remains open without a tracker response |
+| 30 | A device-unavailable startup failure can be classified only by its message text | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | `v0.4.0` adds `RenderDeviceUnavailable`, but no backend throws it yet; the client match remains. [#123](https://github.com/matt439/Labrador/issues/123) and backend migration remain open |
+| 33 | `on_contact` hands the other party over `const` | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h) retains the `const_cast` | PI-25 selects a mutable parameter; the signature in `v0.4.0` is unchanged. [#124](https://github.com/matt439/Labrador/issues/124) remains open |
+| 34 | Known software adapters and Release selection | [the hosted runner's Basic Render Driver](#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit) needs truthful evidence lanes | classification was consumed at the prior pin, with explicit hosted software lanes and strict hardware defaults. SM-98's ordinary Release software refusal is still planned; [#125](https://github.com/matt439/Labrador/issues/125) remains open |
+| 39 | A float written as `FLT_MAX` does not read back | the [`boundary_factor`](../../scripts/acceptance/gameplay_tuning.cpp) check, moved one float below `FLT_MAX` | the parser is unchanged in `v0.4.0`; drafted, not filed; the author chooses the issue route or an engine fix (`ENG#39`) |
 
-Nothing else is outstanding, on either side, beyond reports 26, 34 and 39 below, the three still live
+Nothing else is outstanding, on either side, beyond reports 34 and 39 below, the three still live
 [from the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
 evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
 leaves this repository to supply. The fullscreen workaround the
@@ -294,9 +306,9 @@ shipped without the fix, so on 2026-11-05 the author closed it as declined
 [closed](#closed), its client-side change `HYG#52` (done 2026-11-03) in
 [code hygiene](../code-hygiene.md#a-typed-projectile-list-in-level-hyg52).
 
-| # | Report | Exhibit at `96c65373` |
+| # | Report | Exhibit at `96c65373`, with later consumption noted |
 |---|---|---|
-| 27 | No headless or recording pad backend; a consumer test can substitute `GamepadReader` only by redefining it | the `namespace labrador` blocks in `scripts/acceptance/action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp`, `painter_visual.cpp` and, since report 25 was spent (2026-11-05), `rumble_adapter.cpp`, and since `REV#31` (2026-11-12) `toggle_fire.cpp`; a test seam, separate from the pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here), which stays |
+| 27 | No headless or recording pad backend; a consumer test could substitute `GamepadReader` only by redefining it | historically the `namespace labrador` blocks in `action_bindings.cpp`, `input_bindings.cpp`, `keyboard_jump_capture.cpp`, `painter_visual.cpp`, `rumble_adapter.cpp` and `toggle_fire.cpp`. At `v0.4.0` only [`rumble_adapter.cpp`](../../scripts/acceptance/rumble_adapter.cpp) retains its block, to inject transport exceptions; the other five use `ScriptedGamepadSource`. The pad-coverage "XInput is the only pad reader" entry under [What is deliberately not here](#what-is-deliberately-not-here) stays |
 | 28 | Public types and members removed with an engine-only caller count, against the rule from report 7 as extended by `c369e8b`; the deprecation-release ask is declined by policy | `game/carried/` and the `HYG#25` removed-member list |
 | 29 | ~~`Scene` gives no typed access to short-lived objects and no retirement notice~~ withdrawn 2026-11-03, see [Closed](#closed) | the tag test and downcast loops at `game/objects/level.cpp:442-452` and `:606-614`; since `HYG#42` (2026-10-30) those loops ask each object for its role, and the downcast they paid is the one cross-cast in [`Collider::of`](../../game/objects/collider.cpp), which every scene walk and every contact now pays instead |
 | 30 | A device-unavailable startup failure can be classified only by its message text | `game/fatal_report.cpp:115` and the exact-text checks at `scripts/sandbox/logon.ps1:218` and `:248`; `scripts/check-startup.ps1:225` and `:248` held the same match until 2026-11-04 |
@@ -304,76 +316,30 @@ shipped without the fix, so on 2026-11-05 the author closed it as declined
 | 32 | ~~Word wrap by measured width is client code; the engine backlog's OCA-77 premise ("no caller in either client wraps by width") is false~~ answered and spent in `v0.3.0`, see [Closed](#closed) | `game/config/text_wrap.h` and its caller `WrappedTextDropShadow` |
 | 33 | `CollisionObject::on_contact` hands the other party over `const` (unchanged on master `8e91aab`), so a response that changes both parties has no route back to the other one | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h), the one `const_cast` in `game/`: a painted surface's answer reaches the projectile through it, where it used to reach `mutable` flags through a `const` method (`HYG#49`, 2026-10-30) |
 
-## 26. `Registry` cannot forget a name - **draft with rescan exhibit**
-
-**Filed 2026-11-05** as the rider section of [labrador#122](https://github.com/matt439/Labrador/issues/122), checked against master `6189072`.
-
-**Author's decision 2026-11-03: not filed alone; it rides with report 27.**
-Since `HYG#47` what is left is a comment and some unreachable definitions held
-until exit, and master now documents the opposite as deliberate ("a name owns
-its slot for the registry's lifetime"), so a filing of its own would spend a
-public issue on little. The ask is still true for any client that reloads user
-content, so it is not withdrawn: it goes with the report 27 filing as a rider,
-since both are state a test or a reload needs to reset, and it stays among the
-`ENG#PARKED` asks until an answer. The draft below is kept as written.
-Rechecked 2026-11-03 at master `aa8f5a2`: `registry.h` is unchanged since
-`3a14f11`, and still at master `11292fa` (2026-11-05). **Reopen** and file it alone if reloading user stages becomes a
-frequent or large flow (an editor hot-reload loop, or many large user stages)
-so the held memory or a stale `contains` has a measurable cost, or if a
-Labrador sample adds reloadable content and needs the same removal. Withdraw it
-if the author accepts "a name owns its slot" as the final design; the
-`stage_catalog.h` comment then becomes a permanent note.
-
-**Drafted against the pin** (`1e60fb2`, 2026-10-28). `labrador::Registry`
-(`engine/core/registry.h`) offers `add`, which replaces the resource of a name
-it already holds, plus `resolve`, `get` and `contains`. It has no way to remove
-a name.
-
-**Rechecked 2026-10-29 against upstream master `b96bad6`: still unanswered.**
-The only change to the header since the pin is `3a14f11` (2026-10-29,
-*Clarify Registry presence and retained resource handles*), and it changes
-comments only. Master's header comment says a name owns its slot for the
-registry's lifetime. `contains` answers false for an empty or released slot,
-the name still resolves to its handle, and `get` throws until the slot is
-refilled. Per-name removal is still absent. The only bulk operation is
-`release_all`, which empties every slot and keeps every name. That empty-slot
-behaviour is the pin's code too; `3a14f11` only documents it. So the
-`contains` trap below is a client choice. The rescan could
-`add(name, nullptr)` a vanished stage, after which `contains` says no and
-`get` throws "released". The name and its slot would still stay, so the ask
-narrows to forgetting the name itself.
-
-**Exhibit.** `ROAD#16` rereads the player's stage folder each time Stage Select
-opens from the main menu ([`UserStageFolder::rescan`](../../game/config/stage_loading.cpp)).
-A new or edited file goes through `add`, which is what the rescan needs. A
-file the player deleted, or one that now fails its checks, can only leave the
-stage list. Its old `LevelLoadedInfo` stays in the registry, unreachable from
-the list, until the game exits.
-
-**Narrowed 2026-10-30 (`HYG#47`).** The list and the registry now have one
-owner and one writer, [`StageCatalog`](../../game/config/stage_catalog.h), and its
-by-name lookup `definition` answers from the list, so a stage that is gone is
-not found there. The registry's own `contains` still answers yes for one, but
-only whole-registry readers (`LevelBuilder`, the content and sound-group
-checks) are handed it. What is left is the memory the vanished definitions
-hold until the game exits. Every client that reloads user content over a
-session would still meet that.
-
-**The ask.** A way to remove a name (or to replace the whole set) with a
-defined meaning for handles already resolved to it. The spelling, and
-whether stale handles throw or stay invalid, are engine decisions.
-
-**What an answer lets this repository delete.** The paragraph about
-unreachable definitions in `game/config/stage_catalog.h` and the roadmap's note
-about stale entries. `StageCatalog::remove_user_stages` would remove the
-names that left the list, so the registry would agree with it. This is a
-local draft; it is posted only as report 27's rider.
-
----
-
 ## 27. No headless or recording pad backend - **draft with link-seam exhibit**
 
 **Filed 2026-11-05** as [labrador#122](https://github.com/matt439/Labrador/issues/122) (Engine request), checked against master `6189072`, with report 26 as its rider.
+
+**Partly answered and spent at `v0.4.0`, 2026-11-17.** `0696db59` adds
+`ScriptedGamepadSource` beside the configured backend in the same engine
+library, selected by reader construction or
+`ApplicationOptions::scripted_gamepad_source`. The source owns copied
+snapshots and bounded input/output records and must outlive its borrowing
+reader or Application. `action_bindings`, `input_bindings`,
+`keyboard_jump_capture`, `toggle_fire` and the focused painter now use it;
+their five reader-member substitutions are gone. The painter publishes its
+authored snapshots before each real `Gamepads::poll`, while its ordinary
+build keeps the configured reader. Scripted output is explicitly unavailable
+where the earlier fixtures always refused it.
+
+`rumble_adapter.cpp` keeps its CPU-only reader fixture to inject exceptions
+from both vibration and stop. The supported source can accept/refuse and
+record output, but cannot inject those failures; removing the fixture would
+remove existing assertions that the game adapter swallows them without
+retry. That remaining exhibit keeps report 27 live. The Registry rider is
+[closed](#26-registry-cannot-forget-a-name---draft-with-rescan-exhibit) on its
+declined local decision. Issue #122 is still open without a tracker response.
+The original filing and its earlier counts below remain dated history.
 
 **Shipped unanswered, 2026-11-03.** `v0.3.0` carries `PI-21`'s vibration with
 no pad seam beside it, so the growth this draft predicted has happened. At the
@@ -494,6 +460,15 @@ with synthetic content only, after a fresh check of upstream master.
 ## 30. A device-unavailable startup failure can be classified only by its message text - **draft with string-match exhibit**
 
 **Filed 2026-11-05** as [labrador#123](https://github.com/matt439/Labrador/issues/123) (Engine request), checked against master `6189072`.
+
+**Partial API in `v0.4.0`, checked 2026-11-17.** `28ae5a6e` adds
+[`RenderDeviceUnavailable`](../../external/labrador/engine/render/device_unavailable.h),
+derived from `std::runtime_error`, but no backend yet throws it. OCA-120's
+backend classification and qualification remain open. A type existing does
+not replace the client's string match until the actual refusal uses it, so
+`FatalReport` and the sandbox checks keep their workaround. Issue #123 has
+no tracker response. The older filing below records the state before this
+partial API.
 
 **Author's decision 2026-11-03: file now as an Engine request.** The exhibit
 spans four places in two languages, and the failure record and the sandbox
@@ -624,6 +599,16 @@ for this pin/renderer change. See [adapter evidence policy](../crt-trial.md#adap
 Nightly painter/paint-fx policy remains unchanged and needs separate work;
 this does not claim those hosted hardware-only gates pass.
 
+**Rechecked at `v0.4.0`, 2026-11-17.** The classification fix was already
+consumed at the previous pin `d44101a0`. Both movement configurations and
+the nightly painter/paint-fx now use explicit hosted-software functional
+lanes; ordinary local probes remain strict hardware-only, under the
+[adapter evidence policy](../crt-trial.md#adapter-evidence-policy). The
+remaining upstream SM-98 decision selects ordinary Release refusal of known
+software with explicit test opt-in, but that selection implementation is
+not in this tag. The earlier 2026-11-15 paragraph records that integration's
+scope, rather than the present nightly policy. Issue #125 remains open.
+
 **The ask.** Report the Basic Render Driver as software (or add a kind that says
 what it is), and say in `SEAM.md` what the kind promises. Whether Release should
 still start on it is the engine's call under T6.
@@ -637,6 +622,12 @@ the `AGENTS.md` note go.
 ## 33. `on_contact` hands the other party over `const` - **draft with const_cast exhibit**
 
 **Filed 2026-11-05** as [labrador#124](https://github.com/matt439/Labrador/issues/124) (Engine request), checked against master `6189072`; the cast is now at `game/objects/projectile_contacts.cpp:557`.
+
+**Rechecked at `v0.4.0`, 2026-11-17.** The local upstream PI-25 decision
+selects mutable `other` with deterministic dispatch and deferred lifetime
+rules, but the public callback still takes `const CollisionObject&` in this
+tag. The client cast remains, and issue #124 has no tracker response. The
+original draft below records the earlier absence of that plan.
 
 **Author's decision 2026-11-03: file now as an Engine request.** The exhibit is
 small, live and the single exception to the rule `HYG#49` just enforced
@@ -745,13 +736,15 @@ itself, and the comment that names this report.
 
 # Closed
 
-Thirty-one reports: twenty-eight answered, one declined by this repository's author and two withdrawn. Twenty-one were
+Thirty-two reports: twenty-nine answered, one declined by this repository's author and two withdrawn. Twenty-one were
 spent here in code: 23 and 32 at the 2026-11-03 bump, 31 and 25 on
-2026-11-05, and 36 at the 2026-11-13 bump. Seven spent nothing in code: 1 was fixed before it was
+2026-11-05, and 36 at the 2026-11-13 bump. Eight spent nothing in code: 1 was fixed before it was
 filed; 9 and 10 were answered as document only, and those two changed only
 comments and docs; 15 was answered as document only, 17 changed only a
 manifest comment, 19 needs more evidence and 21 was declined — an answer that
-leaves the workaround where it is still closes the report. 29 was withdrawn by
+leaves the workaround where it is still closes the report. 26 was declined by
+the engine's retained-slot decision in `v0.4.0` and keeps its existing policy.
+29 was withdrawn by
 this repository, because its exhibit was the game's own choice, 37 because the
 engine never promised what it asked for, and 28 was
 declined by the author once `v0.3.0` shipped without its fix. Kept as outcomes rather than as
@@ -1802,6 +1795,90 @@ Physical output is still unchecked: there is no pad on this machine, and
 The four probe `GamepadReader` fakes needed exactly the two members
 [report 27](#27-no-headless-or-recording-pad-backend---draft-with-link-seam-exhibit)
 predicted, and got them at the bump.
+
+---
+
+<a id="26-registry-cannot-forget-a-name---draft-with-rescan-exhibit"></a>
+
+## 26. ~~`Registry` cannot forget a name~~ - declined in `v0.4.0`
+
+**Closed at the 2026-11-17 bump.** The local upstream decision in
+[`scripted-pad.md`, Registry rider](../../external/labrador/docs/review/colourwars-reports/scripted-pad.md#registry-rider)
+declines name forgetting and slot recycling under Registry's retained-slot
+contract: resolved handles keep their name for that registry's lifetime.
+Releasing an owning value can free its payload, but neither erases nor
+recycles the name. A different lifetime or a game-owned map must own any
+stronger removal policy. This is an answer, so the report and its
+`ENG#PARKED` ask close; `StageCatalog` keeps its existing retained-definition
+policy. No client code is deleted. The decision is local to the release;
+[labrador#122](https://github.com/matt439/Labrador/issues/122) remains open
+with no tracker response as of this bump. Generation-aware removal would need
+new ownership, stale-handle and catalogue-lifetime requirements.
+
+### Original draft and rechecks, 2026-10-28 to 2026-11-05
+
+**Filed 2026-11-05** as the rider section of [labrador#122](https://github.com/matt439/Labrador/issues/122), checked against master `6189072`.
+
+**Author's decision 2026-11-03: not filed alone; it rides with report 27.**
+Since `HYG#47` what is left is a comment and some unreachable definitions held
+until exit, and master now documents the opposite as deliberate ("a name owns
+its slot for the registry's lifetime"), so a filing of its own would spend a
+public issue on little. The ask is still true for any client that reloads user
+content, so it is not withdrawn: it goes with the report 27 filing as a rider,
+since both are state a test or a reload needs to reset, and it stays among the
+`ENG#PARKED` asks until an answer. The draft below is kept as written.
+Rechecked 2026-11-03 at master `aa8f5a2`: `registry.h` is unchanged since
+`3a14f11`, and still at master `11292fa` (2026-11-05). **Reopen** and file it alone if reloading user stages becomes a
+frequent or large flow (an editor hot-reload loop, or many large user stages)
+so the held memory or a stale `contains` has a measurable cost, or if a
+Labrador sample adds reloadable content and needs the same removal. Withdraw it
+if the author accepts "a name owns its slot" as the final design; the
+`stage_catalog.h` comment then becomes a permanent note.
+
+**Drafted against the pin** (`1e60fb2`, 2026-10-28). `labrador::Registry`
+(`engine/core/registry.h`) offers `add`, which replaces the resource of a name
+it already holds, plus `resolve`, `get` and `contains`. It has no way to remove
+a name.
+
+**Rechecked 2026-10-29 against upstream master `b96bad6`: still unanswered.**
+The only change to the header since the pin is `3a14f11` (2026-10-29,
+*Clarify Registry presence and retained resource handles*), and it changes
+comments only. Master's header comment says a name owns its slot for the
+registry's lifetime. `contains` answers false for an empty or released slot,
+the name still resolves to its handle, and `get` throws until the slot is
+refilled. Per-name removal is still absent. The only bulk operation is
+`release_all`, which empties every slot and keeps every name. That empty-slot
+behaviour is the pin's code too; `3a14f11` only documents it. So the
+`contains` trap below is a client choice. The rescan could
+`add(name, nullptr)` a vanished stage, after which `contains` says no and
+`get` throws "released". The name and its slot would still stay, so the ask
+narrows to forgetting the name itself.
+
+**Exhibit.** `ROAD#16` rereads the player's stage folder each time Stage Select
+opens from the main menu ([`UserStageFolder::rescan`](../../game/config/stage_loading.cpp)).
+A new or edited file goes through `add`, which is what the rescan needs. A
+file the player deleted, or one that now fails its checks, can only leave the
+stage list. Its old `LevelLoadedInfo` stays in the registry, unreachable from
+the list, until the game exits.
+
+**Narrowed 2026-10-30 (`HYG#47`).** The list and the registry now have one
+owner and one writer, [`StageCatalog`](../../game/config/stage_catalog.h), and its
+by-name lookup `definition` answers from the list, so a stage that is gone is
+not found there. The registry's own `contains` still answers yes for one, but
+only whole-registry readers (`LevelBuilder`, the content and sound-group
+checks) are handed it. What is left is the memory the vanished definitions
+hold until the game exits. Every client that reloads user content over a
+session would still meet that.
+
+**The ask.** A way to remove a name (or to replace the whole set) with a
+defined meaning for handles already resolved to it. The spelling, and
+whether stale handles throw or stay invalid, are engine decisions.
+
+**What an answer lets this repository delete.** The paragraph about
+unreachable definitions in `game/config/stage_catalog.h` and the roadmap's note
+about stale entries. `StageCatalog::remove_user_stages` would remove the
+names that left the list, so the registry would agree with it. This is a
+local draft; it is posted only as report 27's rider.
 
 ---
 
@@ -3296,3 +3373,92 @@ leaf passed with its 21-case background supplement. The presence driving is
 recorded under `PIN#2`. Not run here: the full painter and paint-effects
 sweeps (nightly), the startup and package checks (CI runs both), and anything
 needing a pad.
+
+# What the 2026-11-17 bump changed
+
+**Moved 2026-11-17 to `v0.4.0` (`f525bc6c`)**, 105 commits past the previous
+pin `d44101a0`. The tag returns this client to the release-following pin
+policy. The engine's
+[`CHANGES.md`](../../external/labrador/CHANGES.md#v040-2026-11-17) was read
+against the client's callers; the migrations consumed here are:
+
+- **Atlas dimensions.** `read_sprite_sheet(path, texture)` now requires
+  positive atlas dimensions and checks every sampled frame and strip.
+  Manifest loading supplies them automatically. The 49 direct CPU-probe
+  calls now use
+  [`acceptance::read_cpu_sprite_sheet`](../../scripts/acceptance/support/sprite_sheet.h),
+  which decodes the actual single DDS/PNG beside the JSON and passes its
+  width and height. A modified JSON fixture names its original atlas
+  explicitly; no guessed dimensions disable the new checks. The six shipped
+  atlas definitions fit their real textures, so no runtime asset changes or
+  raster-pin changes were required.
+- **Supported scripted pads.** The five fixtures named in
+  [report 27](#27-no-headless-or-recording-pad-backend---draft-with-link-seam-exhibit)
+  use `ScriptedGamepadSource` through the normal engine library. The source
+  outlives its reader or Application, and the painter publishes each authored
+  snapshot before polling the real `Gamepads`. Its normal binary keeps the
+  configured XInput reader. The throwing-transport rumble adapter fixture
+  remains, preserving both exception-handling assertions; the supported
+  source has no equivalent exception injection. No physical pad or vibration
+  qualification follows from a scripted run.
+- **Debug diagnostics.** The engine now sends informational adapter identity
+  to stderr rather than `OutputDebugString`. Startup and visual wrappers
+  explicitly admit only that exact structured line in Debug, through
+  [`check-diagnostics.ps1`](../../scripts/check-diagnostics.ps1). Release,
+  warnings and every other unexpected engine notice retain their existing
+  refusal. The helper's checks cover matching, malformed and wrong-lane
+  diagnostics.
+- **Other source and behaviour changes.** `ApplicationOptions` callers assign
+  members by name, so the positional-construction migration is not reached.
+  Native first-frame reveal and default-accepting close requests need no
+  client change. The new ISO key preserves existing ordinals; this game's
+  27-key binding domain remains explicit. Camera scales and collider inputs
+  already use finite valid values; integer conversion checks preserve valid
+  values. Custom post materials remain optional, and native Release IPO
+  remains off for this consumer.
+
+**Reports at this pin.** [26](#26-registry-cannot-forget-a-name---draft-with-rescan-exhibit)
+closes on the engine's declined Registry rider, with no deleted code; its
+retained-definition policy remains a client choice. 27 is partly spent as
+above. 30's `RenderDeviceUnavailable` exists but no backend throws it yet, so
+the client still matches the actual refusal text. 33's mutable contact and
+34's ordinary Release software refusal are planned, not implemented. 34's
+classification fix and the explicit hosted/strict hardware evidence lanes
+were already consumed at the prior pin. 39's JSON parser and the one-float-
+below-`FLT_MAX` workaround are unchanged. Local release decisions do not
+claim tracker responses or issue closure.
+
+## Verification of the 2026-11-17 bump
+
+On MattPC, using Windows PowerShell 5.1 and the same `d3d11` / `xaudio2` /
+`xinput` consumer configuration in both presets:
+
+| Check | Result |
+|---|---|
+| Configure and build | Debug and Release game and editor passed, with `/W4 /WX` |
+| Default CPU acceptance | 89 unique Debug cases and 87 Release cases passed, including the slow cases. The three changed pad cases ran separately; `keyboard_jump_capture` also passed again with them |
+| Optional probes | All 17 compiled in both presets; all 13 Quick Release cases ran and passed, including 832 level and 600 save mutants |
+| Strict movement and paint effects | Both presets passed on D3D11 NVIDIA GeForce RTX 5080, with no software opt-in and unchanged pixel assertions |
+| Plain painter | Full Debug and Release matrices passed on the RTX 5080, including the generated review sheets, with unchanged pixel assertions |
+| Scripted painter | Release `-TeamSetupOnly` and Debug `-RumbleOnly` passed through the supported source. These cover held-entry, missing-pad, focus, roster and recording-rumble flows, plus the Debug background supplement |
+| CRT comparison | Release saved off/on captures passed: 32 pairs, 12 changed monitor frames, no changes outside the glass, and byte-identical active/reduced-effect frames |
+| Startup | Debug and Release with the accepted bank passed from unrelated working directories and isolated profiles; Debug and extracted Release ZIP also passed with the optional bank absent. Release used only the system DLL search path |
+| Editor and registration | Debug editor acceptance, hidden shell/DPI flows and stage registration passed. The first editor run used a stale opt-in executable; explicitly rebuilding its `EXCLUDE_FROM_ALL` targets fixed that without a source change |
+| Package | Release ZIP passed 36 checks over 69 files. Packaged Labrador license and notice match upstream bytes and retain lodepng provenance |
+| Other integration checks | Display-awake passed in both presets; Debug frame-pacing probe compiled; diagnostic helper passed 70 checks; CI Python suite passed 78 tests |
+
+Receipts, compiler logs, raw stderr, lossless captures and comparison output
+are retained under `out/validation/labrador-v0.4/`.
+`validation-summary.json` records the passing receipt paths and changed-source
+SHA-256 hashes. Full painter receipts are Debug
+`painter-plain/x64-debug/7ebe07d4980e4561a5fc5f411d633607` and Release
+`painter-plain/x64-release/947bdce4f05c4f0ebef956dbef73d18d`; the background
+and rumble receipt is `painter-rumble/x64-debug/ffaceda61d4844c1bcf781d975989263`.
+The editor's own receipt is
+`out/acceptance/x64-debug/level-editor/3eed67f8d26447969cabba7a1f8b0fae`.
+The selected engine tag's upstream master push run
+[44002989378](https://github.com/matt439/Labrador/actions/runs/44002989378)
+passed before this pin was selected.
+
+Not run here: the full focused-leaf painter sweep, physical pads or rumble,
+listening, attended gameplay/performance, or a new hosted ColourWars gate.

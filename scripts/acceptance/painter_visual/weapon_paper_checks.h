@@ -32,7 +32,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
     struct ClearWeaponPaper { StateContext& stack; Presentation& presentation; Presentation original; ~ClearWeaponPaper() { this->stack.clear(); painter_scripted_pads::states = {}; this->presentation = this->original; } } clear{ stack, presentation, original };
     const std::array<int, 4> slots{ input_slots::keyboard_and_mouse, 3, 0, 2 };
     std::vector<int> choices; std::vector<bool> ready; bool missing = false; TeamColourPair opened_palette = TeamColourPair::random;
-    const auto tick = [&](float elapsed = 0.0f) { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
+    const auto tick = [&](float elapsed = 0.0f) { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto hold = [&](int player, GamepadButton button, bool down)
     {
         const int slot = slots[static_cast<size_t>(player)];
@@ -55,7 +55,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (Key key : { Key::enter, Key::escape, Key::left, Key::right }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; for (int player = 1; player < count; ++player) { painter_scripted_pads::states[static_cast<size_t>(slots[static_cast<size_t>(player)])].connected = true; }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         require(preferences.set_display_settings_and_save(preferences.resolution(), false, palette), "Isolated Weapon paper palette fixture could not save"); opened_palette = palette;
         settings = MatchSetup(); settings.set_player_count(count); settings.set_best_of(3); settings.set_duration(73.0f); settings.set_stage("movement_course");
         settings.set_screen_layout(players_layout(count));

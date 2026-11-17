@@ -62,7 +62,7 @@ namespace input_bindings_acceptance
         require(input.jump_pressed && h.menus[input_slots::keyboard_and_mouse].direction == Direction::up,
             "Gameplay W binding rewrote the actual menu direction alias");
         h.keyboard.on_key_up(Key::w); std::ignore = h.desktop();
-        auto& pad = binding_test_pads::states[2]; pad.connected = true;
+        auto& pad = h.states[2]; pad.connected = true;
         pad.buttons = uint16_t(1u << static_cast<unsigned int>(GamepadButton::a));
         auto all = h.sample(); require(all[2].jump_held && !all[2].jump_pressed && !all[0].connected,
             "Custom keyboard mapping changed reconnect guarding or sparse pad identity");
@@ -85,9 +85,9 @@ namespace input_bindings_acceptance
         {
             for (PadControl face : faces)
             {
-                binding_test_pads::states = {}; std::ignore = h.sample();
+                h.states = {}; std::ignore = h.sample();
                 h.bindings.pads[slot] = jump_on(face);
-                auto& pad = binding_test_pads::states[slot];
+                auto& pad = h.states[slot];
                 pad = pressing(face);
                 auto all = h.sample();
                 require(all[slot].jump_held && !all[slot].jump_pressed,
@@ -109,9 +109,9 @@ namespace input_bindings_acceptance
                     "Resuming a held custom pad binding invented a Jump edge");
             }
         }
-        binding_test_pads::states = {}; std::ignore = h.sample();
+        h.states = {}; std::ignore = h.sample();
         h.bindings.pads = jump_faces({ PadControl::x, PadControl::b, PadControl::a, PadControl::y });
-        auto& second = binding_test_pads::states[1]; auto& fourth = binding_test_pads::states[3];
+        auto& second = h.states[1]; auto& fourth = h.states[3];
         second.connected = fourth.connected = true; std::ignore = h.sample();
         second.buttons = button_bit(GamepadButton::b); fourth.buttons = button_bit(GamepadButton::y);
         auto all = h.sample();
@@ -142,10 +142,10 @@ namespace input_bindings_acceptance
 
         // Shoot and Pause move too: slot 2 shoots on RB (and LT) and pauses on Y;
         // Jump takes RT. Menus, intro skip and the other slots keep theirs.
-        binding_test_pads::states = {}; h.bindings.pads = default_pads; std::ignore = h.sample();
+        h.states = {}; h.bindings.pads = default_pads; std::ignore = h.sample();
         h.bindings.pads[2] = profile(PadControl::right_trigger, PadControl::none, PadControl::right_shoulder,
             PadControl::left_trigger, PadControl::y, PadControl::none);
-        auto& third = binding_test_pads::states[2]; auto& first = binding_test_pads::states[0];
+        auto& third = h.states[2]; auto& first = h.states[0];
         third.connected = first.connected = true; std::ignore = h.sample(); std::ignore = h.sample();
         third = pressing(PadControl::right_shoulder); first = pressing(PadControl::right_trigger); all = h.sample();
         require(all[2].primary_shoot && !all[2].jump_held && all[0].primary_shoot == (h.tuning.input().trigger_shoot_threshold < 1.0f),
@@ -166,7 +166,7 @@ namespace input_bindings_acceptance
         h.bindings.pads[0][PadAction::jump].primary = PadControl::start;
         rejects([&] { h.player.player_inputs(); }, "Invalid connected-slot profile escaped actual reader validation");
         h.bindings.pads = default_pads;
-        binding_test_pads::states = {}; std::ignore = h.sample();
+        h.states = {}; std::ignore = h.sample();
     }
 
     void check_actual_resume(const char* content)

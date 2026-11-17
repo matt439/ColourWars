@@ -2,7 +2,7 @@
 #include "game/config/presentation/presentation.h"
 #include "game/states/menu_panel.h"
 #include "game/carried/ui_text_drop_shadow.h"
-#include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/sprite_font_file.h"
 #include "scripts/acceptance/support/content_world.h"
@@ -661,7 +661,8 @@ namespace
         require(removed, "Required primitive regression fixture has no authored pixel frame");
         const auto path = variants.folder() / "sheet-without-pixel.json";
         write_document(sheet, path);
-        world.render.add_sprite_sheet("sprite_sheet_1", read_sprite_sheet(path.string().c_str(), TextureHandle{}));
+        world.render.add_sprite_sheet("sprite_sheet_1", acceptance::read_cpu_sprite_sheet(
+            path.string().c_str(), TextureHandle{}, content / "textures/sprite_sheet_1.json"));
         // Point data-owned sprite_sheet_1 pixel references at a substitute,
         // including the custom menu atlas, so only the explicit guard for
         // non-menu C++ primitive users can catch the missing built-in frame.

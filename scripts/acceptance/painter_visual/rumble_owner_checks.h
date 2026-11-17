@@ -36,7 +36,7 @@ void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         ~ClearRumbleOwner()
         {
             this->stack.clear(); painter_scripted_pads::states = {};
-            this->app.gamepads()->poll(); this->app.gamepads()->poll();
+            poll_gamepads(this->app); poll_gamepads(this->app);
         }
     } clear{ stack, app };
     std::ofstream cases(output / "rumble-owner.csv");
@@ -68,7 +68,7 @@ void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     GameLevel* game = nullptr;
     const auto tick = [&](float elapsed = dt)
     {
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto pad = [&](GamepadButton button)
     {
@@ -85,7 +85,7 @@ void rumble_owner_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         painter_scripted_pads::states = {};
         painter_scripted_pads::states[3].connected = true;
         painter_scripted_pads::states[1].connected = true;
-        app.gamepads()->poll(); app.gamepads()->poll();
+        poll_gamepads(app); poll_gamepads(app);
         MatchSetup settings; settings.set_stage("movement_course"); settings.set_duration(duration);
         settings.set_player_count(3); settings.begin_input_claims(3);
         require(settings.claim_input_slot(1) && settings.claim_input_slot(input_slots::keyboard_and_mouse),

@@ -33,7 +33,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     const std::array<Key, 7> keys{ Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right, Key::r };
     const auto tick = [&]
     {
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(dt);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(dt);
     };
     const auto tap = [&](Key key)
     {
@@ -52,7 +52,7 @@ void series_repick_checks(Application& app, Registry<LevelLoadedInfo>& levels, c
     {
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : keys) { app.keyboard()->on_key_up(key); }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll();
         input.reset_actions(); choice.reset(); delivered = 0;
         stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));

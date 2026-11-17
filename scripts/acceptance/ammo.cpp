@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/weapon_builder.h"
 #include "game/contracts/simulation.h"
-#include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -88,14 +88,14 @@ int main(int argc, char** argv)
 
         RenderResources render;
         render.add_sprite_sheet("sprite_sheet_1",
-            read_sprite_sheet(sheet_path.c_str(), TextureHandle{}));
+            acceptance::read_cpu_sprite_sheet(sheet_path.c_str(), TextureHandle{}));
         const auto weapon_sheet_path =
             (content / "textures" / "weapon_paint.json").string();
         render.add_sprite_sheet("weapon_paint",
-            read_sprite_sheet(weapon_sheet_path.c_str(), TextureHandle{}));
-        render.add_sprite_sheet("paint_fx", read_sprite_sheet(
+            acceptance::read_cpu_sprite_sheet(weapon_sheet_path.c_str(), TextureHandle{}));
+        render.add_sprite_sheet("paint_fx", acceptance::read_cpu_sprite_sheet(
             (content / "textures/paint_fx.json").string().c_str(), TextureHandle{}));
-        render.add_sprite_sheet("terrain", read_sprite_sheet(
+        render.add_sprite_sheet("terrain", acceptance::read_cpu_sprite_sheet(
             (content / "textures/terrain.json").string().c_str(), TextureHandle{}));
         AudioResources audio;
         audio.add_sound_bank("paint_exe", SoundBank::silent());

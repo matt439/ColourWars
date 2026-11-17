@@ -177,7 +177,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
             this->app.keyboard()->set_focused(this->keyboard_focused);
             this->app.mouse()->set_focused(this->mouse_focused);
             painter_scripted_pads::states = this->pads;
-            this->app.gamepads()->poll(); this->app.gamepads()->poll();
+            poll_gamepads(this->app); poll_gamepads(this->app);
             this->app.keyboard()->poll(); this->app.keyboard()->poll();
             this->app.mouse()->poll(); this->app.mouse()->poll();
             this->app.audio_resources()->set_group_volume(this->music, this->old_music);
@@ -197,7 +197,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     };
     const auto tick = [&](float elapsed = dt)
     {
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto muted = [&]
     {
@@ -233,7 +233,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
         painter_scripted_pads::states[3].connected = true;
         painter_scripted_pads::states[1].connected = true;
         for (Key key : { Key::d, Key::space, Key::escape, Key::f10 }) { app.keyboard()->on_key_up(key); }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
     };
     const auto pad = [&](GamepadButton button, int slot = 3)
     {
@@ -382,7 +382,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     auto& current = live_play_settings(preferences_session);
     current.music_volume = was_muted ? 3 : 31; current.sfx_volume = was_muted ? 4 : 47;
     painter_scripted_pads::states[3].buttons = static_cast<std::uint16_t>(1u << static_cast<unsigned int>(GamepadButton::a));
-    app.gamepads()->poll();
+    poll_gamepads(app);
     stack.notify_activation(true);
     require(audio->group_volume(music) == current.music_gain() && audio->group_volume(sfx) == current.sfx_gain(),
         "Activation restored stale rather than current preferences");

@@ -11,7 +11,7 @@
 		impl.set_content_directories(scratch.source, scratch.staged);
 		const CombatFeedbackPresentation* const look = &presentation.combat_feedback();
 		labrador::RenderResources resources;
-		resources.add_sprite_sheet(look->sprite_sheet, labrador::read_sprite_sheet(
+		resources.add_sprite_sheet(look->sprite_sheet, acceptance::read_cpu_sprite_sheet(
 			(game_directory / L"textures" / (look->sprite_sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
 		CombatFeedback hurt(look, &resources), burst(look, &resources);
 		const labrador::RectangleF body(80, 120, 56, 96), detached(240, 120, 56, 96);
@@ -94,7 +94,7 @@
 		};
 		const auto held_shape = shape();
 		labrador::RenderResources resources;
-		resources.add_sprite_sheet(sheet, labrador::read_sprite_sheet(
+		resources.add_sprite_sheet(sheet, acceptance::read_cpu_sprite_sheet(
 			(game_directory / L"textures" / (sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
 		BlockedShotFeedback feedback(look, &resources);
 		const std::array<labrador::Vector2F, 4> normals{ labrador::Vector2F(2.0f, 0.0f),
@@ -232,7 +232,7 @@
 				look.nozzle_inset, look.nozzle_underside, look.keyline_width };
 		};
 		labrador::RenderResources resources;
-		resources.add_sprite_sheet(original.front().sprite_sheet, labrador::read_sprite_sheet(
+		resources.add_sprite_sheet(original.front().sprite_sheet, acceptance::read_cpu_sprite_sheet(
 			(game_directory / L"textures" / (original.front().sprite_sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
 		// Separate consumers are necessary: the next quiet interval exceeds a
 		// falling drop's lifetime. Do not pretend both states coexist by default.

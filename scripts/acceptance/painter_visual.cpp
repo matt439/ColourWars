@@ -4,6 +4,7 @@
 #include "game/config/sound_groups.h"
 #include "game/carried/removed_members.h"
 #include "engine/app/application.h"
+#include "engine/input/scripted_gamepad_source.h"
 #include "engine/core/file_path.h"
 #include "game/input/input_slots.h"
 #include "game/objects/level_builder.h"
@@ -90,38 +91,13 @@
 #include "scripts/acceptance/support/stage_catalog.h"
 
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
-// This focused probe supplies the concrete input backend at the link seam.
-// Normal painter binaries retain Labrador's XInput implementation.
+// The focused fixture selects Labrador's supported scripted source. It
+// outlives the borrowing Application; normal painter binaries keep XInput.
+// The authored snapshots remain convenient to edit between explicit polls.
 namespace painter_scripted_pads
 {
     std::array<labrador::GamepadState, labrador::Gamepads::max_count> states{};
-}
-namespace labrador
-{
-    struct GamepadReader::Impl
-    {
-        std::array<GamepadState, Gamepads::max_count> states{};
-        bool suspended = false;
-    };
-    GamepadReader::GamepadReader() : impl_(std::make_unique<Impl>()) {}
-    GamepadReader::~GamepadReader() = default;
-    GamepadReader::GamepadReader(GamepadReader&&) noexcept = default;
-    GamepadReader& GamepadReader::operator=(GamepadReader&&) noexcept = default;
-    void GamepadReader::sample()
-    {
-        this->impl_->states = this->impl_->suspended ?
-            std::array<GamepadState, Gamepads::max_count>{} : painter_scripted_pads::states;
-    }
-    GamepadState GamepadReader::read(int slot) const
-    {
-        return slot >= 0 && slot < Gamepads::max_count ?
-            this->impl_->states[static_cast<size_t>(slot)] : GamepadState{};
-    }
-    void GamepadReader::suspend() { this->impl_->suspended = true; }
-    void GamepadReader::resume() { this->impl_->suspended = false; }
-    // Engine v0.3.0 reader members Gamepads calls; a fake pad has no motors.
-    bool GamepadReader::vibrate(int, const Vibration&) { return false; }
-    void GamepadReader::stop_vibration(int) {}
+    labrador::ScriptedGamepadSource source;
 }
 #endif
 
@@ -129,6 +105,23 @@ using namespace labrador;
 
 namespace
 {
+    void poll_gamepads(Application& app)
+    {
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+        for (int slot = 0; slot < Gamepads::max_count; ++slot)
+        {
+            painter_scripted_pads::source.set_state(slot,
+                painter_scripted_pads::states[static_cast<size_t>(slot)]);
+            // Rumble is observed through the game's RumbleSink fixture.
+            painter_scripted_pads::source.set_vibration_available(slot, false);
+        }
+        // These raster checks do not inspect transport records. Bound their
+        // retained history to this poll rather than the entire painter run.
+        painter_scripted_pads::source.clear_records();
+#endif
+        app.gamepads()->poll();
+    }
+
     constexpr bool admits_adapter(RenderDeviceKind kind, bool hosted_software)
     {
         return kind == (hosted_software ? RenderDeviceKind::software : RenderDeviceKind::hardware);
@@ -491,6 +484,9 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"cq-blockout" || std::wstring(argv[3]) == L"crossfeed" || std::wstring(argv[3]) == L"press-tower" || std::wstring(argv[3]) == L"turbulence-blockout" || std::wstring(argv[3]) == L"gate-permission" || std::wstring(argv[3]) == L"ferry-direction" || std::wstring(argv[3]) == L"surface-finish" || std::wstring(argv[3]) == L"route-warning" || keyboard_jump_only))) { options.view_capacity = 5; }
         if (crt_runtime.enabled()) { options.view_capacity = crt_runtime.view_capacity(); }
         options.visible = false;
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+        options.scripted_gamepad_source = &painter_scripted_pads::source;
+#endif
         Application app(options);
         app.initialize();
         crt_runtime.initialize(*app.renderer());

@@ -24,7 +24,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
     } clear{ stack };
     const float settled = std::max(style.motion.focus_duration, style.motion.press_duration) + 0.01f;
     const auto tick = [&](float elapsed = 0.0f)
-        { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
+        { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto hold = [&](GamepadButton button, bool down)
     {
         if (pad)
@@ -55,7 +55,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::space }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = pad;
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); settings = MatchSetup();
         stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); active_home = nullptr;
         if (page == 0)

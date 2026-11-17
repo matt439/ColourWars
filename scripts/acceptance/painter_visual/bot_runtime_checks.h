@@ -18,7 +18,7 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
     for (const Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right })
     { app.keyboard()->on_key_up(key); }
     painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = true;
-    app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+    poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
 
     MatchSetup settings; settings.set_player_count(4);
     settings.set_player_bot(1, BotDifficulty::easy); settings.set_player_bot(3, BotDifficulty::hard);
@@ -38,7 +38,7 @@ void check_playable_bot_runtime(Application& app, Registry<LevelLoadedInfo>& lev
         remembered_setup_matches(*preferences.last_match_setup(), settings),
         "Normal confirmed bot match failed to save its controller/difficulty setup");
     const auto tick = [&](float elapsed = dt)
-    { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
+    { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto tap = [&](Key key)
     {
         app.keyboard()->on_key_down(key); tick(0.0f);

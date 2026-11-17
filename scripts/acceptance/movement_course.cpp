@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "scripts/acceptance/movement_course/fixtures.h"
 #include "scripts/acceptance/support/probe.h"
 
@@ -21,7 +22,7 @@ int main(int argc, char** argv)
         RenderResources render;
         for (const char* name : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx", "terrain" })
         {
-            render.add_sprite_sheet(name, read_sprite_sheet(
+            render.add_sprite_sheet(name, acceptance::read_cpu_sprite_sheet(
                 (content / "textures" / (std::string(name) + ".json")).string().c_str(),
                 TextureHandle{}));
         }

@@ -50,7 +50,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
                 painter_scripted_pads::states = previous_pads;
                 for (const Key key : keys) app.keyboard()->on_key_up(key);
                 app.keyboard()->set_focused(keyboard_focus); app.mouse()->set_focused(mouse_focus);
-                app.gamepads()->poll(); app.gamepads()->poll();
+                poll_gamepads(app); poll_gamepads(app);
                 app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
                 stack.notify_activation(active);
             }
@@ -58,7 +58,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
             app.mouse()->focused(), painter_scripted_pads::states };
         const auto host_tick = [&]
         {
-            app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); host_stack.update(dt);
+            poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); host_stack.update(dt);
         };
         const auto host_tap = [&](int slot, GamepadButton button)
         {
@@ -142,7 +142,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
             if (guest_wearing) require(host_preferences_session.wear_profile(current_guest, guest_id), "ROAD#34 could not wear the guest profile");
             if (input_slots::is_pad(slot)) painter_scripted_pads::states[static_cast<size_t>(slot)].connected = true;
             if (count == 2) painter_scripted_pads::states[static_cast<size_t>(current_guest)].connected = true;
-            app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+            poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
             app.mouse()->poll(); app.mouse()->poll();
             host_settings = MatchSetup(); host_settings.set_player_count(count);
             host_settings.set_player_handicap(0, previous_boost);
@@ -240,7 +240,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
     const std::array<Key, 7> keys{ Key::enter, Key::escape, Key::up, Key::down, Key::left, Key::right, Key::r };
     const auto tick = [&]
     {
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(dt);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(dt);
     };
     const auto tap = [&](Key key)
     {
@@ -284,7 +284,7 @@ void check_playable_bot_setup(Application& app, Registry<LevelLoadedInfo>& level
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         for (const Key key : keys) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = claimed;
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll();
         settings = MatchSetup(); settings.set_player_count(count);
         settings.begin_input_claims(input_slots::keyboard_and_mouse);

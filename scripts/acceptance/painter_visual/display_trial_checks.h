@@ -57,7 +57,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const auto tick = [&](float elapsed = 0.0f)
     {
         if (in_trial && stack.depth() == 3 && std::isfinite(elapsed) && elapsed > 0.0f) { age += elapsed; }
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
         if (stack.depth() < 3) { in_trial = false; }
     };
     const auto hold = [&](int slot, GamepadButton button, bool down)
@@ -105,7 +105,7 @@ void display_trial_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         metadata_fullscreen = saved_fullscreen; before_bytes = bytes();
         for (Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::space }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = true;
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll(); input.reset_actions();
         stack.push(std::make_unique<CanvasProbeRoot>(app, canvas)); stack.push(std::make_unique<MainMenuOptions>(&context)); tick(); tick();
         // Restore supplies independently known 1920/windowed/Random choices.
         for (int move = saved_fullscreen ? 1 : 0; move < 6; ++move) { tap(GamepadButton::dpad_down); }

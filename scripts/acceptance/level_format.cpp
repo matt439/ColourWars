@@ -7,7 +7,7 @@
 #include "game/objects/team_gate_structure_paintable.h"
 #include "game/config/content_validation.h"
 #include "game/contracts/simulation.h"
-#include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "engine/assets/sound_bank_loader.h"
 #include "editor/content_catalog.h"
 #include "scripts/acceptance/support/probe.h"
@@ -857,7 +857,7 @@ namespace
         {
             require(frames.has_value(), "The editor could not read sprite sheet " + sheet);
             const std::filesystem::path path = content / "textures" / (sheet + ".json");
-            const auto loaded = read_sprite_sheet(path.string().c_str(), TextureHandle{});
+            const auto loaded = acceptance::read_cpu_sprite_sheet(path.string().c_str(), TextureHandle{});
             for (const std::string& frame : *frames)
             {
                 try { loaded->resolve_sprite_frame(frame); }
@@ -905,11 +905,11 @@ int main(int argc, char** argv)
         const auto schema_json = acceptance::read_document(repo / "game/contracts/level.schema.json");
         const rapidjson::SchemaDocument schema(schema_json);
         RenderResources render;
-        render.add_sprite_sheet("sprite_sheet_1", read_sprite_sheet(
+        render.add_sprite_sheet("sprite_sheet_1", acceptance::read_cpu_sprite_sheet(
             (content / "textures/sprite_sheet_1.json").string().c_str(), TextureHandle{}));
-        render.add_sprite_sheet("paint_fx", read_sprite_sheet(
+        render.add_sprite_sheet("paint_fx", acceptance::read_cpu_sprite_sheet(
             (content / "textures/paint_fx.json").string().c_str(), TextureHandle{}));
-        render.add_sprite_sheet("terrain", read_sprite_sheet(
+        render.add_sprite_sheet("terrain", acceptance::read_cpu_sprite_sheet(
             (content / "textures/terrain.json").string().c_str(), TextureHandle{}));
         AudioResources audio;
         audio.add_sound_bank("paint_exe", SoundBank::silent());

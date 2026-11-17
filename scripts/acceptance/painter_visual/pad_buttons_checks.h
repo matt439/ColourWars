@@ -33,7 +33,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         ~RestorePadJump()
         {
             this->stack.clear(); this->presentation = this->original; painter_scripted_pads::states = {};
-            this->app.gamepads()->poll(); this->app.gamepads()->poll();
+            poll_gamepads(this->app); poll_gamepads(this->app);
             this->blocked.release();
         }
     } restore{ stack, app, presentation, original, blocked };
@@ -46,7 +46,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto tick = [&](float elapsed = 0.0f)
     {
         require(++updates < 1800, "Pad Jump exceeded bounded scripted update budget");
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed);
     };
     const auto tap = [&](Key key)
     { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); };
@@ -65,7 +65,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         for (unsigned int key = 1; key < static_cast<unsigned int>(Key::count); ++key)
         { app.keyboard()->on_key_up(static_cast<Key>(key)); }
         app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
-        app.gamepads()->poll(); app.gamepads()->poll(); input.reset_actions();
+        poll_gamepads(app); poll_gamepads(app); input.reset_actions();
     };
     const auto size_to = [&](Vector2I size)
     {
@@ -363,7 +363,7 @@ void pad_buttons_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         first.left_trigger = phase >= 20 && phase <= 22 ? 1.0f : 0.0f;
         first.right_trigger = phase >= 80 && phase < 84 ? 1.0f : 0.0f;
         first.right_stick = { 1.0f, 0.0f }; second.right_stick = { -1.0f, 0.0f };
-        app.gamepads()->poll();
+        poll_gamepads(app);
     };
     struct RestoreMappedReplayLayout
     {

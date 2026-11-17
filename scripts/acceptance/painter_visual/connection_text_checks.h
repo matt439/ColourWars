@@ -42,7 +42,7 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto tick = [&]
     {
         require(++ticks <= 300, "Connection text exceeded its bounded 300 update budget");
-        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f);
+        poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f);
     };
     const auto bit = [](GamepadButton button) { return static_cast<uint16_t>(1u << static_cast<unsigned int>(button)); };
     const auto hold = [&](int slot, GamepadButton button, bool down)
@@ -87,7 +87,7 @@ void connection_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {};
         for (int slot : { 3, 0, 2 }) { painter_scripted_pads::states[static_cast<size_t>(slot)].connected = true; }
-        app.gamepads()->poll(); app.gamepads()->poll(); app.keyboard()->poll(); app.keyboard()->poll();
+        poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); choice.reset();
         settings = MatchSetup(); settings.set_player_count(kind == 0 ? 3 : kind == 1 ? 4 : 2);
         settings.begin_input_claims(3); require(settings.claim_input_slot(4), "Cannot create the connection text sparse roster");

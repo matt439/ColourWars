@@ -18,7 +18,7 @@
 #include "game/objects/monitor.h"
 #include "game/objects/respawn_redraw.h"
 #include "game/objects/silhouette.h"
-#include "engine/assets/sprite_sheet_loader.h"
+#include "scripts/acceptance/support/sprite_sheet.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/math/scalar.h"
 #include "engine/render/render_resources.h"

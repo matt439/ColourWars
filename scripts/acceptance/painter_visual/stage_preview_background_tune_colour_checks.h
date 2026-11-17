@@ -216,7 +216,7 @@ private:
         values.insert(values.end(), { static_cast<int>(preferences_.resolution()), preferences_.fullscreen() ? 1 : 0,
             static_cast<int>(preferences_.team_palette()), static_cast<int>(preferences_settings_.input_bindings().keyboard_jump) }); return values;
     }
-    void poll() { app_.gamepads()->poll(); app_.keyboard()->poll(); app_.mouse()->poll(); ++counts_.polls; }
+    void poll() { poll_gamepads(app_); app_.keyboard()->poll(); app_.mouse()->poll(); ++counts_.polls; }
     void tap(Key key) { app_.keyboard()->on_key_down(key); tick(); app_.keyboard()->on_key_up(key); tick(); ++counts_.taps; }
     Frame frame() { return draw(true, [](DrawList&) {}); }
     static size_t offset(int x, int y) { return (static_cast<size_t>(y) * 1920 + static_cast<size_t>(x)) * 4; }

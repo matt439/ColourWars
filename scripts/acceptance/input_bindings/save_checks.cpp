@@ -333,7 +333,7 @@ namespace input_bindings_acceptance
                 !directory.temporary_left(), "Failed pad write rolled back active preferences or damaged disk bytes");
             ReaderHarness h(content);
             PlayerInput actual(&h.pads, &h.keyboard, &h.mouse, &h.tuning, &h.play, &save_session.input_bindings());
-            auto& pad = binding_test_pads::states[2]; pad.connected = true; std::ignore = h.sample();
+            auto& pad = h.states[2]; pad.connected = true; std::ignore = h.sample();
             pad = pressing(PadControl::left_stick); std::ignore = h.sample();
             require(actual.player_inputs()[2].jump_pressed, "Save-borrowing reader ignored a pad profile kept active after write failure");
             pad = pressing(PadControl::none); std::ignore = h.sample();
