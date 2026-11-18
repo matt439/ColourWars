@@ -7,6 +7,11 @@
 
 using namespace labrador;
 
+bool DebugDirector::shader_playground_requested()
+{
+	return DebugShaderPlayground::requested();
+}
+
 DebugDirector::DebugDirector() = default;
 
 DebugDirector::DebugDirector(GameTuning* tuning, Presentation* presentation)

@@ -69,7 +69,11 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		save.load_save_file();
 		// This run's settings: the save's, with any worn profiles laid over them.
 		SettingsSession settings_session(save);
-        const crt_trial::Runtime crt_runtime(save.saved_play_settings().crt_monitor);
+        // The optional Debug playground owns the single post pass for this
+        // launch. Saved preferences remain available to the next normal run.
+        const crt_trial::Runtime crt_runtime(save.saved_play_settings().crt_monitor,
+            DebugDirector::shader_playground_requested() ? std::optional<bool>(false) :
+                crt_trial::environment_override());
 
 		ApplicationOptions options;
         // Four player views plus the crisp physical foreground, only for the trial.

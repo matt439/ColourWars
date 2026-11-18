@@ -39,6 +39,7 @@ DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentat
 	this->binds_.reset();
 	this->register_commands();
 	this->register_view_commands();
+	this->shader_playground_.register_command(this->registry_);
 	this->register_player_commands();
 	this->register_bot_commands();
 	this->register_replay_commands();
@@ -71,6 +72,11 @@ void DebugDirectorImpl::attach(Application* application, GameData* data)
 	// The running game's baseline is the staged files main.cpp just loaded.
 	if (application != nullptr)
 	{
+		if (DebugDirector::shader_playground_requested())
+		{
+			this->shader_playground_.initialize(*application->renderer());
+			this->log_.info("shader playground ready; CRT disabled for this launch; type help shader");
+		}
 		this->load_tune_documents();
 	}
 }

@@ -342,6 +342,19 @@ Both cheats are kept by the director and re-applied to every build. While a
 recording or a replay runs, `goto`, `respawn`, `kill`, `god`, `ammo`, `bot` and `tune`
 are refused (they would change the match outside the recorded input).
 
+## Shader playground
+
+An opt-in Debug launch with `COLOURWARS_SHADER_PLAYGROUND=1` enables
+`shader <look> [strength] [detail]`. Looks are `off`, `crt`, `highcolour`,
+`dither`, `paint90`, `posterise`, `ink` and `halftone`. Bare `shader`
+reports the current look; parameters change immediately. `highcolour` uses
+fixed RGB565 channel depths and accepts strength only. The
+[playground guide](shader-playground.md) covers launch, ranges and shader
+editing. It processes the whole picture, including gameplay. Its `crt` and
+combined `paint90` modes keep mouse aim aligned and use stationary display
+texture. The playground replaces the saved monitor-glass CRT effect for that
+session; it does not change that preference.
+
 ## Live tuning
 
 Every number and boolean in `tuning.json` and `presentation.json`, plus the
