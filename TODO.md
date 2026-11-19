@@ -103,13 +103,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step; across rounds is done ([record](docs/debug-console-record.md#replays-across-rounds-dbg2)). |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
 
-## Levels and the editor
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `ED#28` | OPEN | LOW | S | Bound the editor's comparison with an externally changed file on Save, retaining unsaved edits and recovery. [Save guard](docs/level-editor-record.md#bound-the-external-change-comparison-on-save-ed28). |
-| `ED#29` | OPEN | LOW | S | After Save to My Stages, give accurate play guidance when the file falls outside the first 256 JSON files. [Stage discovery](docs/level-editor-record.md#save-guidance-at-the-my-stages-file-limit-ed29). |
-
 ## Release preparation
 
 | id | status | sev | size | item |
@@ -212,6 +205,7 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
+| Levels and the editor (`ED`) | [level-editor-record.md](docs/level-editor-record.md) | a new stage-authoring or editor workflow issue |
 | Code hygiene (`HYG`) | [code-hygiene.md](docs/code-hygiene.md#todo-audit-follow-ups-2026-11-12) | a new maintenance finding |
 | Audio replacement | [polish-plan.md §5](docs/polish-plan.md#5-replace-the-entire-audio-set) | a missing cue hook or a mix defect; `POL#23` was accepted and `ROAD#3` waived 2026-11-05 |
 | Game gaps (gap audit Class 1) | [docs/review/gap-audit.md](docs/review/gap-audit.md) (frozen) | a new finding; `ROAD#5`, `ROAD#7`, `ROAD#9`, `ROAD#10`, `GAP#4.2`, `GAP#5.1`, `GAP#L9` and `GAP#L11` were accepted or waived 2026-11-05 (no translation language chosen) |

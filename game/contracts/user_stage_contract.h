@@ -7,9 +7,11 @@
 #include <algorithm>
 #include <cctype>
 #include <cstddef>
+#include <cwctype>
 #include <filesystem>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 namespace user_stage_contract
 {
@@ -21,6 +23,27 @@ namespace user_stage_contract
 	inline std::filesystem::path folder_under(const std::filesystem::path& local_app_data)
 	{
 		return local_app_data / game_folder_name / stage_folder_name;
+	}
+
+	inline bool has_json_extension(const std::filesystem::path& path)
+	{
+		std::wstring extension = path.extension().wstring();
+		std::transform(extension.begin(), extension.end(), extension.begin(),
+			[](wchar_t character) { return static_cast<wchar_t>(std::towlower(character)); });
+		return extension == L".json";
+	}
+
+	// All regular JSON files count toward the folder limit before their
+	// names or content are validated.
+	inline bool is_stage_file(const std::filesystem::directory_entry& entry)
+	{
+		std::error_code kind_error;
+		return has_json_extension(entry.path()) && entry.is_regular_file(kind_error);
+	}
+
+	inline bool filename_less(const std::filesystem::path& first, const std::filesystem::path& second)
+	{
+		return first.filename().native() < second.filename().native();
 	}
 
 	// The file name, without .json, is the stage's id: 1 to 64 ASCII letters,

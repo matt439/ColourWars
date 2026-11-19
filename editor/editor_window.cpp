@@ -561,9 +561,7 @@ namespace colourwars_editor
             if (chosen)
             {
                 const UserStageTarget target = check_user_stage_target(folder, *chosen, content_catalog_.stages);
-                const std::wstring question = L"Replace your stage '" + wide(target.name) + L"' in My Stages?\n\n"
-                    L"The game plays the new version the next time Stage Select opens from the main menu.";
-                if (!target.replaces || MessageBoxW(window_, question.c_str(), L"Save to My Stages",
+                if (!target.replaces || MessageBoxW(window_, user_stage_replacement_prompt(target).c_str(), L"Save to My Stages",
                     MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) == IDYES)
                 {
                     colourwars_editor::save_user_stage(document_, folder, target);

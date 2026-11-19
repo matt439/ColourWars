@@ -23,6 +23,7 @@
 #include "scripts/acceptance/support/content_world.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/scratch.h"
+#include "scripts/acceptance/support/user_stage_limit_fixture.h"
 
 #include <algorithm>
 #include <array>
@@ -870,22 +871,22 @@ namespace
 		// One file more than the folder limit: the first by name are read and
 		// the last is neither loaded nor refused by name.
 		const std::filesystem::path crowded = fresh(scratch / "limits-count");
-		acceptance::write_text(crowded / "a-first.json", stage);
-		for (std::size_t index = 0; index + 2 < limit::max_user_stage_files + 1; ++index)
-		{
-			acceptance::write_text(crowded / ("m-" + std::to_string(1000 + index) + ".json"), "{");
-		}
-		acceptance::write_text(crowded / "zz-last.json", stage);
+		acceptance::fill_before_user_stage_limit(crowded, stage);
+		acceptance::write_text(crowded / "y-edge.json", stage);
+		acceptance::write_text(crowded / "zz-last.JSON", stage);
 		Shipped counted;
 		const UserStageScan count = scan(fixture, content, crowded, counted);
 		const std::size_t files = limit::max_user_stage_files + 1;
-		require(count.accepted == std::vector<std::string>{ "a-first" } &&
-			count.refused.size() == limit::max_user_stage_files && !counted.levels.contains("zz-last"),
-			"A folder one file past the limit must load its first stage, refuse the broken files it read "
-			"and leave the last file unread");
+		require(count.accepted == std::vector<std::string>{ "Z-FIRST", "y-edge" } &&
+			count.refused.size() == limit::max_user_stage_files - 1 && !counted.levels.contains("zz-last"),
+			"A folder one file past the limit must load its first and 256th stages, refuse the broken files it read "
+			"and leave the 257th file unread");
 		require(refused(count, path_to_utf8(crowded), "holds " + std::to_string(files) + " .json files") &&
 			refused(count, path_to_utf8(crowded), "first " + std::to_string(limit::max_user_stage_files) + " by file name"),
 			"The folder line must give the folder's count and the limit");
+		require(std::any_of(count.refused.begin(), count.refused.end(),
+			[](const std::string& line) { return line.find("m-1000.JSON") != std::string::npos; }),
+			"A malformed file with an uppercase extension must count toward the folder limit");
 		require(std::none_of(count.refused.begin(), count.refused.end(),
 			[](const std::string& line) { return line.find("zz-last") != std::string::npos; }),
 			"The file past the folder limit must not be refused by name");

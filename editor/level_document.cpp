@@ -24,7 +24,6 @@
 #include <cmath>
 #include <exception>
 #include <fstream>
-#include <iterator>
 #include <limits>
 #include <string_view>
 #include <system_error>
@@ -145,6 +144,25 @@ namespace colourwars_editor
 
     namespace level_document_detail
     {
+        bool matches_saved_source(std::istream& input, std::string_view baseline)
+        {
+            constexpr const char* read_error = "Could not read the complete saved level file. "
+                "Use Save As to preserve your edits in another file.";
+            std::array<char, 64 * 1024> chunk;
+            while (!baseline.empty())
+            {
+                const std::size_t size = (std::min)(baseline.size(), chunk.size());
+                input.read(chunk.data(), static_cast<std::streamsize>(size));
+                if (input.bad()) { fail(read_error); }
+                if (!input || std::string_view(chunk.data(), size) != baseline.substr(0, size))
+                { return false; }
+                baseline.remove_prefix(size);
+            }
+            const bool has_trailing_byte = input.get() != std::char_traits<char>::eof();
+            if (input.bad()) { fail(read_error); }
+            return !has_trailing_byte && input.eof();
+        }
+
         void move_shape(Json& object, const Rect& rectangle)
         {
             if (string(object, key::type) == object_type::fixed_slab_paintable)
@@ -271,13 +289,7 @@ namespace colourwars_editor
                 fail("Could not read the saved level file. It may have been removed or opened exclusively. "
                     "Use Save As to preserve your edits in another file.");
             }
-            const std::string text{ std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
-            if (input.bad())
-            {
-                fail("Could not read the complete saved level file. "
-                    "Use Save As to preserve your edits in another file.");
-            }
-            if (text != baseline)
+            if (!matches_saved_source(input, baseline))
             {
                 fail("The level file has changed outside this editor since it was loaded or saved. "
                     "Use Save As to preserve your edits in another file.");

@@ -7,12 +7,16 @@
 namespace colourwars_editor
 {
     struct ContentCatalog;
+    struct UserStageTarget;
 
     // Feedback only: does not write, register, change the destination or opt a
     // stage into Random. `my_stages` is absent when the user's folder is unknown.
     std::wstring save_guidance(const std::filesystem::path& destination,
         const std::filesystem::path& source_levels, const ContentCatalog& catalog,
         const std::optional<std::filesystem::path>& my_stages, bool saved);
+
+    // The overwrite confirmation for an existing My Stages target.
+    std::wstring user_stage_replacement_prompt(const UserStageTarget& target);
 
     // Empty unless `destination` is a registered source level (in
     // `source_levels`, named by the manifest) whose `display_name` differs from

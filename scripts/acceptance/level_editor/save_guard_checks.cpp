@@ -1,9 +1,11 @@
 // Same-file saves must not replace another writer's bytes. Every file here is
 // under the acceptance scratch directory; no player or authored stage is used.
 #include "scripts/acceptance/level_editor/fixtures.h"
+#include "editor/level_document_impl.h"
 #include <Windows.h>
 
 #include <iostream>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -71,6 +73,52 @@ namespace level_editor_acceptance
                 "Conflict fixture needs live edits with both undo and redo history");
         }
 
+        void check_oversized_replacement(const fs::path& scratch, std::string original)
+        {
+            original.resize(level_format::limit::max_file_bytes, ' ');
+            const std::string oversized = original + std::string(64 * 1024, ' ');
+
+            using level_document_detail::matches_saved_source;
+            std::istringstream trailing(oversized);
+            require(!matches_saved_source(trailing, original) && trailing.tellg() ==
+                std::streampos(static_cast<std::streamoff>(original.size() + 1)),
+                "An oversized matching prefix must be compared through its first trailing byte only");
+            std::istringstream changed_first_byte("!" + original.substr(1));
+            require(!matches_saved_source(changed_first_byte, original), "Comparison accepted a changed first byte");
+            const std::streampos compared = changed_first_byte.tellg();
+            require(compared > std::streampos(0) &&
+                compared < std::streampos(static_cast<std::streamoff>(original.size())),
+                "Comparison read the entire source after a mismatch in the first chunk");
+            std::istringstream truncated(original.substr(0, original.size() - 1));
+            require(!matches_saved_source(truncated, original) && truncated.eof(),
+                "Comparison accepted a matching prefix that ended early");
+
+            const fs::path source = scratch / "external-save-oversized.json";
+            write_text(source, original);
+            LevelDocument local;
+            local.load(source);
+            edit_with_redo(local);
+            LevelDocument retry;
+            retry.load(source);
+            edit_with_redo(retry);
+
+            write_text(source, oversized);
+            refuse_external_save(local, source, scratch);
+            refuse_external_save(retry, source, scratch);
+            require(read_text(source) == oversized, "Refusal changed an oversized external replacement");
+
+            const fs::path rescue = scratch / "external-save-oversized-rescue.json";
+            const std::string edited = local.serialize();
+            local.save(rescue);
+            require(local.path() == rescue && !local.dirty() && local.can_undo() && local.can_redo() &&
+                read_text(rescue) == edited && read_text(source) == oversized,
+                "Save As failed to recover edits from an oversized external replacement");
+            write_text(source, original);
+            retry.save(source);
+            require(!retry.dirty() && read_text(source) == edited,
+                "Restoring the original bytes after an oversized conflict did not permit retry");
+        }
+
         class ExclusiveReadLock
         {
         public:
@@ -93,6 +141,7 @@ namespace level_editor_acceptance
         LevelDocument seed;
         seed.save(source);
         const std::string normalized = read_text(source);
+        check_oversized_replacement(scratch, normalized);
         const std::string original = " \n\t" + normalized + "\n ";
         write_text(source, original);
 
@@ -191,7 +240,7 @@ namespace level_editor_acceptance
         require(!locked.dirty() && !fs::exists(unavailable),
             "Failed Save As replaced the previous successful baseline");
         no_save_temporary(scratch);
-        std::cout << "PASS external-save byte baselines, competing editors, metadata-preserving edit, "
+        std::cout << "PASS bounded external-save comparison, competing editors, metadata-preserving edit, "
             "deletion/read refusal, complete history, Save As and latest-success retry\n";
     }
 }
