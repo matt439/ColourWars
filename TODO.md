@@ -9,33 +9,26 @@ thread starts here: read **NOW**, then the owner of the row it picks up.
 **The only ordering in this file.** Keep this block to the current aim and the next few actions;
 results go in their owners, and `git log` is the changelog.
 
-**Aim: after `v0.1.0`.** [`v0.1.0`](https://github.com/matt439/ColourWars/releases/tag/v0.1.0)
-was published as a pre-release on 2026-11-13 ([record](docs/releasing.md#first-release-v010));
-`master` is now `0.1.1` (`REL#6`).
+**Aim (2026-11-20).** Bring the development version up to date with the content
+added since [the first release](docs/releasing.md#first-release-v010), then
+improve bot setup and let solo players compare sub weapons at the workshop.
 
-The engine pin moved to `v0.4.0` on 2026-11-17, consuming its atlas-dimension
-contract and supported scripted-pad source
-([record](docs/review/engine-reports.md#what-the-2026-11-17-bump-changed)). The earlier
-`ENG#36`, `PIN#2` and `PIN#3` work remains done; five atlases ship as PNG
-through the engine's loader ([`PIN#3`](docs/review/engine-reports.md#png-atlases-and-texconv-pin3)).
-
-Next actions: none open. `HYG#96` waits on the first green scheduled nightly after the
-2026-11-13 ASan link fix reaches `master`; that night should close issue #72 itself. The required `gate` and up-to-date `master` rule still apply. The author's
-calls of 2026-11-13 on the decision rows are recorded in
-[Project review calls](docs/feature-roadmap.md#project-review-calls-2026-11-13) and the owners;
-the rows they opened (`REV#1`, `REV#13`, `REV#14`, `REV#63`, `POL#49`) were built 2026-11-13.
+1. `REL#9` — Apply the existing version rule to the new arena content. Verify
+   the `0.2.0` stamp in the local ZIP and its executable. [Release scope](docs/releasing.md#apply-the-next-minor-version-rel9).
+2. `ROAD#45` — Return Home focus to **Play a bot** when the player cancels its
+   review, so one Confirm opens it again. [Home focus](docs/menu-presentation.md#return-focus-to-play-a-bot-road45).
+3. `ROAD#46` — Show who still needs to choose or confirm a team, tool or sub
+   during full setup. [Setup rows](docs/menu-presentation.md#show-readiness-on-each-setup-row-road46).
+4. `ROAD#48` — Let a solo player try all three subs on the same surface
+   without leaving for Weapon Select. [Practice pause](docs/polish-movement-course.md#try-each-sub-from-practice-pause-road48).
 
 **Author calls** (every `DECISION` row):
 
 - `POL#16`: review the four arena backdrops on a real GPU and in play; rule on Close Quarters' centre cover material.
 - `ROAD#13`: whether to build umbrella slices 2-4 (`PIN#2` is done).
-- `ENG#PARKED`: approve the drafted mouse-button comment for labrador#122 and the engine `REV#60` note.
+- `ENG#PARKED`: decide whether to post the drafted mouse-button comment on labrador#122.
 - `ENG#39`: file the `FLT_MAX` round-trip draft as an issue, or fix it in the engine.
 - `ROAD#44`: whether the ball and grenade keep circle collision shapes (hit feel; numbers in the item).
-
-The hardware, participant and listening checks waived on 2026-11-05 were not performed. Arena
-backdrops (`POL#16`) were built 2026-11-14 and wait on the author's look; bot lift routing, non-XInput pads and growing sponges are
-deferred.
 
 ## Art direction, characters and the UI
 
@@ -63,10 +56,19 @@ or above (2026-10-27). The owner records the gaps left out by choice and the exc
 | `ROAD#29` | DEFERRED | LOW | M | Growing sponges parked 2026-11-13 behind `REV#27`: no G1-G7 picks until a Random arena wants a sponge, then resume from the [contract draft](docs/feature-roadmap.md#growing-sponge-contract-draft-road29)'s recommendations. |
 | `ROAD#23` | DEFERRED | MED | L | Non-XInput pads (PlayStation, Switch Pro). The engine ask is parked in `ENG#PARKED` and there is no client exhibit; resumes when such a pad is in hand or a store release is chosen (`REV#68`). [Input](docs/feature-roadmap.md#input). |
 | `ROAD#24` | DEFERRED | LOW | M | Pad aim assist against the one mouse seat. Deferred until attended play shows pad seats consistently losing to the mouse seat (story B8); relates to `POL#3`, `POL#18` and `ROAD#5`. [Input](docs/feature-roadmap.md#input). |
-| `ROAD#41` | UNSCOPED | LOW | M | Grey, non-scoring practice targets in the workshop that pop and redraw with no damage readout; needs a scope section first. [Item](docs/feature-roadmap.md#practice-targets-in-the-workshop-road41). |
+| `ROAD#41` | OPEN | LOW | S | Sketch one workshop target encounter and specify its hit, redraw and practice-only checks. [Practice target design](docs/feature-roadmap.md#practice-targets-in-the-workshop-road41). |
 | `ROAD#42` | UNSCOPED | LOW | M | Weapon Select could show each tool's shot shape, drawn from its tuning, beside the text (story A6). No problem has been observed; it may wait on `POL#16`. [Item](docs/feature-roadmap.md#shot-shapes-on-weapon-select-road42). |
-| `ROAD#43` | UNSCOPED | LOW | L | Flood-fill paint object that fills one authored region for the team holding its trigger. Needs a contract draft on the lift precedent before an author call on the territory swing. [Item](docs/feature-roadmap.md#flood-fill-paint-object-road43). |
+| `ROAD#43` | OPEN | LOW | M | Draft a flood-fill contract for one Yard region. Work out the maximum territory swing and who gets credit before proposing a playable trial. [Fill contract](docs/feature-roadmap.md#flood-fill-paint-object-road43). |
 | `ROAD#44` | DECISION | LOW | M | Circle round shots landed behind Debug `shots.round` and runner `--round-shots`, default rectangle (unchanged). 128 seeded 1v1s: bucket player contacts 8.3% -> 9.0% of shots, muzzle stops -3%; grenade drops stopped at launch -32%. Author: keep circles (flip the default, rebaseline) or drop the switch. [Item](docs/feature-roadmap.md#circle-shapes-for-round-projectiles-road44). |
+
+## Match setup, practice and stage records
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `ROAD#45` | OPEN | LOW | S | Restore focus to Play a bot on both ways back from its review. [Home focus](docs/menu-presentation.md#return-focus-to-play-a-bot-road45). |
+| `ROAD#46` | OPEN | LOW | M | Show each participant's readiness on Team and Weapon Select, including bot rows the host controls. [Setup rows](docs/menu-presentation.md#show-readiness-on-each-setup-row-road46). |
+| `ROAD#47` | OPEN | LOW | S | Stop saved stage tallies at their integer limit while continuing to record new bests. [Stage records](docs/feature-roadmap.md#stage-record-counters-at-their-limit-road47). |
+| `ROAD#48` | OPEN | LOW | M | Let a player change sub weapons from practice pause and try the new sub at the same station. [Practice pause](docs/polish-movement-course.md#try-each-sub-from-practice-pause-road48). |
 
 ## Engine demonstration
 
@@ -89,9 +91,10 @@ remain open. A pin bump that answers one is when its workaround is deleted.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#PARKED` | DECISION | LOW | S | Asks waiting for a vehicle: window presence (was 38), `window_size_changed`, desktop size (exhibit for engine `REV#83`), atomic JSON write, install facts, listener/voice cap, display-awake owner, non-XInput reader (`ROAD#23`), colour transforms (was `GAP#F10`), engine `GAP#6`, sound-group lookup (was `ENG#35`). Author: approve the drafted mouse-button comment for labrador#122 and the engine `REV#60` note, then post them. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
+| `ENG#PARKED` | DECISION | LOW | S | The mouse-button naming draft awaits the author's call on posting to labrador#122. The ledger lists the other requests and what would justify filing them. [Parked requests](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed as [labrador#122](https://github.com/matt439/Labrador/issues/122), #123, #124 and #125. At `v0.4.0`, 27 is partly spent (only the throwing rumble transport keeps a reader link fixture); 30's category exists but backends still need it; 33's mutable contact and 34's Release software refusal remain planned. 34's truthful classification and explicit hosted/strict hardware lanes were already consumed. Tracker responses remain open. [Ledger](docs/review/engine-reports.md#live) |
 | `ENG#39` | DECISION | LOW | S | `FLT_MAX` written to JSON reads back one double step above it, so `gameplay_tuning` tests one float below. Drafted 2026-11-13, not filed. Author: issue route or engine fix. [Report](docs/review/engine-reports.md#39-a-float-written-as-flt_max-does-not-read-back---draft-not-filed) |
+| `PIN#4` | OPEN | LOW | S | Use the pinned engine's reduced-motion query for the fresh-save default and retire the duplicate Windows read. [Client migration](docs/review/engine-reports.md#first-run-reduced-motion-preference-pin4). |
 
 ## Developer console
 
@@ -103,16 +106,22 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#1` | DEFERRED | LOW | M | Resume only when a concrete field/caller is selected; fifty-eight colour paths are qualified. String/font edits and missing-key insertion need separate scopes. [Scope](docs/debug-console-record.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step; across rounds is done ([record](docs/debug-console-record.md#replays-across-rounds-dbg2)). |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
+| `DBG#20` | OPEN | LOW | M | Make the one- and four-pane shader comparisons runnable from a fresh checkout with an opt-in Debug check. [Shader checks](docs/shader-playground.md#repeatable-shader-checks-dbg20). |
+| `DBG#21` | OPEN | LOW | S | Draw circular projectile shapes as rings in F2 so the overlay shows the collisions under review in `ROAD#44`. [Collision outline](docs/debug-console-record.md#show-circular-shot-colliders-in-f2-dbg21). |
 
-## Code hygiene
-
-**Owner:** [docs/code-hygiene.md, TODO audit follow-ups](docs/code-hygiene.md#todo-audit-follow-ups-2026-11-12).
-The last seven rows of the [2026-11-05 review](docs/code-hygiene.md#hygiene-review-2026-11-05)
-queue closed 2026-11-07.
+## Levels and the editor
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `HYG#96` | BLOCKED | LOW | S | Waits on a green scheduled nightly. The 2026-11-13 night failed at the ASan link (fixed on the same day), and its `report` job commented on #72 as designed. The next green night must close #72 through the `close` job; a dispatched trial would wrongly close #72 while it tracks a real failure. [Item](docs/code-hygiene.md#close-the-nightly-issue-on-a-green-night-hyg96). |
+| `ED#28` | OPEN | LOW | S | Bound the editor's comparison with an externally changed file on Save, retaining unsaved edits and recovery. [Save guard](docs/level-editor-record.md#bound-the-external-change-comparison-on-save-ed28). |
+| `ED#29` | OPEN | LOW | S | After Save to My Stages, give accurate play guidance when the file falls outside the first 256 JSON files. [Stage discovery](docs/level-editor-record.md#save-guidance-at-the-my-stages-file-limit-ed29). |
+
+## Release preparation
+
+| id | status | sev | size | item |
+|---|---|---|---|---|
+| `REL#8` | OPEN | MED | M | Verify the installed notices and audio provenance in the extracted ZIP. Add fixtures that remove or alter individual files. [Package checks](docs/releasing.md#verify-packaged-notices-and-provenance-rel8). |
+| `REL#9` | OPEN | MED | S | Apply the next minor development version required by the arena content added after `v0.1.0`. [Version correction](docs/releasing.md#apply-the-next-minor-version-rel9). |
 
 ## Tooling, CI and docs
 
@@ -120,7 +129,7 @@ queue closed 2026-11-07.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `CI#7` | DEFERRED | LOW | S | Tallied: paint-fx passed 7 of 7 scheduled nights (about 1 min of check per preset), and the 11-09 red night caught real regressions. After 2026-11-17's run, run check-paint-fx in ci.yml's checks legs; the rest stay nightly. [Hygiene](docs/code-hygiene.md#promote-stable-nightly-checks-ci7). |
+| `CI#7` | DEFERRED | LOW | S | Both paint-effects checks passed the first four scheduled nights on the current hosted-software policy. Recheck after the Nov 22 UTC run for seven green nights before promotion to PR checks. [Nightly evidence](docs/code-hygiene.md#promote-stable-nightly-checks-ci7). |
 
 ## Project review (2026-11-10)
 
@@ -138,7 +147,7 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 |---|---|---|---|---|
 | `REV#10` | DEFERRED | MED | S | No live enemy-paint cue (2026-11-13); the HOW-TO-PLAY line and the refill lesson explain it. Reopens if players cannot tell why they slowed, as one choice between a cue (tank state first) and milder `POL#30` amounts. [Item](docs/polish-plan.md#decide-which-splatoon-mechanics-to-borrow-pol30). |
 | `REV#16` | DEFERRED | LOW | S | Actions are pinned by major tag with no Dependabot, and the nightly's legs each rebuild. Each Dependabot pull request would need the owner to merge it and run the full gate; per-leg builds are a recorded choice. [Record](docs/review/2026-11-10-project-review.md#ci-action-pins-and-nightly-rebuilds-rev16). |
-| `REV#18` | UNSCOPED | LOW | M | Level-editor manual/record split done 2026-11-12 ([record](docs/level-editor-record.md)). Left: moving closed rows out of feature-roadmap.md and code-hygiene.md (L, cosmetic). [Record](docs/review/2026-11-10-project-review.md#large-docs-mix-manual-and-records-rev18). |
+| `REV#18` | UNSCOPED | LOW | L | Moving closed rows out of feature-roadmap.md and code-hygiene.md is the remaining manual/record split. [Record](docs/review/2026-11-10-project-review.md#large-docs-mix-manual-and-records-rev18). |
 
 **Bots, stages and records**
 
@@ -154,7 +163,7 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 |---|---|---|---|---|
 | `REV#28` | DEFERRED | MED | L | No bot takeover of a missing seat for now (2026-11-13). Trigger: a series lost to a pad that cannot return; then only the between-rounds version, which relaxes the `ROAD#20` roster lock. [Calls](docs/feature-roadmap.md#project-review-calls-2026-11-13), [record](docs/review/2026-11-10-project-review.md#bot-takeover-for-a-missing-seat-rev28). |
 | `REV#29` | DEFERRED | MED | M | No split-pane HUD text floor (2026-11-13). Trigger: a player finds the text unreadable, or `POL#16` rebaselines the HUD fixtures; then an opt-in Options Normal/Large row, not a floor. [HUD](docs/polish-hud.md#split-pane-text-size-rev29-2026-11-12). |
-| `REV#30` | DEFERRED | MED | M | Narrowed 2026-11-12 to a Practice row on Home for Movement Course (README already points newcomers there). `REV#26` put the course fifth, after the Random arenas (2026-11-13). Home is an authored six-aspect layout; deferred by priority. [Record](docs/review/2026-11-10-project-review.md#direct-entry-to-the-practice-course-rev30). |
+| `REV#30` | DEFERRED | MED | M | Direct entry from Home to solo Movement Course. How to play now explains the route, and Play a bot starts a versus setup. [Guide](docs/review/2026-11-15-first-match-guide.md), [proposal](docs/review/2026-11-10-project-review.md#direct-entry-to-the-practice-course-rev30). |
 | `REV#32` | UNSCOPED | LOW | M | Home has no play-again shortcut. GAP#6.1 already pre-fills every setup page and Join cannot be skipped, so it saves about four confirm presses for a conditional Home row and a second route into Join and Stage. [Record](docs/review/2026-11-10-project-review.md#play-again-with-last-setup-rev32). |
 | `REV#36` | DEFERRED | LOW | M | Respawn grace is already a recorded POL#17 fallback, to add only on observed spawn pressure; the sprinkler is a reason to look for it. ROAD#11's review was waived 2026-11-13, so it waits on pressure seen in play. Choosing among the team's spawns is new and undesigned. [Record](docs/review/2026-11-10-project-review.md#respawn-grace-and-spawn-choice-rev36). |
 
@@ -201,7 +210,7 @@ already had rows. `FTR#13` was folded into `REV#26` on 2026-11-12, which closed 
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `FTR#14` | UNSCOPED | LOW | S | The setup path is long and the save folder is never shown; `stages` is now made on the first save write ([User stages](docs/feature-roadmap.md#user-stages-road16)). Optional reviewed Play a bot now retains Join/profile choice and shortens fresh setup ([qualification](docs/review/2026-11-15-quick-match-prototype.md)); an Open save folder item stays undesigned. [Record](docs/review/2026-11-10-first-run-review.md#the-setup-path-is-long-and-the-save-folder-is-hidden-ftr14). |
+| `FTR#14` | UNSCOPED | LOW | S | An in-game Open save folder action still needs a design. [First-run finding](docs/review/2026-11-10-first-run-review.md#the-setup-path-is-long-and-the-save-folder-is-hidden-ftr14). |
 
 ## Areas with no open rows
 
@@ -209,16 +218,14 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
-| Release preparation (`REL`) | [releasing.md, Release work items](docs/releasing.md#release-work-items-rel) | a new release-process gap; `REL#6`, the versioning rule, was decided 2026-11-13, and `ROAD#1`, `ROAD#2`, `POL#24` and `POL#25` were waived 2026-11-05 |
-| Levels and the editor | [polish-plan.md](docs/polish-plan.md) §3, §8; [level-editor.md](docs/level-editor.md) | a new arena or editor slice; `POL#21`, `POL#27`, `POL#30`, `POL#31` and `ED#5` were settled 2026-11-05 |
+| Code hygiene (`HYG`) | [code-hygiene.md](docs/code-hygiene.md#todo-audit-follow-ups-2026-11-12) | a new maintenance finding |
 | Audio replacement | [polish-plan.md §5](docs/polish-plan.md#5-replace-the-entire-audio-set) | a missing cue hook or a mix defect; `POL#23` was accepted and `ROAD#3` waived 2026-11-05 |
 | Game gaps (gap audit Class 1) | [docs/review/gap-audit.md](docs/review/gap-audit.md) (frozen) | a new finding; `ROAD#5`, `ROAD#7`, `ROAD#9`, `ROAD#10`, `GAP#4.2`, `GAP#5.1`, `GAP#L9` and `GAP#L11` were accepted or waived 2026-11-05 (no translation language chosen) |
 | Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Design process (`DES#1`-`DES#4`) | [design-process.md](docs/design-process.md) | a new story, persona or journey, or a check gap a later trace finds; `DES#4`, the code re-review, was the last (2026-11-03) |
-| Pin follow-up (`PIN`) | [engine-reports.md, PNG atlases](docs/review/engine-reports.md#png-atlases-and-texconv-pin3) | the next pin bump's preparation; `PIN#3` moved five atlases to PNG 2026-11-13 and `sprite_sheet_1` keeps its BC3 DDS |
-| Closed engine reports (1–25, 28, 29, 31, 32) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
+| Closed engine reports | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
-| 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |
+| 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round |
 | Splatoon borrowings (no live score, random pairs) | gap audit 1.1, 2.1; [`ROAD#8`](docs/feature-roadmap.md#more-team-palette-pairs-road8) | only the author reversing the decision; `REV#14` (2026-11-13) took the two exempt pairs out of the roll and kept the random-pair model |
 | Startup content validation | gap audit 8.1, `game/config/content_validation.cpp` | a content kind added without validation |
 | Content pipeline | [Text scope](docs/menu-presentation.md#remaining-text-slices-gap84), [art/content policy](game/art/README.md#runtime-content-separation-gap86) | a new authored text role or accepted runtime-content requirement; the scoped `GAP#8.4` extraction is complete |
@@ -257,9 +264,9 @@ the owner; a second copy here goes stale unnoticed.
 **`id`:** a stable handle, not an order; a retired id is never reused. Gap-audit rows keep the
 audit's own section number (`GAP#4.2`, `GAP#D3`, `GAP#F8`), ledger rows the report number
 (`ENG#23`); the rest are `PREFIX#n` by owner: `STORY` backstory, `POL` polish plan, `ED` level
-editor, `ROAD` feature roadmap, `DBG` developer console, `HYG` code hygiene,
+editor, `ROAD` feature roadmap or the feature's own guide, `DBG` developer console, `HYG` code hygiene,
 `OOP` OOP guide, `DES` design process, `REV` the 2026-11-10 project review, `FTR` the
-2026-11-10 first-run review, `REL` the release guide, `PIN` the ledger's next-pin-bump preparation,
+2026-11-10 first-run review, `REL` the release guide, `PIN` the ledger's client work for an engine pin,
 `DOC`/`CI`/`TOOL` the named file.
 
 **`status`**, a closed list:

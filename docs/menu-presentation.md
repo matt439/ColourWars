@@ -50,13 +50,26 @@ same shape. `docs/audio-inventory.md` owns which wave each name is.
 
 ## Home return focus
 
-Home's initial focus is a bounded C++ choice among Play, Options and Credits,
-selected once after its actions are registered. Both Options Back routes request
-Options; Credits requests Credits. Title, both Mode Select return paths and the
-developer page factory retain the default Play focus. The Back row and B/Escape
-share each page's return choice. Existing page-entry input rearming still
-applies, and Controls/audio continues to return to its retained parent page.
-No presentation field, saved navigation history, artwork or geometry is added.
+Home selects its initial focus once after registering its actions. How to play,
+Options and Credits return to their own Home actions. Title, both Mode Select
+return paths and the developer page factory use Play. Each child handles its
+Back row and B/Escape alike.
+
+### Return focus to Play a bot (`ROAD#45`)
+
+**OPEN, LOW, S (2026-11-20).** Both exits from `MainMenuQuickMatch` request
+plain Home. After a player backs out of the preset review, the next Confirm opens ordinary Mode
+Select. The [first-match probe](../scripts/acceptance/painter_visual/first_match_flow_checks.h)
+checks that cancellation leaves the save alone, then presses Down and Right
+to find Play a bot again.
+
+Start with `-HomeReturnFocusOnly`. Exercise both Back paths with keyboard and
+scripted pad, check the highlighted Home action, then press Confirm once to
+reopen the review. Give Play a bot its own `MainMenuHome::InitialFocus` and
+use it on both exits. Adjust the first-match preflight to use the restored
+focus and retain its save and control checks. Fresh Title and ordinary Mode
+Back must still select Play. Update the route graph in `main_menu_route.cpp`
+to show the preset review, its Join route and its Customise route.
 
 ## Home Exit confirmation
 
@@ -274,11 +287,36 @@ The same line names the row's sub weapon (`ROAD#11`): `menu_text.subs.line`,
 A row picks its tool, then A moves it to its sub, where Left/Right cycles the
 grenade, sprinkler, paint wall and Random and the description column shows the
 sub's `menu_text.subs.choices.*.description` in place of the tool's; A again
-readies it, and B steps back one step at a time. The page leaves only when
-every row is back on its tool. Validation fits every Boost level with every
-sub in both steps before the first tool tile, and every sub description in the
+readies it, and B steps back one step at a time. The page advances when every
+row is ready. Back leaves the page when all rows began the frame on their
+tool. Validation fits every Boost level with every sub in both steps before
+the first tool tile, and every sub description in the
 description column. The rule is `LoadoutChoice`
 ([loadout_choice.h](../game/states/loadout_choice.h)).
+
+### Show readiness on each setup row (`ROAD#46`)
+
+**OPEN, LOW, M (2026-11-20).** On full Play the host confirms a team, tool
+and sub for each bot as well as for their own seat. The Team page shows readiness through the selected icon's
+tint. Weapon Select changes its sub line while choosing a sub, then switches
+back to the ordinary line and marks the ready tile by tint. The host underline
+identifies the row the host controls. The first-match rehearsal proposed a
+text label so the host can see who still needs to choose or confirm.
+[Rehearsal findings](review/2026-11-15-first-match-flow.md#next-meaningful-ux-bet).
+
+Start by capturing a human and a host-controlled bot in different states on
+Team and Weapon Select. Give each row a short authored status in
+`presentation.json` derived from its selected team and `ConfirmationState`,
+or from `LoadoutChoice::Step`. Distinguish needing a team, a team awaiting
+confirmation, choosing a tool, choosing a sub and ready. Reuse the existing
+sub-selection wording and preserve space for device/profile, Boost and sub.
+
+Extend `-TeamSetupOnly` to check the visible states across 2–4 rows, including
+shuffle clearing readiness and Back undoing one choice. Exercise the bot
+route with `-FirstMatchFlowOnly` and verify that the host's input changes the
+selected row and a guest still controls their own. Check English and `qps-ploc`
+against row and paper bounds. The same final confirmation must still advance
+to the next setup page.
 
 ## Shared paper focus and press motion
 

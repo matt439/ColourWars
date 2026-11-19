@@ -265,8 +265,10 @@ the game would then read `save/stages` beside its own executable, which the
 editor cannot know. Like the other saves, it never touches the player's save.
 
 The game reads that folder at startup and again each time Stage Select opens
-from the main menu. A stage saved while the game runs joins the list, and an
-edited one plays its new version. You can also copy a file there by hand. A
+from the main menu. It considers the first 256 regular `.json` files in filename
+order, including files that fail validation. Within that limit a valid stage
+saved while the game runs joins the list, and an edited one plays its new
+version. You can also copy a file there by hand. A
 user stage appears in Stage Select after the shipped stages, with "Built by
 you." in the briefing, and `+stage <name>` starts it from the Debug command
 line. It joins Random only when its file says `"include_in_random": true`

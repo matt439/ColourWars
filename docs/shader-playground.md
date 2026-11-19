@@ -200,3 +200,20 @@ under `out/validation/shader-playground/`. This is focused functional evidence, 
 a performance measurement or an art-direction acceptance. The author still
 needs to judge team colour recognition, small text and the look in play,
 particularly in four panes. These settings remain experimental values.
+
+### Repeatable shader checks (`DBG#20`)
+
+**Open (2026-11-20).** The November captures used scripts kept alongside the
+results under `out/validation/`. Their comparisons depend on paths from the
+original checkout. Add a tracked, opt-in Debug runner that can reproduce the
+pixel and simulation checks on a D3D11 hardware adapter from a fresh checkout.
+
+Use an isolated profile and a fixed seed to pause the same scene in one and
+four panes. Capture an ordinary launch as the RGB baseline for each layout.
+Compare `shader off` and each look at zero strength with that baseline, then
+check that each default look changes pixels and the paused simulation checksum
+stays fixed. Send an invalid parameter after selecting a look and check that the
+reported settings and pixels stay the same. Retain the adapter identity,
+captures and per-check outcomes together, and return a failing exit code for a
+failed comparison. The author judges team colours and small text at couch
+distance if a look is pursued further.

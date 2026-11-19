@@ -104,6 +104,28 @@ kept the workshop and its current wording. That fresh-player observation was
 waived by the author on 2026-11-05 and not performed, so the test has not been
 passed, only set aside.
 
+### Try each sub from practice pause (`ROAD#48`)
+
+**OPEN, LOW, M (2026-11-20).** At the `sub` station a player can try their
+chosen sub. Comparing the grenade with the sprinkler or paint wall means
+quitting the course, picking another sub in Weapon Select and travelling back
+to the station. The practice pause already rebuilds the course in place when
+the main tool changes.
+
+Expose a sub choice on the practice pause paper. Start by fitting the choice
+alongside the existing Tool control at the smallest supported layout. Reuse
+the three concrete sub names and the clean rebuild used by the Tool row. On
+confirm, keep the main tool and the living player's position so the player
+can try the next sub against the same surface. Back or Resume before applying
+keeps the original loadout.
+
+Extend the [workshop checks](../scripts/acceptance/practice_workshop.cpp)
+to switch through all three at the station in one practice session and verify
+each sub's ordinary reserve cost. Exercise the pause choice with keyboard
+and scripted pad, check English and pseudo-locale label fit, and verify that
+timed solo and versus pause still offer their normal actions. The lesson
+already explains the common Sub input.
+
 ## Dimensions and route
 
 Coordinates are world units, with positive Y downward. Surfaces below are their

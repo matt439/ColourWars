@@ -7,6 +7,47 @@ how it was checked. They were split out of the [editor guide](level-editor.md)
 on 2026-11-12 (`REV#18`) so that page reads as a manual; the behaviour these
 entries added is described there. [TODO.md](../TODO.md) indexes any open work.
 
+## Bound the external-change comparison on save (`ED#28`)
+
+**Open (2026-11-20).** A level can be at most 1 MiB when opened. If another
+program later replaces that file, saving in the editor reads the replacement
+into a string of its full size before it can warn the author. This happens in
+`check_saved_source`, at both comparison sites in `LevelDocument::save`.
+[Save implementation](../editor/level_document.cpp) · [Level file limits](level-format.md#limits)
+
+Compare fixed-size chunks from the disk file with the retained source bytes.
+Stop on the first differing chunk, premature EOF or first trailing byte. Keep
+the comparison before preparing the temporary file and the one immediately
+before replacement. Preserve the existing Save As recovery for missing,
+unreadable and externally changed files.
+
+Extend the editor save-guard checks with a source whose prefix matches the
+loaded level and whose suffix takes it past the file limit. Verify the read
+stops after the baseline and one extra byte. At the document boundary, check
+that refusal preserves the external bytes, open edits, path and undo/redo
+history, and leaves no temporary file. Exercise Save As to a new file and a
+retry after restoring the original bytes. Run the focused editor checks in
+Debug and Release. [Existing save-guard checks](../scripts/acceptance/level_editor/save_guard_checks.cpp)
+
+## Save guidance at the My Stages file limit (`ED#29`)
+
+**OPEN, LOW, S (2026-11-20).** Save to My Stages tells the author to open
+Stage Select even when the saved file sorts 257th. Replacing that file also
+promises the new version will play. Both operations can succeed on disk while
+the game skips the file. Its [scanner](../game/config/stage_loading.cpp)
+matches the extension case-insensitively, sorts regular files by their native
+filename spelling and keeps the first `level_format::limit::max_user_stage_files`.
+
+Start with the [editor guidance checks](../scripts/acceptance/level_editor/save_guidance_checks.cpp)
+in a scratch folder. Give the replacement prompt and the post-save status
+guidance based on where the chosen file sorts. Beyond the limit, explain that
+the author can move earlier files out of the folder and reopen Stage Select.
+Keep the saved file and the normal overwrite confirmation. Exercise a new
+file at positions 256 and 257 and a replacement of the latter. Include an
+early-sorting file in the crowded folder and a malformed `.JSON` that counts
+toward the cutoff. Check the editor's result against the existing
+[user_stages fixture](../scripts/acceptance/user_stages.cpp) in Debug and Release.
+
 ## Authoring follow-up shortlist (2026-10-28)
 
 The author authorized autonomous bounded improvements while attended gates

@@ -189,7 +189,7 @@ block is written on that same path whatever the verdict, so the job page carries
 
 ### Close the nightly issue on a green night (`HYG#96`)
 
-**Landed 2026-11-12; waits on a green scheduled night.** The `report` job opens or
+**Closed by the 2026-11-16 scheduled run (UTC).** The `report` job opens or
 comments on `Nightly sweep failed` when a scheduled night fails, and its body
 said "Close this once a night passes". Nothing acted on a green night, so the
 issue stayed open until someone noticed: issue #72, opened by the failure on
@@ -213,23 +213,18 @@ reported "No open" for none and closed one and two listed issues with the
 trial or green-night comment; and the same read-only `gh issue list` query and
 `--jq` filter against the repository returned `72 OPEN`.
 
-Owed, and needing a push: a `workflow_dispatch` run with `close_trial` set
-that closes a test issue titled `Nightly sweep failed`. Issue #72 is still
-open and has the same title, so a trial while it is open closes it too, which
-two green nights already earned. Then a scheduled failure still opening one is
-seen on the next red night; the `report` job did not change but for its body
-text.
-
-
 The 2026-11-13 scheduled night
 ([run 43462006681](https://github.com/matt439/ColourWars/actions/runs/43462006681))
 failed in its `asan` leg. lodepng is a static library that came in with that day's
 engine pin bump, and it broke the ASan link. The fix is under the `x64-asan` preset
 below. The `report` job then commented "Failed again" on #72 and `close` was skipped,
-as designed, so the failure path is seen. No dispatched trial was run, because a trial
-closes every issue with that title, and #72 now tracks a real failure. Still owed: the
-next green scheduled night after the fix reaches `master` should close #72 through the
-`close` job.
+as designed. The author later closed [#72](https://github.com/matt439/ColourWars/issues/72)
+on 2026-11-13. The scheduled failure on 2026-11-14 opened
+[#88](https://github.com/matt439/ColourWars/issues/88), the next failure added a comment,
+and the green [2026-11-16 close job](https://github.com/matt439/ColourWars/actions/runs/43907043322/job/133457681529)
+closed it with a [link to the passing run](https://github.com/matt439/ColourWars/issues/88#issuecomment-6923021623).
+That scheduled sequence exercised the full issue lifecycle. All run dates here are UTC.
+
 ### Editor undo without copying its history (`HYG#97`)
 
 **Done 2026-11-12; nothing the user can do changed.** `Impl::mutate` now
@@ -4060,7 +4055,7 @@ is rebuilt after committing this fix, following [the release guide](releasing.md
 
 ### Promote stable nightly checks (`CI#7`)
 
-**Deferred until a week of scheduled nightlies, from 2026-11-11.**
+**Deferred pending seven green scheduled nights on the explicit hosted-software lane.**
 [nightly.yml](../.github/workflows/nightly.yml) reached `master` on 2026-11-04
 and first fires on its schedule at 16:17 UTC on 2026-11-05. Its first hosted
 trial passed 96 of 97 painter leaves and paint effects in both presets. The
@@ -4098,13 +4093,24 @@ through the sub step) and `d8f70756` (the home-band hold) landed before the
 next night, which passed. The nightly did its job; the failure says nothing
 against promoting paint effects.
 
-Next step, after 2026-11-17's scheduled run: extend this table to the seven
-nights, and if both paint-effects legs stayed green, open the pull request that
-runs `check-paint-fx.ps1` (in place of its `-CompileOnly` line in the compile
-gate) on `ci.yml`'s Debug and Release checks legs, at about one and a half
-minutes and one minute of check, and drops the two legs from the nightly. The
-painter, `opt-in` and `asan` legs run 12 to 34 minutes each and stay nightly.
-`analyze` cannot fail, so promoting it gains nothing.
+**2026-11-20 audit (run dates in UTC).** In the planned 2026-11-11 through
+2026-11-17 window, each paint-effects step passed six of seven nights. The
+successful steps took 74–95 seconds in Debug and 39–65 seconds in Release. On
+2026-11-15 both presets correctly refused the hosted software adapter under
+the hardware policy. [Failed run](https://github.com/matt439/ColourWars/actions/runs/43734951017).
+
+[PR #96](https://github.com/matt439/ColourWars/pull/96) switched the nightly
+to the explicit `-HostedSoftwareFunctional` policy. Both paint-effects steps
+passed on each of the first four scheduled nights with that policy,
+[2026-11-16](https://github.com/matt439/ColourWars/actions/runs/43907043322)
+through [2026-11-19](https://github.com/matt439/ColourWars/actions/runs/44565369646).
+After the 2026-11-22 UTC run, check both steps for November 20–22. If all
+three nights also pass, replace the `-CompileOnly` paint-effects line with
+`check-paint-fx.ps1 -HostedSoftwareFunctional` in the Debug and Release
+checks legs of [ci.yml](../.github/workflows/ci.yml), retain the receipts and
+remove the two duplicate nightly legs. Investigate any failed step before
+promotion. The default local hardware checks and the longer nightly checks
+keep their existing scope.
 
 ### A typed projectile list in `Level` (`HYG#52`)
 

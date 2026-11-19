@@ -15,9 +15,8 @@ muzzle drip, tool settling and environmental life. Start with one complete
 reference match and review its feel in motion. That work is planned, apart from
 the backstory's opening, respawn and reveal, which its "Building it" section
 records as built, including the accepted pop, sigh and chair-creak sounds.
-Existing live audio bindings now use the accepted replacement set; further cue
-hooks and the gameplay mix remain open. The sections below record implemented
-increments and their remaining acceptance checks.
+The author accepted the replacement cues and gameplay mix on 2026-11-05.
+An additional cue hook would be new work. [Audio inventory](audio-inventory.md#63-decisions-and-what-is-still-open).
 
 ## Match scope decisions (2026-10-15)
 
@@ -2714,11 +2713,10 @@ balance runner's `engaged_ticks` uses the same sight.
 
 ### Umbrella tool proposal (`ROAD#13`)
 
-**Proposed 2026-11-12; questions answered 2026-11-13; nothing is built.** This
-is the first step the 2026-11-12 audit set for `ROAD#13`: a scope proposal for
-one new tool archetype, written in the shape [Sub weapons](#sub-weapons-road11)
-used. No code, tuning or content changed. The author's answers are at the end;
-whether to build slices 2-4 is a separate call, below them.
+**DECISION.** The author chose the umbrella on 2026-11-13. Slice 1 already
+stops shots on the existing paint wall. Slices 2–4 would build the tool
+itself. The proposal below follows the [sub-weapons plan](#sub-weapons-road11)
+and ends with the author's answers and the remaining build decision.
 
 **The archetype: an umbrella (Splatoon's brella).** It fires a short fan of
 paint pellets. While Shoot is held, a canopy opens in front of the player and
@@ -4856,8 +4854,8 @@ been built says so and when.
 A 2026-11-12 audit of the open-work index looked for work no row carried and
 checked each candidate against the existing rows, the declines under
 [Not tracked, by choice](#not-tracked-by-choice) and the 2026-11-10 review.
-These five survived. None is engineer-ready: the first was answered no on
-2026-11-13, and the rest need a written scope or the next engine pin first.
+The five entries below retain their original proposals. The 2026-11-20 audit
+scoped two design tasks here, for the practice target and the flood-fill object.
 
 ### Series side swap (`ROAD#40`)
 
@@ -4884,7 +4882,7 @@ remembered-setup key and the replay format.
 
 ### Practice targets in the workshop (`ROAD#41`)
 
-**UNSCOPED, LOW, M.** The Movement Course workshop teaches that eliminations
+**OPEN, LOW, S (design).** The Movement Course workshop teaches that eliminations
 clear room ([stations](polish-movement-course.md)), but a solo practice has
 nobody to eliminate and no station gives the player something to shoot. The
 workshop proposal asks for "cover around which the different shot shapes can
@@ -4895,12 +4893,19 @@ numbers into a game that shows none
 A grey, non-scoring figure that pops and redraws through the existing wordless
 respawn, with no HUD element or number, avoids that objection.
 
-First step: a scope section for a new station kind that places such a figure,
-which takes hits through the existing `Collider` path, in untimed solo practice
-only, with the `practice_workshop` checks it adds. It is a new subclass beside
-the existing ones and flattens nothing. Related: `REV#56` (the Sub lesson, done 2026-11-13);
-solo practice on any stage (`REV#55`) was declined on 2026-11-13, so the
-figure stays in the workshop.
+Draft one encounter at the existing `workshop` station. Pick a placement from
+the [course geometry](../game/content/levels/movement_course.json) that lets the
+player hit the figure from spawn and still try shots against a wall. Trace one
+shot through [Collider](../game/objects/collider.h) and specify which contacts
+pop the figure, what happens to the shot and when the figure can be hit again.
+The figure earns no territory, elimination or award credit.
+
+The deliverable is a station sketch with that hit/redraw sequence and a set of
+[practice_workshop](../scripts/acceptance/practice_workshop.cpp) cases. Cover
+a second hit after redraw, a clean restart and the target's absence in timed
+solo, human-versus-human and bot matches. The draft should be enough to decide
+whether to build the encounter. The completed Sub lesson (`REV#56`) and the
+author's workshop-only practice decision (`REV#55`) still apply.
 
 ### Shot shapes on Weapon Select (`ROAD#42`)
 
@@ -4922,7 +4927,7 @@ it may wait for `POL#16`'s UI pass.
 
 ### Flood-fill paint object (`ROAD#43`)
 
-**UNSCOPED, LOW, L.** The paint objects so far are the ferry, the gate and the
+**OPEN, LOW, M (design).** The paint objects so far are the ferry, the gate and the
 lifts, with sponges (`ROAD#29`), a bounce pad (`REV#52`) and an eraser
 (`REV#53`) proposed. None borrows the paint program's defining tool, the fill
 ([classic paint research](classic-paint-research.md)). A swatch that fills one
@@ -4931,12 +4936,21 @@ charge ([Rules for anything new](backstory.md#rules-for-anything-new)), only
 lays paint, so it keeps the invariant `REV#53` breaks, and fills a fixed area,
 so it needs none of the sponge's changing-area contracts.
 
-First step: a contract draft in the manner of the
-[vertical-lift draft](#vertical-lift-contract-draft-road28): the trigger rule
-(the gate's held-paint rule is the precedent), the region as authored
-paintable structures, a cooldown, `PaintCredit` for the triggering team, bot
-awareness and a Yard trial stage. It ends with the author's question whether a
-bulk territory swing fits the balance accepted on 2026-11-05.
+Draft the contract around one region on an explicit Yard trial, following the
+[vertical-lift draft](#vertical-lift-contract-draft-road28). Name the painted
+faces and express their area as a fraction of all paintable surface. Taking
+the whole region from the other team changes the held-area lead by twice the
+region's area. For a worked capture, give both teams' before/after painted
+areas and the percentages [Results](../game/objects/level_end_info.cpp) would
+show using total *painted* area. Work through a neutral trigger, a tie, first
+capture, holding through cooldown and recapture. The [gate rule](../game/contracts/team_gate_contract.h)
+already resolves the held-paint leader.
+
+Specify who gets the credit for each transition. Territory belongs to a team,
+but [PaintCredit](../game/objects/paintable_object.h) records laid and recaptured
+area per paint owner. Include a mixed human/bot example and what the bot needs
+to observe. The deliverable is the worked example and contract for the author
+to judge whether the swing warrants a prototype.
 
 ### Circle shapes for round projectiles (`ROAD#44`)
 
@@ -5191,6 +5205,22 @@ shrinking at 720p and 1080p. The Team setup matrix's real best-of-three series
 records its two drawn rounds once each and reloads them from disk; it and the
 Resume matrix, whose matches also finish, now save into nested profiles so the
 probe's shared save fixture stays byte-identical.
+
+### Stage record counters at their limit (`ROAD#47`)
+
+**OPEN, LOW, S (2026-11-20).** An existing save can contain `2147483647`
+for any of its five nonnegative match counts. The reader accepts that value
+as an `int`. Completing another relevant round then increments it past the
+signed integer limit in [MatchRecords::add](../game/save/match_records.cpp).
+Stage Select displays either the practice or the versus count directly.
+
+Extend the isolated [match_records probe](../scripts/acceptance/match_records.cpp)
+with records one below and at the limit. Record a Team A win, a Team B win,
+a draw and a solo result through `record_result_and_save`. Make each count
+stop at the limit independently. Check that smaller counts still advance,
+that wins and solo coverage can still set a best when their counts are full,
+and that a draw preserves the best winning share. Reload the save and verify
+the exact counts and bests in both Debug and Release.
 
 ## Remembered match setup (`GAP#6.1`)
 

@@ -1,11 +1,33 @@
 # Developer console work record
 
-The finished, deferred and unscoped `DBG` rows of the
-[developer console](debug-console.md), and its `CI#1` row: what each changed,
-why, and how it was checked. They were split out of the reference on
+This record covers work on the [developer console](debug-console.md), including
+the `DBG` rows and its foreground check (`CI#1`). Completed entries describe
+the change and its checks. They were split out of the reference on
 2026-10-30 (`HYG#31`) so that page describes the console as it is; the
 commands these rows added are documented there. [TODO.md](../TODO.md) indexes
 the open ones.
+
+## Show circular shot colliders in F2 (`DBG#21`)
+
+**Open (2026-11-20).** Fire a bucket ball or grenade after `shots.round circle`
+and enable `overlay collision`. The projectile supplies an inscribed disc to
+collision detection. F2 draws its bounding square because `draw_pane` only
+handles rotated rectangles separately. This hides the corner clearance the
+author is comparing under `ROAD#44`. [Shot shapes](feature-roadmap.md#circle-shapes-for-round-projectiles-road44)
+· [Overlay drawing](../game/debug/debug_overlay_draw.cpp)
+
+Draw a closed ring of line segments from the object's actual circle centre
+and radius using the overlay's existing `Pen::line`, projectile colour and
+per-pane thickness. Read the shape on the object so shots already in flight
+keep their own outline when the console setting changes. `ROAD#44` owns the
+decision on the default collision shape.
+
+Extend `check_collision_outline` in the Debug `debug_console` probe to exercise
+the geometry consumed by `draw_pane`. For a circle away from the origin,
+check that adjacent endpoints meet, including the closing pair, that the
+vertices lie on the radius within float tolerance, and that the outline reaches
+the four cardinal points. Keep the existing rectangle and left- and right-slab
+checks. [Probe source](../scripts/acceptance/debug_console/director_checks.cpp)
 
 ## Bind word round trips (`DBG#9`)
 

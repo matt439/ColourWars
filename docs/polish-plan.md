@@ -210,8 +210,10 @@ expected. No new test matrix, device session or detailed observations are
 implied by this approval. The reference-match finish review (`POL#24`) was
 waived by the author on 2026-11-05 and not performed.
 
-`POL#16` no longer waits on arena selection (settled 2026-11-05) but stays
-deferred as a later art pass. The listening/mix choices (`POL#23`) were accepted
+The four Random arena backdrops were built on 2026-11-14. `POL#16` now awaits
+the author's in-play review and Close Quarters material decision. UI art follows
+later. [Arena backdrops](polish-terrain.md#per-arena-backdrops-pol16-2026-11-14).
+The listening/mix choices (`POL#23`) were accepted
 as they stand on 2026-11-05; the physical-pad sessions and the attended
 performance/hardware acceptance (`POL#25`) were waived the same day and not
 performed.
@@ -1917,11 +1919,9 @@ scripts that launch the real executable with a fresh save would start it with
 Reduce effects On on such a runner. That changes presentation only, never the
 simulation or a seeded replay.
 
-The read is the client exhibit for engine `REV#60` on Labrador's `master`,
-which proposes a read-only reduced-motion fact and notes that no native client
-reads the setting. The note for that row, citing this call, is drafted in the
-[engine reports](review/engine-reports.md#what-is-deliberately-not-here) and
-waits for the author to post it.
+Labrador shipped its reduced-motion query in `v0.4.0`, now pinned here.
+Replacing the Win32 read above with that query is the remaining client task.
+[First-run reduced-motion preference](review/engine-reports.md#first-run-reduced-motion-preference-pin4).
 
 ### Help players read the tool and the fight
 

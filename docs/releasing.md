@@ -2,8 +2,9 @@
 
 The Release ZIP is the player download. Its version comes from
 `project(VERSION)` in [CMakeLists.txt](../CMakeLists.txt). The first release,
-`v0.1.0`, is [published](#first-release-v010); `master` is now `0.1.1`, the
-next patch under the [versioning rule](#versioning-rule-rel6). [The development guide](development.md#release-zip) describes
+`v0.1.0`, is [published](#first-release-v010). The development build still
+identifies itself as `0.1.1`. The [version correction](#apply-the-next-minor-version-rel9)
+tracks the content changes since that tag. [The development guide](development.md#release-zip) describes
 what it contains. [AGENTS.md](../AGENTS.md#commits-and-pull-requests) owns the
 branch, required `gate` and publication rules.
 
@@ -219,10 +220,9 @@ The author's distribution calls (2026-11-13):
 
 ## Release work items (`REL`)
 
-Work this guide owns, found by the 2026-11-12 audit of [TODO.md](../TODO.md).
-Each item has a row there. Ids are `REL#n` and are never reused. Line numbers
-were checked against `68e3dc2` with the engine pin at `e7fc50e` (`v0.3.0` plus
-nine commits).
+[TODO.md](../TODO.md) indexes the open release work. The 2026-11-12 audit
+found `REL#1` to `REL#7` at `68e3dc2` with engine pin `e7fc50e`
+(`v0.3.0` plus nine commits).
 
 `REL#5` and `REL#7` changed the executable. A candidate built before they
 landed proves the procedure, not the archive the first tag will publish.
@@ -373,3 +373,40 @@ says where the symbols are. The crash half of `REV#63` was decided on
 record goes to `last-error.log`, its `crash_rva` symbolicated against this PDB;
 the [failure-reporting guide](failure-reporting.md#crash-record-rev63)
 describes it.
+
+### Verify packaged notices and provenance (`REL#8`)
+
+**Open, 2026-11-20.** The packager installs the game's `LICENSE` and `NOTICE`,
+dependency and font licences, and the paint bank's provenance. The ZIP check
+compares the player guide and runtime assets with source and checks that six
+files under `licenses/` exist. Removing `NOTICE` or
+`licenses/paint_exe/sources.json`, or changing the contents of a font licence,
+would escape those checks. See the [install rules](../cmake/release_package.cmake)
+and [ZIP check](../scripts/check-release-package.ps1).
+
+Share the repository-owned source paths and installed names between the
+install rules and the [extracted-asset check](../cmake/check_packaged_assets.cmake).
+Compare those files byte-for-byte, including the pinned Labrador and vendored
+RapidJSON notices. Require the three vcpkg dependency notices at their installed
+paths so an extracted package can also be checked without a configured build.
+
+Extend the [package fixture](../scripts/ci/test_packaged_assets.py). A complete
+fixture must pass. Remove the root `NOTICE`, remove the audio source inventory,
+alter a font licence, and omit a vcpkg notice in separate cases. Each must fail
+with the affected installed path. Run the ZIP check on a local Release package
+after the installer and verifier share the mapping.
+
+### Apply the next minor version (`REL#9`)
+
+**Open, 2026-11-20.** After `v0.1.0`, ColourWars added new backdrops for
+the four Random arenas and a saved CRT preference. The
+[versioning rule](#versioning-rule-rel6) calls for the next minor as soon as a
+content, gameplay or save-format change lands. [CMakeLists.txt](../CMakeLists.txt)
+still declares `0.1.1`.
+
+Set the development version to `0.2.0` in CMake and update the current-version
+references in this guide and TODO.md. Build a local Release package and check
+that its ZIP name and `build-info.txt` give `0.2.0`. Run the
+[startup check](../scripts/check-startup.ps1) on the extracted executable to
+verify its Windows version resource. Tagging and publishing remain separate
+author decisions under the [publication procedure](#publish-only-after-the-author-authorizes-publication).
