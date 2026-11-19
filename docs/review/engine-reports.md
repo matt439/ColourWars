@@ -2267,7 +2267,7 @@ still only reads.
     [Client fix](../debug-console-record.md#fixed-slabs-in-the-collision-overlay-dbg19).
   - **`REV#60`**: the report drafted on 2026-11-13 is retired. Labrador
     shipped the requested reduced-motion query under `OCA-92` in `v0.4.0`.
-    Its remaining caller migration is [PIN#4](#first-run-reduced-motion-preference-pin4).
+    The game adopted it under [PIN#4](#first-run-reduced-motion-preference-pin4).
 
 - **The write side of `json.h`.** Still absent, still correct (the engine's
   OCA-53 plans a guide, not an API, and declines a save facility under T1):
@@ -3448,18 +3448,14 @@ listening, attended gameplay/performance, or a new hosted ColourWars gate.
 
 ## First-run reduced-motion preference (`PIN#4`)
 
-**Open, 2026-11-20.** Startup samples the platform before it loads the save.
-`initial_reduce_effects_from_system()` still calls `SystemParametersInfoW`
-directly. The pinned engine exposes `labrador::prefers_reduced_motion()` on
-the application thread before a window exists. A failed read returns `false`,
-which matches the game's authored default.
+**Done, 2026-11-20.** Startup calls `labrador::prefers_reduced_motion()` on the
+application thread before loading the save or opening a window. Its failed-read
+result, `false`, matches the game's authored default.
 [Client caller](../../game/main.cpp) · [Engine contract](../../external/labrador/engine/app/motion_preference.h).
 
-Use the engine query for that startup argument and retire the redundant
-game-side query and conversion. Keep the `POL#49` first-run save policy.
-Run `initial_display` in Debug and Release with its isolated saves. Cover
-both fresh defaults, the stored choice on reload and an unreadable save,
-and keep the live Windows comparison as an independent check. The probe can
-read the host preference without changing it.
+The `POL#49` save policy still applies to first runs. The isolated
+`initial_display` probe covers both fresh defaults and their persisted values,
+an existing choice, and an unreadable save. It compares the engine's live
+result with an independent read of the Windows animation setting.
 [First-run policy](../polish-plan.md#reduce-effects-default-from-windows-pol49) ·
 [Acceptance case](../../scripts/acceptance/initial_display.cpp).

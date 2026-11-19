@@ -1895,11 +1895,9 @@ effects On when Windows' **Animation effects** setting is off. The authored
 default is still `bool reduce_effects = false;`
 ([play_settings.h](../game/config/play_settings.h)).
 
-`initial_reduce_effects_from_system()` in
-[initial_display.cpp](../game/config/initial_display.cpp) reads
-`SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, ...)` beside the
-monitor-fit read, before the save loads, and [main.cpp](../game/main.cpp)
-passes the answer to `Save`'s first-run constructor with the display defaults.
+[main.cpp](../game/main.cpp) calls Labrador's `prefers_reduced_motion()`
+beside the monitor-fit read, before the save loads, and passes the answer to
+`Save`'s first-run constructor with the display defaults.
 Only a missing save without a legacy file uses it, so the first-run write
 records it and `SettingsSession` sees it at once. Existing, legacy-imported and
 unreadable saves keep their own value or the authored default, and a failed
@@ -1919,9 +1917,8 @@ scripts that launch the real executable with a fresh save would start it with
 Reduce effects On on such a runner. That changes presentation only, never the
 simulation or a seeded replay.
 
-Labrador shipped its reduced-motion query in `v0.4.0`, now pinned here.
-Replacing the Win32 read above with that query is the remaining client task.
-[First-run reduced-motion preference](review/engine-reports.md#first-run-reduced-motion-preference-pin4).
+The client adopted Labrador's reduced-motion query from `v0.4.0` under
+[PIN#4](review/engine-reports.md#first-run-reduced-motion-preference-pin4).
 
 ### Help players read the tool and the fight
 

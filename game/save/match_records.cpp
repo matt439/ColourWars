@@ -4,8 +4,20 @@
 #include "game/objects/level_end_info.h"
 #include "engine/assets/json.h"
 #include <cmath>
+#include <limits>
 
 using namespace labrador;
+
+namespace
+{
+	void increment_match_count(int& count)
+	{
+		if (count < std::numeric_limits<int>::max())
+		{
+			++count;
+		}
+	}
+}
 
 const StageRecord* MatchRecords::find(const std::string& stage) const
 {
@@ -65,26 +77,26 @@ RecordOutcome MatchRecords::add(const std::string& stage, const LevelEndInfo& re
 	{
 		// Solo practice: the coverage line the results show.
 		outcome.coverage = true;
-		++record.practice_played;
+		increment_match_count(record.practice_played);
 		value = 100.0f * result.coverage_ratio();
 		best = &record.best_coverage_percentage;
 	}
 	else
 	{
-		++record.versus_played;
+		increment_match_count(record.versus_played);
 		switch (result.winning_team())
 		{
 		case PlayerTeam::a:
-			++record.team_a_wins;
+			increment_match_count(record.team_a_wins);
 			value = result.team_a_percentage();
 			break;
 		case PlayerTeam::b:
-			++record.team_b_wins;
+			increment_match_count(record.team_b_wins);
 			value = result.team_b_percentage();
 			break;
 		default:
 			// A draw has no winning share, so it cannot set or beat a best.
-			++record.draws;
+			increment_match_count(record.draws);
 			outcome.best = record.best_win_percentage;
 			return outcome;
 		}

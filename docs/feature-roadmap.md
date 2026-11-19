@@ -5329,19 +5329,15 @@ probe's shared save fixture stays byte-identical.
 
 ### Stage record counters at their limit (`ROAD#47`)
 
-**OPEN, LOW, S (2026-11-20).** An existing save can contain `2147483647`
-for any of its five nonnegative match counts. The reader accepts that value
-as an `int`. Completing another relevant round then increments it past the
-signed integer limit in [MatchRecords::add](../game/save/match_records.cpp).
-Stage Select displays either the practice or the versus count directly.
+**Done, 2026-11-20.** [MatchRecords::add](../game/save/match_records.cpp) caps
+each of the five match counts independently at `2147483647`, the largest
+value the existing save format accepts for those counts. Wins and solo
+coverage can still improve a best and draws preserve the best winning share.
 
-Extend the isolated [match_records probe](../scripts/acceptance/match_records.cpp)
-with records one below and at the limit. Record a Team A win, a Team B win,
-a draw and a solo result through `record_result_and_save`. Make each count
-stop at the limit independently. Check that smaller counts still advance,
-that wins and solo coverage can still set a best when their counts are full,
-and that a draw preserves the best winning share. Reload the save and verify
-the exact counts and bests in both Debug and Release.
+The isolated [match_records probe](../scripts/acceptance/match_records.cpp)
+loads counts one below and at the limit, records wins for both teams, a draw,
+and solo results through `record_result_and_save`, and reloads the resulting
+save to verify the exact counts and bests.
 
 ## Remembered match setup (`GAP#6.1`)
 

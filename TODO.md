@@ -65,7 +65,6 @@ or above (2026-10-27). The owner records the gaps left out by choice and the exc
 |---|---|---|---|---|
 | `ROAD#45` | OPEN | LOW | S | Restore focus to Play a bot on both ways back from its review. [Home focus](docs/menu-presentation.md#return-focus-to-play-a-bot-road45). |
 | `ROAD#46` | OPEN | LOW | M | Show each participant's readiness on Team and Weapon Select, including bot rows the host controls. [Setup rows](docs/menu-presentation.md#show-readiness-on-each-setup-row-road46). |
-| `ROAD#47` | OPEN | LOW | S | Stop saved stage tallies at their integer limit while continuing to record new bests. [Stage records](docs/feature-roadmap.md#stage-record-counters-at-their-limit-road47). |
 | `ROAD#48` | OPEN | LOW | M | Let a player change sub weapons from practice pause and try the new sub at the same station. [Practice pause](docs/polish-movement-course.md#try-each-sub-from-practice-pause-road48). |
 
 ## Engine demonstration
@@ -92,7 +91,6 @@ remain open. A pin bump that answers one is when its workaround is deleted.
 | `ENG#PARKED` | DECISION | LOW | S | The mouse-button naming draft awaits the author's call on posting to labrador#122. The ledger lists the other requests and what would justify filing them. [Parked requests](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed as [labrador#122](https://github.com/matt439/Labrador/issues/122), #123, #124 and #125. At `v0.4.0`, 27 is partly spent (only the throwing rumble transport keeps a reader link fixture); 30's category exists but backends still need it; 33's mutable contact and 34's Release software refusal remain planned. 34's truthful classification and explicit hosted/strict hardware lanes were already consumed. Tracker responses remain open. [Ledger](docs/review/engine-reports.md#live) |
 | `ENG#39` | DECISION | LOW | S | `FLT_MAX` written to JSON reads back one double step above it, so `gameplay_tuning` tests one float below. Drafted 2026-11-13, not filed. Author: issue route or engine fix. [Report](docs/review/engine-reports.md#39-a-float-written-as-flt_max-does-not-read-back---draft-not-filed) |
-| `PIN#4` | OPEN | LOW | S | Use the pinned engine's reduced-motion query for the fresh-save default and retire the duplicate Windows read. [Client migration](docs/review/engine-reports.md#first-run-reduced-motion-preference-pin4). |
 
 ## Developer console
 

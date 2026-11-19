@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/initial_display.h"
 #include "game/save/save.h"
+#include "engine/app/motion_preference.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/isolated_save.h"
 
@@ -48,8 +49,6 @@ int main()
         // POL#49: Windows' Animation effects chooses a fresh save's shared
         // Reduce effects, and nothing else. The probe only reads the setting;
         // an SPI_SET call would change the player's whole desktop.
-        acceptance::require(choose_initial_reduce_effects(false) && !choose_initial_reduce_effects(true),
-            "Reduce effects did not start On exactly when Windows' animations are off");
         {
             const acceptance::IsolatedSave calm(L"initial-reduce-on");
             Save fresh_on(ScreenResolution::s_1280_720, false, true);
@@ -83,10 +82,14 @@ int main()
             acceptance::require(fresh_off.first_run() && !fresh_off.saved_play_settings().reduce_effects &&
                 !fresh_off.saved_play_settings().reduce_effects_for(0),
                 "A fresh save did not keep Reduce effects Off when Windows' animations are on");
+            Save reread(ScreenResolution::s_1280_720, false, true);
+            reread.load_save_file();
+            acceptance::require(!reread.first_run() && !reread.saved_play_settings().reduce_effects,
+                "The fresh save's Reduce effects Off was not written to the file");
         }
         BOOL animation = TRUE;
         const bool queried = SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &animation, 0) != FALSE;
-        acceptance::require(initial_reduce_effects_from_system() == (queried && animation == FALSE),
+        acceptance::require(labrador::prefers_reduced_motion() == (queried && animation == FALSE),
             "The live Reduce effects default did not follow Windows' Animation effects");
 
         const DPI_AWARENESS_CONTEXT before = GetThreadDpiAwarenessContext();
