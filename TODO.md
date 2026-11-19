@@ -102,8 +102,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#1` | DEFERRED | LOW | M | Resume only when a concrete field/caller is selected; fifty-eight colour paths are qualified. String/font edits and missing-key insertion need separate scopes. [Scope](docs/debug-console-record.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step; across rounds is done ([record](docs/debug-console-record.md#replays-across-rounds-dbg2)). |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
-| `DBG#20` | OPEN | LOW | M | Make the one- and four-pane shader comparisons runnable from a fresh checkout with an opt-in Debug check. [Shader checks](docs/shader-playground.md#repeatable-shader-checks-dbg20). |
-| `DBG#21` | OPEN | LOW | S | Draw circular projectile shapes as rings in F2 so the overlay shows the collisions under review in `ROAD#44`. [Collision outline](docs/debug-console-record.md#show-circular-shot-colliders-in-f2-dbg21). |
 
 ## Levels and the editor
 

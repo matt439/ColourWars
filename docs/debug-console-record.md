@@ -9,25 +9,17 @@ the open ones.
 
 ## Show circular shot colliders in F2 (`DBG#21`)
 
-**Open (2026-11-20).** Fire a bucket ball or grenade after `shots.round circle`
-and enable `overlay collision`. The projectile supplies an inscribed disc to
-collision detection. F2 draws its bounding square because `draw_pane` only
-handles rotated rectangles separately. This hides the corner clearance the
-author is comparing under `ROAD#44`. [Shot shapes](feature-roadmap.md#circle-shapes-for-round-projectiles-road44)
+**Done (2026-11-20).** After `shots.round circle`, F2 draws each circular
+projectile as a closed 24-segment ring around its collision centre. Its radius,
+projectile colour and per-pane line thickness come from the current object
+and overlay. Shots already in flight keep the outline of the shape they were
+built with. [Shot shapes](feature-roadmap.md#circle-shapes-for-round-projectiles-road44)
 · [Overlay drawing](../game/debug/debug_overlay_draw.cpp)
 
-Draw a closed ring of line segments from the object's actual circle centre
-and radius using the overlay's existing `Pen::line`, projectile colour and
-per-pane thickness. Read the shape on the object so shots already in flight
-keep their own outline when the console setting changes. `ROAD#44` owns the
-decision on the default collision shape.
-
-Extend `check_collision_outline` in the Debug `debug_console` probe to exercise
-the geometry consumed by `draw_pane`. For a circle away from the origin,
-check that adjacent endpoints meet, including the closing pair, that the
-vertices lie on the radius within float tolerance, and that the outline reaches
-the four cardinal points. Keep the existing rectangle and left- and right-slab
-checks. [Probe source](../scripts/acceptance/debug_console/director_checks.cpp)
+`check_collision_outline` in the Debug `debug_console` probe checks an
+off-origin circle for joined edges, radius and all four cardinal points. It
+also checks the rectangle and the left- and right-rising slab outlines.
+[Probe source](../scripts/acceptance/debug_console/director_checks.cpp)
 
 ## Bind word round trips (`DBG#9`)
 

@@ -203,17 +203,31 @@ particularly in four panes. These settings remain experimental values.
 
 ### Repeatable shader checks (`DBG#20`)
 
-**Open (2026-11-20).** The November captures used scripts kept alongside the
-results under `out/validation/`. Their comparisons depend on paths from the
-original checkout. Add a tracked, opt-in Debug runner that can reproduce the
-pixel and simulation checks on a D3D11 hardware adapter from a fresh checkout.
+Build `x64-debug` as above, then run the local hardware check from the repository
+root.
 
-Use an isolated profile and a fixed seed to pause the same scene in one and
-four panes. Capture an ordinary launch as the RGB baseline for each layout.
-Compare `shader off` and each look at zero strength with that baseline, then
-check that each default look changes pixels and the paused simulation checksum
-stays fixed. Send an invalid parameter after selecting a look and check that the
-reported settings and pixels stay the same. Retain the adapter identity,
-captures and per-check outcomes together, and return a failing exit code for a
-failed comparison. The author judges team colours and small text at couch
-distance if a look is pursued further.
+```powershell
+powershell -File scripts/check-shader-playground.ps1
+```
+
+The [runner](../scripts/check-shader-playground.ps1) starts four hidden games,
+each with a private profile. It pauses Movement Course at the same seeded
+simulation update for an ordinary and a playground launch in each layout,
+one pane and four panes, at 1280×720. Both `shader off` captures and every
+zero-strength look must match the ordinary RGB baseline exactly. Each default
+look must change pixels while the simulation checksum and update stay fixed.
+The console must refuse an invalid CRT scanline pitch and keep the previous
+look's settings and pixels intact.
+
+Each run leaves a new evidence folder under `out/validation/shader-playground/`
+or `-OutputDirectory`. `result.json` records the executable hash, the renderer's
+selected device from `status` for each launch and every check's outcome. The
+folder also holds the console scripts, transcripts and PNGs. A failed comparison,
+launch or adapter check exits with an error and keeps the evidence. The check
+requires D3D11 hardware and a display that can fit the capture resolution.
+
+On 2026-11-20, 51 checks passed on D3D11 / NVIDIA GeForce RTX 5080 under
+Windows PowerShell 5.1. A separate one-second deadline run returned failure,
+retained its partial evidence and cleaned up all four owned processes.
+The author judges team colours and small text at couch distance if a look is
+pursued further.

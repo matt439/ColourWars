@@ -81,7 +81,7 @@ During a match, without opening the console - these are the default
 
 | Key | Does |
 |---|---|
-| **F2** | `overlay collision` - collision bounds per pane |
+| **F2** | `overlay collision` - per-pane boxes, fixed slab edges and circular shot rings |
 | **F3** | `overlay camera` - each pane's scroll border, camera bounds and followed centre |
 | **F4** | `overlay paint` - paint coverage per team and seat, bottom left |
 | **F5** | `restart` - rebuild the match with its current settings (keeps the session) |
@@ -283,7 +283,7 @@ label.
 | Overlay | Shows |
 |---|---|
 | `overlay.player` | every player's per-player debug text, as F1 shows one. Setting it turns every player's text on or off; F1 and pad Back still toggle single players afterwards, and the other overlays leave those toggles alone. It does not track them, so it can read `off` while a player's own text shows |
-| `overlay.collision` | per pane: the collision shape of every object in view (structures white, paintables green, jump-throughs cyan, ramps orange with their slope, fixed slabs lavender along their own rotated edges, players in their team colour, projectiles yellow) and the out-of-bounds edge in red |
+| `overlay.collision` | per pane: the collision shape of every object in view (structures white, paintables green, jump-throughs cyan, ramps orange with their slope, fixed slabs lavender along their own rotated edges, players in their team colour, projectiles yellow with rings for circular shapes) and the out-of-bounds edge in red |
 | `overlay.camera` | per pane: the camera's scroll border (magenta; the player moves inside it before the camera follows), the camera bounds (blue) and a cross at the followed centre |
 | `overlay.paint` | bottom left: paint coverage per team and per seat, as a share of the paintable area, live. When a narrow window cannot hold it and the bottom-right status strip on one row, the strip moves above it |
 | `overlay.stations` | in the world: every [station](#stations-and-goto)'s name, the spawns included, above the place `goto` puts a player. The names are `labrador::UiText` objects in the level's scene, made the first time the overlay is turned on and hidden after that by `set_hidden`, which keeps their words, box and colour, so they draw wherever the world is drawn (the intro picture and the overview too) and under structures and players. Font, scale, offset and colour are `presentation.debug_overlay.station_label`; scale, offset and colour tune live. No default key |

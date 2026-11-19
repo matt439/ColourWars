@@ -3,11 +3,13 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/debug_overlay_draw.h"
+#include "engine/math/circle.h"
 #include "engine/math/rectangle_rotated.h"
 #include "engine/math/shape.h"
 #include "game/carried/camera_tools.h"
 #include "game/objects/collision_object_type.h"
 #include "game/objects/player.h"
+#include <numbers>
 
 using namespace labrador;
 
@@ -118,6 +120,35 @@ std::array<Segment, 4> debug_overlay::collision_outline(const Shape& shape)
 	return { Segment(a, b), Segment(b, c), Segment(c, d), Segment(d, a) };
 }
 
+std::array<Segment, debug_overlay::circle_outline_segments> debug_overlay::collision_outline(const Circle& circle)
+{
+	static const std::array<Vector2F, circle_outline_segments> directions = []
+	{
+		std::array<Vector2F, circle_outline_segments> result;
+		constexpr float angle_step = 2.0f * std::numbers::pi_v<float> /
+			static_cast<float>(circle_outline_segments);
+		for (std::size_t index = 0; index < result.size(); ++index)
+		{
+			const float angle = static_cast<float>(index) * angle_step;
+			result[index] = Vector2F(std::cos(angle), std::sin(angle));
+		}
+		return result;
+	}();
+	const Vector2F centre = circle.center();
+	const float radius = circle.radius();
+	std::array<Vector2F, circle_outline_segments> vertices;
+	for (std::size_t index = 0; index < vertices.size(); ++index)
+	{
+		vertices[index] = centre + directions[index] * radius;
+	}
+	std::array<Segment, circle_outline_segments> outline;
+	for (std::size_t index = 0; index < outline.size(); ++index)
+	{
+		outline[index] = Segment(vertices[index], vertices[(index + 1) % vertices.size()]);
+	}
+	return outline;
+}
+
 void debug_overlay::draw_pane(DrawList& list, const LevelOverlays& overlays,
 	const Scene& scene, const Scene::View& view, const Player& player,
 	const RectangleF& camera_bounds, const SpriteSheet& sheet,
@@ -137,20 +168,27 @@ void debug_overlay::draw_pane(DrawList& list, const LevelOverlays& overlays,
 	{
 		for (const CollisionObject* object : scene.collision_objects())
 		{
-			// The narrow-phase shape, not the broad-phase bounds (a player's
-			// is padded for its weapon).
-			const RectangleF bounds = object->shape()->bounding_box();
+			// The narrow-phase shape follows the object, including projectiles
+			// still in flight after a change to shots.round.
+			const Shape& shape = *object->shape();
+			const RectangleF bounds = shape.bounding_box();
 			if (!bounds.intersects(visible))
 			{
 				continue;
 			}
 			const CollisionObjectType type = to_collision_type(object->tag());
 			const Colour colour = colour_for(type, *object);
-			if (object->shape()->shape_type() == ShapeType::rectangle_rotated)
+			if (shape.shape_type() == ShapeType::circle)
 			{
-				// A fixed slab: its own four edges along the slope, not the
-				// axis-aligned box around it.
-				for (const Segment& edge : debug_overlay::collision_outline(*object->shape()))
+				for (const Segment& edge : debug_overlay::collision_outline(static_cast<const Circle&>(shape)))
+				{
+					pen.line(edge, colour);
+				}
+				continue;
+			}
+			if (shape.shape_type() == ShapeType::rectangle_rotated)
+			{
+				for (const Segment& edge : debug_overlay::collision_outline(shape))
 				{
 					pen.line(edge, colour);
 				}
