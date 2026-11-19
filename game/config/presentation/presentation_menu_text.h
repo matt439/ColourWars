@@ -327,13 +327,23 @@ struct SubMenuText
 	std::wstring label(size_t choice, bool choosing_sub, const std::wstring& handicap) const;
 };
 
+struct MenuSetupText
+{
+	std::wstring choose_team;
+	std::wstring confirm_team;
+	std::wstring choose_tool;
+	std::wstring choose_sub;
+	std::wstring ready;
+};
+
 // Fixed roles select display text; navigation and accepted inputs remain code.
 struct MenuText
 {
 	std::wstring brand;
 	std::wstring solo_practice_hint;
-	// Untimed practice's pause row (POL#19), with one {tool} token.
+	// Untimed practice's pause rows, with one {tool} or {sub} token.
 	std::wstring practice_tool;
+	std::wstring practice_sub;
 	MenuTitleText title;
 	std::wstring home_subtitle;
 	std::wstring learn_start, learn_controls, learn_finish, learn_next;
@@ -363,6 +373,7 @@ struct MenuText
 	MenuStickReadoutsText stick_readouts;
 	HudLabels hud;
 	SubMenuText subs;
+	MenuSetupText setup;
 	MenuCountdownText countdown;
 	// The in-match controls reminder and the control-label words (controls_copy.h).
 	ControlsCopy controls;
@@ -413,6 +424,7 @@ struct MenuText
 	// Player numbers are the visible roster numbers 1-4, never device slots.
 	std::wstring pause_title_for_player(int number) const;
 	std::wstring practice_tool_label(std::wstring_view tool) const;
+	std::wstring practice_sub_label(SubType sub) const;
 	// Pad slots are 0-3; rounded percentages are -100 through 100 inclusive.
 	std::wstring stick_connection(int pad_slot, bool connected) const;
 	std::wstring stick_raw_movement(int value) const;

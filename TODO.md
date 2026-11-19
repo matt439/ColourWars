@@ -9,16 +9,7 @@ thread starts here: read **NOW**, then the owner of the row it picks up.
 **The only ordering in this file.** Keep this block to the current aim and the next few actions;
 results go in their owners, and `git log` is the changelog.
 
-**Aim (2026-11-20).** Bring the development version up to date with the content
-added since [the first release](docs/releasing.md#first-release-v010), then
-improve bot setup and let solo players compare sub weapons at the workshop.
-
-1. `ROAD#45` — Return Home focus to **Play a bot** when the player cancels its
-   review, so one Confirm opens it again. [Home focus](docs/menu-presentation.md#return-focus-to-play-a-bot-road45).
-2. `ROAD#46` — Show who still needs to choose or confirm a team, tool or sub
-   during full setup. [Setup rows](docs/menu-presentation.md#show-readiness-on-each-setup-row-road46).
-3. `ROAD#48` — Let a solo player try all three subs on the same surface
-   without leaving for Weapon Select. [Practice pause](docs/polish-movement-course.md#try-each-sub-from-practice-pause-road48).
+All rows marked `OPEN` in the 2026-11-20 queue are complete.
 
 **Author calls** (every `DECISION` row):
 
@@ -56,14 +47,6 @@ or above (2026-10-27). The owner records the gaps left out by choice and the exc
 | `ROAD#24` | DEFERRED | LOW | M | Pad aim assist against the one mouse seat. Deferred until attended play shows pad seats consistently losing to the mouse seat (story B8); relates to `POL#3`, `POL#18` and `ROAD#5`. [Input](docs/feature-roadmap.md#input). |
 | `ROAD#42` | UNSCOPED | LOW | M | Weapon Select could show each tool's shot shape, drawn from its tuning, beside the text (story A6). No problem has been observed; it may wait on `POL#16`. [Item](docs/feature-roadmap.md#shot-shapes-on-weapon-select-road42). |
 | `ROAD#44` | DECISION | LOW | M | Circle round shots landed behind Debug `shots.round` and runner `--round-shots`, default rectangle (unchanged). 128 seeded 1v1s: bucket player contacts 8.3% -> 9.0% of shots, muzzle stops -3%; grenade drops stopped at launch -32%. Author: keep circles (flip the default, rebaseline) or drop the switch. [Item](docs/feature-roadmap.md#circle-shapes-for-round-projectiles-road44). |
-
-## Match setup, practice and stage records
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `ROAD#45` | OPEN | LOW | S | Restore focus to Play a bot on both ways back from its review. [Home focus](docs/menu-presentation.md#return-focus-to-play-a-bot-road45). |
-| `ROAD#46` | OPEN | LOW | M | Show each participant's readiness on Team and Weapon Select, including bot rows the host controls. [Setup rows](docs/menu-presentation.md#show-readiness-on-each-setup-row-road46). |
-| `ROAD#48` | OPEN | LOW | M | Let a player change sub weapons from practice pause and try the new sub at the same station. [Practice pause](docs/polish-movement-course.md#try-each-sub-from-practice-pause-road48). |
 
 ## Engine demonstration
 
@@ -196,6 +179,7 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
+| Match setup, practice and stage records | [Menu presentation](docs/menu-presentation.md), [Movement Course](docs/polish-movement-course.md), [Stage records](docs/feature-roadmap.md#stage-records-and-the-sectioned-save-gap62) | a new setup, workshop or stage-record issue |
 | Levels and the editor (`ED`) | [level-editor-record.md](docs/level-editor-record.md) | a new stage-authoring or editor workflow issue |
 | Release preparation (`REL`) | [releasing.md](docs/releasing.md) | a new packaging or release qualification item |
 | Code hygiene (`HYG`) | [code-hygiene.md](docs/code-hygiene.md#todo-audit-follow-ups-2026-11-12) | a new maintenance finding |

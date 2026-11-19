@@ -289,10 +289,17 @@ struct PauseMenuPresentation
 	float heading_y = 0.0f;
 	float status_y = 0.0f;
 	WidgetLayout layout;
-	// Practice Pause fits a fifth row, Tool, into the same paper at this
-	// vertical spacing in place of layout.spacing.y. The key is optional; the
-	// reader fills in 0.8 * layout.spacing.y without it.
+	// Practice fits Tool and Sub into the same paper at its own spacing.
+	// The reader fills in 0.8 * layout.spacing.y without an authored value.
 	float practice_row_spacing = 0.0f;
+	WidgetLayout practice_layout() const
+	{
+		WidgetLayout result = this->layout;
+		// Share the extra row's height above and below the old action stack.
+		result.position.y -= this->practice_row_spacing * 0.5f;
+		result.spacing.y = this->practice_row_spacing;
+		return result;
+	}
 	PresentationSound window_open_sound;
 	PresentationSound pad_lost_sound;
 	PresentationSound pad_back_sound;

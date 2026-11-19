@@ -428,7 +428,7 @@ namespace menu_text_acceptance
         constexpr Boundary boundaries[]{
             {"join_ready", 1675, 75}, {"join_waiting", 1675, 75},
             {"pause_title", 1050, 135}, {"pause_player_title", 1042, 135},
-            {"controller_lost", 1050, 135}, {"all_connected", 1050, 122},
+            {"controller_lost", 1050, 135}, {"all_connected", 1050, 74},
             {"teams_required", 1715, 65}
         };
         for (const auto& entry : boundaries)

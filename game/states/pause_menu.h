@@ -5,6 +5,7 @@
 #include "game/states/menu_page.h"
 #include "game/objects/slot_input.h"
 #include "game/input/input_slots.h"
+#include "game/objects/sub_type.h"
 #include "game/objects/weapon_type.h"
 
 #include <optional>
@@ -44,6 +45,7 @@ void latch_intro_pause(bool intro_playing, std::vector<SlotInput>& player_inputs
 // or left, wrapping at each end. Random is a setup choice, not something to
 // hold, so it is never offered.
 WeaponType practice_tool_after(WeaponType tool, labrador::Direction direction);
+SubType practice_sub_after(SubType sub, labrador::Direction direction);
 
 
 class PauseMenuPage : public MenuPage
@@ -91,8 +93,8 @@ class PauseMenuInitial final : public PauseMenuPage
 {
 public:
 	// Returning from a confirmation keeps the same pause session. Practice
-	// adds a Tool row under Resume: left/right chooses, select rebuilds the
-	// course clean with that tool where the player stands.
+	// adds Tool and Sub rows under Resume. Left/right chooses, and Select
+	// rebuilds the course clean with the chosen loadout where the player stands.
 	PauseMenuInitial(MenuContext* context, int player_num, bool opening = true,
 		bool practice = false);
 	void init() override;
@@ -100,8 +102,9 @@ public:
 private:
 	bool opening_ = true;
 	void refresh_connections();
-	void cycle_tool(labrador::Direction direction);
+	void cycle_loadout(labrador::Direction direction);
 	WeaponType tool_choice_ = WeaponType::sprayer;
+	SubType sub_choice_ = SubType::grenade;
 	bool waiting_for_players_ = false;
 	// Bit per roster seat whose pad was missing when the texts were last
 	// built. Empty until the first build, so that one always happens.
@@ -114,6 +117,7 @@ private:
 	std::unique_ptr<labrador::UiText> quit_ = nullptr;
 	std::unique_ptr<labrador::UiText> options_ = nullptr;
 	std::unique_ptr<labrador::UiText> tool_ = nullptr;
+	std::unique_ptr<labrador::UiText> sub_ = nullptr;
 };
 
 class PauseMenuConfirmation final : public PauseMenuPage

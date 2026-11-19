@@ -469,7 +469,7 @@ CPU-checkable criterion that no case asserts; they are collected under
 | D7 | any | Music/SFX volume, per-pad rumble | `ROAD#9` | `settings`, `rumble`, `story_audio` | Attended |
 | D8 | P1 | `DisplaySettingsTrial` | none | `display_trial` | Served |
 | S1 | P3 | Untimed Movement Course practice and its lessons | `POL#19` | `practice_workshop` (`movement_course` proves only the routes) | Attended |
-| S2 | P3 | Practice Pause's Tool row (`PauseMenuInitial::cycle_tool`, `GameLevel`'s change-tool rebuild) | `POL#19` | `practice_workshop` (the row's wrap and the change-tool rebuild, `DES#3`) | Attended |
+| S2 | P3 | Practice Pause's Tool and Sub rows (`PauseMenuInitial::cycle_loadout`, `GameLevel`'s loadout rebuild) | `POL#19`, `ROAD#48` | `practice_workshop`; `-PracticeReplayOnly` drives the Sub row at the station | Attended |
 | S3 | P3 | One human with bots | `ROAD#10` | `bot_runtime`, `bot_roster` | Attended |
 | S4 | P3 | Stage records | `GAP#6.2` done | `match_records`; painter for Stage Select's line | Served |
 | S5 | P3 | Solo opening off ([game_states.cpp](../game/states/game_states.cpp)), `LevelEndInfo`'s solo coverage | none | `paint`, `menu_text`, `match_records`; `check-display-awake.ps1` for the opening | Served |

@@ -141,11 +141,11 @@ namespace presentation_read
 	{
 		const JsonValue json = root.object("menu_text");
 		// stage_scan is optional, so a misspelt key must fail rather than be skipped.
-		content_value::require_known_keys(json, { "brand", "solo_practice_hint", "practice_tool",
+		content_value::require_known_keys(json, { "brand", "solo_practice_hint", "practice_tool", "practice_sub",
 			"quick_match", "learn", "graphics", "options_palette_timing", "title", "home_subtitle", "display_trial_countdown", "help",
 			"keyboard_jump", "pad_buttons", "profiles", "status", "values", "confirmations", "end",
 			"results", "stage_scan", "stage", "stage_names", "records", "labels", "connection",
-			"stick_readouts", "hud", "subs", "countdown", "controls", "headings", "prompts", "items" });
+			"stick_readouts", "hud", "subs", "setup", "countdown", "controls", "headings", "prompts", "items" });
 		MenuText text;
 		text.brand = read_menu_line(json, "brand");
 		text.solo_practice_hint = read_menu_line(json, "solo_practice_hint");
@@ -153,6 +153,10 @@ namespace presentation_read
 		try { std::ignore = format_label_template(text.practice_tool, { { L"{tool}", L"Sprayer" } }); }
 		catch (const std::invalid_argument& error)
 		{ throw std::runtime_error(json.where() + ": practice_tool: " + error.what()); }
+		text.practice_sub = read_menu_line(json, "practice_sub");
+		try { std::ignore = format_label_template(text.practice_sub, { { L"{sub}", L"Grenade" } }); }
+		catch (const std::invalid_argument& error)
+		{ throw std::runtime_error(json.where() + ": practice_sub: " + error.what()); }
 		text.options_palette_timing = read_menu_line(json, "options_palette_timing");
 		text.display_trial_countdown = read_menu_line(json, "display_trial_countdown");
 		try { std::ignore = format_label_template(text.display_trial_countdown, { { L"{seconds}", L"1" } }); }
@@ -487,6 +491,13 @@ namespace presentation_read
 		text.hud.team_b = read_menu_line(hud, "team_b");
 		text.hud.health = read_menu_line(hud, "health");
 		text.hud.paint = read_menu_line(hud, "paint");
+		const JsonValue setup = json.object("setup");
+		content_value::require_known_keys(setup, { "choose_team", "confirm_team", "choose_tool", "choose_sub", "ready" });
+		text.setup.choose_team = read_menu_line(setup, "choose_team");
+		text.setup.confirm_team = read_menu_line(setup, "confirm_team");
+		text.setup.choose_tool = read_menu_line(setup, "choose_tool");
+		text.setup.choose_sub = read_menu_line(setup, "choose_sub");
+		text.setup.ready = read_menu_line(setup, "ready");
 		const JsonValue subs = json.object("subs");
 		content_value::require_known_keys(subs, { "line", "choosing", "choices" });
 		text.subs.line = read_menu_line(subs, "line");
@@ -686,6 +697,11 @@ std::wstring SubMenuText::label(size_t choice, bool choosing_sub, const std::wst
 std::wstring MenuText::practice_tool_label(std::wstring_view tool) const
 {
 	return format_label_template(this->practice_tool, { { L"{tool}", std::wstring(tool) } });
+}
+
+std::wstring MenuText::practice_sub_label(SubType sub) const
+{
+	return format_label_template(this->practice_sub, { { L"{sub}", this->subs.names.at(static_cast<size_t>(sub)) } });
 }
 
 std::wstring MenuText::pause_title_for_player(int number) const

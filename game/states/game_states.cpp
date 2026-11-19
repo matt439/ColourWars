@@ -666,13 +666,13 @@ void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 	case PauseMenuAction::quit:
 		this->leave_match(EndMenuAction::exit);
 		break;
-	case PauseMenuAction::change_tool:
+	case PauseMenuAction::change_loadout:
 	{
-		// The page wrote the tool into settings_. The rebuild cleans the
+		// The page wrote the choice into settings_. The rebuild cleans the
 		// paint; a living player keeps their place and goes straight to GO.
-		const std::optional<labrador::Vector2F> place = this->level_->tool_change_place();
+		const std::optional<labrador::Vector2F> place = this->level_->loadout_change_place();
 		this->build_and_enter_level();
-		this->level_->enter_after_tool_change(place);
+		this->level_->enter_after_loadout_change(place);
 		break;
 	}
 	}

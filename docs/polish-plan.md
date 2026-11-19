@@ -1807,7 +1807,7 @@ match; each is a `presentation.json` or one-function change in
 chosen relation.
 
 A second overlay question, found 2026-10-31 while making the validator check
-the practice Pause layout: practice Pause puts its five rows (Resume, Tool,
+the practice Pause layout: practice Pause put its five rows (Resume, Tool,
 Restart, Options, Quit) 96 pixels apart (0.8 of the 120 row spacing), but a
 shipped item's focus card is 113 tall (77 text plus 2 x 18 focus padding), so
 neighbouring focus cards overlap by 17 pixels. Only one card is drawn at a time,
@@ -1815,6 +1815,7 @@ so the overlap shows only as a focused card reaching into its neighbours' text.
 The validator checks the practice rows against the paper only, because the
 normal row rule would refuse the shipped file. The author accepted that as
 intended on 2026-11-05, so the validator keeps its paper-only practice check.
+The addition of Sub brought the paper to six rows. [Practice Pause](polish-movement-course.md#try-each-sub-from-practice-pause-road48).
 Changing it later means widening the spacing, shrinking the padding for that
 page or dropping a row, with the validator taking the row rule.
 

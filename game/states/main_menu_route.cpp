@@ -5,8 +5,12 @@
 // left; the pages themselves decide when, this file decides what is built.
 //
 //   Title         -> Home
-//   Home          -> Title (Back), Mode Select, How to play, Options, Credits
+//   Home          -> Title (Back), Mode Select, Play a bot, How to play, Options, Credits
 //                    (Exit pushes its confirmation above Home instead)
+//   Play a bot    -> Home on Play a bot (Back), reviewed Join (Continue to Join),
+//                    Mode Select (Customise)
+//   reviewed Join -> Player Count (Back), Stage Select with the reviewed roster,
+//                    or Team Select with a different roster
 //   How to play   -> Home on How to play (no setup changes)
 //   Options       -> Home on Options        (as a paused child it pops)
 //   Credits       -> Home on Credits

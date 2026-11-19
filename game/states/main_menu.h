@@ -142,7 +142,7 @@ private:
 class MainMenuHome final : public MainMenuPage
 {
 public:
-	enum class InitialFocus { play, how_to_play, options, credits };
+	enum class InitialFocus { play, how_to_play, quick_match, options, credits };
 	explicit MainMenuHome(MenuContext* context, InitialFocus initial_focus = InitialFocus::play);
 	void update_page(float dt) override;
 	void init() override;
@@ -170,6 +170,7 @@ public:
     bool shows_focus_backing() const override { return false; }
 private:
     void accept(bool customise);
+    void return_home();
     int activating_slot_ = -1;
     std::unique_ptr<MenuPaperArtwork> paper_;
     std::unique_ptr<labrador::UiTexture> background_;
@@ -427,6 +428,7 @@ private:
 		MenuFocusMotion motion;
 		std::unique_ptr<MenuPaperArtwork> paper;
 		std::unique_ptr<colourwars::UiTextDropShadow> player = nullptr;
+		std::unique_ptr<labrador::UiText> status;
 		std::unique_ptr<UiPlayerBadge> badge;
 		std::unique_ptr<MenuChoiceIcon> player_a = nullptr;
 		std::unique_ptr<MenuChoiceIcon> player_center = nullptr;
@@ -453,6 +455,7 @@ private:
 	// until the first write, so that one always happens.
 	std::vector<PlayerTeam> displayed_teams_;
 	std::vector<ConfirmationState> displayed_confirmations_;
+	MenuSetupText setup_text_;
 	int host_row_ = 0;
 	std::unique_ptr<labrador::UiTexture> host_cursor_;
 	void shuffle_teams();
@@ -494,12 +497,12 @@ private:
 		LoadoutChoice loadout;
 		int handicap = 0;
 	};
-	// What a row's Boost and sub line and description last showed; the
+	// What a row's Boost and sub line, description and status last showed; the
 	// default matches no row, so the first update always writes them.
 	struct DisplayedSub
 	{
 		size_t choice = LoadoutChoice::sub_choice_count;
-		bool choosing = false;
+		LoadoutChoice::Step step = LoadoutChoice::Step::tool;
 		int handicap = -1;
 		bool operator==(const DisplayedSub&) const = default;
 	};
@@ -514,6 +517,7 @@ private:
 		std::unique_ptr<MenuIcon> weapon_icon = nullptr;
 		std::unique_ptr<colourwars::UiTextDropShadow> weapon_name = nullptr;
 		std::unique_ptr<WrappedTextDropShadow> weapon_description = nullptr;
+		std::unique_ptr<labrador::UiText> status;
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;
@@ -523,6 +527,7 @@ private:
 	// Keep names, frames and descriptions paired with the atlas captured on entry.
 	WeaponSelectArtworkPresentation weapon_select_art_;
 	std::array<std::wstring, selectable_weapon_count> weapon_descriptions_;
+	MenuSetupText setup_text_;
 	// Each row's weapon when its icon and text were last written; none until
 	// the first write, so that one always happens.
 	std::vector<WeaponType> displayed_weapons_;
@@ -619,7 +624,7 @@ struct MainMenuRoute
 {
 	// Most edges name only the page, so a screen converts to its route.
 	MainMenuRoute(MainMenuScreen screen);
-	// Back from Options or Credits, onto the row that opened them.
+	// Back onto the Home action that opened the page.
 	static MainMenuRoute home(MainMenuHome::InitialFocus focus);
 	// Weapon or Stage Select re-picking for an unfinished series (ROAD#20);
 	// an empty `between_rounds` is ordinary setup. `picker` as for

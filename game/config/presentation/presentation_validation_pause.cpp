@@ -13,8 +13,8 @@
 
 using namespace labrador;
 
-// Phase 1: Pause's actions, practice Pause's five rows in the same paper and
-// the Tool row's name for every tool.
+// Phase 1: Pause's actions and practice Pause's six rows, including every
+// concrete Tool and Sub choice.
 void Presentation::Validation::validate_pause_actions() const
 {
 	const MainMenuPresentation& main = this->presentation.main_menu_;
@@ -24,59 +24,56 @@ void Presentation::Validation::validate_pause_actions() const
 		throw std::runtime_error(this->presentation.source_path_ +
 			": menu_text.items.resume requires positive finite pause_menu.layout.spacing.y.");
 	}
+	const RectangleF paper = menu_geometry::screen_paper(pause.box_size);
 	const MenuItem pause_items[]{ MenuItem::resume, MenuItem::restart, MenuItem::options, MenuItem::quit };
 	for (size_t index = 0; index < std::size(pause_items); ++index)
 	{
 		check_menu_item(pause_items[index], this->presentation.menu_.item_font, pause.layout.position +
 			Vector2F(0.0f, pause.layout.spacing.y * static_cast<float>(index)),
-			menu_geometry::screen_paper(pause.box_size), pause.layout.spacing.y, std::nullopt, pause.art);
+			paper, pause.layout.spacing.y, std::nullopt, pause.art);
 	}
-	// Practice fits a fifth row, Tool, into the same paper at its own spacing:
-	// Resume, Tool, Restart, Options and Quit. Only the paper is checked: the
+	// Practice lays out Resume, Tool, Sub, Restart, Options and Quit. The
 	// shipped rows are closer than a focus card is tall (HYG#37), so the row
 	// rule would refuse them.
-	const float practice_spacing = pause.practice_row_spacing;
+	const WidgetLayout practice = pause.practice_layout();
+	const auto position = [&](int row)
+	{
+		return practice.position + Vector2F(0.0f, practice.spacing.y * static_cast<float>(row));
+	};
 	for (size_t index = 0; index < std::size(pause_items); ++index)
 	{
-		const int row = index == 0 ? 0 : static_cast<int>(index) + 1;
-		check_menu_item(pause_items[index], this->presentation.menu_.item_font, pause.layout.position +
-			Vector2F(0.0f, practice_spacing * static_cast<float>(row)),
-			menu_geometry::screen_paper(pause.box_size), 0.0f, std::nullopt, pause.art);
+		const int row = index == 0 ? 0 : static_cast<int>(index) + 2;
+		check_menu_item(pause_items[index], this->presentation.menu_.item_font, position(row),
+			paper, 0.0f, std::nullopt, pause.art);
 	}
+	const RectangleF face(paper.position(), paper.size() - Vector2F(pause.art.shadow_offset));
+	const FontHandle font = render.resolve_sprite_font(this->presentation.menu_.item_font);
+	const auto check_choice = [&](const std::string& role, const std::wstring& label, int row)
 	{
-		// The Tool row names each real tool, unscaled. Glyph coverage stays
-		// with the content check that names the same token.
-		const RectangleF paper = menu_geometry::screen_paper(pause.box_size);
-		const Vector2F face_bottom = paper.position() + paper.size() - Vector2F(pause.art.shadow_offset);
-		const Vector2F position = pause.layout.position + Vector2F(0.0f, practice_spacing);
-		const Vector2F padding = pause.art.focus_padding;
-		const FontHandle font = render.resolve_sprite_font(this->presentation.menu_.item_font);
-		for (int tool = 0; tool < static_cast<int>(WeaponType::max_prim_wep); ++tool)
+		// The content check reports missing glyphs under the same role.
+		if (!render.can_render(font, label)) { return; }
+		const Vector2F size = render.measure_text(font, label);
+		RectangleF bounds(position(row), size);
+		bounds.inflate(pause.art.focus_padding);
+		if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f ||
+			!menu_geometry::fits(bounds, face))
 		{
-			std::wstring label;
-			try
-			{
-				label = this->presentation.menu_text_.practice_tool_label(
-					main.weapon_select_art.choice(static_cast<WeaponType>(tool)).name);
-			}
-			catch (const std::invalid_argument& error)
-			{
-				throw std::runtime_error(this->presentation.source_path_ + ": menu_text.practice_tool: " + error.what());
-			}
-			if (!render.can_render(font, label)) { continue; }
-			const Vector2F size = render.measure_text(font, label);
-			if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f ||
-				position.x - padding.x < paper.x || position.y - padding.y < paper.y ||
-				position.x + size.x + padding.x > face_bottom.x ||
-				position.y + size.y + padding.y > face_bottom.y)
-			{
-				throw std::runtime_error(this->presentation.source_path_ +
-					": menu_text.practice_tool with main_menu.weapon_select.choices." +
-					weapon_name(static_cast<WeaponType>(tool)) +
-					".name must fit the practice Pause paper including focus padding.");
-			}
+			throw std::runtime_error(this->presentation.source_path_ + ": " + role +
+				" must fit the practice Pause paper including focus padding.");
 		}
+	};
+	const MenuText& text = this->presentation.menu_text_;
+	for (int tool = 0; tool < static_cast<int>(WeaponType::max_prim_wep); ++tool)
+	{
+		const WeaponType type = static_cast<WeaponType>(tool);
+		check_choice(std::string("menu_text.practice_tool with main_menu.weapon_select.choices.") +
+			weapon_name(type) + ".name", text.practice_tool_label(main.weapon_select_art.choice(type).name), 1);
 	}
+	for_each_sub([&](SubType sub, const char* name)
+	{
+		check_choice(std::string("menu_text.practice_sub with menu_text.subs.choices.") + name + ".name",
+			text.practice_sub_label(sub), 2);
+	});
 }
 
 // Phase 1: the Exit confirmation's Yes and No on the Pause paper.
@@ -231,7 +228,7 @@ void Presentation::Validation::validate_pause_connection(const SetupGeometry& se
 		// neither Main's footer centering nor retained text-shadow bounds.
 		const RectangleF bounds(menu_geometry::centred_x(size.x),
 			heading ? pause.heading_y : pause.status_y, size.x, size.y);
-		const float bottom = heading ? pause.status_y : pause.layout.position.y - pause.art.focus_padding.y;
+		const float bottom = heading ? pause.status_y : pause.practice_layout().position.y - pause.art.focus_padding.y;
 		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !std::isfinite(bottom) ||
 			!confirmation_paper.contains(bounds) || bounds.bottom() > bottom)
 		{
@@ -266,8 +263,10 @@ void Presentation::Validation::validate_pause_missing_lists(const SetupGeometry&
 			const Vector2F size = label_size(missing_key, words, this->presentation.menu_.detail_font);
 			const RectangleF bounds(menu_geometry::centred_x(size.x), pause.status_y, size.x, size.y);
 			check_label_bounds(missing_key, bounds, confirmation_paper);
-			if (!std::isfinite(pause.layout.position.y) || !std::isfinite(pause.art.focus_padding.y) ||
-				bounds.bottom() > pause.layout.position.y - pause.art.focus_padding.y)
+			// Practice has one human, so its missing list has only one line.
+			const float action_y = count == 1 ? pause.practice_layout().position.y : pause.layout.position.y;
+			if (!std::isfinite(action_y) || !std::isfinite(pause.art.focus_padding.y) ||
+				bounds.bottom() > action_y - pause.art.focus_padding.y)
 			{
 				throw std::runtime_error(this->presentation.source_path_ + ": " + missing_key +
 					" must fit before the first Pause action including its focus padding.");

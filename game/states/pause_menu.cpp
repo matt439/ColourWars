@@ -152,11 +152,28 @@ WeaponType practice_tool_after(WeaponType tool, Direction direction)
 	return step_tool(tool, direction, tuned_weapon_count);
 }
 
-void PauseMenuInitial::cycle_tool(Direction direction)
+SubType practice_sub_after(SubType sub, Direction direction)
 {
-	this->tool_choice_ = practice_tool_after(this->tool_choice_, direction);
-	this->tool_->set_text(this->text().practice_tool_label(
-		this->presentation().main_menu().weapon_select_art.choice(this->tool_choice_).name));
+	return static_cast<SubType>(wrap_step(static_cast<size_t>(sub), sub_count, direction));
+}
+
+void PauseMenuInitial::cycle_loadout(Direction direction)
+{
+	if (!this->practice() || this->waiting_for_players_) { return; }
+	const UiWidget* focused = this->focus_.focused(0);
+	if (focused == this->tool_.get())
+	{
+		this->tool_choice_ = practice_tool_after(this->tool_choice_, direction);
+		this->tool_->set_text(this->text().practice_tool_label(
+			this->presentation().main_menu().weapon_select_art.choice(this->tool_choice_).name));
+	}
+	else if (focused == this->sub_.get())
+	{
+		this->sub_choice_ = practice_sub_after(this->sub_choice_, direction);
+		this->sub_->set_text(this->text().practice_sub_label(this->sub_choice_));
+	}
+	else { return; }
+	this->play_wave(this->direction_sound_);
 }
 
 void PauseMenuInitial::update_page(float /*dt*/)
@@ -189,17 +206,11 @@ void PauseMenuInitial::update_page(float /*dt*/)
 	{
 		this->activate_focus();
 	}
-	else if (this->focus_.move(0, input.direction))
+	else if (input.direction == Direction::left || input.direction == Direction::right)
 	{
-		this->play_wave(this->direction_sound_);
+		this->cycle_loadout(input.direction);
 	}
-	else if (this->tool_ && this->focus_.focused(0) == this->tool_.get() &&
-		this->focus_.enabled(this->tool_.get()) &&
-		(input.direction == Direction::left || input.direction == Direction::right))
-	{
-		this->play_wave(this->direction_sound_);
-		this->cycle_tool(input.direction);
-	}
+	else if (this->focus_.move(0, input.direction)) { this->play_wave(this->direction_sound_); }
 }
 
 void PauseMenuInitial::refresh_connections()
@@ -251,7 +262,7 @@ void PauseMenuInitial::refresh_connections()
 		const RectangleF status(Vector2F(menu_geometry::centred_x(this->connection_status_->bounds().width),
 			look.status_y), this->connection_status_->bounds().size());
 		if (this->waiting_for_players_ && (!menu_geometry::screen_paper(look.box_size).contains(status) ||
-			status.bottom() > look.layout.position.y - look.art.focus_padding.y))
+			status.bottom() > this->widget_position().y - look.art.focus_padding.y))
 		{
 			this->connection_status_->set_text(missing_list(false));
 		}
@@ -266,6 +277,7 @@ void PauseMenuInitial::refresh_connections()
 	this->focus_.set_enabled(this->resume_.get(), !this->waiting_for_players_);
 	this->focus_.set_enabled(this->restart_.get(), !this->waiting_for_players_);
 	if (this->tool_) { this->focus_.set_enabled(this->tool_.get(), !this->waiting_for_players_); }
+	if (this->sub_) { this->focus_.set_enabled(this->sub_.get(), !this->waiting_for_players_); }
 	if (was_waiting != this->waiting_for_players_)
 	{
 		// Reconnection never consumes a held button or resumes automatically.
@@ -296,13 +308,12 @@ void PauseMenuInitial::init()
 		&style, &look.art, &this->focus_, nullptr,
 		&this->focus_motion_, &this->settings_session()->play_settings());
 
-	this->set_widget_position(look.layout.position);
-	this->set_widget_size(look.layout.size);
-	// Practice fits a fifth row, Tool, into the same paper.
 	const bool practice = this->practice();
-	this->set_widget_spacing(practice ?
-		Vector2F(look.layout.spacing.x, look.practice_row_spacing) : look.layout.spacing);
-	const int first_row = practice ? 1 : 0;
+	const WidgetLayout layout = practice ? look.practice_layout() : look.layout;
+	this->set_widget_position(layout.position);
+	this->set_widget_size(layout.size);
+	this->set_widget_spacing(layout.spacing);
+	const int loadout_rows = practice ? 2 : 0;
 
 	this->player_num_ = std::make_unique<UiText>(
 		"player_num",
@@ -326,37 +337,40 @@ void PauseMenuInitial::init()
 
 	if (practice)
 	{
-		// Start from the tool in hand, so Select on an untouched row is a
-		// clean course with the same tool, where the player stands.
+		// Start from the equipped loadout. Only Select writes back a choice.
 		const std::vector<SeatSetup>& players = this->level_settings()->player_settings();
-		if (!players.empty() && players.front().weapon < WeaponType::max_prim_wep)
+		if (!players.empty())
 		{
-			this->tool_choice_ = players.front().weapon;
+			const SeatSetup& player = players.front();
+			if (player.weapon < WeaponType::max_prim_wep) { this->tool_choice_ = player.weapon; }
+			this->sub_choice_ = player.sub;
 		}
 		this->tool_ = std::make_unique<UiText>("tool",
 			this->text().practice_tool_label(
 				this->presentation().main_menu().weapon_select_art.choice(this->tool_choice_).name),
 			style.item_font, this->calculate_widget_position(0, 1), this->render_resources(),
 			look.art.ink);
+		this->sub_ = std::make_unique<UiText>("sub", this->text().practice_sub_label(this->sub_choice_),
+			style.item_font, this->calculate_widget_position(0, 2), this->render_resources(), look.art.ink);
 	}
 
 	this->restart_ = std::make_unique<UiText>(
 		"restart",
 		this->text().item(MenuItem::restart),
 		style.item_font,
-		this->calculate_widget_position(0, first_row + 1),
+		this->calculate_widget_position(0, loadout_rows + 1),
 		this->render_resources(),
 		look.art.ink);
 
 	this->options_ = std::make_unique<UiText>("options", this->text().item(MenuItem::options),
-		style.item_font, this->calculate_widget_position(0, first_row + 2), this->render_resources(),
+		style.item_font, this->calculate_widget_position(0, loadout_rows + 2), this->render_resources(),
 		look.art.ink);
 
 	this->quit_ = std::make_unique<UiText>(
 		"quit",
 		this->text().item(MenuItem::quit),
 		style.item_font,
-		this->calculate_widget_position(0, first_row + 3),
+		this->calculate_widget_position(0, loadout_rows + 3),
 		this->render_resources(),
 		look.art.ink);
 
@@ -371,7 +385,11 @@ void PauseMenuInitial::init()
 	this->text_container_->add_child(this->player_num_.get());
 	this->text_container_->add_child(this->connection_status_.get());
 	this->text_container_->add_child(this->resume_.get());
-	if (this->tool_) { this->text_container_->add_child(this->tool_.get()); }
+	if (practice)
+	{
+		this->text_container_->add_child(this->tool_.get());
+		this->text_container_->add_child(this->sub_.get());
+	}
 	this->text_container_->add_child(this->restart_.get());
 	this->text_container_->add_child(this->options_.get());
 	this->text_container_->add_child(this->quit_.get());
@@ -381,13 +399,19 @@ void PauseMenuInitial::init()
 			this->play_wave(this->confirm_sound_);
 			this->finish(PauseMenuAction::resume);
 		});
-	if (this->tool_)
+	if (practice)
 	{
 		this->focus_.add(this->tool_.get(), [this]
 			{
 				this->play_wave(this->confirm_sound_);
 				this->level_settings()->set_player_weapon(0, this->tool_choice_);
-				this->finish(PauseMenuAction::change_tool);
+				this->finish(PauseMenuAction::change_loadout);
+			});
+		this->focus_.add(this->sub_.get(), [this]
+			{
+				this->play_wave(this->confirm_sound_);
+				this->level_settings()->set_player_sub(0, this->sub_choice_);
+				this->finish(PauseMenuAction::change_loadout);
 			});
 	}
 	this->focus_.add(this->restart_.get(), [this]

@@ -164,6 +164,16 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         {
             open(count);
             const MatchSetup initial = settings;
+            if (seed == 1)
+            {
+                tap(0, GamepadButton::dpad_right);
+                check_setup_status_pixels(app, presentation, frame(), false, { { 0, L"Choose a team" }, { 1, L"Confirm team" } });
+                tap(0, GamepadButton::dpad_left);
+                tap(0, GamepadButton::a);
+                check_setup_status_pixels(app, presentation, frame(), false, { { 0, L"Ready" }, { 1, L"Confirm team" } });
+                tap(0, GamepadButton::b);
+                check_setup_status_pixels(app, presentation, frame(), false, { { 0, L"Confirm team" }, { 1, L"Confirm team" } });
+            }
             for (int player = 0; player < count - 1; ++player) { tap(player, GamepadButton::a); }
             const Frame partly_ready = frame();
             require(partly_ready.pixels != reference(initial).pixels, "Pre-confirmed roster did not show any readiness");
@@ -185,6 +195,8 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             if (count == 3) { majority_a = majority_a || a == 2; majority_b = majority_b || a == 1; }
             if (seed == 1)
             {
+                check_setup_status_pixels(app, presentation, shuffled_frame, false,
+                    { { 0, L"Confirm team" }, { count - 1, L"Confirm team" } });
                 for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
                 {
                     resize_page(size); verify_team_page(shuffled, "Native-size shuffled rows/legend changed team/readiness state");
@@ -203,6 +215,23 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             tap(count - 1, GamepadButton::a);
             require(same_plan(settings, shuffled) && frame().pixels == reference(shuffled, true).pixels,
                 "Final reconfirm did not commit just shuffled teams and enter actual Weapon Select");
+            if (seed == 1)
+            {
+                const auto& descriptions = presentation.main_menu().weapon_descriptions;
+                const auto& sub = presentation.menu_text().subs.descriptions[0];
+                const auto& host_tool = descriptions[static_cast<size_t>(weapons[0])];
+                const auto& guest_tool = descriptions[static_cast<size_t>(weapons[1])];
+                tap(0, GamepadButton::a);
+                check_setup_status_pixels(app, presentation, frame(), false,
+                    { { 0, L"Choose sub", &sub }, { 1, L"Choose tool", &guest_tool } });
+                tap(0, GamepadButton::a);
+                check_setup_status_pixels(app, presentation, frame(), false,
+                    { { 0, L"Ready", &host_tool }, { 1, L"Choose tool", &guest_tool } });
+                tap(0, GamepadButton::b);
+                check_setup_status_pixels(app, presentation, frame(), false,
+                    { { 0, L"Choose sub", &sub }, { 1, L"Choose tool", &guest_tool } });
+                tap(0, GamepadButton::b);
+            }
             tap(0, GamepadButton::b); tick();
             verify_team_page(shuffled, "Returning from Weapon Select lost teams or retained readiness");
             require(same_plan(settings, shuffled), "Weapon return changed weapons, slots, stage, duration or series length");

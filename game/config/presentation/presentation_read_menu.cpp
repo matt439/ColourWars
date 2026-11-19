@@ -813,8 +813,7 @@ namespace presentation_read
 			throw std::runtime_error(json.where() + ": heading_y < status_y <= " + number_text(menu_geometry::overlay_max_y) + " required.");
 		}
 		menu.layout = read_layout(json, "layout");
-		// Optional, so a file from before the key still loads: without it the
-		// five practice rows take 0.8 of the spacing, as they always did.
+		// A file from before the key uses 0.8 of the normal spacing.
 		menu.practice_row_spacing = json.has("practice_row_spacing") ?
 			read_positive(json, "practice_row_spacing") : menu.layout.spacing.y * 0.8f;
 		menu.window_open_sound = read_sound(json, "window_open_sound");

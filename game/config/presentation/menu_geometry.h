@@ -12,6 +12,7 @@
 #include "engine/math/vector2f.h"
 #include "game/config/presentation/presentation_menu.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace menu_consts
@@ -109,6 +110,17 @@ namespace menu_geometry
 
 	// The setup pages' paper: the main art with the setup focus card and shade.
 	MenuPaperArtPresentation setup_art(const MainMenuPresentation& main);
+	// Team status begins after the three choice icons. Weapon status follows
+	// the description and aligns with the tool name for a short description.
+	inline labrador::Vector2F team_status_position(const labrador::Vector2F& row, const MainMenuPresentation& main)
+	{
+		return row + labrador::Vector2F(main.team_select.spacing.x * 2.0f +
+			main.team_select.size.x * 3.0f + main.setup_focus_padding.x, 0.0f);
+	}
+	inline labrador::Vector2F weapon_status_position(const labrador::RectangleF& description, float name_y)
+	{
+		return labrador::Vector2F(description.x, std::max(description.bottom(), name_y));
+	}
 	// Mode's seven actions use rows 1-7, leaving its heading at the paper top.
 	// The shared row origin still controls the actions and the other setup pages.
 	labrador::Vector2F mode_heading_position(const MenuStyle& style, const MainMenuPresentation& main);

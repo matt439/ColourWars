@@ -100,7 +100,9 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         const auto position = [&](int column, int row) { return style.layout.position + Vector2F(
             look.team_select.spacing.x * static_cast<float>(column), look.team_select.spacing.y * static_cast<float>(row)); };
         const SpriteSheet* atlas = app.render_resources()->sprite_sheet(look.team_select_sheet);
-        std::vector<RectangleF> rows, strips; std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels;
+        std::vector<RectangleF> rows, strips, status_bounds;
+        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels;
+        std::vector<std::unique_ptr<UiText>> statuses;
         for (size_t seat = 0; seat < teams.size(); ++seat)
         {
             labels.push_back(std::make_unique<colourwars::UiTextDropShadow>("independent-team-focus-label", L"P" + std::to_wstring(seat + 1) + L" - " + devices[seat],
@@ -121,6 +123,13 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
                     Vector2F(sprite.origin().x * scale.x, sprite.origin().y * scale.y), look.team_select.size);
                 row = RectangleF::union_of(row, bounds); strip = choice == 0 ? bounds : RectangleF::union_of(strip, bounds);
             }
+            const Vector2F status_position = position(2, static_cast<int>(seat) + 2) +
+                Vector2F(look.team_select.size.x * 3.0f + art.focus_padding.x, 0.0f);
+            const size_t status = ready[seat] ? 2 : teams[seat] == PlayerTeam::none ? 0 : 1;
+            statuses.push_back(std::make_unique<UiText>("independent-team-focus-status", team_status_words[status],
+                style.detail_font, status_position, app.render_resources(), art.ink));
+            status_bounds.push_back(team_status_reference_bounds(*app.render_resources(), style.detail_font, status_position));
+            row = RectangleF::union_of(row, status_bounds.back());
             row.inflate(art.focus_padding); require(panel.contains(row), "Team focus row escaped its paper"); rows.push_back(row);
             strip.inflate(Vector2F(2.0f)); strips.push_back(strip);
         }
@@ -150,7 +159,7 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             choice_warning ? L"Choose a team with Left/Right, then Ready." : L"Both teams need a player", style.detail_font,
             look.team_warning_position, app.render_resources(), art.ink, Colour{}, style.detail_shadow_offset);
         list.set_filter(TextureFilter::linear); title.draw(list);
-        for (const auto& label : labels) { label->draw(list); }
+        for (size_t row = 0; row < labels.size(); ++row) { labels[row]->draw(list); statuses[row]->draw(list); }
         if (warning) { message.draw(list); }
         const Frame expected = read(renderer);
         const auto check = [&](RectangleF bounds, const std::string& role)
@@ -176,7 +185,11 @@ void team_focus_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         }
         // Lettering and its fonts are captured when widgets are constructed.
         check(title.bounds(), stem + "-title");
-        for (size_t seat = 0; seat < labels.size(); ++seat) { check(labels[seat]->bounds(), stem + "-label" + std::to_string(seat)); }
+        for (size_t seat = 0; seat < labels.size(); ++seat)
+        {
+            check(labels[seat]->bounds(), stem + "-label" + std::to_string(seat));
+            check(status_bounds[seat], stem + "-status" + std::to_string(seat));
+        }
         // Always inspect both messages' full footprint, including after the
         // longer choice instruction clears. A stale tail must not escape the oracle.
         const colourwars::UiTextDropShadow choice_message("independent-team-focus-choice-bounds",
@@ -415,6 +428,9 @@ void team_tune_colour_matrix(Application& app, Registry<LevelLoadedInfo>& levels
                 text.y + (text.height - identity.ui_size.y) / 2.0f, identity.ui_size.x, identity.ui_size.y);
             RectangleF row = RectangleF::union_of(RectangleF::union_of(text, badge),
                 RectangleF(position(2, seat + 2), Vector2F(look.team_select.size.x * 3.0f, look.team_select.size.y)));
+            const Vector2F status_position = position(2, seat + 2) +
+                Vector2F(look.team_select.size.x * 3.0f + art.focus_padding.x, 0.0f);
+            row = RectangleF::union_of(row, team_status_reference_bounds(*app.render_resources(), style.detail_font, status_position));
             row.inflate(art.focus_padding); setup_paper_reference(list, *app.render_resources(), style, row_art, row, RectangleF());
             for (int choice = 0; choice < 3; ++choice)
             {

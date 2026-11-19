@@ -364,6 +364,9 @@ void MainMenuHome::init()
 	case InitialFocus::how_to_play:
         this->focus_.set_focused(0, this->learn_.get());
         break;
+	case InitialFocus::quick_match:
+		this->focus_.set_focused(0, this->quick_.get());
+		break;
 	case InitialFocus::options:
 		this->focus_.set_focused(0, this->options_.get());
 		break;

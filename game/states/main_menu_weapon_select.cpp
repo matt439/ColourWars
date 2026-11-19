@@ -185,10 +185,10 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 		const LoadoutChoice& loadout = row.loadout;
 		const WeaponType type = loadout.tool();
 		WeaponType& displayed = this->displayed_weapons_[static_cast<size_t>(i)];
-		// The Boost and sub line, and the description, which is the sub's
-		// while the sub is chosen (ROAD#11), follow the step and the sub.
+		// The Boost and sub line, description and status follow the step
+		// and sub. The description shows the sub during that step (ROAD#11).
 		DisplayedSub& shown_sub = this->displayed_subs_[static_cast<size_t>(i)];
-		const DisplayedSub sub{ loadout.sub_choice(), loadout.step() == LoadoutChoice::Step::sub, row.handicap };
+		const DisplayedSub sub{ loadout.sub_choice(), loadout.step(), row.handicap };
 		if (displayed != type)
 		{
 			const WeaponChoicePresentation& choice =
@@ -201,9 +201,16 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 		}
 		if (shown_sub != sub)
 		{
-			this->player_widgets_[i]->handicap->set_text(this->handicap_and_sub_line(row));
-			this->player_widgets_[i]->weapon_description->set_text(sub.choosing ?
+			Widgets& widgets = *this->player_widgets_[i];
+			const bool choosing_sub = sub.step == LoadoutChoice::Step::sub;
+			widgets.handicap->set_text(this->handicap_and_sub_line(row));
+			widgets.weapon_description->set_text(choosing_sub ?
 				this->text().subs.descriptions.at(sub.choice) : this->weapon_description(type));
+			const std::wstring& status = choosing_sub ? this->setup_text_.choose_sub :
+				sub.step == LoadoutChoice::Step::ready ? this->setup_text_.ready : this->setup_text_.choose_tool;
+			widgets.status->set_text(status);
+			widgets.status->set_position(menu_geometry::weapon_status_position(
+				widgets.weapon_description->bounds(), widgets.weapon_name->bounds().y));
 			shown_sub = sub;
 		}
 
@@ -231,6 +238,7 @@ void MainMenuWeaponSelect::init()
 {
 	this->weapon_select_art_ = this->look().weapon_select_art;
 	this->weapon_descriptions_ = this->look().weapon_descriptions;
+	this->setup_text_ = this->text().setup;
 	const MainMenuPresentation& look = this->look();
 	const MenuStyle& style = this->menu_style();
 	this->paper_art_ = menu_geometry::setup_art(look);
@@ -363,12 +371,18 @@ void MainMenuWeaponSelect::init()
 			clear_shadow,
 			this->look().weapon_description_shadow_offset);
 
+		widgets->status = std::make_unique<UiText>(name + "_status", this->setup_text_.choose_tool,
+			look.weapon_description_font, menu_geometry::weapon_status_position(
+				widgets->weapon_description->bounds(), widgets->weapon_name->bounds().y),
+			this->render_resources(), this->paper_art_.ink);
+
 		this->texture_container_->add_child(widgets->weapon_icon.get());
 		this->texture_container_->add_child(widgets->badge.get());
 		this->text_container_->add_child(widgets->weapon_name.get());
 		this->text_container_->add_child(widgets->player.get());
 		this->text_container_->add_child(widgets->handicap.get());
 		this->text_container_->add_child(widgets->weapon_description.get());
+		this->text_container_->add_child(widgets->status.get());
 
 		this->register_selection_motion(&widgets->motion);
 		this->player_widgets_.push_back(std::move(widgets));
@@ -410,6 +424,7 @@ void MainMenuWeaponSelect::check_paper_geometry() const
 		check(tile, "weapon tile");
 		check(widgets->weapon_name->bounds(), "weapon name");
 		check(widgets->weapon_description->bounds(), "weapon description");
+		check(widgets->status->bounds(), "loadout status");
 
 		const float inset_limit = std::max(0.0f,
 			std::min(this->menu_style().icon_padding.x, this->menu_style().icon_padding.y));
@@ -423,6 +438,7 @@ void MainMenuWeaponSelect::check_paper_geometry() const
 		row = RectangleF::union_of(row, tile);
 		row = RectangleF::union_of(row, widgets->weapon_name->bounds());
 		row = RectangleF::union_of(row, widgets->weapon_description->bounds());
+		row = RectangleF::union_of(row, widgets->status->bounds());
 		if (row.y < previous_bottom)
 		{
 			throw std::runtime_error("main_menu.weapon_select.spacing: Weapon Select rows must follow the heading without overlap.");

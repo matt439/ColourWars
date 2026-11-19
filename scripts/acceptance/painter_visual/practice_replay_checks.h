@@ -10,6 +10,10 @@ namespace practice_replay_acceptance
     struct TapeTag { using Type = RoundTape GameLevel::*; friend Type member(TapeTag); };
     struct SettingsTag { using Type = MatchSetup GameLevel::*; friend Type member(SettingsTag); };
     struct StartTag { using Type = MatchStart GameLevel::*; friend Type member(StartTag); };
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+    struct LevelTag { using Type = std::unique_ptr<Level> GameLevel::*; friend Type member(LevelTag); };
+    template struct Access<LevelTag, &GameLevel::level_>;
+#endif
     struct BuildTag { using Type = void (GameLevel::*)(); friend Type member(BuildTag); };
     struct EndMenuTag { using Type = void (GameLevel::*)(); friend Type member(EndMenuTag); };
     struct StepReplayTag { using Type = void (GameLevel::*)(); friend Type member(StepReplayTag); };
@@ -117,9 +121,14 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         ~Cleanup()
         {
             stack.clear();
-            for (Key key : { Key::a, Key::d, Key::space, Key::escape, Key::enter, Key::up, Key::down })
+            for (Key key : { Key::a, Key::d, Key::space, Key::escape, Key::enter, Key::up, Key::down, Key::left, Key::right })
             { app.keyboard()->on_key_up(key); }
             app.mouse()->on_button_up(MouseButton::left);
+            app.mouse()->on_button_up(MouseButton::right);
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+            painter_scripted_pads::states = {};
+            poll_gamepads(app);
+#endif
             app.keyboard()->poll(); app.keyboard()->poll(); app.mouse()->poll(); app.mouse()->poll();
             stack.notify_activation(active); app.keyboard()->set_focused(keyboard); app.mouse()->set_focused(mouse);
         }
@@ -132,7 +141,7 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto note = [&](const char* name, const GameLevel& game, int reproduced = 0)
     { csv << name << ',' << game.level().practice() << ',' << tape(game).steps() << ',' << gaps(game) << ',' << reproduced << '\n'; };
     const auto tick = [&](float elapsed = dt)
-    { app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); ++updates; };
+    { poll_gamepads(app); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); ++updates; };
     const auto tap = [&](Key key)
     { app.keyboard()->on_key_down(key); tick(0.0f); app.keyboard()->on_key_up(key); tick(0.0f); };
     const auto push = [&](const MatchSetup& plan, MatchStart start)
@@ -148,7 +157,11 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         require(stack.depth() == 2 && game.level().state() == LevelState::active, "Actual GameLevel did not enter play");
     };
     const auto pause = [&]
-    { tap(Key::escape); require(stack.depth() == 3, "Actual practice/replay fixture failed to open Pause"); };
+    {
+        tap(Key::escape);
+        require(stack.depth() == 3, "Actual practice/replay fixture failed to open Pause");
+        tick(0.0f);
+    };
     const auto resume = [&](GameLevel& game)
     {
         tap(Key::enter); require(stack.depth() == 2 && game.resume_remaining() > 0.0f, "Actual Resume omitted count-in");
@@ -163,7 +176,9 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     stack.notify_activation(false); stack.notify_activation(true);
     require(game->resume_remaining() > 0.0f, "Practice focus return omitted count-in");
     tick(game->resume_remaining() + 1.0f); empty(*game); note("practice-pause-focus-resume", *game);
-    pause(); tap(Key::down); tap(Key::down); tap(Key::enter); tick(0.0f); tap(Key::up); tap(Key::enter);
+    pause(); tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::enter);
+    require(stack.depth() == 3, "Practice Restart did not open its confirmation");
+    tick(0.0f); tap(Key::up); tap(Key::enter);
     require(stack.depth() == 2 && game->level().state() == LevelState::start_countdown,
         "Actual practice Restart did not rebuild the match");
     live(*game);
@@ -195,9 +210,98 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
     note("independent-debug-recorder", *game);
 #endif
 
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+    const std::vector<LevelStation> stations = levels.get("movement_course")->stations();
+    const auto station = std::find_if(stations.begin(), stations.end(),
+        [](const LevelStation& point) { return point.name == "sub"; });
+    require(station != stations.end(), "The actual course has no sub station");
+    for (const bool scripted_pad : { false, true })
+    {
+        GamepadState& pad = painter_scripted_pads::states[0];
+        pad.connected = scripted_pad;
+        tick(0.0f); tick(0.0f);
+        MatchSetup setup = settings("movement_course");
+        setup.begin_input_claims(scripted_pad ? 0 : input_slots::keyboard_and_mouse);
+        setup.set_player_weapon(0, WeaponType::mister);
+        game = push(setup, MatchStart::menu);
+        live(*game);
+        Level& level = *(game->*member(LevelTag{}));
+        require(level.place_player(level.participant_for_view(0), station->position), "Could not enter the sub station");
+        for (int settle = 0; settle < 10; ++settle) { tick(); }
+        const Vector2F stood = game->level().player(0).rectangle().position();
+        const auto act = [&](Key key, GamepadButton button)
+        {
+            if (scripted_pad)
+            {
+                pad.buttons = gamepad_button_bit(button); tick(0.0f);
+                pad.buttons = 0; tick(0.0f);
+            }
+            else { tap(key); }
+        };
+        const auto open_choice = [&]
+        {
+            act(Key::escape, GamepadButton::start);
+            require(stack.depth() == 3, "Owning device did not open practice Pause");
+            tick(0.0f); // Let the new page read neutral directions before navigating.
+            act(Key::down, GamepadButton::dpad_down);
+            act(Key::down, GamepadButton::dpad_down);
+        };
+        const auto verify_loadout = [&](SubType sub)
+        {
+            const Player& player = game->level().player(0);
+            const int lesson = game->level().active_lesson();
+            require(game->level().state() == LevelState::active && lesson >= 0 &&
+                game->level().lesson(lesson).station == "sub" &&
+                (player.rectangle().position() - stood).length_squared() < 0.25f &&
+                player.primary_weapon().type() == WeaponType::mister && player.sub_weapon() != nullptr &&
+                player.sub_weapon()->type() == sub, "Practice Pause lost the chosen sub, main tool or living player's place");
+            empty(*game);
+        };
+        const auto verify_resume = [&](const char* action)
+        {
+            require(stack.depth() == 2 && game->resume_remaining() > 0.0f,
+                std::string(action) + " skipped regular Resume for " + (scripted_pad ? "scripted pad" : "keyboard"));
+            tick(game->resume_remaining() + 1.0f); tick();
+            verify_loadout(SubType::grenade);
+        };
+        open_choice(); act(Key::left, GamepadButton::dpad_left); act(Key::escape, GamepadButton::b);
+        verify_resume("Back");
+        open_choice(); act(Key::right, GamepadButton::dpad_right);
+        act(Key::up, GamepadButton::dpad_up); act(Key::up, GamepadButton::dpad_up);
+        act(Key::enter, GamepadButton::a); verify_resume("Resume");
+        for (const SubType sub : { SubType::sprinkler, SubType::wall, SubType::grenade })
+        {
+            open_choice(); act(Key::right, GamepadButton::dpad_right); act(Key::enter, GamepadButton::a);
+            require(stack.depth() == 2 && game->resume_remaining() == 0.0f,
+                "Confirming a sub choice did not rebuild directly into play");
+            live(*game); tick(); verify_loadout(sub);
+            const float full = game->level().player(0).weapon_ammo();
+            if (scripted_pad)
+            {
+                pad.right_stick = Vector2F::direction_right;
+                pad.buttons = gamepad_button_bit(GamepadButton::right_shoulder);
+            }
+            else
+            {
+                app.mouse()->on_move({ app.resolution_manager()->resolution_ivec().x - 1, 370 });
+                app.mouse()->on_button_down(MouseButton::right);
+            }
+            tick();
+            const float spent = full - game->level().player(0).weapon_ammo();
+            pad.right_stick = Vector2F::zero; pad.buttons = 0;
+            app.mouse()->on_button_up(MouseButton::right); tick(0.0f);
+            require(std::abs(spent - tuning.sub(sub).cost) < 0.5f,
+                "Ordinary Sub action from the station did not spend the chosen sub's reserve cost");
+        }
+        note(scripted_pad ? "practice-subs-scripted-pad" : "practice-subs-keyboard-mouse", *game);
+        std::cout << "PASS practice Pause " << (scripted_pad ? "scripted pad" : "keyboard/mouse") <<
+            ": Back, Resume, three changes at the sub station and ordinary reserve costs\n";
+        pad = {};
+    }
+#endif
+
     // Real timed GameLevels: ordinary menu solo, developer timed course, and a
-    // human-versus-shipping-bot match. All use the normal physical backend;
-    // only the keyboard/mouse host is claimed, so no pad is fabricated.
+    // human-versus-shipping-bot match. Only the keyboard/mouse host is claimed.
     for (int which = 0; which < 3; ++which)
     {
         const char* name = which == 0 ? "timed-menu-solo" : which == 1 ? "timed-developer-course" : "timed-multiplayer";
@@ -213,7 +317,19 @@ void practice_replay_checks(Application& app, Registry<LevelLoadedInfo>& levels,
         bool paused = false;
         for (int step = 0; step < 2400 && game->level().state() != LevelState::zoom_out; ++step)
         {
-            if (tape(*game).steps() == 60 && !paused) { pause(); resume(*game); paused = true; }
+            if (tape(*game).steps() == 60 && !paused)
+            {
+                pause();
+                // D moves in play and is also Right on menus. Release it
+                // while Pause owns input so its direction gate can rearm.
+                app.keyboard()->on_key_up(Key::d); tick(0.0f);
+                tap(Key::down); tap(Key::enter);
+                require(stack.depth() == 3, "Timed Pause's second row applied a practice loadout");
+                tap(Key::escape);
+                require(stack.depth() == 3, "Timed Pause's second row did not open Restart confirmation");
+                resume(*game); paused = true;
+                app.keyboard()->on_key_down(Key::d);
+            }
             const int before = tape(*game).steps(); tick();
             if (tape(*game).steps() > before) { seen.push_back(moment(game->level())); }
         }

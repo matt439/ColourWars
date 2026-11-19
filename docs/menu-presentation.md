@@ -51,25 +51,19 @@ same shape. `docs/audio-inventory.md` owns which wave each name is.
 ## Home return focus
 
 Home selects its initial focus once after registering its actions. How to play,
-Options and Credits return to their own Home actions. Title, both Mode Select
-return paths and the developer page factory use Play. Each child handles its
-Back row and B/Escape alike.
+Play a bot, Options and Credits return to their own Home actions. Title, both
+Mode Select return paths and the developer page factory use Play. Each child
+handles its Back row and B/Escape alike.
 
 ### Return focus to Play a bot (`ROAD#45`)
 
-**OPEN, LOW, S (2026-11-20).** Both exits from `MainMenuQuickMatch` request
-plain Home. After a player backs out of the preset review, the next Confirm opens ordinary Mode
-Select. The [first-match probe](../scripts/acceptance/painter_visual/first_match_flow_checks.h)
-checks that cancellation leaves the save alone, then presses Down and Right
-to find Play a bot again.
-
-Start with `-HomeReturnFocusOnly`. Exercise both Back paths with keyboard and
-scripted pad, check the highlighted Home action, then press Confirm once to
-reopen the review. Give Play a bot its own `MainMenuHome::InitialFocus` and
-use it on both exits. Adjust the first-match preflight to use the restored
-focus and retain its save and control checks. Fresh Title and ordinary Mode
-Back must still select Play. Update the route graph in `main_menu_route.cpp`
-to show the preset review, its Join route and its Customise route.
+Both exits from the preset review restore focus to **Play a bot**, so the next
+Confirm reopens the review. `-HomeReturnFocusOnly` checks the highlighted
+Home action and one-Confirm reopen after both Back paths using keyboard and
+scripted pad. It also checks that Title entry and ordinary Mode Back focus
+**Play**. The [first-match rehearsal](../scripts/acceptance/painter_visual/first_match_flow_checks.h)
+reopens the review from the restored focus and checks that cancellation
+preserves the saved setup and controls.
 
 ## Home Exit confirmation
 
@@ -296,27 +290,24 @@ description column. The rule is `LoadoutChoice`
 
 ### Show readiness on each setup row (`ROAD#46`)
 
-**OPEN, LOW, M (2026-11-20).** On full Play the host confirms a team, tool
-and sub for each bot as well as for their own seat. The Team page shows readiness through the selected icon's
-tint. Weapon Select changes its sub line while choosing a sub, then switches
-back to the ordinary line and marks the ready tile by tint. The host underline
-identifies the row the host controls. The first-match rehearsal proposed a
-text label so the host can see who still needs to choose or confirm.
-[Rehearsal findings](review/2026-11-15-first-match-flow.md#next-meaningful-ux-bet).
+**Built 2026-11-20.** Team Select shows **Choose a team**, **Confirm team** or
+**Ready** beside each row's choice icons. Every Team card reserves space for
+all three states, so its paper stays put when a player confirms, backs up or
+shuffles. Weapon Select shows **Choose tool**, **Choose sub** or **Ready**
+below the active description. Its original Boost and Sub line still names the
+sub and shows the selection arrows during that step.
 
-Start by capturing a human and a host-controlled bot in different states on
-Team and Weapon Select. Give each row a short authored status in
-`presentation.json` derived from its selected team and `ConfirmationState`,
-or from `LoadoutChoice::Step`. Distinguish needing a team, a team awaiting
-confirmation, choosing a tool, choosing a sub and ready. Reuse the existing
-sub-selection wording and preserve space for device/profile, Boost and sub.
+`menu_text.setup` in [presentation.json](../game/content/presentation.json)
+provides the five labels. Startup validates the status glyphs, row spacing and
+paper bounds. Team labels follow the selected team and its confirmation, while
+Weapon labels follow `LoadoutChoice::Step`. The host underline marks the host's
+current row and guest pads control their own.
 
-Extend `-TeamSetupOnly` to check the visible states across 2–4 rows, including
-shuffle clearing readiness and Back undoing one choice. Exercise the bot
-route with `-FirstMatchFlowOnly` and verify that the host's input changes the
-selected row and a guest still controls their own. Check English and `qps-ploc`
-against row and paper bounds. The same final confirmation must still advance
-to the next setup page.
+`-TeamSetupOnly` checks the mixed states across two to four rows, including
+shuffle, Back and final confirmation. `-FirstMatchFlowOnly` checks host and
+sparse guest input with a bot between them, in English and `qps-ploc`.
+`-TeamPaperOnly`, `-TeamFocusOnly` and `-WeaponPaperOnly` compare the rendered
+labels and paper geometry against independent references.
 
 ## Shared paper focus and press motion
 
@@ -921,9 +912,10 @@ paper rectangle: `pause_menu.box_size`, centered in the full 1920 by 1080 design
 area. The row-height rule is
 `measured_height + 2 * pause_menu.art.focus_padding.y <= pause_menu.layout.spacing.y`.
 Rows begin at `pause_menu.layout.position` and use its authored spacing;
-practice Pause's five rows use `pause_menu.practice_row_spacing` instead
-(optional; without it, 0.8 of `layout.spacing.y`), and are checked against
-the paper only.
+practice Pause's six rows start half a step higher and use
+`pause_menu.practice_row_spacing` (optional; without it, 0.8 of
+`layout.spacing.y`). The Tool and Sub labels and every action's focus card
+fit inside the paper face. The status sits above the first action.
 Equality is accepted; no item-text shadow or fitting scale is added.
 
 Each Pause page uses its captured `MenuText` and resolves the item font when it
