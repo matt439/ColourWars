@@ -13,13 +13,11 @@ results go in their owners, and `git log` is the changelog.
 added since [the first release](docs/releasing.md#first-release-v010), then
 improve bot setup and let solo players compare sub weapons at the workshop.
 
-1. `REL#9` — Apply the existing version rule to the new arena content. Verify
-   the `0.2.0` stamp in the local ZIP and its executable. [Release scope](docs/releasing.md#apply-the-next-minor-version-rel9).
-2. `ROAD#45` — Return Home focus to **Play a bot** when the player cancels its
+1. `ROAD#45` — Return Home focus to **Play a bot** when the player cancels its
    review, so one Confirm opens it again. [Home focus](docs/menu-presentation.md#return-focus-to-play-a-bot-road45).
-3. `ROAD#46` — Show who still needs to choose or confirm a team, tool or sub
+2. `ROAD#46` — Show who still needs to choose or confirm a team, tool or sub
    during full setup. [Setup rows](docs/menu-presentation.md#show-readiness-on-each-setup-row-road46).
-4. `ROAD#48` — Let a solo player try all three subs on the same surface
+3. `ROAD#48` — Let a solo player try all three subs on the same surface
    without leaving for Weapon Select. [Practice pause](docs/polish-movement-course.md#try-each-sub-from-practice-pause-road48).
 
 **Author calls** (every `DECISION` row):
@@ -102,13 +100,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | `DBG#1` | DEFERRED | LOW | M | Resume only when a concrete field/caller is selected; fifty-eight colour paths are qualified. String/font edits and missing-key insertion need separate scopes. [Scope](docs/debug-console-record.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step; across rounds is done ([record](docs/debug-console-record.md#replays-across-rounds-dbg2)). |
 | `DBG#4` | DEFERRED | LOW | S | Typing in the live console blanks the whole keyboard seat; typed keys are play keys and the engine declined input capture (report 9), so any per-key gate is client policy. [Not done](docs/debug-console.md#not-done). |
-
-## Release preparation
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `REL#8` | OPEN | MED | M | Verify the installed notices and audio provenance in the extracted ZIP. Add fixtures that remove or alter individual files. [Package checks](docs/releasing.md#verify-packaged-notices-and-provenance-rel8). |
-| `REL#9` | OPEN | MED | S | Apply the next minor development version required by the arena content added after `v0.1.0`. [Version correction](docs/releasing.md#apply-the-next-minor-version-rel9). |
 
 ## Tooling, CI and docs
 
@@ -206,6 +197,7 @@ A new row for one of these gets its section back.
 | area | owner | a row returns with |
 |---|---|---|
 | Levels and the editor (`ED`) | [level-editor-record.md](docs/level-editor-record.md) | a new stage-authoring or editor workflow issue |
+| Release preparation (`REL`) | [releasing.md](docs/releasing.md) | a new packaging or release qualification item |
 | Code hygiene (`HYG`) | [code-hygiene.md](docs/code-hygiene.md#todo-audit-follow-ups-2026-11-12) | a new maintenance finding |
 | Audio replacement | [polish-plan.md §5](docs/polish-plan.md#5-replace-the-entire-audio-set) | a missing cue hook or a mix defect; `POL#23` was accepted and `ROAD#3` waived 2026-11-05 |
 | Game gaps (gap audit Class 1) | [docs/review/gap-audit.md](docs/review/gap-audit.md) (frozen) | a new finding; `ROAD#5`, `ROAD#7`, `ROAD#9`, `ROAD#10`, `GAP#4.2`, `GAP#5.1`, `GAP#L9` and `GAP#L11` were accepted or waived 2026-11-05 (no translation language chosen) |

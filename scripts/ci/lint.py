@@ -18,10 +18,14 @@ DOC_MEDIA = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".mp4"}
 def packaged_markdown(cwd=None):
     """Markdown installed by the Release rule must still exist when packaging."""
     root = Path(cwd) if cwd is not None else Path(__file__).resolve().parents[2]
+    documents = (root / "cmake/packaged_documents.cmake").read_text(encoding="utf-8")
+    mapped = set(re.findall(r'^\s*colourwars_packaged_document\(\s*"([^"\n]+\.md)"',
+                            documents, flags=re.MULTILINE))
     rule = (root / "cmake/release_package.cmake").read_text(encoding="utf-8")
     installs = re.findall(r"\binstall\(\s*FILES\b(.*?)\)", rule, flags=re.DOTALL | re.IGNORECASE)
-    return {path for command in installs
-            for path in re.findall(r'"\$\{PROJECT_SOURCE_DIR\}/([^"\n]+\.md)"', command)}
+    direct = {path for command in installs
+              for path in re.findall(r'"\$\{PROJECT_SOURCE_DIR\}/([^"\n]+\.md)"', command)}
+    return mapped | direct
 
 
 def git(*args, cwd=None):

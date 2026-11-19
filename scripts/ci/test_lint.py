@@ -26,8 +26,9 @@ class ChangeChecks(unittest.TestCase):
         }.items():
             self.git("config", key, value)
         self.write("seed", "Initial repository.\n")
-        self.write("cmake/release_package.cmake",
-                   (Path(__file__).resolve().parents[2] / "cmake/release_package.cmake").read_text(encoding="utf-8"))
+        root = Path(__file__).resolve().parents[2]
+        for rule in ("cmake/release_package.cmake", "cmake/packaged_documents.cmake"):
+            self.write(rule, (root / rule).read_text(encoding="utf-8"))
         self.initial = self.commit()
 
     def git(self, *args: str) -> str:
@@ -123,18 +124,27 @@ class ChangeChecks(unittest.TestCase):
                 self.assertEqual(self.push(before, self.commit()), docs_only)
 
     def test_deleting_packaged_markdown_requires_full_ci(self) -> None:
-        for path in ("game/audio/paint_exe/PROVENANCE.md",):
-            with self.subTest(path=path):
-                self.write(path)
-                before = self.commit()
-                self.git("rm", path)
-                self.assertFalse(self.push(before, self.commit()))
+        path = "game/audio/paint_exe/PROVENANCE.md"
+        self.assertIn(path, packaged_markdown())
+        self.write(path)
+        before = self.commit()
+        self.git("rm", path)
+        self.assertFalse(self.push(before, self.commit()))
 
     def test_new_packaged_markdown_is_derived_from_install_rule(self) -> None:
         rule = self.repo / "cmake/release_package.cmake"
         rule.write_text(rule.read_text(encoding="utf-8") +
                         '\ninstall(FILES "${PROJECT_SOURCE_DIR}/docs/new-license.md" DESTINATION licenses)\n',
                         encoding="utf-8")
+        self.assertIn("docs/new-license.md", packaged_markdown(self.repo))
+        self.write("docs/new-license.md")
+        before = self.commit()
+        self.git("rm", "docs/new-license.md")
+        self.assertFalse(self.push(before, self.commit()))
+
+    def test_new_packaged_markdown_is_derived_from_document_mapping(self) -> None:
+        with (self.repo / "cmake/packaged_documents.cmake").open("a", encoding="utf-8") as mapping:
+            mapping.write('\ncolourwars_packaged_document("docs/new-license.md" "licenses/New.txt")\n')
         self.assertIn("docs/new-license.md", packaged_markdown(self.repo))
         self.write("docs/new-license.md")
         before = self.commit()

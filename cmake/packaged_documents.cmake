@@ -1,0 +1,21 @@
+# Shared by the Release installer and the extracted-package verifier. The
+# first argument is a source path or vcpkg config package name, the second
+# is the complete installed path.
+colourwars_packaged_document("LICENSE" "LICENSE")
+colourwars_packaged_document("NOTICE" "NOTICE")
+colourwars_packaged_document("docs/HOW-TO-PLAY.txt" "HOW-TO-PLAY.txt")
+colourwars_packaged_document("game/audio/paint_exe/PROVENANCE.md" "licenses/paint_exe/PROVENANCE.md")
+colourwars_packaged_document("game/audio/paint_exe/sources.json" "licenses/paint_exe/sources.json")
+colourwars_packaged_document("game/audio/paint_exe/cues.json" "licenses/paint_exe/cues.json")
+colourwars_packaged_document("game/audio/paint_exe/acceptance.json" "licenses/paint_exe/acceptance.json")
+colourwars_packaged_document("game/audio/paint_exe/interface/licenses/CC0-1.0.txt" "licenses/paint_exe/CC0-1.0.txt")
+colourwars_packaged_document("scripts/audio/runtime-bank.json" "licenses/paint_exe/runtime-bank.json")
+colourwars_packaged_document("external/labrador/LICENSE" "licenses/Labrador-LICENSE.txt")
+colourwars_packaged_document("external/labrador/NOTICE" "licenses/Labrador-NOTICE.txt")
+colourwars_packaged_document("game/art/sources/fonts/licenses/Lato-OFL.txt" "licenses/fonts/Lato-OFL.txt")
+colourwars_packaged_document("game/art/sources/fonts/licenses/BowlbyOne-OFL.txt" "licenses/fonts/BowlbyOne-OFL.txt")
+colourwars_packaged_document("game/art/sources/fonts/licenses/CourierPrime-OFL.txt" "licenses/fonts/CourierPrime-OFL.txt")
+colourwars_packaged_document("external/rapidjson/license.txt" "licenses/rapidjson-LICENSE.txt")
+colourwars_packaged_vcpkg_notice(directxtk "licenses/DirectXTK-LICENSE.txt")
+colourwars_packaged_vcpkg_notice(directxmath "licenses/DirectXMath-LICENSE.txt")
+colourwars_packaged_vcpkg_notice(xaudio2redist "licenses/XAudio2Redist-LICENSE.txt")

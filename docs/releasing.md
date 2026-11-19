@@ -2,9 +2,9 @@
 
 The Release ZIP is the player download. Its version comes from
 `project(VERSION)` in [CMakeLists.txt](../CMakeLists.txt). The first release,
-`v0.1.0`, is [published](#first-release-v010). The development build still
-identifies itself as `0.1.1`. The [version correction](#apply-the-next-minor-version-rel9)
-tracks the content changes since that tag. [The development guide](development.md#release-zip) describes
+`v0.1.0`, is [published](#first-release-v010). The development build identifies
+itself as `0.2.0` following the [content changes since that tag](#apply-the-next-minor-version-rel9).
+[The development guide](development.md#release-zip) describes
 what it contains. [AGENTS.md](../AGENTS.md#commits-and-pull-requests) owns the
 branch, required `gate` and publication rules.
 
@@ -103,10 +103,10 @@ moves the parent, relative to the caller's location), it:
 1. builds and packages `x64-release` through `scripts/build.ps1 -Package`,
    which loads the Visual Studio C++ environment and usable vcpkg itself, and
    keeps the build log;
-2. inspects the ZIP with `scripts/check-release-package.ps1`: required
-   runtimes, help, licences, the accepted bank's hash, no PDB and no
-   developer-console classes, and the executable naming its symbols as plain
-   `ColourWars.pdb`;
+2. inspects the ZIP with `scripts/check-release-package.ps1`. It checks required
+   runtimes, reviewed content, help, licences, audio provenance and the
+   accepted bank's hash. It rejects PDBs and developer-console classes and
+   checks that the executable names its symbols as plain `ColourWars.pdb`.
 3. checks that the packaged `build-info.txt` names this commit, the engine
    pin, the version and `Release`;
 4. starts the extracted game with `scripts/check-startup.ps1 -RequireAudio
@@ -376,37 +376,31 @@ describes it.
 
 ### Verify packaged notices and provenance (`REL#8`)
 
-**Open, 2026-11-20.** The packager installs the game's `LICENSE` and `NOTICE`,
-dependency and font licences, and the paint bank's provenance. The ZIP check
-compares the player guide and runtime assets with source and checks that six
-files under `licenses/` exist. Removing `NOTICE` or
-`licenses/paint_exe/sources.json`, or changing the contents of a font licence,
-would escape those checks. See the [install rules](../cmake/release_package.cmake)
-and [ZIP check](../scripts/check-release-package.ps1).
+The [install rules](../cmake/release_package.cmake) and the
+[extracted-asset check](../cmake/check_packaged_assets.cmake) share the
+[source and installed paths](../cmake/packaged_documents.cmake) for the player
+guide, licences, notices and audio provenance. The check compares the
+repository-owned files byte-for-byte, including the pinned Labrador and
+vendored RapidJSON notices. It requires the three vcpkg notices at their
+installed paths and can run independently of a configured build.
 
-Share the repository-owned source paths and installed names between the
-install rules and the [extracted-asset check](../cmake/check_packaged_assets.cmake).
-Compare those files byte-for-byte, including the pinned Labrador and vendored
-RapidJSON notices. Require the three vcpkg dependency notices at their installed
-paths so an extracted package can also be checked without a configured build.
+The [package fixture](../scripts/ci/test_packaged_assets.py) verifies a complete
+asset and documentation set and expects diagnostics naming the installed files
+when the root `NOTICE`, the audio source inventory or any vcpkg notice is
+missing, or when a font licence differs.
 
-Extend the [package fixture](../scripts/ci/test_packaged_assets.py). A complete
-fixture must pass. Remove the root `NOTICE`, remove the audio source inventory,
-alter a font licence, and omit a vcpkg notice in separate cases. Each must fail
-with the affected installed path. Run the ZIP check on a local Release package
-after the installer and verifier share the mapping.
+Run the [ZIP check](../scripts/check-release-package.ps1) after packaging with
+`x64-release` to verify the extracted files against that checkout.
 
 ### Apply the next minor version (`REL#9`)
 
-**Open, 2026-11-20.** After `v0.1.0`, ColourWars added new backdrops for
-the four Random arenas and a saved CRT preference. The
-[versioning rule](#versioning-rule-rel6) calls for the next minor as soon as a
-content, gameplay or save-format change lands. [CMakeLists.txt](../CMakeLists.txt)
-still declares `0.1.1`.
+After `v0.1.0`, ColourWars added new backdrops for the four Random arenas and a
+saved CRT preference. The [versioning rule](#versioning-rule-rel6) calls for the
+next minor as soon as a content, gameplay or save-format change lands.
+[CMakeLists.txt](../CMakeLists.txt) declares `0.2.0` for development. Tagging and
+publishing follow the [publication procedure](#publish-only-after-the-author-authorizes-publication).
 
-Set the development version to `0.2.0` in CMake and update the current-version
-references in this guide and TODO.md. Build a local Release package and check
-that its ZIP name and `build-info.txt` give `0.2.0`. Run the
-[startup check](../scripts/check-startup.ps1) on the extracted executable to
-verify its Windows version resource. Tagging and publishing remain separate
-author decisions under the [publication procedure](#publish-only-after-the-author-authorizes-publication).
+On 2026-11-20 the local Release build produced `ColourWars-0.2.0-windows-x64.zip`.
+The extracted `build-info.txt` gave `0.2.0` and the
+[startup check](../scripts/check-startup.ps1) confirmed the executable's Windows
+version resource.

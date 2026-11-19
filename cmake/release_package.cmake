@@ -42,35 +42,23 @@ foreach(asset IN LISTS COLOURWARS_RUNTIME_ASSETS)
     install(FILES "${PROJECT_SOURCE_DIR}/game/content/${asset}"
         DESTINATION "${directory}")
 endforeach()
-install(FILES "${PROJECT_BINARY_DIR}/generated/build-info.txt"
-    "${PROJECT_SOURCE_DIR}/LICENSE" "${PROJECT_SOURCE_DIR}/NOTICE"
-    "${PROJECT_SOURCE_DIR}/docs/HOW-TO-PLAY.txt" DESTINATION .)
-install(FILES
-    "${PROJECT_SOURCE_DIR}/game/audio/paint_exe/PROVENANCE.md"
-    "${PROJECT_SOURCE_DIR}/game/audio/paint_exe/sources.json"
-    "${PROJECT_SOURCE_DIR}/game/audio/paint_exe/cues.json"
-    "${PROJECT_SOURCE_DIR}/game/audio/paint_exe/acceptance.json"
-    "${PROJECT_SOURCE_DIR}/game/audio/paint_exe/interface/licenses/CC0-1.0.txt"
-    DESTINATION licenses/paint_exe)
-install(FILES "${PROJECT_SOURCE_DIR}/scripts/audio/runtime-bank.json"
-    DESTINATION licenses/paint_exe)
-install(FILES "${PROJECT_SOURCE_DIR}/external/labrador/LICENSE"
-    DESTINATION licenses RENAME Labrador-LICENSE.txt)
-install(FILES "${PROJECT_SOURCE_DIR}/external/labrador/NOTICE"
-    DESTINATION licenses RENAME Labrador-NOTICE.txt)
-install(FILES
-    "${PROJECT_SOURCE_DIR}/game/art/sources/fonts/licenses/Lato-OFL.txt"
-    "${PROJECT_SOURCE_DIR}/game/art/sources/fonts/licenses/BowlbyOne-OFL.txt"
-    "${PROJECT_SOURCE_DIR}/game/art/sources/fonts/licenses/CourierPrime-OFL.txt"
-    DESTINATION licenses/fonts)
-install(FILES "${PROJECT_SOURCE_DIR}/external/rapidjson/license.txt"
-    DESTINATION licenses RENAME rapidjson-LICENSE.txt)
-install(FILES "${directxtk_DIR}/copyright"
-    DESTINATION licenses RENAME DirectXTK-LICENSE.txt)
-install(FILES "${directxmath_DIR}/copyright"
-    DESTINATION licenses RENAME DirectXMath-LICENSE.txt)
-install(FILES "${xaudio2redist_DIR}/copyright"
-    DESTINATION licenses RENAME XAudio2Redist-LICENSE.txt)
+install(FILES "${PROJECT_BINARY_DIR}/generated/build-info.txt" DESTINATION .)
+
+function(colourwars_install_document source installed)
+    cmake_path(GET installed PARENT_PATH directory)
+    cmake_path(GET installed FILENAME filename)
+    if(directory STREQUAL "")
+        set(directory ".")
+    endif()
+    install(FILES "${source}" DESTINATION "${directory}" RENAME "${filename}")
+endfunction()
+function(colourwars_packaged_document source installed)
+    colourwars_install_document("${PROJECT_SOURCE_DIR}/${source}" "${installed}")
+endfunction()
+function(colourwars_packaged_vcpkg_notice package installed)
+    colourwars_install_document("${${package}_DIR}/copyright" "${installed}")
+endfunction()
+include("${CMAKE_CURRENT_LIST_DIR}/packaged_documents.cmake")
 
 set(CPACK_GENERATOR ZIP)
 set(CPACK_PACKAGE_NAME ColourWars)
