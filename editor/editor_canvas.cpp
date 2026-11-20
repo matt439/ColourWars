@@ -121,12 +121,21 @@ namespace colourwars_editor
 
     void Editor::draw_item(HDC dc, const DrawItem& item)
     {
-        const bool selected = selection_ && same_entry(*selection_, item.entry);
-        const Rect rectangle = selected && dragging_ ? drag_preview_ : item.rectangle;
+        const bool selected = is_selected(item.entry);
+        Rect rectangle = item.rectangle;
+        if (selected && dragging_)
+        {
+            if (resizing_) rectangle = drag_preview_;
+            else
+            {
+                rectangle.x += drag_preview_.x - drag_original_.x;
+                rectangle.y += drag_preview_.y - drag_original_.y;
+            }
+        }
         auto motion = item.motion;
         if (motion && selected && dragging_)
         {
-            try { motion = document_.motion_guide(item.entry, drag_preview_); }
+            try { motion = document_.motion_guide(item.entry, rectangle); }
             catch (const std::exception&) { motion.reset(); }
         }
         if (motion)
@@ -150,7 +159,7 @@ namespace colourwars_editor
         {
             // Provisional drags can leave the bounded authoring range. Keep
             // the last valid outline; committed edits still fail atomically.
-            try { slab = document_.slab_guide(item.entry, drag_preview_); }
+            try { slab = document_.slab_guide(item.entry, rectangle); }
             catch (const std::exception&) {}
         }
         if (item.entry.kind == EntryKind::bounds)
@@ -280,7 +289,7 @@ namespace colourwars_editor
         {
             if (motion) { screen = screen_rect(motion->anchor); }
             outline(dc, screen, RGB(255, 255, 255), 2);
-            if (!is_marker(item.entry) && !slab)
+            if (group_.empty() && !is_marker(item.entry) && !slab)
                 fill(dc, RECT{screen.right - pixels(5), screen.bottom - pixels(5), screen.right + pixels(6), screen.bottom + pixels(6)}, RGB(255, 255, 255));
         }
     }
@@ -318,9 +327,9 @@ namespace colourwars_editor
             line(dc, a.x, a.y, b.x, b.y, RGB(87, 230, 204), 2);
         }
         std::optional<Rect> region;
-        if (selection_ && selection_->kind != EntryKind::level)
+        if (group_.empty() && selection_ && selection_->kind != EntryKind::level)
             region = dragging_ ? drag_preview_ : document_.rectangle(*selection_);
-        if (selection_ && !dragging_)
+        if (group_.empty() && selection_ && !dragging_)
         {
             for (const DrawItem& item : draw_items_)
                 if (same_entry(item.entry, *selection_) && item.motion) { region = item.motion->initial_pose; break; }
@@ -400,7 +409,7 @@ namespace colourwars_editor
             EntryKind::spawn_b, EntryKind::station})
             for (const DrawItem& item : draw_items_) if (item.entry.kind == kind) draw_item(dc, item);
         if (selection_)
-            for (const DrawItem& item : draw_items_) if (same_entry(item.entry, *selection_)) draw_item(dc, item);
+            for (const DrawItem& item : draw_items_) if (is_selected(item.entry)) draw_item(dc, item);
         if (show_blockout_) draw_blockout(dc);
         const std::wstring legend = L"GEOMETRY VIEW    " + std::to_wstring(static_cast<int>(std::round(zoom_ * 100.0)))
             + L"%    |    Grid " + std::to_wstring(static_cast<int>(spacing));
@@ -513,7 +522,9 @@ namespace colourwars_editor
         Rect rectangle = document_.rectangle(*selection_);
         const double step = (GetKeyState(VK_SHIFT) & 0x8000) ? 1.0 : static_cast<double>(snap_);
         rectangle.x += x * step; rectangle.y += y * step;
-        document_.set_rectangle(*selection_, rectangle); refresh(true);
+        if (group_.empty()) document_.set_rectangle(*selection_, rectangle);
+        else document_.move_group(group_, x * step, y * step);
+        refresh(true);
     }
 
     LRESULT Editor::canvas_message(UINT message_id, WPARAM wparam, LPARAM lparam)
@@ -544,6 +555,11 @@ namespace colourwars_editor
             if (!apply_pending()) return 0;
             SetFocus(canvas_);
             cancel_drag();
+            if ((wparam & (MK_CONTROL | MK_SHIFT)) == (MK_CONTROL | MK_SHIFT))
+            {
+                if (const auto found = hit(point)) toggle_member(*found);
+                return 0;
+            }
             if (wparam & MK_CONTROL)
             {
                 const auto candidates = hits(point);
@@ -560,7 +576,7 @@ namespace colourwars_editor
                 }
                 return 0;
             }
-            if (selection_ && selection_->kind != EntryKind::level && !is_marker(*selection_) &&
+            if (group_.empty() && selection_ && selection_->kind != EntryKind::level && !is_marker(*selection_) &&
                 !document_.slab_guide(*selection_))
             {
                 const RECT rectangle = screen_rect(document_.rectangle(*selection_));
@@ -581,7 +597,7 @@ namespace colourwars_editor
                 {
                     const std::optional<Entry> found = hit(point);
                     if (!found) return 0;
-                    select(*found);
+                    if (!is_selected(*found)) select(*found);
                 }
             }
             if (!selection_ || selection_->kind == EntryKind::level) return 0;
@@ -625,10 +641,15 @@ namespace colourwars_editor
                 const Rect result = drag_preview_; cancel_drag();
                 if (result.x != drag_original_.x || result.y != drag_original_.y ||
                     result.width != drag_original_.width || result.height != drag_original_.height)
-                { document_.set_rectangle(*selection_, result); refresh(true); }
+                {
+                    if (group_.empty()) document_.set_rectangle(*selection_, result);
+                    else document_.move_group(group_, result.x - drag_original_.x, result.y - drag_original_.y);
+                    refresh(true);
+                }
             }
             return 0;
         case WM_MBUTTONUP: if (panning_) cancel_drag(); return 0;
+        case WM_CANCELMODE: cancel_drag(); return 0;
         case WM_CAPTURECHANGED: dragging_ = false; panning_ = false; InvalidateRect(canvas_, nullptr, FALSE); return 0;
         case WM_MOUSEWHEEL:
         {

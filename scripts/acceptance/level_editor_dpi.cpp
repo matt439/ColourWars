@@ -84,6 +84,7 @@ namespace colourwars_editor
         static void check_empty_key_properties(Editor& editor, const std::filesystem::path& scratch);
         static void check_gestures(Editor& editor, const std::filesystem::path& scratch);
         static void check_button_chords(Editor& editor, const std::filesystem::path& scratch);
+        static void check_group_move(Editor& editor, const std::filesystem::path& scratch);
         static void check_overlap_selection(Editor& editor, const std::filesystem::path& scratch);
         static void check_align_origin(Editor& editor, const std::filesystem::path& scratch);
         static void check_ramp_hits(Editor& editor, const std::filesystem::path& scratch);
@@ -171,7 +172,7 @@ namespace colourwars_editor
             const std::wstring pending = window_text(editor.value_edit_);
             const std::wstring status = window_text(editor.status_);
             const std::wstring title = window_text(editor.window_);
-            const LRESULT object_selection = SendMessageW(editor.object_list_, LB_GETCURSEL, 0, 0);
+            const LRESULT object_selection = SendMessageW(editor.object_list_, LB_GETCARETINDEX, 0, 0);
 
             const auto unchanged = [&]
             {
@@ -182,7 +183,9 @@ namespace colourwars_editor
                     "DPI handling changed document, saved path, dirty state or history availability");
                 require(editor.selection_ && same_entry(*editor.selection_, spawn) && editor.property_index_ == row &&
                     ListView_GetNextItem(editor.property_list_, -1, LVNI_SELECTED) == row &&
-                    SendMessageW(editor.object_list_, LB_GETCURSEL, 0, 0) == object_selection,
+                    SendMessageW(editor.object_list_, LB_GETCARETINDEX, 0, 0) == object_selection &&
+                    SendMessageW(editor.object_list_, LB_GETSELCOUNT, 0, 0) == 1 &&
+                    SendMessageW(editor.object_list_, LB_GETSEL, object_selection, 0) == 1,
                     "DPI handling changed the selected object or property row");
                 require(editor.pending() && window_text(editor.value_edit_) == pending && start == 3 && end == 9 &&
                     window_text(editor.status_) == status && window_text(editor.window_) == title,
@@ -254,6 +257,7 @@ namespace colourwars_editor
 #include "scripts/acceptance/level_editor_dpi/empty_key_checks.h"
 #include "scripts/acceptance/level_editor_dpi/metadata_checks.h"
 #include "scripts/acceptance/level_editor_dpi/gesture_checks.h"
+#include "scripts/acceptance/level_editor_dpi/group_move_checks.h"
 #include "scripts/acceptance/level_editor_dpi/align_origin_checks.h"
 #include "scripts/acceptance/level_editor_dpi/overlap_selection_checks.h"
 #include "scripts/acceptance/level_editor_dpi/button_chord_checks.h"

@@ -113,7 +113,7 @@ namespace colourwars_editor
                 const std::string document = editor.document_.serialize();
                 const auto history = native_history(editor.document_);
                 const auto selection = editor.selection_;
-                const LRESULT object_row = SendMessageW(editor.object_list_, LB_GETCURSEL, 0, 0);
+                const LRESULT object_row = SendMessageW(editor.object_list_, LB_GETCARETINDEX, 0, 0);
                 const std::wstring status = window_text(editor.status_), title = window_text(editor.window_);
                 const UINT dpi = editor.dpi_; const HFONT font = editor.font_;
                 RECT rectangle{}; require(GetWindowRect(editor.window_, &rectangle), "Could not retain the pending caller rectangle");
@@ -137,7 +137,9 @@ namespace colourwars_editor
                     case Action::save_as: SendMessageW(editor.window_, WM_COMMAND, file_save_as, 0); break;
                     case Action::my_stages: SendMessageW(editor.window_, WM_COMMAND, file_save_user_stage, 0); break;
                     case Action::select:
-                        SendMessageW(editor.object_list_, LB_SETCURSEL, static_cast<WPARAM>(other_row), 0);
+                        SendMessageW(editor.object_list_, LB_SETSEL, FALSE, -1);
+                        SendMessageW(editor.object_list_, LB_SETSEL, TRUE, other_row);
+                        SendMessageW(editor.object_list_, LB_SETCARETINDEX, static_cast<WPARAM>(other_row), 0);
                         SendMessageW(editor.window_, WM_COMMAND, MAKEWPARAM(objects_list, LBN_SELCHANGE), reinterpret_cast<LPARAM>(editor.object_list_)); break;
                     case Action::navigate: SendMessageW(editor.canvas_, WM_KEYDOWN, VK_HOME, 0); break;
                     default: SendMessageW(editor.window_, WM_CLOSE, 0, 0); break;
@@ -166,7 +168,9 @@ namespace colourwars_editor
                 const bool unchanged_document = editor.document_.serialize() == document && editor.document_.path() == stage && editor.document_.dirty();
                 const bool unchanged_history = editor.document_.can_undo() && editor.document_.can_redo() && native_history(editor.document_) == history;
                 const bool unchanged_selection = editor.selection_ && selection && same_entry(*editor.selection_, *selection) &&
-                    SendMessageW(editor.object_list_, LB_GETCURSEL, 0, 0) == object_row;
+                    SendMessageW(editor.object_list_, LB_GETCARETINDEX, 0, 0) == object_row &&
+                    SendMessageW(editor.object_list_, LB_GETSELCOUNT, 0, 0) == 1 &&
+                    SendMessageW(editor.object_list_, LB_GETSEL, object_row, 0) == 1;
                 const bool unchanged_property = editor.property_index_ == row && ListView_GetNextItem(editor.property_list_, -1, LVNI_SELECTED) == row &&
                     window_text(editor.status_) == status && window_text(editor.window_) == title;
                 const bool unchanged_pending = editor.pending() && window_text(editor.value_edit_) == L"true" && start == 1 && end == 3;

@@ -157,7 +157,7 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `REV#66` | UNSCOPED | LOW | L | Editor has no multi-select, recent files, drag-and-drop open or autosave. Group move is the one with authoring value; a textured canvas contradicts the schematic scope. Scope with the next editor slice. [Record](docs/review/2026-11-10-project-review.md#editor-lacks-multi-select-and-recent-files-rev66). |
+| `REV#66` | UNSCOPED | LOW | L | [Editor group movement](docs/level-editor.md#editing) is built. Recent files, drag-and-drop open and autosave remain unscoped conveniences from the [editor review](docs/review/2026-11-10-project-review.md#editor-lacks-multi-select-and-recent-files-rev66). |
 | `REV#67` | DEFERRED | LOW | M | No signing or separate checksum (2026-11-13). An itch.io page with a butler publish step waits for the first non-pre-release tag or a wanted store page. [Calls](docs/feature-roadmap.md#project-review-calls-2026-11-13), [record](docs/review/2026-11-10-project-review.md#distribution-is-one-unsigned-github-zip-rev67). |
 | `REV#68` | DEFERRED | LOW | L | No document scopes a Steam release (store page, Remote Play Together, prompts, Deck pass); a note beside `ROAD#23`. Deferred behind `REV#67`'s itch.io trigger. [Record](docs/review/2026-11-10-project-review.md#steam-release-is-not-scoped-rev68). |
 

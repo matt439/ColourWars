@@ -46,9 +46,8 @@ and `format`; a rejected load or failed save preserves the open document,
 its path and undo/redo history. Unknown fields survive the legacy upgrade.
 See [the level format reference](level-format.md) for the file contract.
 
-How each `ED` slice was built and checked, from the 2026-10-28 shortlist to
-`ED#27`, is in [the editor's record](level-editor-record.md); this page
-describes the editor as it is.
+The [editor record](level-editor-record.md) documents the implementation and
+acceptance checks for the authoring tools.
 
 ## Editing
 
@@ -62,6 +61,25 @@ Ramp selection follows the triangular body, so its empty corner lets you
 select an object beneath it.
 Ctrl+click cycles through overlapping objects without starting a drag. Repeated
 clicks wrap through the same hit order; empty space retains the selection.
+
+**Move a group.** Select the first object, then **Ctrl+Shift+click** each
+additional object, spawn or station. The same gesture removes a member.
+White outlines on the canvas and highlighted rows in Level Contents show
+the group. For overlapping items, **Ctrl+click** their rows in Level Contents.
+With the keyboard, **Ctrl+Up/Down** moves the focus outline through the list
+and **Space** toggles that row. **Enter** returns focus to the canvas.
+Press **F** to frame the group.
+
+Drag a member or use the canvas arrow keys to translate the group by one
+common grid offset. Hold **Shift** to bypass snapping during a drag or to
+nudge one unit with an arrow. Mover paths follow their anchors. The editor
+validates the final arrangement together, and **Ctrl+Z** undoes the whole
+move. Select an individual row to edit properties, resize, or copy it.
+
+For example, open [Sluice Works](../game/content/levels/sluice_works.json)
+and save a copy. Select the `gauge_step_a` platform, `gauge_trestle_a` art
+and `Station gauge_step_a` in Level Contents. At grid spacing 10, drag them
+40 units right to move the entire approach toward the gate in a single edit.
 
 Use the palette to add paintable platforms, solid structures, jump-through
 platforms, [horizontal moving paintables](#moving-structure-authoring-gapd5),

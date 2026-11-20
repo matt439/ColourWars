@@ -8,6 +8,43 @@ namespace level_editor_acceptance
 {
     namespace
     {
+        void check_group_move(const fs::path& repo)
+        {
+            LevelDocument document(repo / "game/content/tuning.json");
+            const Entry first = document.add_object("MovingPaintable", { 600, 600, 160, 20 });
+            const Entry second = document.add_object("MovingPaintable", { 1300, 600, 160, 20 });
+            const Entry spawn = entry(document, EntryKind::spawn_a);
+            const Entry station = entry(document, EntryKind::station);
+            const Rect spawn_start = document.rectangle(spawn);
+            const Rect station_start = document.rectangle(station);
+            const MotionGuide guide = document.motion_guide(first).value();
+            // Standing clearance includes a coordinate-dependent floating-point pad.
+            const Rect expected_standing = document.motion_guide(first, document.rectangle(second))->standing_envelope;
+            const std::vector<Entry> group{ spawn, station, first, second, first };
+            const std::string original = document.serialize();
+            // The first mover would overlap the second's old position. Their
+            // final paths are clear only when the whole selection moves.
+            document.move_group(group, 700, 0);
+            auto translated = [](Rect rect) { rect.x += 700; return rect; };
+            const MotionGuide moved = document.motion_guide(first).value();
+            require(equal(moved.anchor, translated(guide.anchor)) &&
+                equal(moved.initial_pose, translated(guide.initial_pose)) &&
+                equal(moved.travel_envelope, translated(guide.travel_envelope)) &&
+                equal(moved.standing_envelope, expected_standing) &&
+                equal(document.rectangle(second), { 2000, 600, 160, 20 }) &&
+                equal(document.rectangle(spawn), translated(spawn_start)) &&
+                equal(document.rectangle(station), translated(station_start)),
+                "Group move lost a marker, double-moved a member or changed a platform path");
+            const std::string after = document.serialize();
+            require(document.undo() && document.serialize() == original, "Group move needs one undo");
+            document.move_group(group, 0, 0);
+            document.move_group({}, 700, 0);
+            reject_without_change(document, [&] { document.move_group(group, 4000, 0); },
+                "Accepted a group move that put a platform outside the arena");
+            require(document.redo() && document.serialize() == after,
+                "An empty, zero or rejected group move destroyed redo");
+        }
+
         rapidjson::Value& alignment_object(rapidjson::Document& document, const Entry& selected)
         {
             return document[selected.kind == EntryKind::collision ? "collision_objects" : "non_collision_objects"]
@@ -71,6 +108,7 @@ namespace level_editor_acceptance
 
     void check_alignment(const fs::path& repo, const fs::path& scratch)
     {
+        check_group_move(repo);
         struct GridCase { int grid; double x, y, expected_x, expected_y; };
         const GridCase grids[] = {
             { 1, 113.5, -87.5, 114, -88 }, { 10, 113.5, -87.5, 110, -90 },

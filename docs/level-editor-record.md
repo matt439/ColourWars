@@ -7,6 +7,23 @@ how it was checked. They were split out of the [editor guide](level-editor.md)
 on 2026-11-12 (`REV#18`) so that page reads as a manual; the behaviour these
 entries added is described there. [TODO.md](../TODO.md) indexes any open work.
 
+## Move an arena approach as one edit (`REV#66`)
+
+The [editor guide](level-editor.md#editing) covers selection and movement.
+The document applies one offset to the selected objects, spawns and stations,
+then validates the entire proposed level. This lets one mover enter a space
+that another selected mover vacates in the same edit. A failed move keeps
+the original geometry and undo/redo history.
+
+The [Sluice Works check](../scripts/acceptance/level_editor/sluice_group_checks.cpp)
+moves the gauge step, trestle and station in a saved copy. The whole JSON
+matches the equivalent individual translations, survives reopening and takes
+one Undo to restore. The [native gesture checks](../scripts/acceptance/level_editor_dpi/group_move_checks.h)
+exercise mouse and keyboard membership changes, preview cancellation, grid
+and fine movement, and commands when the list's keyboard focus is on a
+different row from the selected object. The editor suite passed in Debug and
+Release on 2026-11-20.
+
 ## Bound the external-change comparison on save (`ED#28`)
 
 **Implemented (2026-11-20).** Save compares the disk file against the retained

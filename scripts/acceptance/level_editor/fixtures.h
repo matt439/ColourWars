@@ -72,6 +72,7 @@ namespace level_editor_acceptance
     void check_format_limits(const fs::path& scratch);
     void check_empty_property_keys(const fs::path& scratch);
     void check_alignment(const fs::path& repo, const fs::path& scratch);
+    void check_sluice_group_move(const fs::path& repo, const fs::path& scratch);
     void check_unknown_fields_and_rectangles(const fs::path& scratch);
     void check_ending_audio(const fs::path& repo);
     void check_random_setting(const fs::path& scratch);
