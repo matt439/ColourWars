@@ -88,7 +88,8 @@ Labrador is public, so the submodule needs no credentials of its own.
 
 - **Git for Windows**, to fetch the repository and its engine submodule.
 - **Visual Studio 2022 or newer**, with the "Desktop development with C++"
-  workload. Ninja and CMake come with it.
+  workload. Keep its Ninja and CMake tools installed. The presets require
+  **CMake 3.26 or newer**.
 - **The Windows 10/11 SDK**, for `d3d11.h` and friends.
 - **vcpkg**, with `VCPKG_ROOT` set for this by-hand route. `CMakePresets.json`
   reads it for the toolchain file, and configuring fails without it. Visual Studio ships a copy
@@ -167,15 +168,20 @@ For paired GPU captures of the takeoff/landing prototype, run
 `./scripts/check-movement-feedback.ps1 -Preset x64-debug -SkipBuild`.
 It uses a hidden D3D11 hardware window, scripted jumps and isolated profile;
 see [feedback evidence and limitations](polish-feedback.md).
-CI runs the same correctness matrix in both presets on the runner's Basic
-Render Driver, a software rasteriser the engine reports as hardware. A Debug run
-with `-AllowSoftwareAdapter` also accepts the engine's WARP fallback; CI no longer
-uses it. Evidence names
-the actual adapter, and CI uploads JSON/CSV results and logs rather than the
-large raw captures. This does not qualify hardware, movement feel or performance.
-The foreground-dependent `check-debug-console.ps1` remains a local check.
+CI runs the same correctness matrix in both presets with
+`-HostedSoftwareFunctional` on the runner's Microsoft Basic Render Driver. The
+probe requires the engine to classify the adapter as software. It records the
+actual adapter, and CI uploads JSON/CSV results and logs. Hardware qualification
+uses the default hardware-only probe. Movement feel and performance require
+separate evidence. See [the adapter evidence policy](crt-trial.md#adapter-evidence-policy).
+The full `check-debug-console.ps1` run needs a foreground desktop. CI runs its
+CPU menu probe through `-CompileOnly`.
 
-Check runtime startup separately, preferably against the extracted Release ZIP:
+Check runtime startup separately, preferably against the extracted Release ZIP.
+Run the package inspection and startup scripts from the checkout used to build
+the ZIP. The startup check reads the expected version from that checkout, and
+package inspection checks its assets and notices. For a published ZIP, use the
+corresponding release tag. See [the shipped-package check](review/2026-11-15-shipped-package-qualification.md#exact-input).
 
 ```powershell
 ./scripts/check-startup.ps1 -Executable C:/Games/ColourWars/ColourWars.exe -SystemOnlyPath
@@ -259,25 +265,24 @@ a PDB from any other build does not fit.
 
 Only the assets listed in [cmake/runtime_assets.cmake](../cmake/runtime_assets.cmake)
 are staged and packaged; configure checks that the list matches the runtime manifest.
-The ZIP includes licence notices, the player guide `HOW-TO-PLAY.txt`, the seven compiled fonts, six sprite sheets,
-the twelve arenas (including Crossfeed, Press Tower and the explicit
-static/mover/slab/ferry/gate/lift/paint-lift Turbulence Yard comparisons) and Movement Course, tuning,
-presentation, the replacement sound-bank definition and validated `paint_exe.xwb`,
-with audio provenance and CC0 terms. Source audio, development art, content tools and saves are excluded.
+The ZIP includes licence notices, the player guide `HOW-TO-PLAY.txt`, seven
+compiled fonts, six sprite sheets, fourteen arenas and Movement Course. The
+arenas include Sluice Works and the Turbulence Yard trials, including the Fill
+Trial. The ZIP also carries tuning, presentation, the replacement sound-bank
+definition and validated `paint_exe.xwb`, with audio provenance and CC0 terms.
+Source audio, development art, content tools and saves are excluded.
 Do not distribute the normal `game/` build directory in place of this ZIP.
 Debug packaging is rejected because its runtime is not redistributable.
 
-The current docs-and-packaging preparation scope and candidate checks are in
-[Releasing](releasing.md): `scripts/release-candidate.ps1` builds the ZIP,
-inspects it, starts it, starts a separate extraction without the bank
-(`-RequireNoAudio`) and writes the receipt.
+For release candidates, `scripts/release-candidate.ps1` builds and inspects the
+ZIP, starts the extracted game, checks startup separately with the bank absent
+(`-RequireNoAudio`) and writes the receipt. See [Build a clean candidate](releasing.md#build-a-clean-candidate).
 
-An attended solo match and listening to music and effects are optional checks:
-the author waived the prior hardware, gameplay and listening checks on
-2026-11-05; they were not performed. This docs-and-packaging pass does not
-reopen them or close the separate sub-weapon play review (`ROAD#11`). Settings
-still live in `%LOCALAPPDATA%\ColourWars\save_data.json`, independently of
-where the ZIP was extracted.
+The author waived the earlier hardware, gameplay and listening checks on
+2026-11-05 and the sub-weapon play review (`ROAD#11`) on 2026-11-13. See
+[the release record](releasing.md#first-release-preparation). Settings live in
+`%LOCALAPPDATA%\ColourWars\save_data.json`, independently of where the ZIP was
+extracted.
 
 ## The engine submodule
 

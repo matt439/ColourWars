@@ -286,10 +286,9 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 | 34 | Known software adapters and Release selection | [the hosted runner's Basic Render Driver](#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit) needs truthful evidence lanes | classification was consumed at the prior pin, with explicit hosted software lanes and strict hardware defaults. SM-98's ordinary Release software refusal is still planned; [#125](https://github.com/matt439/Labrador/issues/125) remains open |
 | 39 | A float written as `FLT_MAX` does not read back | the [`boundary_factor`](../../scripts/acceptance/gameplay_tuning.cpp) check, moved one float below `FLT_MAX` | the parser is unchanged in `v0.4.0`; drafted, not filed; the author chooses the issue route or an engine fix (`ENG#39`) |
 
-Nothing else is outstanding, on either side, beyond reports 34 and 39 below, the three still live
-[from the architecture review](#owed-from-the-architecture-review-2026-10-30), and the
-evidence [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
-leaves this repository to supply. The fullscreen workaround the
+The live client items are listed above. The author waived the startup captures
+requested in [report 19](#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
+on 2026-11-05. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -1506,15 +1505,15 @@ the engine declined to bless that sequence and puts a natively shown window
 outside its contract. The draft and the hidden-creation exhibit are deleted,
 and the polish plan's "needs an engine show-after-load" is restated.
 
-**Outstanding, and this repository's** (`GAP#5.1`, now `DECISION`). The engine
-asks for two captures, each recorded with commit and date: a default-visible
-`x64-release` launch of `samples/minimal` and of ColourWars on the owner's
-desktop, from `ShowWindow` to the first present (the class brush or not, and
-for how long); and the same with a hidden launch and a native `ShowWindow`
-after the first state is constructed. If the first shows a flash and the second
-cures it, the engine-side fix above follows. They go back to Labrador as new
-evidence on its decision, not as this report reopened. They are attended screen
-captures, not ctest.
+**Client captures waived on 2026-11-05.** The engine asked for two captures,
+each recorded with commit and date, for `x64-release` launches of
+`samples/minimal` and ColourWars on the owner's desktop. The first would record
+a default-visible launch from `ShowWindow` to the first present to measure how
+long the class brush appeared, if at all. The second would record a hidden launch with native
+`ShowWindow` after the first state was constructed. Labrador wanted to see
+whether the first launch flashed and the second cured it before choosing the
+engine-side fix above. The author waived the attended captures and closed
+`GAP#5.1` in `a0f1d762`. The captures were not performed.
 
 **The prediction was wrong about what the problem is.** The draft offered a
 later-show call or a documented sequence as acceptable; the engine took
@@ -2625,7 +2624,7 @@ before had done for more than one, and none of them had been filed.
 | 16 | accepted, widened to entering full screen | `7db3d5c` | `a1238ee`, in part |
 | 17 | accepted, narrowed: client pixels kept under per-monitor v2; floor Windows 10 1607 | `dae6c87` | `a1238ee`, a manifest comment |
 | 18 | document only: `UiText::set_hidden`; zero-alpha tint warned | `30cb06a` | `83544c2` |
-| 19 | needs more evidence: two first-frame captures asked for | `cacf112` | `a1238ee`, nothing in code; captures are `GAP#5.1` |
+| 19 | needs more evidence: two first-frame captures asked for | `cacf112` | `a1238ee`, nothing in code; `GAP#5.1` captures later waived in `a0f1d762` |
 | 20 | accepted, narrowed: `DrawList::camera()` and `viewport()` | `11ec1fc` | `83544c2`, in part; later Scene integration below |
 | 21 | declined: the action map stays the game's | `197aff1` | `487b8d2`, nothing in code |
 | 22 | accepted, narrowed: `SheetFrame`/`SheetStrip` pairs | `bec82f0` | `83544c2` |

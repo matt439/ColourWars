@@ -18,7 +18,9 @@ arena, and a scoreboard that counts painted surface rather than kills.
    a copy you trust from this repository. The game isn't signed with a
    publisher certificate.
 
-The downloaded game needs no installer, Git, Visual Studio or terminal.
+The downloaded game needs no installer, Git, Visual Studio or terminal. The
+[v0.1.0 player guide](https://github.com/matt439/ColourWars/blob/v0.1.0/docs/HOW-TO-PLAY.txt)
+matches the `HOW-TO-PLAY.txt` beside the executable in that ZIP.
 
 ### Requirements
 
@@ -36,27 +38,18 @@ Choose **Play > Single Match > player count**. The device choosing the count
 becomes Player 1. Everyone else presses **A** on their pad (**Enter** for
 keyboard and mouse) on Join Players, then Player 1 confirms to continue.
 No friends around? Player 1 picks an empty seat with **Up/Down** and turns it
-into an Easy, Normal or Hard bot with **Left/Right**. Choose **1 Player** for
-solo practice.
+into an Easy, Normal or Hard bot with **Left/Right**.
 
-New? Select **Single Match > 1 Player > Movement Course** for lesson cards on
-moving, jumping, dropping through platforms, refilling your paint and using
-your sub.
+For **Movement Course**, choose **Play > Single Match > 1 Player (practice)**.
+Confirm on Join Players, choose your tool and sub weapon on Weapon Select,
+then choose **Movement Course** on Stage Select. The course teaches movement,
+jumping, dropping through platforms and refilling paint.
 
-Choose teams, a tool and a sub weapon for each player, then an arena. Random
-in this source build draws from Crossfeed, Press Tower, Close Quarters, Slab
-Yard and **Sluice Works**. Stage Select lists these five first, in series
-rotation order. On Sluice Works, paint the sides of the gate to claim the
-passage under the bridge, or climb over it from either loading dock. Stage
-Select previews the arena before a separate confirmation starts the match.
-
-To try the fill mechanic, choose **Turbulence Yard - Fill Trial** by name.
-Paint the marked sides of the centre block to claim the strip across its top.
-
-Choose **Umbrella** in Weapon Select to fire a short fan of paint. Hold Shoot
-and aim toward incoming shots to block them with the canopy. Teammates can
-fire through it. If it breaks, you can still fire while it recovers.
-[Umbrellas facing off on Sluice Works](docs/images/umbrella/in-play.png)
+For a versus match, choose teams, then a tool and a sub weapon for each player.
+Stage Select previews the arena before a separate confirmation starts the
+match. In v0.1.0, the built-in Random pool is Crossfeed, Press Tower, Close
+Quarters and Slab Yard, which Stage Select lists first. Custom stages can
+join the pool by opting in.
 
 The arena is an unsaved picture in a paint program
 ([the backstory](docs/backstory.md)). **A, B or Start** (**Space, Escape or
@@ -122,12 +115,6 @@ label fits.
 Profile edits save immediately. Other settings pages use **Apply** to save
 and **Back** to discard unapplied changes.
 
-Options > **Graphics** offers **CRT monitor (restart)**, Off by default.
-Apply saves the next launch; restart to add texture only to the opening and
-result monitor glass. Gameplay and score text stay clear. **Reduce effects**
-suppresses the texture. The Graphics page separately shows this launch's state;
-Back discards unapplied changes and a failed save leaves the next launch unchanged.
-
 Options > **Team palette** offers Random or a fixed pair. Purple/gold,
 red/azure and magenta/forest are checked under protan, deutan and tritan
 colour-vision simulation. HUD and Results also identify teams by A/B letters.
@@ -171,12 +158,8 @@ back to player count to choose a new roster.
   `build-info.txt` from beside the executable and, if it was saved,
   `%LOCALAPPDATA%\ColourWars\last-error.log`. That short report records build
   and failure categories; it does not contain the message, so include the
-  copied dialog too. If the game closes with no dialog at all, the same file
-  may hold a short crash report; attach it. For a build failure, attach the
-  build log instead.
+  copied dialog too. For a build failure, attach the build log instead.
 
-The [player guide](docs/HOW-TO-PLAY.txt), included beside the executable,
-covers starting the game, controls, where settings are saved and removing it.
 Settings live in `%LOCALAPPDATA%\ColourWars`, independently of the extracted
 game folder. To update, extract a new ZIP; your settings stay.
 
@@ -195,14 +178,13 @@ creates beside its save the first time it saves, or use the editor's
 **File > Save to My Stages**. They appear after the built-in stages, marked
 "Built by you." The game rereads the folder when Stage Select opens from the
 main menu. A refused file does not stop the others loading: press **Down**
-while browsing arenas to read scan issues. A player who leaves a stage's
-bounds is eliminated and respawns, so a gap in the walls or floor is a pit
-([Leaving the arena](docs/level-format.md#coordinates-bounds-and-spawns)).
+while browsing arenas to read scan issues. In v0.1.0, enclose a stage with
+solid walls, floor and ceiling. Leaving the arena closes the game in that
+release.
 
 The editor needs a source build and is not included in the game ZIP.
-See [the editor guide](docs/level-editor.md#play-the-level) for naming,
-saving and playing stages, and [the level format](docs/level-format.md) for
-the file contract and limits.
+See the [v0.1.0 editor guide](https://github.com/matt439/ColourWars/blob/v0.1.0/docs/level-editor.md#play-the-level)
+for naming, saving and playing stages in that release.
 
 <a id="building"></a>
 <a id="easy-build"></a>
@@ -212,6 +194,34 @@ the file contract and limits.
 If a ready-made download is unavailable, [Easy build](docs/development.md#easy-build)
 walks through the tools and `build.cmd`. GitHub's **Download ZIP** lacks the
 engine submodule and cannot be built as downloaded.
+
+### Playing the current source build
+
+The [source player guide](docs/HOW-TO-PLAY.txt) covers changes since v0.1.0.
+
+- On Home, **How to play** explains setup, controls and results. **Play a bot**
+  sets up a preset match against a Normal bot, and Movement Course now teaches
+  how to use your sub weapon.
+- **Sluice Works** is in the Random pool and series rotation. Paint the sides
+  of its gate to claim the passage under the bridge, or climb over it from
+  either loading dock. To try the fill mechanic, choose **Turbulence Yard -
+  Fill Trial** by name and paint the sides of the centre block to claim its top.
+- **Umbrella** fires a short fan of paint. Hold Shoot and aim toward incoming
+  shots to block them with the canopy. Teammates can fire through it. If it
+  breaks, you can still fire while it recovers.
+  [Umbrellas facing off on Sluice Works](docs/images/umbrella/in-play.png)
+- **Options > Graphics > CRT monitor (restart)** adds texture to the opening
+  and result monitor glass after you save and restart. It defaults to Off.
+  **Reduce effects** suppresses the texture. The Graphics page shows this
+  launch's state, and a failed save leaves the next launch unchanged.
+- A player who leaves a custom stage's bounds is eliminated and respawns, so
+  a gap in the walls or floor can serve as a pit. Instructions for the current
+  source build are in the [editor guide](docs/level-editor.md#play-the-level)
+  and [level format](docs/level-format.md#coordinates-bounds-and-spawns).
+- If the game closes with no dialog, `%LOCALAPPDATA%\ColourWars\last-error.log`
+  may hold a short crash report you can attach to a bug report.
+
+### Development references
 
 ColourWars is the first client of [Labrador](https://github.com/matt439/Labrador),
 a 2D game engine. [Development](docs/development.md) covers building, acceptance

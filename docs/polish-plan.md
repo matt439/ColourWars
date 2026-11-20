@@ -69,10 +69,9 @@ at their current values and are no longer provisional (`POL#38`, `POL#39`,
 `POL#45`, `POL#19`, `POL#3`, `POL#27`, `POL#23`). The attended checks that
 could not be run were **waived by the author on 2026-11-05 and not performed**:
 the finish review and fresh-player observations (`POL#24`), the physical-pad
-sessions (`POL#18`, the pad half of `POL#3`), and the performance captures and
-hardware baseline (`POL#25`). Nothing below that names one of those checks
-records it as passed. `POL#16` is no longer blocked by arena selection but stays
-a deferred later art pass.
+sessions (`POL#18`, the pad half of `POL#3`), the performance captures and
+hardware baseline (`POL#25`), and the startup captures for Labrador (`GAP#5.1`).
+Arena selection cleared `POL#16` for a later art pass.
 
 ## Goal and direction
 
@@ -210,9 +209,11 @@ expected. No new test matrix, device session or detailed observations are
 implied by this approval. The reference-match finish review (`POL#24`) was
 waived by the author on 2026-11-05 and not performed.
 
-The four Random arena backdrops were built on 2026-11-14. `POL#16` now awaits
-the author's in-play review and Close Quarters material decision. UI art follows
-later. [Arena backdrops](polish-terrain.md#per-arena-backdrops-pol16-2026-11-14).
+The [November 14 backdrops](polish-terrain.md#per-arena-backdrops-pol16-2026-11-14)
+for Crossfeed, Close Quarters, Press Tower and Slab Yard await the author's
+real-GPU and in-play review under `POL#16`, along with the Close Quarters
+centre cover decision. UI art follows later. Sluice Works joined Random on
+2026-11-20 and has its own [couch play guidance](sluice-works.md#play-review).
 The listening/mix choices (`POL#23`) were accepted
 as they stand on 2026-11-05; the physical-pad sessions and the attended
 performance/hardware acceptance (`POL#25`) were waived the same day and not
@@ -1191,21 +1192,20 @@ behavior, a supported hardware baseline, or performance on slower machines. They
 do not create a construction-time reason for a loading card. Attended visible
 performance and gameplay acceptance remain separate gates.
 
-What remains of `GAP#5.1` is the hard cut itself: a transition
-look in the Paint.exe language (a fade, a wipe, a redraw or a deliberate cut) is UI
-art for a later pass using the approved gameplay style. Separately, the startup
-window is thought to show a blank client area during the asset walk (about 53 ms in
-Release, an unretained timing). Labrador answered
+The hard cut itself is UI art for the later `POL#16` pass. The approved gameplay
+style leaves room for a fade, a wipe, a redraw or a deliberate cut. Separately,
+the startup window was suspected of showing a blank client area during the
+asset walk (about 53 ms in Release, an unretained timing). Labrador answered
 [report 19](review/engine-reports.md#19-no-public-later-show-convenience-for-a-hidden-application--needs-more-evidence-cacf112)
-"needs more evidence": it calls the white flash inferred, not observed, and wants two
-captures, recorded with commit and date: a default-visible `x64-release` launch from
-`ShowWindow` to the first present, and a hidden launch shown natively after the first
-state is constructed. If the first shows a flash and the second cures it, the engine's
-preferred fix is its own (show after the first `end_frame`, no class-brush paint) and
-needs no client call. Those captures are this repository's to make (`GAP#5.1`).
+by asking for default-visible and native-reveal `x64-release` captures to check
+whether the flash occurs between `ShowWindow` and the first present. The author
+waived those captures on 2026-11-05 and closed `GAP#5.1`. The captures were not
+performed.
+
 Re-measure with `perf` when later blockouts (`POL#17`, `POL#21`) add geometry: the
 build makes paint tiles for every paintable face. The Crossfeed and Press Tower
-refresh above completes `POL#33`; the first-draw, startup and human gates stay open.
+refresh above completed `POL#33` for level construction. First-draw timing and
+attended play were outside the measurement.
 
 **Takeoff/landing production puffs implemented (2026-10-15, part of `POL#16`).**
 The [drawing and evidence](polish-feedback.md#paintexe-production-puffs-2026-10-15)
@@ -1511,8 +1511,8 @@ pass, including extracted Release with its published bank and optional-bank
 fallback under a system-only PATH. The 53-file ZIP contains all 26 reviewed
 runtime assets byte for byte and excludes source, debug and private audio.
 
-Accepted-arena artwork is `POL#16`. On 2026-11-14 each of the four Random arenas
-was given its own backdrop in the approved kit
+Accepted-arena artwork is `POL#16`. On 2026-11-14 each arena then in Random
+received its own backdrop in the approved kit
 ([per-arena backdrops](polish-terrain.md#per-arena-backdrops-pol16-2026-11-14)):
 a printworks for Press Tower, a loading yard for Slab Yard, a paint warehouse
 for Close Quarters and painter's-kit landmarks for Crossfeed. What remains is
@@ -2404,8 +2404,9 @@ all 26 reviewed runtime assets and excludes authoring assets. Evidence is under
 Debug `64e06ffaae7c42e4bcca94a413d9c562` and Release
 `ed454a07b52d4fea9795c0148531f4ad`. Rerun with
 `scripts/check-painter.ps1 -Preset x64-debug -EndMenuOnly` (or `x64-release`).
-Physical-pad comfort, listening and human readability acceptance were waived by
-the author on 2026-11-05 and not performed; `POL#16` stays a deferred art pass.
+The author waived physical-pad comfort, listening and human readability
+acceptance on 2026-11-05. Those checks were not performed. The remaining UI art
+stays in the later `POL#16` pass.
 
 A visible per-player ready check before the next round is
 worth testing if one person's confirmation repeatedly starts play before the

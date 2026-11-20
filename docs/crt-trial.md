@@ -1,10 +1,9 @@
 # Optional CRT monitor graphics
 
-This local branch adds **Options > Graphics > CRT monitor (restart)**. It is
-**Off by default**. Apply saves the choice for the next launch; Back discards
-unapplied changes. The page separately shows the current launch's state. A
-failed write leaves the previous saved choice intact and reports failure.
-Nothing is pushed, deployed or enabled in the owner's normal profile.
+Find **CRT monitor (restart)** under **Options > Graphics** in Debug and
+Release. It is **Off by default**. Apply saves the choice for the next launch.
+Back discards unapplied changes. The page also shows the current launch's
+state. A failed write reports the error and keeps the previous saved choice.
 
 For CRT throughout gameplay, launch the opt-in Debug
 [shader playground](shader-playground.md). Its `shader vga`, `shader trinitron`
@@ -42,13 +41,12 @@ launch state. Restart the process after changing an environment override.
 
 ## Dependency and local isolation
 
-Branch `work/crt-trial`, isolated worktree `ColourWars-crt-trial`. The original
-checkout is untouched. Separate pin commit `9eed4e9f` advances Labrador from
+The original trial on 2026-11-15 ran from `work/crt-trial` in the isolated worktree
+`ColourWars-crt-trial`. Commit `9eed4e9f` advanced Labrador from
 `1dc8533c175059f84f947f99e21b11f36967d135` to
-`d44101a08d5e57327d17ef64015e9e973358fe5b`, 51 intervening commits. Runtime changes
-include the post pipeline on all backends, CRT material and software-adapter
-classification. No engine code is edited. This is not a minimal engine patch;
-verify the engine green-tip policy before proposing release/merge.
+`d44101a08d5e57327d17ef64015e9e973358fe5b`, spanning 51 commits that included
+the post pipeline on all backends, CRT material and software-adapter
+classification.
 
 ## Validation evidence, 2026-11-15
 
@@ -139,11 +137,10 @@ The older Debug-only `-AllowSoftwareAdapter` retains its Release refusal and
 cannot be combined with the hosted lane. Both wrapper and native probe enforce
 the requested evidence policy; compile-time policy cases cover their boundaries.
 
-Before merging this pin/renderer change, strict hardware-default Debug and
-Release movement checks must pass on the final source and engine revisions,
-with recorded device identity and no software opt-in. This is separate local
-qualification, not a hosted check or a fabricated GitHub status. Hosted `gate`
-remains required and cannot be bypassed. The nightly painter and paint-fx wrappers now also select an explicit
+For a pin or renderer change, the strict hardware-default movement checks
+must pass in Debug and Release on the final source and engine revisions before
+merge. Record the device identity for both checks. The hosted `gate` also
+remains required. The nightly painter and paint-fx wrappers select an explicit
 `-HostedSoftwareFunctional` lane. It requires software, rejects hardware/null/
 unknown devices, retains all pixel assertions, and records the requested policy
 and observed device in each result. The sweep forwards it to every leaf and
@@ -153,6 +150,5 @@ expanded. A green scheduled sweep may close its functional-CI issue, but does
 not discharge the separate real-GPU obligation above. No manual close or
 hardware qualification follows from this policy change.
 
-This follow-up changes admission only. Native Debug/Release compilation,
-hosted painter/paint-fx pixels and strict hardware checks must be reported as
-separate results; source checks alone cannot establish any of them.
+Record native Debug and Release compilation, hosted painter and paint-fx
+pixel checks, and strict hardware checks as separate results.

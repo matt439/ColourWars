@@ -214,10 +214,10 @@ colour and one frame, so it is not used here.
    update/contact phases and the game's swept projectile movement.
    [Projectile::resolve_movement_contacts](../game/objects/projectile_contacts.cpp)
    prevents a fast flying shot from passing through intervening cover. Level
-   also hands it the planted sprinklers and walls standing as the tick began
-   (its breakables), so an enemy shot whose path enters one before cover or a
-   player is spent on it there. The
-   engine calls each party's `on_contact`, and
+   also passes the planted sprinklers and walls standing at the start of the
+   sweep and the players holding open Umbrella canopies. Once a breakable
+   takes its final hit, later shots in the same step pass it. The engine calls
+   each party's `on_contact`, and
    [Collider](../game/objects/collider.h) dispatches it a second time on the
    other party's class; the engine does not know what painting means.
    After the tick's contacts, `Level::strike_breakables` spends each enemy
@@ -247,10 +247,12 @@ colour and one frame, so it is not used here.
 
 The score is surface still held, not accumulated shots or paint events. A
 paintable object's totals must include neutral area in `total`, credited team
-area in `team_a`/`team_b`, and player area indexed by paint owner (device
-slots, then device-less views; [paint_owners.h](../game/match/paint_owners.h)). Read the
-`PaintableObject` contract and Level's enrollment rule together: the object
-must be in Scene's collision collection and implement `PaintableObject`.
+area in `team_a`/`team_b`, and player area indexed by paint owner. Humans use
+their input slots. Bots and device-less Debug players use their roster
+participant indices after the device slots. See
+[paint_owners.h](../game/match/paint_owners.h). Read the `PaintableObject`
+contract and Level's enrollment rule together. The object must be in Scene's
+collision collection and implement `PaintableObject`.
 That scoring role is independent of its collision tag: a painted one-way
 platform keeps `structure_jump_through` and contributes held area in full.
 

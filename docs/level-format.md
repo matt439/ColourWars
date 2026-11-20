@@ -397,6 +397,8 @@ destination face from `top`, `bottom`, `left` and `right`. Each face must
 be enabled and have exposed scoring area. The target must be separate from
 the trigger. Partially covered faces use only their exposed strips. The
 editor validates each edit against the same declaration that startup reads.
+See [Paint fill authoring](level-editor.md#paint-fill-authoring) for the JSON
+and inspector workflow.
 
 At the end of a live step, the team holding a strict lead and at least
 `paint.fill.open_share` of the trigger area can claim the destination. The
@@ -488,8 +490,9 @@ independently. Runtime startup constructs the objects and resolves these names
 after the manifest has loaded. The level editor warns about names that do not
 resolve in the source manifest's sheets and banks
 ([Resource names](level-editor.md#resource-names)); it does not load the
-resources, and startup stays the authority. Registration still requires both the manifest and runtime
-asset list; follow [Play the level](level-editor.md#play-the-level).
+resources, and startup stays the authority. A new shipped stage needs entries
+in the manifest, the runtime asset list and `menu_text.stage_names` in
+`presentation.json`. See [Play the level](level-editor.md#play-the-level).
 
 ## Sound
 
@@ -694,7 +697,7 @@ meets one.
   are read and one line gives the folder's count. The rest are not opened and
   get no line of their own.
 
-Who enforces what:
+Game, editor and schema checks
 
 | Limit | Game | Editor | Schema |
 |---|---|---|---|
@@ -702,10 +705,10 @@ Who enforces what:
 | Bounds and object extent | Yes | Yes | `width` and `height` only; not a TLBR or triangle extent, which is a difference |
 | Object count | Yes | Yes | `maxItems` |
 | Paint length | Yes | Yes | No |
-| Face tiles | Yes | No (it has no paint tuning) | No |
+| Face tiles | Yes | No | No |
 | File size | Yes | At open and at save | No |
 | Nesting | Yes | At open | No (Draft-04 cannot state a depth) |
-| File count | Yes | No (it opens one file) | No |
+| File count | Yes | Warns when a saved My Stages file sorts past the cutoff | No |
 
 A stage past a limit is refused where any other invalid stage is. A user
 stage is left out with one `user stage refused: <file>: <reason>` line; a
@@ -751,8 +754,8 @@ inputs and sweeps the rest of the format with fixed-seed mutants.
 ## Validation and authoring workflow
 
 Point a JSON editor at [level.schema.json](../game/contracts/level.schema.json), then open the file
-in ColourWarsEditor and save a copy. Register an intended runtime stage using
-the manifest and asset-list steps in [Play the level](level-editor.md#play-the-level).
+in ColourWarsEditor and save a copy. To ship the stage, follow the registration
+steps in [Play the level](level-editor.md#play-the-level).
 Rebuild and run it in the game: the schema does not resolve its assets, the
 editor only warns about names, and neither establishes playability. To try a
 stage without registering or rebuilding, put it in the player's stage folder

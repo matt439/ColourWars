@@ -35,16 +35,25 @@ New here? On Home, move right from Play to How to play. Its three pages
 explain practice/local setup, show your saved controls, and explain results
 and rematches. Back returns to Home; the guide does not change your setup.
 
+For a quick match against a Normal bot, choose Play a bot on Home. Review
+the Sprayer and Grenade preset and choose Continue to Join. Confirm on Join
+Players, then pick an arena. Choose Customise on the preset screen to use
+the full setup with your own teams, tools, bot difficulty and match rules.
+
 Play > Single Match (or Best of 3 / Best of 5) > choose how many players.
 The device you choose with becomes Player 1.
 
 On Join Players, everyone else presses A on their pad (Enter for keyboard
-and mouse) to take a seat. No friends around? Player 1 can move to an empty
-seat with Up/Down and press Left/Right to turn it into a bot (Easy, Normal or
-Hard). For solo practice, choose Single Match, then 1 player.
-New? Choose Single Match > 1 Player > Movement Course for lesson cards on
-moving, jumping, dropping through platforms, refilling your paint and using
-your sub.
+and mouse) to take a seat. Player 1 can move to an empty seat with Up/Down
+and press Left/Right to add a bot and choose Easy, Normal or Hard. Once each
+seat is filled, Player 1 presses A / Enter to continue. For a versus match,
+choose teams before Weapon Select.
+
+For solo practice, choose Play > Single Match > 1 Player (practice).
+Confirm on Join Players with A / Enter, then choose a tool and a sub weapon
+on Weapon Select. Choose Movement Course on Stage Select for lessons on
+moving, jumping, dropping through platforms, refilling paint and using your
+sub.
 
 Up to four players: one may use the keyboard and mouse, the others need
 Xbox-style (XInput) controllers. PlayStation and Switch controllers are not

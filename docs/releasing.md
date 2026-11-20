@@ -8,14 +8,16 @@ itself as `0.2.0` following the [content changes since that tag](#apply-the-next
 what it contains. [AGENTS.md](../AGENTS.md#commits-and-pull-requests) owns the
 branch, required `gate` and publication rules.
 
-## Current preparation scope
+<a id="current-preparation-scope"></a>
+
+## First-release preparation
 
 **Selected by the author, 2026-11-11: docs and packaging first.** Prepare a
 player-focused README, the packaged help and contributor/bug-report guidance,
 then build and inspect a fresh Release ZIP. That selection did not itself
 change stage ordering, Random palettes, out-of-bounds behaviour, tuning, audio
 or the accepted art direction; the author's 2026-11-13 calls below settle stage
-ordering (`REV#26`), and the other gameplay decisions remain open.
+ordering (`REV#26`).
 
 The documentation pass completes the README reshape (`FTR#15`) and contributor
 and issue guidance (`REV#15`). The README links to the source-build and
@@ -77,8 +79,8 @@ inspection passed 35 checks on 69 files, and isolated startup passed on MattPC.
 It covers package integrity and startup; it does not establish an attended
 first match, controller recovery or listening quality.
 
-Other design calls stay indexed in [TODO.md](../TODO.md). Selecting this
-documentation/package pass did not accept them. Arena artwork (`POL#16`) remains deferred.
+The first-release sign-off left arena artwork (`POL#16`) for a separate
+review. [TODO.md](../TODO.md) tracks current author decisions.
 
 ## Build a clean candidate
 
@@ -87,11 +89,13 @@ candidate's `build-info.txt` must name that commit without `-dirty`, and name
 the checked-out engine pin. An older ZIP can have the same version while
 containing older runtime data; do not reuse it solely because its name matches.
 
-From a plain PowerShell at the repository root, one command builds the
-candidate, checks it and writes its receipt (`REL#3`):
+Run from the repository root in a PowerShell session with `cmake` on `PATH`.
+Use an x64 Visual Studio Developer PowerShell if you rely on Visual Studio's
+bundled CMake. The separate ZIP inspection step needs `cmake` even with
+`-SkipBuild` (`REL#3`).
 
 ```powershell
-pwsh -NoProfile -File scripts/release-candidate.ps1
+./scripts/release-candidate.ps1
 ```
 
 [`scripts/release-candidate.ps1`](../scripts/release-candidate.ps1) refuses a
@@ -102,30 +106,35 @@ moves the parent, relative to the caller's location), it:
 
 1. builds and packages `x64-release` through `scripts/build.ps1 -Package`,
    which loads the Visual Studio C++ environment and usable vcpkg itself, and
-   keeps the build log;
+   keeps the build log.
 2. inspects the ZIP with `scripts/check-release-package.ps1`. It checks required
    runtimes, reviewed content, help, licences, audio provenance and the
    accepted bank's hash. It rejects PDBs and developer-console classes and
    checks that the executable names its symbols as plain `ColourWars.pdb`.
 3. checks that the packaged `build-info.txt` names this commit, the engine
-   pin, the version and `Release`;
+   pin, the version and `Release`.
 4. starts the extracted game with `scripts/check-startup.ps1 -RequireAudio
    -SystemOnlyPath`: a separate working directory, an isolated save, a
    system-only DLL search path and a hidden, muted process. It checks content
    loading, executable version, DPI awareness, window fit and graceful
-   shutdown;
+   shutdown.
 5. starts a fresh extraction with `sounds/paint_exe.xwb` removed
    (`-RequireNoAudio`), leaving the first intact. This must load the silent
    substitute with only the expected missing-bank diagnostic. It does not
    qualify listening or the normal audible bank's mix.
 
-It writes `candidate.json` beside the evidence: commit, engine pin, version,
-the ZIP's path, size and SHA256, the packaged `build-info.txt`, and each
-check's outcome, log and `result.json`. A copy of the ZIP stays in the folder
-for the sandbox run (`REL#2`). Every check runs even when an earlier one
-failed, and the script fails at the end if any did. `-SkipBuild` checks the ZIP
-already in `out/build/x64-release/packages/` instead; it must still name this
-clean commit, so a ZIP from an older commit is refused rather than reused.
+The script stops validation if the build fails or no ZIP is available. If
+inspection fails, it records the build stamp if present and skips both startup
+checks. After a successful inspection, the fallback startup runs even if the
+first startup reports failure.
+
+`candidate.json` records the commit, engine pin, version and check outcomes.
+When available, it also records the ZIP path, size and SHA256, the copied
+`build-info.txt`, and the logs and `result.json` paths the checks produced.
+Skipped startup checks carry a diagnostic. The script returns an error if the
+candidate fails. A copy of the ZIP stays in the folder for the sandbox run
+(`REL#2`). With `-SkipBuild`, the script checks the ZIP already in
+`out/build/x64-release/packages/` against this clean commit.
 [`scripts/check-release-candidate.ps1`](../scripts/check-release-candidate.ps1)
 checks the refusals in a scratch repository without a build, in CI's Release
 leg.
@@ -143,10 +152,10 @@ requirements, not a player's GPU.
 
 `check-release-package.ps1` checks that the extracted guide and every runtime
 asset match the reviewed source byte-for-byte, using the packager's allow-list.
-It also refuses unreviewed files in runtime directories. Run it from the source
-revision that produced the ZIP; an older released ZIP needs its matching checkout.
-Evidence under `out/validation/` is local, not a public download or a hosted
-CI result.
+It also refuses unreviewed files in runtime directories. Use the source revision
+that produced the ZIP for package inspection and startup checks.
+`check-startup.ps1` reads the expected executable version from that checkout's
+`CMakeLists.txt`. Local evidence is in `out/validation/`.
 
 These checks establish package integrity and startup on the machine that ran
 them. The hardware, participant and listening checks waived on 2026-11-05
@@ -161,7 +170,7 @@ requested. Before merging, bring the branch up to date with `master` and wait
 for the required `gate` on that updated tree. No ruleset bypass is part of
 release preparation.
 
-When the author authorizes the first tag, tag the selected commit on `master`
+When the author authorizes publication, tag the selected commit on `master`
 with the version matching `project(VERSION)`. The tag push runs full CI. Its
 [`publish` job](../.github/workflows/ci.yml) runs
 [`scripts/ci/release.py`](../scripts/ci/release.py) to check that the tagged
@@ -200,9 +209,8 @@ Never attach a ZIP or PDB built anywhere else to the release by hand: the
 published archive is the one its own run inspected and started, and the PDB
 fits only the executable it was linked with.
 
-After publication, point the README's download step at the release, verify the
-asset name and player instructions, and close `FTR#1` in the same commit that
-finishes the remaining documentation work.
+After publication, point the README's download step at the release and verify
+the asset name and player instructions against the published ZIP.
 
 The author's distribution calls (2026-11-13):
 
@@ -289,9 +297,8 @@ now one command, [`scripts/release-candidate.ps1`](../scripts/release-candidate.
 It refuses a dirty tree (any tracked change or untracked file) and an engine
 submodule that is not at the pin before it builds, runs the four steps that
 were typed by hand, adds a check that the packaged `build-info.txt` names the
-clean commit and pin, and writes `candidate.json` (commit, engine pin, version,
-ZIP SHA256 and each check's outcome, log and result path) into one folder
-under the repository's `OutputDirectory` rule.
+clean commit and pin, and writes `candidate.json` beside the [candidate
+evidence](#build-a-clean-candidate).
 [`scripts/check-release-candidate.ps1`](../scripts/check-release-candidate.ps1)
 covers the refusals (an untracked file, an edited tracked file, `-SkipBuild`
 with no ZIP, and no evidence folder left by a refusal) in a scratch repository
@@ -313,8 +320,8 @@ instructions and add one line saying the PDB is not needed to play.
 job's existing `unittest discover -s scripts/ci` against real Git histories: a
 matching tag, a mismatched tag, the version read from the tagged commit rather
 than a later one, a tag off `master`, malformed tags, an unreadable version, an
-unknown commit, the `GITHUB_OUTPUT` values and the notes text. The job itself
-still cannot run before a real tag, so its first end-to-end run is `v0.1.0`;
+unknown commit, the `GITHUB_OUTPUT` values and the notes text. The first
+end-to-end run was [`v0.1.0`](#first-release-v010).
 [If publish fails](#if-publish-fails) says when to rerun the job and when to
 delete and push the tag again.
 
