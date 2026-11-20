@@ -1,9 +1,11 @@
 // Debug playground: material_value(0) = mode, strength, detail, unused.
 // Modes: 0 identity, 1 posterise, 2 ink edges, 3 halftone dots,
-// 4 CRT, 5 RGB565 high colour, 6 ordered dither, 7 Paint.exe desktop.
+// 4 CRT, 5 RGB565 high colour, 6 ordered dither, 7 Paint.exe desktop,
+// 8 VGA dot mask, 9 Trinitron aperture grille, 10 arcade slot mask.
 // The engine supplies the frame contract and sampling helpers.
 
 #include "desktop_90s.hlsli"
+#include "crt_monitors.hlsli"
 
 float largest_channel(float3 colour)
 {
@@ -83,9 +85,13 @@ float4 material(MaterialInput input)
 		{
 			processed = desktop_dither(input, picture, settings.z);
 		}
-		else
+		else if (settings.x < 7.5)
 		{
 			processed = desktop_paint90(input, picture, settings.z);
+		}
+		else
+		{
+			processed = crt_monitor(input, picture, settings.x, settings.z);
 		}
 		result = float4(lerp(picture.rgb, processed, saturate(settings.y)), picture.a);
 	}

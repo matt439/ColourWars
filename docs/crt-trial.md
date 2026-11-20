@@ -6,11 +6,11 @@ unapplied changes. The page separately shows the current launch's state. A
 failed write leaves the previous saved choice intact and reports failure.
 Nothing is pushed, deployed or enabled in the owner's normal profile.
 
-For CRT throughout gameplay, the separate opt-in Debug
-[shader playground](shader-playground.md) offers `shader crt` and the
-combined `shader paint90` treatment. That experiment replaces this saved
-monitor-glass effect for its session; the normal option described here still
-applies only to opening and reveal glass.
+For CRT throughout gameplay, launch the opt-in Debug
+[shader playground](shader-playground.md). Its `shader vga`, `shader trinitron`
+and `shader arcade` presets process the full picture. The playground takes
+over the post pass for that session. The saved Graphics option described here
+applies to opening and reveal glass.
 
 ## Behavior and lifecycle
 

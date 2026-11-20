@@ -284,7 +284,7 @@ target_precompile_headers(colourwars_game PRIVATE pch.h)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     labrador_add_material(colourwars_game colourwars_shader_playground
         SOURCE shaders/shader_playground.hlsl
-        DEPENDS shaders/desktop_90s.hlsli)
+        DEPENDS shaders/desktop_90s.hlsli shaders/crt_monitors.hlsli)
 endif()
 
 # The platform adapters are libraries of their own, so a probe chooses each by

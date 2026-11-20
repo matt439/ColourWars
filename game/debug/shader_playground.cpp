@@ -28,6 +28,9 @@ namespace
 		{ "highcolour", 5, 1.0f, 0, 0, 0 },
 		{ "dither", 6, 0.6f, 8, 2, 16 },
 		{ "paint90", 7, 0.5f, 4, 4, 12 },
+		{ "vga", 8, 0.85f, 600, 240, 720 },
+		{ "trinitron", 9, 0.85f, 480, 240, 720 },
+		{ "arcade", 10, 0.9f, 360, 240, 720 },
 	};
 
 	std::vector<std::string> look_names()
@@ -62,7 +65,8 @@ void DebugShaderPlayground::initialize(labrador::Renderer& renderer)
 
 void DebugShaderPlayground::register_command(DebugRegistry& registry)
 {
-	registry.add_command("shader", "Debug shader playground; strength 0-1, detail: colour levels, pixel radius/cell size or CRT scanline pitch",
+	registry.add_command("shader", "Change the display look. Strength 0-1. Detail sets raster lines (240-720) "
+		"for vga, trinitron and arcade, scanline pitch for crt/paint90, or levels/pixel size for other looks.",
 		{ { "look", true, look_names },
 			{ "strength", true, {} }, { "detail", true, {} } },
 		[this](const DebugArgs& args, DebugLog&) { return this->command(args); },
