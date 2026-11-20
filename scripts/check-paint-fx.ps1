@@ -168,6 +168,7 @@ $result = [ordered]@{
     worktree_status = @(& git status --short)
     stage = 'movement_course'
     player_counts = @(1, 4)
+    yard_fill_cue = 'Controlled baffle at 1280x720 in two and four panes. Ready/cooling source and destination marks, early and late sweep pixels, a stationary reduced-effects trace over both changed runs excluding friendly paint, and rearmed shapes.'
     resolutions = @('1280x720', '1920x1080', '2560x1440')
     # Capped by camera.minimum_world_width in a quarter pane, not in a full view.
     camera_scales = [ordered]@{

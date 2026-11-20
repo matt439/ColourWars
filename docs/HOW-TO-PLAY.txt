@@ -86,6 +86,12 @@ Paint on the floor affects you too: your team's paint makes you move and
 refill faster. Enemy paint slows you and stops your paint refilling; step
 onto your own paint or unpainted ground to refill again.
 
+On Sluice Works, paint the sides of the gate to open the lower passage for
+your team. Either team can cross the bridge above it. For a different rule,
+pick Turbulence Yard - Fill Trial in Stage Select. Paint the marked sides of
+the centre block to fill its top, then defend your paint as the other team
+tries to take it back.
+
 Menus: left stick or D-pad / arrow keys to move, A / Enter (or a left
 click) to choose, B / Escape (or a right click) to go back. A click acts on
 the highlighted row, wherever the pointer is. Controls, volume, window size

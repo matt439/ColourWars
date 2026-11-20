@@ -172,6 +172,7 @@ Cases = @(
     @{ Name = 'bot_navigation' }
     @{ Name = 'bot_territory' }
     @{ Name = 'bot_gate_routes' }
+    @{ Name = 'yard_fill' }
     @{ Name = 'sluice_works'; Sources = @('scripts/acceptance/support/route_run.cpp') }
     @{ Name = 'handicap' }
     @{

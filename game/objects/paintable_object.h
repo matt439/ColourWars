@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/match/paint_owners.h"
+#include "game/contracts/paint_fill_region.h"
 #include "game/objects/player_team.h"
 #include "engine/math/vector2f.h"
 #include <array>
@@ -50,9 +51,6 @@ struct PaintTotal
 	// What was captured over the match, not what is held now.
 	PaintCredit credit;
 };
-
-// Authored/local face identity; a future rigid pose may change its world normal.
-enum class PaintSurfaceFace { top, bottom, left, right };
 
 // A value-only view of one actual scoring tile, including neutral tiles.
 // Corners follow local top-left, top-right, bottom-right, bottom-left winding

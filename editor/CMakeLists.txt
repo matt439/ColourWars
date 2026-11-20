@@ -65,6 +65,7 @@ add_executable(colourwars_editor_acceptance EXCLUDE_FROM_ALL
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/motion_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/drive_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/gate_checks.cpp"
+    "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/paint_fill_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/station_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/station_editing_checks.cpp"
     "${PROJECT_SOURCE_DIR}/scripts/acceptance/level_editor/mirror_checks.cpp"

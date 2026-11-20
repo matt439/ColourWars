@@ -56,6 +56,7 @@ public:
 	const MatchPresentation& match() const;
 	const GatePermissionPresentation& gate_permission() const;
 	const FerryDirectionPresentation& ferry_direction() const;
+	const PaintFillPresentation& paint_fill() const { return this->paint_fill_; }
 	const CameraPresentation& camera() const;
 	const MovementFeedbackPresentation& movement_feedback() const;
 	const CombatFeedbackPresentation& combat_feedback() const;
@@ -93,6 +94,7 @@ private:
 	MatchPresentation match_;
 	GatePermissionPresentation gate_permission_;
 	FerryDirectionPresentation ferry_direction_;
+	PaintFillPresentation paint_fill_;
 	CameraPresentation camera_;
 	MovementFeedbackPresentation movement_feedback_;
 	CombatFeedbackPresentation combat_feedback_;

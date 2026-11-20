@@ -639,6 +639,30 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		input.primary_shoot = match_bot_territory::top_launch_lands(view, view.support_bounds, angle, *this->tuning_);
 	}
 	else if (slow && (this->ascending_ || this->climbing_ramp_ || this->continue_ascent_)) { input.primary_shoot = false; }
+	// A fill is a shot of opportunity, independent of the movement plan.
+	// Recheck its reach from this pose before spending a ready shot.
+	if (!view.fill_triggers.empty() && input.shoot_direction_requested && !input.sub_pressed && !this->refilling_)
+	{
+		const WeaponTuning& tool = this->tuning_->weapon(view.weapon);
+		const ProjectileTuning& projectile = this->tuning_->projectile(tool.details.proj_type);
+		// Each ballistic search integrates 32 trajectories. Try every tile on
+		// short strips, or four evenly spaced ranks including both ends.
+		const size_t count = view.fill_triggers.size();
+		constexpr size_t max_attempts = 4;
+		const size_t attempts = std::min(count, max_attempts);
+		for (size_t attempt = 0; attempt < attempts; ++attempt)
+		{
+			const size_t index = count <= max_attempts ? attempt : attempt * (count - 1) / (max_attempts - 1);
+			const Vector2F point = view.fill_triggers[index];
+			const auto angle = match_bot_ballistics::paint_angle(tool, projectile, view.velocity, point - view.center);
+			if (!angle) { continue; }
+			input.shoot_angle = *angle + this->aim_error_;
+			input.shoot_direction = Vector2F(std::cos(input.shoot_angle), std::sin(input.shoot_angle));
+			input.right_analog_stick = input.shoot_direction;
+			input.primary_shoot = true;
+			break;
+		}
+	}
 	input.connected = true;
 	// The reserve guard is immediate, even between policy reactions. It cannot
 	// buy an unaffordable shot or inherit firing from a depleted decision.

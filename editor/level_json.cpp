@@ -4,6 +4,7 @@
 #include "game/contracts/drawable_text_contract.h"
 #include "game/contracts/station_contract.h"
 #include "game/contracts/team_gate_contract.h"
+#include "game/config/paint_fill_json.h"
 
 #include <rapidjson/error/en.h>
 #include <rapidjson/prettywriter.h>
@@ -570,6 +571,7 @@ namespace colourwars_editor
             }
             validate_slab_pairs(document);
             validate_motion_geometry(document, motion_tuning);
+            (void)paint_fill_json::decode(document);
             validate_gate_spawns(document, motion_tuning);
             validate_stations(document, arena);
         }

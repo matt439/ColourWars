@@ -61,6 +61,7 @@ namespace level_format
 		inline constexpr const char* end_sting_volume = "end_sting_volume";
 
 		inline constexpr const char* stations = "stations";
+		inline constexpr const char* paint_fill = "paint_fill";
 		inline constexpr const char* lesson = "lesson";
 
 		// An object record.

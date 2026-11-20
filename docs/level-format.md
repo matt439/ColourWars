@@ -377,6 +377,37 @@ tuned player size at a spawn point) may overlap a gate. The game's loader,
 its startup check and the [editor](level-editor.md#team-gate-authoring-road15)
 read all of this through `game/contracts/team_gate_contract.h`, in the same words.
 
+### Paint fill
+
+A level can link exposed scoring faces of two fixed rectangular paintables
+with one optional top-level `paint_fill`. Its receiver can be another face
+of the same object. The [Yard Fill Trial](../game/content/levels/turbulence_fill_trial.json)
+uses both sides of its central baffle to control the top.
+
+```json
+"paint_fill": {
+  "trigger": { "object": "centre_baffle", "faces": ["left", "right"] },
+  "target": { "object": "centre_baffle", "face": "top" }
+}
+```
+
+Use unique collision-object names. Each endpoint must be a stationary
+`StructurePaintable`. Choose one to four distinct trigger faces and one
+destination face from `top`, `bottom`, `left` and `right`. Each face must
+be enabled and have exposed scoring area. The target must be separate from
+the trigger. Partially covered faces use only their exposed strips. The
+editor validates each edit against the same declaration that startup reads.
+
+At the end of a live step, the team holding a strict lead and at least
+`paint.fill.open_share` of the trigger area can claim the destination. The
+last team to activate must lose a fill to the other team before it can
+activate again. A tie clears the pending claim. During the
+`paint.fill.cooldown` interval, paint still changes hands on both the
+trigger and target. When the cooldown expires, the painter who established
+the surviving lead earns credit for each destination tile that changes.
+Friendly tiles retain their individual owners. Both thresholds are in
+[tuning.json](../game/content/tuning.json).
+
 ### Decorative drift
 
 A `Visual` may carry a bounded horizontal drift around its authored rectangle:

@@ -132,6 +132,8 @@ add_library(colourwars_game STATIC
     objects/fixed_slab_shadow.cpp
     objects/interface_gameplay.cpp
     objects/level.cpp
+    objects/paint_fill.cpp
+    objects/paint_fill_draw.cpp
     objects/level_structures.cpp
     objects/level_bot_world.cpp
     objects/level_audio.cpp

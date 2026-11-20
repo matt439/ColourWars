@@ -22,6 +22,7 @@ using namespace labrador;
 Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, LevelMatch round_setup) :
 	colourwars::SoundBankObject(stage.audio.sound_bank_name, services.audio_resources),
 	scene_(std::move(world.scene)),
+	paint_fill_(std::move(world.paint_fill)),
 	players_(std::move(world.players)),
 	stations_(std::move(stage.stations)),
 	viewport_dividers_(std::move(world.viewport_dividers)),
@@ -68,7 +69,7 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 	if (this->view_participants_.empty())
 	{ throw std::invalid_argument("Level requires at least one human view"); }
 	this->bot_world_ = std::make_unique<LevelBotWorld>(*this->scene_, this->players_, this->structures_,
-		this->projectiles_);
+		this->projectiles_, this->paint_fill_.get());
 	if (roster != nullptr && roster->bot_count() != 0)
 	{ this->bot_driver_ = std::make_unique<MatchBotDriver>(tuning, *roster, round_setup.random.bot_seed()); }
 	this->cards_ = std::make_unique<CountdownCards>(stage.name, &tuning->match(), presentation,
@@ -412,6 +413,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	}
 
 	this->update_players_after_resolve();
+	if (this->paint_fill_) { this->paint_fill_->settle(dt); }
 	for (size_t participant = 0; participant < this->players_.size(); ++participant)
 	{
 		if (was_dead[participant] && this->players_[participant]->state() == PlayerState::alive)

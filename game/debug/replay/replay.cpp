@@ -459,6 +459,10 @@ namespace
 		out << "    \"team_b\": " << quoted(hex32(print.team_b)) << ",\n";
 		out << "    \"total\": " << quoted(hex32(print.total)) << ",\n";
 		out << "    \"level_state\": " << print.level_state << ",\n";
+        if (print.paint_fill_hash)
+        {
+            out << "    \"paint_fill_hash\": " << quoted(hex64(*print.paint_fill_hash)) << ",\n";
+        }
 		out << "    \"seats\": [";
 		for (std::size_t i = 0; i < print.seats.size(); ++i)
 		{
@@ -742,6 +746,13 @@ namespace
 		print.team_b = hex_field(last, "team_b", path);
 		print.total = hex_field(last, "total", path);
 		print.level_state = last.integer("level_state");
+        if (last.has("paint_fill_hash"))
+        {
+            std::uint64_t digest = 0;
+            const std::string encoded = last.string("paint_fill_hash");
+            if (encoded.size() != 16 || !parse_hex(encoded, digest)) { fail(path, "paint_fill_hash must be 16 hex digits"); }
+            print.paint_fill_hash = digest;
+        }
 		const labrador::JsonValue final_seats = last.array("seats");
 		for (std::size_t i = 0; i < final_seats.size(); ++i)
 		{

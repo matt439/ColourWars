@@ -6,6 +6,7 @@
 #include "game/debug/replay/hash.h"
 #include "game/objects/level.h"
 #include "game/objects/horizontal_motion.h"
+#include "game/objects/paint_fill.h"
 #include <bit>
 #include <cstdio>
 #include <limits>
@@ -203,6 +204,26 @@ MatchFingerprint MatchFingerprint::of(const Level& level, int updates)
     // All static/POL#36 hash operations above retain their original order. The
     // Level owns completed-boundary scratch overwrite/consume invariants.
     append_motion(print, level, hash);
+    if (const PaintFill* fill = level.paint_fill())
+    {
+        std::uint64_t state = fnv1a("colourwars-paint-fill-1");
+        state = mix(state, static_cast<std::uint32_t>(fill->last_team()));
+        state = mix(state, static_cast<std::uint32_t>(fill->leader()));
+        state = mix(state, static_cast<std::uint32_t>(fill->pending_owner()));
+        const auto cooldown = std::bit_cast<std::uint64_t>(fill->cooldown_remaining());
+        state = mix(state, static_cast<std::uint32_t>(cooldown));
+        state = mix(state, static_cast<std::uint32_t>(cooldown >> 32));
+        state = mix(state, bits_from_float(fill->trigger_area(PlayerTeam::a)));
+        state = mix(state, bits_from_float(fill->trigger_area(PlayerTeam::b)));
+        for (std::size_t i = 0; i < info.laid_areas.size(); ++i)
+        {
+            state = mix(state, bits_from_float(info.laid_areas[i]));
+            state = mix(state, bits_from_float(info.recaptured_areas[i]));
+        }
+        print.paint_fill_hash = state;
+        hash = mix(hash, static_cast<std::uint32_t>(state));
+        hash = mix(hash, static_cast<std::uint32_t>(state >> 32));
+    }
 	print.hash = hash;
 	return print;
 }
@@ -270,6 +291,7 @@ std::string MatchFingerprint::difference(const MatchFingerprint& expected,
         if (!difference.empty()) { return difference; }
     }
 
+    if (expected.paint_fill_hash != actual.paint_fill_hash) { return "paint fill state or paint credit differs"; }
 	if (expected.hash != actual.hash)
 	{
 		return "per-slot paint (hash " + hex64(actual.hash) + " != " + hex64(expected.hash) + ")";

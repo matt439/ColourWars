@@ -50,6 +50,9 @@ rotation order. On Sluice Works, paint the sides of the gate to claim the
 passage under the bridge, or climb over it from either loading dock. Stage
 Select previews the arena before a separate confirmation starts the match.
 
+To try the fill mechanic, choose **Turbulence Yard - Fill Trial** by name.
+Paint the marked sides of the centre block to claim the strip across its top.
+
 The arena is an unsaved picture in a paint program
 ([the backstory](docs/backstory.md)). **A, B or Start** (**Space, Escape or
 Enter**) skips the opening. When time runs out, the camera pulls back to

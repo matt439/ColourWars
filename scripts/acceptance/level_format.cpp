@@ -12,6 +12,7 @@
 #include "editor/content_catalog.h"
 #include "scripts/acceptance/support/probe.h"
 #include "scripts/acceptance/support/json_fixture.h"
+#include "scripts/acceptance/support/paint_fill_variants.h"
 
 #include <filesystem>
 #include <fstream>
@@ -958,6 +959,12 @@ int main(int argc, char** argv)
         check_motion_fixtures(schema, source, scratch, builder, render, audio);
         check_lift_fixtures(schema, source, scratch, builder, render, audio);
         check_gate_fixtures(schema, source, scratch, builder, render, audio, tuning);
+        acceptance::check_invalid_paint_fill(content / "levels", scratch,
+            [&](const auto& path, const auto& document, bool schema_accepts)
+        {
+            schema_is(schema, document, schema_accepts, path.filename().string());
+            runtime_rejects(path, "paint_fill", builder, render, audio);
+        });
         check_limit_fixtures(schema_json, schema, source, scratch, builder, render, audio);
         check_editor_catalog(content);
         check_scenery_greys();

@@ -197,14 +197,17 @@ namespace debug_console_acceptance
         file.final_print.seats[0].paint_underfoot = true;
         file.final_print.seats[0].support_paint_team = static_cast<int>(PlayerTeam::a);
         file.final_print.seats[0].step_paint_team = static_cast<int>(PlayerTeam::b);
+        file.final_print.paint_fill_hash = 0x123456789abcdef0ull;
         file.write(path);
         const ReplayFile active = ReplayFile::read(path);
         require(active.final_print.seats[0].paint_underfoot &&
+            active.final_print.paint_fill_hash == file.final_print.paint_fill_hash &&
             active.final_print.seats[0].support_paint_team == static_cast<int>(PlayerTeam::a) &&
             active.final_print.seats[0].step_paint_team == static_cast<int>(PlayerTeam::b) &&
             MatchFingerprint::difference(file.final_print, active.final_print).empty(),
             "Active underfoot state did not survive actual replay encoding/decoding");
         file.final_print.seats[0].paint_underfoot = false;
+        file.final_print.paint_fill_hash.reset();
         file.write(path);
         require(read_text(path) == legacy_encoding, "Off replay serialization appended active state or changed legacy bytes");
 		// A replay is replaced whole (replace_file_atomically): a refused write

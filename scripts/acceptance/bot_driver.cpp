@@ -7,6 +7,7 @@
 #include "scripts/acceptance/bot_driver/ascent_approach_checks.h"
 #include "scripts/acceptance/bot_driver/ramp_checks.h"
 #include "scripts/acceptance/bot_driver/refill_checks.h"
+#include "scripts/acceptance/bot_driver/fill_checks.h"
 #include "engine/assets/json.h"
 #include "scripts/acceptance/support/probe.h"
 #include <cstdlib>
@@ -595,6 +596,7 @@ int wmain(int argc, wchar_t** argv)
 		check_refill_retreat(tuning);
 		check_disabled_refill(tuning);
 		bot_refill_acceptance::check_driver(tuning);
+		bot_fill_acceptance::check_driver(tuning);
 		{
 			std::ifstream stream(content / "tuning.json", std::ios::binary);
 			const std::string source{ std::istreambuf_iterator<char>(stream), {} };

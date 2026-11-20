@@ -11,6 +11,7 @@
 #include "engine/render/colour.h"
 #include "game/config/tuning.h"
 #include "game/contracts/paint_polygon_geometry.h"
+#include <functional>
 #include <span>
 #include <optional>
 #include <vector>
@@ -80,6 +81,11 @@ public:
 	PaintableObject* paintable() override { return this; }
 	const PaintableObject* paintable() const override { return this; }
 	PaintTotal paint_total() const override;
+	// Ordinary projectile contacts report each colour change in scoring-tile order.
+	using PaintContactObserver = std::function<void(PaintSurfaceFace, PlayerTeam before,
+		PlayerTeam after, int owner, float scored_area)>;
+	void set_paint_contact_observer(PaintContactObserver observer);
+	void fill_paint_face(PaintSurfaceFace face, PlayerTeam team, int owner);
 	void append_paint_surfaces(std::vector<PaintSurfaceSample>& samples,
 		std::size_t source_index = 0) const override;
 	// Ownership directly under a confirmed top-support contact. Tile intervals
@@ -104,6 +110,7 @@ private:
 	void draw_paint(labrador::DrawList& draw_list) const;
 	std::vector<PaintTile> paint_tiles_ = std::vector<PaintTile>();
 	PaintCredit credit_;
+	PaintContactObserver paint_contact_observer_;
 	TeamColour team_colours_ = TeamColour();
 	PaintableFaces faces_ = PaintableFaces();
 	// Borrowed, and outlives the level: main() owns it.
@@ -137,6 +144,11 @@ private:
 		bool top = false;
 		bool leading = true;
 		Runoff runoff;
+		PaintSurfaceFace face() const
+		{
+			return this->along_x ? (this->leading ? PaintSurfaceFace::top : PaintSurfaceFace::bottom)
+				: (this->leading ? PaintSurfaceFace::left : PaintSurfaceFace::right);
+		}
 	};
 
 	// A covered face can split into several exposed strips.

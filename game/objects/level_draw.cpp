@@ -8,6 +8,7 @@
 #include "game/objects/teammate_markers.h"
 #include "game/objects/player_identity_hud.h"
 #include "game/objects/match_opening.h"
+#include "game/objects/paint_fill_draw.h"
 
 using namespace labrador;
 
@@ -75,6 +76,10 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	// Detached world contacts remain visible even if their shot or owner has
 	// retired or left the pane. Render workers only read the fixed cue storage.
 	list.set_camera(this->scene_->view(view_index).camera);
+	if (const PaintFill* fill = this->paint_fill())
+	{
+		draw_paint_fill(list, *fill, this->paper_, this->presentation_->paint_fill(), this->preferences_->reduce_effects);
+	}
 	this->blocked_shot_feedback_->draw(list);
 	if (this->aim_marker_visible(participant))
 	{

@@ -8,6 +8,8 @@
 #include "game/objects/projectile_builder.h"
 #include "game/objects/projectile_spray.h"
 #include "game/objects/structure_paintable.h"
+#include "game/objects/paint_fill.h"
+#include "game/objects/paint_fill_draw.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -181,6 +183,8 @@ namespace
             save(crop(image, area), output / (prefix + '-' + suffixes[static_cast<size_t>(view)] + "-crop.ppm"));
         }
     }
+
+    #include "scripts/acceptance/paint_fx_visual/yard_fill.h"
 
     using Shots = std::vector<std::unique_ptr<Projectile>>;
     using ShotMatrix = std::array<Shots, 4>;
@@ -660,6 +664,7 @@ int wmain(int argc, wchar_t** argv)
             &preferences, &levels, &tuning, &presentation, app.resolution_manager(),
             app.thread_pool(), app.partitioner());
         const Canvas canvas(app.render_resources());
+        check_yard_fill(app, canvas, tuning, presentation, preferences);
         for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
         {
             app.resolution_manager()->set_resolution_exactly(size);

@@ -226,11 +226,11 @@ namespace balance_regions
         }
         else if (stage == "turbulence_blockout" || stage == "turbulence_mover_trial" || stage == "turbulence_gate_trial" ||
             stage == "turbulence_ferry_trial" || stage == "turbulence_slab_trial" || stage == "turbulence_lift_trial" ||
-            stage == "turbulence_paint_lift_trial")
+            stage == "turbulence_paint_lift_trial" || stage == "turbulence_fill_trial")
         {
             // Geographic X bands, distinct from the candidate's object-role
             // budget (which keeps high crossover and lower contest separate).
-            // The six trials share the blockout's bounds, so they share its
+            // These trials share the blockout's bounds, so they share its
             // bands; the self-check pins both. The 6200-wide `turbulence`
             // candidate keeps the whole-arena fallback until it has its own.
             result.name = "x_band";

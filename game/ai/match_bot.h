@@ -62,6 +62,8 @@ struct MatchBotObservation
 	// Visible enemy sprinklers' centres: shot at in this tool's reach while no
 	// enemy is engaged, never pursued (REV#21).
 	std::vector<labrador::Vector2F> enemy_sprinklers;
+	// In-range visible fill trigger tiles, nearest first. Aim only.
+	std::vector<labrador::Vector2F> fill_triggers;
 	// Sampled visible non-team scoring tiles, refreshed only for a replan.
 	std::vector<labrador::Vector2F> territory;
 	// Non-team paint beyond a permitted gate: useful route destinations, but

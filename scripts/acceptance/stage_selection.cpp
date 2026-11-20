@@ -137,7 +137,7 @@ namespace
 			{ "turbulence_blockout", false }, { "turbulence_mover_trial", false },
 			{ "turbulence_slab_trial", true }, { "turbulence_ferry_trial", false },
 			{ "turbulence_gate_trial", false }, { "turbulence_lift_trial", false },
-			{ "turbulence_paint_lift_trial", false }, { "sluice_works", true } };
+			{ "turbulence_paint_lift_trial", false }, { "turbulence_fill_trial", false }, { "sluice_works", true } };
 		StageList stages;
 		std::vector<std::string> order;
 		std::set<std::string> names_seen;
@@ -173,7 +173,7 @@ namespace
 		require(order == std::vector<std::string>{ "crossfeed", "press_tower", "close_quarters",
 			"turbulence_slab_trial", "sluice_works", "movement_course", "king_of_the_hill", "turbulence",
 			"turbulence_blockout", "turbulence_mover_trial", "turbulence_ferry_trial",
-			"turbulence_gate_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial" },
+			"turbulence_gate_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial", "turbulence_fill_trial" },
 			"Stage Select's shipped order changed from REV#26's");
 		require(stage_select_slot(stages, "") == stages.size(),
 			"A fresh save must open the shipped Stage Select on Random");
@@ -253,7 +253,7 @@ int main(int argc, char** argv)
 		check_mapping();
 		check_shipped_stages(argv[1]);
 		check_invalid_metadata(argv[1], std::filesystem::absolute(argv[0]).parent_path());
-		std::cout << "PASS stage selection: explicit course, originals and Turbulence trials, Crossfeed, Press Tower and slab trial in Random, eligible Random mapping, no repeat of the last stage, defaults and rejection guards.\n";
+		std::cout << "PASS stage selection: shipped order and rotation, explicit-only stages, Random mapping without an immediate repeat, defaults and rejection guards.\n";
 		return 0;
 	});
 }

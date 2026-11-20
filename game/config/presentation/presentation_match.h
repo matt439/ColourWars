@@ -97,6 +97,14 @@ struct FerryDirectionPresentation
 	float lift_width = 0.0f;
 };
 
+struct PaintFillPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour paper;
+	float mark_size = 0.0f; // world units
+	float sweep_seconds = 0.0f;
+};
+
 // World-camera accent sizes in world units, and their timing in seconds.
 struct ViewShakePresentation
 {

@@ -4975,7 +4975,14 @@ it may wait for `POL#16`'s UI pass.
 
 ### Flood-fill paint object (`ROAD#43`)
 
-**Design drafted 2026-11-20.** The paint objects so far are the ferry, the gate and the
+**Playable, 2026-11-20.** Choose **Turbulence Yard - Fill Trial** in Stage
+Select. Paint either side of the centre baffle to fill its top for your team.
+The fill marks on the two sides and the top show the connection, and the
+mark changes shape during the three-second cooldown. Select the trial by
+name. Sluice Works is the paint-gate arena in Random.
+[Level and authoring rules](level-format.md#paint-fill)
+
+**Original design, 2026-11-20.** The paint objects so far are the ferry, the gate and the
 lifts, with sponges (`ROAD#29`), a bounce pad (`REV#52`) and an eraser
 (`REV#53`) proposed. None borrows the paint program's defining tool, the fill
 ([classic paint research](classic-paint-research.md)). A swatch that fills one
@@ -5070,8 +5077,24 @@ qualification progress and leader, fill readiness and last fill team, and
 the visible region's current ownership. Offer reachable non-team trigger
 tiles as aim points when a capture would paint useful area. Keep the first
 trial's routes and seek behaviour on the Yard's existing supports. The
-worked swing and a readable bilateral trigger are the proposal for deciding
-whether to prototype.
+worked swing and a readable bilateral trigger were the basis for the prototype.
+
+**Trial evidence.** The [CPU case](../scripts/acceptance/yard_fill.cpp)
+drives the scoring sequence above, including a teammate painting during
+cooldown, a fully friendly destination, and a target on a different object.
+A real Sprayer opens the fill in a human/bot level. In six separate
+two-minute Normal bot matches from ordinary spawns, every match produced a
+fill. Ten activations changed 153 tiles in total. One activation found the
+top already friendly. All 30 top tiles belonged to the triggering team at
+each settlement. The seed-17 replay check includes an activation and
+reproduces the final tile ownership and individual credit on all three
+playbacks. [Per-match evidence](../out/validation/yard-fill-flow-final/summary.json)
+
+The [two-player frame](images/yard-fill/two-player-sweep.png) shows the
+stroke travelling across the baffle. With Reduce effects enabled, the same
+changed strip shows a fixed stroke. The [four-player frame](images/yard-fill/four-player-reduced.png)
+shows the marks at quarter-pane size. Repeat the capture from Debug with
+`ColourWars.exe +exec review_turbulence_fill_trial +quit`.
 
 ### Circle shapes for round projectiles (`ROAD#44`)
 

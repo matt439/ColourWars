@@ -4,6 +4,7 @@
 #include "game/objects/collision_object_type.h"
 #include "game/objects/level_structures.h"
 #include "game/objects/player.h"
+#include "game/objects/paint_fill.h"
 #include "game/objects/projectile_planted.h"
 #include "game/objects/structure.h"
 #include "game/objects/team_gate_structure_paintable.h"
@@ -29,8 +30,8 @@ namespace
 }
 
 LevelBotWorld::LevelBotWorld(const Scene& scene, const std::vector<Player*>& players,
-    const LevelStructures& structures, const std::vector<Projectile*>& projectiles) :
-    scene_(scene), players_(players), structures_(structures), projectiles_(projectiles)
+    const LevelStructures& structures, const std::vector<Projectile*>& projectiles, const PaintFill* fill) :
+    fill_(fill), scene_(scene), players_(players), structures_(structures), projectiles_(projectiles)
 {
 }
 
@@ -78,6 +79,41 @@ std::vector<PlayerTeam> LevelBotWorld::gate_permissions() const
     permissions.reserve(gates.size());
     for (const TeamGateStructurePaintable* gate : gates) { permissions.push_back(gate->open_for()); }
     return permissions;
+}
+
+std::optional<BotFillObservation> LevelBotWorld::visible_fill(PlayerTeam viewer,
+    const std::function<bool(Vector2F)>& sees) const
+{
+    if (!this->fill_ || viewer == PlayerTeam::none) { return std::nullopt; }
+    const auto visible_tiles = [&](const std::vector<PaintSurfaceSample>& tiles)
+    {
+        std::vector<BotFillTile> visible;
+        for (const PaintSurfaceSample& tile : tiles)
+        {
+            // Sight ends just outside the scored edge so its own solid does not occlude it.
+            const Vector2F first = tile.corners[0];
+            const Vector2F last = tile.corners[2];
+            Vector2F point = (first + last) * 0.5f;
+            switch (tile.face)
+            {
+            case PaintSurfaceFace::left: point.x = first.x - 0.1f; break;
+            case PaintSurfaceFace::right: point.x = last.x + 0.1f; break;
+            case PaintSurfaceFace::top: point.y = first.y - 0.1f; break;
+            case PaintSurfaceFace::bottom: point.y = last.y + 0.1f; break;
+            }
+            if (sees(point)) { visible.push_back({ point, tile.team, tile.scored_area }); }
+        }
+        return visible;
+    };
+    BotFillObservation observed{};
+    observed.trigger_tiles = visible_tiles(this->fill_->trigger_tiles());
+    if (observed.trigger_tiles.empty()) { return std::nullopt; }
+    observed.target_tiles = visible_tiles(this->fill_->target_tiles());
+    observed.leader = this->fill_->leader();
+    observed.last_team = this->fill_->last_team();
+    observed.ready = this->fill_->cooldown_remaining() <= 0.0f;
+    observed.own_trigger_share = this->fill_->trigger_area(viewer) / this->fill_->trigger_total();
+    return observed;
 }
 
 std::vector<PaintSurfaceSample> LevelBotWorld::paint_surfaces() const

@@ -34,6 +34,7 @@ int wmain(int argc, wchar_t* argv[])
         check_motion(repo, scratch);
         check_paint_drive(repo, scratch);
         check_team_gate(repo, scratch);
+        check_paint_fill(repo, scratch);
         check_stations(repo, scratch);
         check_station_editing(repo, scratch);
         check_mirror_copy(repo, scratch);

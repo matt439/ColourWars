@@ -148,6 +148,11 @@
       "_comment": "A team gate (ROAD#15) lets through the team holding more of its paint, once that team holds at least open_share of the gate's paintable area. Provisional.",
       "open_share": 0.25
     },
+    "fill": {
+      "_comment": "A paint fill needs a strict lead and this share of its trigger area. Cooldown is measured in live match seconds.",
+      "open_share": 0.25,
+      "cooldown": 3.0
+    },
     "sound_bank": "paint_exe",
     "splash_sounds": [
       { "name": "paint.splash.01", "volume": 0.20 },

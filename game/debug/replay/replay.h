@@ -48,6 +48,7 @@
 //   step was taken at the one dt.
 //   stage_hash identifies the loaded semantic stage definition; play requires
 //   it.
+//   final.paint_fill_hash is present for arenas with a flood-fill region.
 // `seed` is the round seed the level was built from (HYG#39), always
 // written: playback builds from it, so even an unseeded recording repeats its
 // Random palette.

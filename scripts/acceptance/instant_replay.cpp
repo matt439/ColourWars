@@ -2,6 +2,7 @@
 #include "scripts/acceptance/paint_surfaces/fixtures.h"
 #include "game/contracts/simulation.h"
 #include "game/match/round_tape.h"
+#include "game/objects/paint_fill.h"
 #include "scripts/acceptance/support/probe.h"
 #include <iostream>
 
@@ -71,6 +72,17 @@ namespace
         // The palette is drawn from the round seed's stream: the seed's part.
         std::vector<Colour> colours;
         int projectiles = 0;
+        struct Fill
+        {
+            PlayerTeam last;
+            PlayerTeam leader;
+            int pending_owner;
+            double cooldown;
+            float area_a;
+            float area_b;
+            bool operator==(const Fill&) const = default;
+        };
+        std::optional<Fill> fill;
         bool operator==(const Moment&) const = default;
     };
 
@@ -84,13 +96,19 @@ namespace
             taken.colours.push_back(level.player(seat).team_colour());
         }
         taken.projectiles = level.projectile_count();
+        if (const PaintFill* fill = level.paint_fill())
+        {
+            taken.fill = Moment::Fill{ fill->last_team(), fill->leader(), fill->pending_owner(),
+                fill->cooldown_remaining(), fill->trigger_area(PlayerTeam::a), fill->trigger_area(PlayerTeam::b) };
+        }
         return taken;
     }
 
     bool same_paint(const LevelEndInfo& a, const LevelEndInfo& b)
     {
         return a.total_area == b.total_area && a.team_a_area == b.team_a_area &&
-            a.team_b_area == b.team_b_area && a.player_areas == b.player_areas;
+            a.team_b_area == b.team_b_area && a.player_areas == b.player_areas &&
+            a.laid_areas == b.laid_areas && a.recaptured_areas == b.recaptured_areas;
     }
 
     // The pad human: walks, turns, jumps and sprays on a fixed script.
@@ -185,6 +203,12 @@ namespace
             "The replay's first step is not eight seconds before time up");
         const LevelEndInfo played = level->level_end_info();
         const std::vector<PaintSurfaceSample> played_surfaces = level->paint_surfaces();
+        if (level->paint_fill())
+        {
+            require(std::any_of(seen.begin(), seen.end(), [](const Moment& step_state)
+                { return step_state.fill && step_state.fill->last != PlayerTeam::none; }),
+                "The taped fill trial never activated its painted region");
+        }
 
         // The level the round leaves under the End menu offers Watch Replay.
         require(offers_watch_replay(tape, *level), "A finished timed round did not offer Watch Replay");
@@ -200,7 +224,13 @@ namespace
             const auto& replay = watched.level;
             require(replay->state() == LevelState::zoom_out, "The replay did not end where time ran out");
             require(same_paint(replay->level_end_info(), played), "The replay's paint differs from the round's");
-            require(replay->paint_surfaces().size() == played_surfaces.size(), "The replay's paint surfaces differ");
+            const auto replay_surfaces = replay->paint_surfaces();
+            require(std::equal(played_surfaces.begin(), played_surfaces.end(),
+                replay_surfaces.begin(), replay_surfaces.end(), [](const PaintSurfaceSample& a, const PaintSurfaceSample& b)
+                {
+                    return a.source_index == b.source_index && a.face == b.face && a.corners == b.corners &&
+                        a.team == b.team && a.paint_owner == b.paint_owner && a.scored_area == b.scored_area;
+                }), "Replayed paint tiles differ in geometry, team or individual credit");
         }
         RoundTape spoiled = tape; spoiled.spoil();
         require(!offers_watch_replay(spoiled, *world.build(settings, OpeningMode::off, MatchRandom(seed))),
@@ -344,6 +374,8 @@ int main(int argc, char** argv)
         {
             check_stage(world, stage, seed++);
         }
+        // This roster captures the fill at the end of a complete twenty-second round.
+        check_stage(world, "turbulence_fill_trial", 17);
         return 0;
     });
 }

@@ -355,7 +355,7 @@ namespace
 	PaintTuning read_paint(const JsonValue& root)
 	{
 		const JsonValue json = known_object(root, "paint", { "size", "thickness", "sheet",
-			"frame", "splash", "visual", "gate", "sound_bank", "splash_sounds",
+			"frame", "splash", "visual", "gate", "fill", "sound_bank", "splash_sounds",
 			"capture_sound", "dud_sound", "impact_sounds", "min_impact_interval",
 			"min_capture_interval" });
 
@@ -432,6 +432,9 @@ namespace
 		}
 
 		paint.gate_open_share = read_unit(known_object(json, "gate", { "open_share" }), "open_share");
+		const JsonValue fill = known_object(json, "fill", { "open_share", "cooldown" });
+		paint.fill.open_share = read_unit(fill, "open_share");
+		paint.fill.cooldown = read_positive(fill, "cooldown");
 
 		paint.sound_bank = json.string("sound_bank");
 		const JsonValue choices = json.array("splash_sounds");

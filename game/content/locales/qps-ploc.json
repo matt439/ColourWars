@@ -202,7 +202,8 @@
         "turbulence_ferry_trial": "[Turbulence Yard - Ferry Trial]",
         "turbulence_gate_trial": "[Turbulence Yard - Gate Trial]",
         "turbulence_lift_trial": "[Turbulence Yard - Lift Trial]",
-        "turbulence_paint_lift_trial": "[Turbulence Yard - Paint Lift Trial]"
+        "turbulence_paint_lift_trial": "[Turbulence Yard - Paint Lift Trial]",
+        "turbulence_fill_trial": "[Turbulence Yard - Fill Trial]"
       },
       "records": {
         "new_best": "[NEW BEST {percentage}]",

@@ -451,6 +451,8 @@ namespace
         };
         struct Bound { std::vector<const char*> path; double invalid; };
         const Bound bounds[]{
+            { { "paint", "fill", "open_share" }, 1.01 },
+            { { "paint", "fill", "cooldown" }, 0.0 },
             { { "match", "countdown" }, -0.01 },
             { { "match", "overview" }, -0.01 },
             { { "player", "gravity" }, 1e100 },

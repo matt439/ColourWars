@@ -414,6 +414,18 @@ namespace presentation_read
 
 	}
 
+	PaintFillPresentation read_paint_fill(const JsonValue& root)
+	{
+		const JsonValue json = root.object("paint_fill");
+		PaintFillPresentation cue;
+		cue.ink = read_colour(json, "ink");
+		cue.paper = read_colour(json, "paper");
+		cue.mark_size = read_positive(json, "mark_size");
+		cue.sweep_seconds = read_positive(json, "sweep_seconds");
+		check_plaque(json, cue.ink, cue.paper, { cue.mark_size, cue.mark_size }, cue.mark_size / 9.0f);
+		return cue;
+	}
+
 	std::array<IdleDripPresentation, tuned_weapon_count> read_idle_drips(const JsonValue& root)
 	{
 		const JsonValue json = root.object("idle_drip");

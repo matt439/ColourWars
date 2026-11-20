@@ -61,6 +61,9 @@ struct MatchFingerprint
         std::vector<std::uint32_t> carriers;
     };
     std::optional<HorizontalTerrainPrint> horizontal_motion;
+    // Only for stages with a fill. Includes pending credit and the live timer,
+    // which can differ before anyone sees a change in held territory.
+    std::optional<std::uint64_t> paint_fill_hash;
 
 	int updates = 0;
 	std::uint64_t hash = 0;

@@ -44,6 +44,7 @@ public:
 	void set_rectangle_center(const labrador::Vector2F& center);
 	void reset_and_play();
 	void reset_and_play(labrador::RenderResources::SheetStrip clip);
+	void finish();
 	bool active() const;
 	void set_colour(const labrador::Colour& colour) override;
 
@@ -111,6 +112,8 @@ public:
 	// that owner. The caller has established that the projectile reached it.
 	void paint(PlayerTeam team, int player_num,
 		ProjectileType type = ProjectileType::spray);
+	// A fill uses the structure's sweep instead of a per-tile impact.
+	void fill(PlayerTeam team, int player_num);
 	int player_num() const;
 
 	labrador::RectangleF bounds() const override;
@@ -121,6 +124,7 @@ private:
 	labrador::RectangleF rectangle_ = labrador::RectangleF::zero;
 	PlayerTeam team_ = PlayerTeam::none;
 	int player_num_ = -1;
+	void claim(PlayerTeam team, int player_num);
 	TeamColour team_colours_ = TeamColour();
 	const PaintTuning* paint_ = nullptr;
 	const PaintSplashClips* splash_clips_ = nullptr;

@@ -118,6 +118,7 @@ Presentation::Presentation(const JsonDocument& document)
 	this->combat_feedback_ = read_combat_feedback(root);
 	this->gate_permission_ = read_gate_permission(root);
 	this->ferry_direction_ = read_ferry_direction(root);
+	this->paint_fill_ = read_paint_fill(root);
 	this->weapon_feedback_ = read_weapon_feedback(root);
 	this->blocked_shot_ = read_blocked_shot(root);
 	this->idle_drips_ = read_idle_drips(root);

@@ -139,6 +139,28 @@ void StructurePaintable::on_projectile_contact(const Projectile& other,
 	this->paint_from_projectile(other, other.shape()->bounding_box());
 }
 
+void StructurePaintable::set_paint_contact_observer(PaintContactObserver observer)
+{
+	this->paint_contact_observer_ = std::move(observer);
+}
+
+void StructurePaintable::fill_paint_face(PaintSurfaceFace face, PlayerTeam team, int owner)
+{
+	if (team == PlayerTeam::none) { return; }
+	for (const PaintStrip& strip : this->paint_strips_)
+	{
+		if (strip.face() != face) { continue; }
+		for (int index = strip.begin; index < strip.begin + strip.count; ++index)
+		{
+			PaintTile& tile = this->paint_tiles_[static_cast<size_t>(index)];
+			const PlayerTeam before = tile.team();
+			if (before == team) { continue; }
+			tile.fill(team, owner);
+			this->credit_.add(owner, before, team, tile.area());
+		}
+	}
+}
+
 void StructurePaintable::paint_from_projectile(const Projectile& projectile,
 	const RectangleF& splash)
 {
@@ -189,6 +211,10 @@ void StructurePaintable::paint_from_projectile(const Projectile& projectile,
 			tile_captured |= before != team;
 			paint_tile.paint(team, projectile.player_num(), projectile.projectile_type());
 			this->credit_.add(projectile.player_num(), before, team, paint_tile.area());
+			if (before != team && this->paint_contact_observer_)
+			{
+				this->paint_contact_observer_(strip.face(), before, team, projectile.player_num(), paint_tile.area());
+			}
 			tile_painted = true;
 			if (first_painted < 0) { first_painted = i; }
 			last_painted = i;
@@ -466,9 +492,7 @@ void StructurePaintable::append_paint_surfaces(std::vector<PaintSurfaceSample>& 
     samples.reserve(samples.size() + this->paint_tiles_.size());
     for (const PaintStrip& strip : this->paint_strips_)
     {
-        const PaintSurfaceFace face = strip.along_x
-            ? (strip.leading ? PaintSurfaceFace::top : PaintSurfaceFace::bottom)
-            : (strip.leading ? PaintSurfaceFace::left : PaintSurfaceFace::right);
+        const PaintSurfaceFace face = strip.face();
         for (int index = 0; index < strip.count; ++index)
         {
             const PaintTile& tile = this->paint_tiles_[static_cast<std::size_t>(strip.begin + index)];

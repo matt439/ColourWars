@@ -204,6 +204,12 @@ struct PaintRunoffTuning
 	float highlight = 0.0f;
 };
 
+struct PaintFillTuning
+{
+	float open_share = 0.0f;
+	float cooldown = 0.0f;
+};
+
 // Paint coverage granularity, thickness, visuals and sound.
 // Tile lengths affect scoring precision, so geometry belongs with balance data.
 struct PaintTuning
@@ -232,6 +238,7 @@ struct PaintTuning
 	// A team gate opens only for the team holding more of its paint and at
 	// least this share of its paintable area (game/contracts/team_gate_contract.h).
 	float gate_open_share = 0.0f;
+	PaintFillTuning fill;
 
 	std::string sound_bank;
 	std::vector<SoundTuning> splash_sounds;

@@ -10,6 +10,7 @@ namespace labrador
 class Player;
 class Projectile;
 class LevelStructures;
+class PaintFill;
 
 // A Level's world as its shipping bots see it (HYG#40). Every member is a
 // borrow from the owning Level, which never moves: the scene, its player
@@ -22,7 +23,8 @@ class LevelBotWorld final : public BotWorld
 {
 public:
     LevelBotWorld(const labrador::Scene& scene, const std::vector<Player*>& players,
-        const LevelStructures& structures, const std::vector<Projectile*>& projectiles);
+        const LevelStructures& structures, const std::vector<Projectile*>& projectiles,
+        const PaintFill* fill = nullptr);
     LevelBotWorld(const LevelBotWorld&) = delete;
     LevelBotWorld& operator=(const LevelBotWorld&) = delete;
     LevelBotWorld(LevelBotWorld&&) = delete;
@@ -31,6 +33,8 @@ public:
     int participant_count() const override;
     BotBody body(int participant) const override;
     std::vector<PlayerTeam> gate_permissions() const override;
+    std::optional<BotFillObservation> visible_fill(PlayerTeam viewer,
+        const std::function<bool(labrador::Vector2F)>& sees) const override;
     // Exact scoring tiles in Scene paintable-role order (Level::paint_surfaces).
     std::vector<PaintSurfaceSample> paint_surfaces() const override;
     std::vector<labrador::RectangleF> obstacles(PlayerTeam permitted) const override;
@@ -43,6 +47,7 @@ public:
         PlayerTeam team) const override;
 
 private:
+    const PaintFill* fill_;
     const labrador::Scene& scene_;
     const std::vector<Player*>& players_;
     const LevelStructures& structures_;

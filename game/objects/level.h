@@ -183,6 +183,7 @@ public:
 	// The world as the shipping bots query it (game/ai/bot_world.h). The
 	// bot_* queries below forward to it.
 	const BotWorld& bot_world() const;
+	const PaintFill* paint_fill() const { return paint_fill_.get(); }
 	// Conservative traversal bounds. A permitted team's open gates are neither
 	// obstacles nor standing supports; none retains all structural bounds.
 	std::vector<labrador::RectangleF> bot_obstacles(PlayerTeam team = PlayerTeam::none) const;
@@ -318,6 +319,7 @@ private:
 	// The edge chips for teammates out of a pane's view, and their fade ages.
 	std::unique_ptr<TeammateMarkers> teammate_markers_;
     std::unique_ptr<labrador::Scene> scene_ = nullptr;
+    std::unique_ptr<PaintFill> paint_fill_;
     // The movers, their supports, the team gates and the projectile targets,
     // borrowed from scene_ when build_opening_frame admits the builder's objects.
     LevelStructures structures_;

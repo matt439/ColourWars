@@ -7,6 +7,7 @@
 #include "game/objects/weapon_type.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
+#include <functional>
 #include <optional>
 #include <vector>
 
@@ -52,6 +53,24 @@ struct BotPlantedSub
 	SubType type = SubType::sprinkler;
 };
 
+// Visible face points only. A scoring tile's paint owner is private to the match.
+struct BotFillTile
+{
+	labrador::Vector2F point;
+	PlayerTeam team;
+	float area;
+};
+
+struct BotFillObservation
+{
+	std::vector<BotFillTile> trigger_tiles;
+	std::vector<BotFillTile> target_tiles;
+	PlayerTeam leader;
+	PlayerTeam last_team;
+	float own_trigger_share;
+	bool ready;
+};
+
 // What the shipping bots may ask of a running match (HYG#40). Nothing here
 // returns a game object or a mutable reference, so game/ai reaches the world
 // only through this and value headers. LevelBotWorld implements it.
@@ -66,6 +85,9 @@ public:
 	// Each team gate's settled permission in Scene order, as of the last
 	// settlement; empty when the stage has no team gates.
 	virtual std::vector<PlayerTeam> gate_permissions() const = 0;
+	// A visible trigger exposes its public status and the destination tiles in sight.
+	virtual std::optional<BotFillObservation> visible_fill(PlayerTeam,
+		const std::function<bool(labrador::Vector2F)>&) const { return std::nullopt; }
 	virtual std::vector<PaintSurfaceSample> paint_surfaces() const = 0;
 	// Conservative traversal bounds. A permitted team's open gates are neither
 	// obstacles nor standing supports; none retains all structural bounds.
