@@ -62,23 +62,23 @@ On 2026-11-13 the course gained the `sub` station and its lesson (`REV#56`),
 at the far end of the right runway: the refill lesson's area now ends at
 x 5240, where the sub lesson's begins. The lesson names no cost, since sub
 costs are tuning, and describes the HUD's sub mark as `presentation.json`'s
-`sub_mark` does. To change sub the player leaves for Weapon Select; the
-practice Tool row changes only the tool, so the lesson promises nothing there.
+`sub_mark` does. The practice pause menu lets the player compare subs at that
+station.
 The author has not seen this wording (`ROAD#11`'s play review was waived on
 2026-11-13); `practice_workshop` pins its two phrases and checks that each sub
 works at the station. Like every lesson it is level copy, not
 `presentation.json`, so `qps-ploc` does not reach it
 ([localisation](localisation.md)).
 
-**Tool and clean paint.** The practice pause menu adds a fifth row,
-**Tool: < Sprayer >**, under Resume. Left and right choose among the five
-tools. Select rebuilds the course clean with that tool and puts a living player
-back where they stood. It skips the countdown and goes straight to GO.
-Selecting the tool already held is therefore a clean course in place.
-**Restart** keeps the chosen tool and starts again at the spawn, after the
-countdown and controls reminder. The rows use the authored
-`pause_menu.practice_row_spacing` (96, 0.8 of the pause spacing, which is
-also what a file without the key gets) so five fit the same paper.
+**Loadout and clean paint.** Practice Pause puts **Tool** and **Sub** under
+Resume. Left and right cycle the selected row. Confirm applies that row's
+choice and rebuilds the course with clean paint. A living player returns to
+the same place and goes straight to GO. Confirming the equipped tool or sub
+also gives a clean course in place. **Restart** keeps both choices and starts
+again at the spawn after the countdown and controls reminder. Six rows fit
+the same paper at the authored `pause_menu.practice_row_spacing` of 95, with
+the first row raised by half a step. A file without the spacing uses 0.8 of
+normal Pause spacing.
 
 **Evidence.** The `practice_workshop` acceptance case builds the real level
 through `LevelBuilder` and checks the following:
@@ -94,7 +94,9 @@ through `LevelBuilder` and checks the following:
   1920x1080 window.
 - A dead player sees no lesson.
 - A timed build still ends, and two humans never get the workshop.
-- A tool-change rebuild starts at GO with the chosen tool.
+- A loadout rebuild starts at GO, retains the player's place and equips the
+  confirmed choice. The pause labels and focus cards fit in English and
+  pseudo-localisation at 320 × 200.
 - Bad lessons are rejected at load.
 
 **Kept, 2026-11-05 (`POL#19`).** The test was the polish plan's: a fresh player
@@ -103,6 +105,19 @@ and choose a useful tool without another person explaining the game. The author
 kept the workshop and its current wording. That fresh-player observation was
 waived by the author on 2026-11-05 and not performed, so the test has not been
 passed, only set aside.
+
+### Try each sub from practice pause (`ROAD#48`)
+
+The Sub row cycles Grenade, Sprinkler and Paint wall using the same localized
+names as Weapon Select. Back and Resume discard unconfirmed previews. The main
+tool stays equipped when the player confirms a sub.
+
+The [workshop probe](../scripts/acceptance/practice_workshop.cpp) switches
+through all three subs at one station and measures each sub's ordinary reserve
+cost. `check-painter.ps1 -PracticeReplayOnly` drives the real GameLevel Pause
+with keyboard/mouse and a scripted pad. It checks the two discard paths,
+all three confirmed choices and reserve costs, and the Restart row in timed
+solo and versus Pause.
 
 ## Dimensions and route
 

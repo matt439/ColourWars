@@ -82,7 +82,9 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         const float edge = art.keyline_width * 3.0f; const RectangleF inside(paper.position() + Vector2F(edge), paper.size() - Vector2F(edge * 2.0f + art.shadow_offset));
         const auto position = [&](int column, int row) { return style.layout.position + Vector2F(look.weapon_select.spacing.x * static_cast<float>(column), look.weapon_select.spacing.y * static_cast<float>(row)); };
         const colourwars::UiTextDropShadow title("independent-weapon-title", heading, style.heading_font, position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
-        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels, handicaps, names, details; std::vector<RectangleF> rows, badges, boxes;
+        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels, handicaps, names, details;
+        std::vector<std::unique_ptr<UiText>> statuses;
+        std::vector<RectangleF> rows, badges, boxes;
         const std::array<std::wstring, 4> devices{ L"Keyboard/mouse", L"Pad 4", L"Pad 1", L"Pad 3" };
         for (size_t i = 0; i < choices.size(); ++i)
         {
@@ -93,13 +95,18 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
                 box.position() + Vector2F(0.0f, box.height + style.icon_padding.y + style.rule_height), app.render_resources(), ready[i] ? art.focus_ink : art.ink, Colour{}, style.detail_shadow_offset);
             auto detail = std::make_unique<colourwars::UiTextDropShadow>("independent-weapon-description", look.weapon_descriptions[static_cast<size_t>(choices[i])], look.weapon_description_font,
                 box.position() + Vector2F(look.weapon_description_x_offset, 0.0f), app.render_resources(), look.weapon_description_colour, Colour{}, look.weapon_description_shadow_offset);
+            auto status = std::make_unique<UiText>("independent-weapon-status", ready[i] ? L"Ready" : L"Choose tool",
+                look.weapon_description_font, Vector2F(detail->bounds().x, std::max(detail->bounds().bottom(), tool_name->bounds().y)),
+                app.render_resources(), art.ink);
             const RectangleF bounds = label->bounds(); const auto& identity = snapshot.player_identity();
             auto handicap = std::make_unique<colourwars::UiTextDropShadow>("independent-weapon-handicap", snapshot.menu_text().subs.label(static_cast<size_t>(settings.player_sub(static_cast<int>(i))), false, snapshot.menu_text().handicap_label(settings.player_handicap(static_cast<int>(i)))), look.weapon_description_font, Vector2F(position(0, static_cast<int>(i) + 2).x, bounds.bottom()), app.render_resources(), art.ink, Colour{}, Vector2F(2.0f));
             const RectangleF badge(bounds.x - identity.ui_size.x - identity.ui_gap, bounds.y + (bounds.height - identity.ui_size.y) / 2.0f, identity.ui_size.x, identity.ui_size.y);
             RectangleF tile = box; tile.inflate(style.icon_padding + Vector2F(style.rule_height));
             RectangleF row = RectangleF::union_of(RectangleF::union_of(RectangleF::union_of(bounds, handicap->bounds()), badge), RectangleF::union_of(tile, RectangleF::union_of(tool_name->bounds(), detail->bounds())));
+            row = RectangleF::union_of(row, status->bounds());
             require(inside.contains(row), "Independent Weapon row escapes paper interior"); rows.push_back(row); badges.push_back(badge);
             labels.push_back(std::move(label)); handicaps.push_back(std::move(handicap)); names.push_back(std::move(tool_name)); details.push_back(std::move(detail));
+            statuses.push_back(std::move(status));
         }
         require(inside.contains(title.bounds()) && title.bounds().bottom() <= rows.front().y, "Independent Weapon heading escapes paper or overlaps rows");
         for (size_t i = 1; i < rows.size(); ++i) { require(rows[i - 1].bottom() <= rows[i].y, "Independent Weapon rows overlap"); }
@@ -120,7 +127,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         }
         fill_sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::design_resolution.x, menu_consts::design_resolution.y - style.footer_y), style.scrim_colour);
         fill_sheet->draw(list, fill, RectangleF(style.brand_position.x, style.footer_y, menu_consts::design_resolution.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
-        list.set_filter(TextureFilter::linear); title.draw(list); for (size_t i = 0; i < choices.size(); ++i) { names[i]->draw(list); labels[i]->draw(list); handicaps[i]->draw(list); details[i]->draw(list); }
+        list.set_filter(TextureFilter::linear); title.draw(list); for (size_t i = 0; i < choices.size(); ++i) { names[i]->draw(list); labels[i]->draw(list); handicaps[i]->draw(list); details[i]->draw(list); statuses[i]->draw(list); }
         const auto& footer = snapshot.prompt_bar(); const std::wstring prompt = missing ? L" Reconnect controller    B/Esc Change players" : L"Left/Right Tool, then sub    X/R Boost    A/Enter Confirm    B/Esc Cancel";
         const colourwars::UiTextDropShadow legend("independent-weapon-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
         const Frame expected = read(renderer); const std::string stem = "weapon-paper-" + name + '-' + std::to_string(choices.size()) + "p-" + TeamColourTools::palette_key(opened_palette) + '-' + std::to_string(actual.width) + 'x' + std::to_string(actual.height);
@@ -132,7 +139,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
             for (int y = box.y; y < box.bottom(); ++y) { for (int x = box.x; x < box.right(); ++x) { const float value = srgb_luminance(actual, pixel_offset(actual, x, y)); dark = std::min(dark, value); light = std::max(light, value); if (value < 0.1f) { ++ink; } if (value > 0.5f) { ++pale; } } }
             require(ink > 2 && pale > 2 && (light + 0.05f) / (dark + 0.05f) >= 7.0f, "Weapon paper lost native dark lettering/pale-paper contrast");
         };
-        contrast(title.bounds()); for (size_t i = 0; i < choices.size(); ++i) { contrast(labels[i]->bounds()); contrast(names[i]->bounds()); contrast(details[i]->bounds()); }
+        contrast(title.bounds()); for (size_t i = 0; i < choices.size(); ++i) { contrast(labels[i]->bounds()); contrast(names[i]->bounds()); contrast(details[i]->bounds()); contrast(statuses[i]->bounds()); }
         if (capture) { save(actual, output / (stem + ".ppm")); save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
         std::srand(7919); const int next_random = std::rand(); std::srand(7919); require(actual.pixels == frame().pixels && actual.pixels == frame().pixels && std::rand() == next_random, "Frozen Weapon paper changed pixels or RNG"); plan();
         records << name << ',' << actual.width << ',' << actual.height << ',' << choices.size() << ',' << TeamColourTools::palette_key(opened_palette) << ',' << missing << ',' << std::count_if(insets.begin(), insets.end(), [](float value) { return value > 0.0f; }) << ",true\n"; return actual;

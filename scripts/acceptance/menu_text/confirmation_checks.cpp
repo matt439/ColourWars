@@ -142,6 +142,8 @@ namespace menu_text_acceptance
             {
                 const bool display = std::string(entry.key) == "display";
                 use_font(d, display ? "menu_confirmation_display_action_edge" : "menu_confirmation_action_edge", entry.key);
+                // Leave the compact practice status above its raised first row.
+                d["pause_menu"]["practice_row_spacing"].SetFloat(6.0f);
                 d["pause_menu"]["layout"]["position"]["y"].SetFloat(pause.status_y + (display ? 40.0f : 20.0f) +
                     (display ? original.main_menu().setup_focus_padding.y : pause.art.focus_padding.y));
             };
@@ -243,7 +245,7 @@ namespace menu_text_acceptance
             d["pause_menu"]["status_y"].SetFloat(900.0f);
             d["pause_menu"]["layout"]["position"]["y"].SetFloat(940.5f);
             d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(3.0f);
-            // Practice's five rows keep their 0.8 share of the tight spacing.
+            // Practice's six rows keep their 0.8 share of the tight spacing.
             d["pause_menu"]["practice_row_spacing"].SetFloat(3.0f * 0.8f);
             d["pause_menu"]["art"]["focus_padding"]["y"].SetFloat(0.5f);
             d["pause_menu"]["art"]["keyline_width"].SetFloat(0.125f);

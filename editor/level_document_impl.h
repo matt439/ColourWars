@@ -1,6 +1,6 @@
 #pragma once
 
-// Private to the colourwars_level_document library; included only by the level_document TUs.
+// Private to the colourwars_level_document library and its acceptance checks.
 
 #include "editor/motion_authoring.h"
 #include "editor/level_document.h"
@@ -10,8 +10,10 @@
 #include <cstddef>
 #include <exception>
 #include <filesystem>
+#include <iosfwd>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <utility>
 #include <vector>
@@ -26,6 +28,7 @@ namespace colourwars_editor
         Json& entry_array(Document& document, EntryKind kind);
         void set_number(Json& object, const char* name, double value);
         void move_shape(Json& object, const Rect& rectangle);
+        bool matches_saved_source(std::istream& input, std::string_view baseline);
         // The added entry as entries() lists it, label included.
         Entry labelled(const std::vector<Entry>& entries, const Entry& added);
     }

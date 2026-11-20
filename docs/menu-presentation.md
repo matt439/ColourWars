@@ -50,13 +50,20 @@ same shape. `docs/audio-inventory.md` owns which wave each name is.
 
 ## Home return focus
 
-Home's initial focus is a bounded C++ choice among Play, Options and Credits,
-selected once after its actions are registered. Both Options Back routes request
-Options; Credits requests Credits. Title, both Mode Select return paths and the
-developer page factory retain the default Play focus. The Back row and B/Escape
-share each page's return choice. Existing page-entry input rearming still
-applies, and Controls/audio continues to return to its retained parent page.
-No presentation field, saved navigation history, artwork or geometry is added.
+Home selects its initial focus once after registering its actions. How to play,
+Play a bot, Options and Credits return to their own Home actions. Title, both
+Mode Select return paths and the developer page factory use Play. Each child
+handles its Back row and B/Escape alike.
+
+### Return focus to Play a bot (`ROAD#45`)
+
+Both exits from the preset review restore focus to **Play a bot**, so the next
+Confirm reopens the review. `-HomeReturnFocusOnly` checks the highlighted
+Home action and one-Confirm reopen after both Back paths using keyboard and
+scripted pad. It also checks that Title entry and ordinary Mode Back focus
+**Play**. The [first-match rehearsal](../scripts/acceptance/painter_visual/first_match_flow_checks.h)
+reopens the review from the restored focus and checks that cancellation
+preserves the saved setup and controls.
 
 ## Home Exit confirmation
 
@@ -274,11 +281,33 @@ The same line names the row's sub weapon (`ROAD#11`): `menu_text.subs.line`,
 A row picks its tool, then A moves it to its sub, where Left/Right cycles the
 grenade, sprinkler, paint wall and Random and the description column shows the
 sub's `menu_text.subs.choices.*.description` in place of the tool's; A again
-readies it, and B steps back one step at a time. The page leaves only when
-every row is back on its tool. Validation fits every Boost level with every
-sub in both steps before the first tool tile, and every sub description in the
+readies it, and B steps back one step at a time. The page advances when every
+row is ready. Back leaves the page when all rows began the frame on their
+tool. Validation fits every Boost level with every sub in both steps before
+the first tool tile, and every sub description in the
 description column. The rule is `LoadoutChoice`
 ([loadout_choice.h](../game/states/loadout_choice.h)).
+
+### Show readiness on each setup row (`ROAD#46`)
+
+**Built 2026-11-20.** Team Select shows **Choose a team**, **Confirm team** or
+**Ready** beside each row's choice icons. Every Team card reserves space for
+all three states, so its paper stays put when a player confirms, backs up or
+shuffles. Weapon Select shows **Choose tool**, **Choose sub** or **Ready**
+below the active description. Its original Boost and Sub line still names the
+sub and shows the selection arrows during that step.
+
+`menu_text.setup` in [presentation.json](../game/content/presentation.json)
+provides the five labels. Startup validates the status glyphs, row spacing and
+paper bounds. Team labels follow the selected team and its confirmation, while
+Weapon labels follow `LoadoutChoice::Step`. The host underline marks the host's
+current row and guest pads control their own.
+
+`-TeamSetupOnly` checks the mixed states across two to four rows, including
+shuffle, Back and final confirmation. `-FirstMatchFlowOnly` checks host and
+sparse guest input with a bot between them, in English and `qps-ploc`.
+`-TeamPaperOnly`, `-TeamFocusOnly` and `-WeaponPaperOnly` compare the rendered
+labels and paper geometry against independent references.
 
 ## Shared paper focus and press motion
 
@@ -883,9 +912,10 @@ paper rectangle: `pause_menu.box_size`, centered in the full 1920 by 1080 design
 area. The row-height rule is
 `measured_height + 2 * pause_menu.art.focus_padding.y <= pause_menu.layout.spacing.y`.
 Rows begin at `pause_menu.layout.position` and use its authored spacing;
-practice Pause's five rows use `pause_menu.practice_row_spacing` instead
-(optional; without it, 0.8 of `layout.spacing.y`), and are checked against
-the paper only.
+practice Pause's six rows start half a step higher and use
+`pause_menu.practice_row_spacing` (optional; without it, 0.8 of
+`layout.spacing.y`). The Tool and Sub labels and every action's focus card
+fit inside the paper face. The status sits above the first action.
 Equality is accepted; no item-text shadow or fitting scale is added.
 
 Each Pause page uses its captured `MenuText` and resolves the item font when it

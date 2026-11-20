@@ -21,13 +21,22 @@ void MainMenuQuickMatch::accept(bool customise)
     this->go_to(customise ? MainMenuScreen::mode_select : MainMenuScreen::quick_join);
 }
 
+void MainMenuQuickMatch::return_home()
+{
+    this->go_to(MainMenuRoute::home(MainMenuHome::InitialFocus::quick_match));
+}
+
 void MainMenuQuickMatch::update_page(float)
 {
     const auto inputs = this->menu_inputs();
     for(size_t i=0;i<inputs.size();++i)
     {
         const auto& input=inputs[i];
-        if(input.action==MenuInputAction::back) { this->go_to(MainMenuScreen::home); return; }
+        if (input.action == MenuInputAction::back)
+        {
+            this->return_home();
+            return;
+        }
         if(input.action==MenuInputAction::proceed)
         {
             this->activating_slot_=static_cast<int>(i);
@@ -69,5 +78,5 @@ void MainMenuQuickMatch::init()
     for(auto* item:{this->heading_.get(),this->body_.get(),this->start_.get(),this->customise_.get(),this->back_.get()}) this->text_container_->add_child(item);
     this->focus_.add(this->start_.get(),[this]{this->accept(false);});
     this->focus_.add(this->customise_.get(),[this]{this->accept(true);});
-    this->focus_.add(this->back_.get(),[this]{this->go_to(MainMenuScreen::home);});
+    this->focus_.add(this->back_.get(), [this] { this->return_home(); });
 }

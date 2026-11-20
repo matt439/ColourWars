@@ -49,6 +49,20 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 	const int depth = this->application_ != nullptr ? this->application_->depth() : 0;
 	lines.push_back("stack depth " + std::to_string(depth) +
 		(this->match_ != nullptr ? ", in a match" : ", in the menus"));
+	if (this->application_ != nullptr && this->application_->renderer() != nullptr)
+	{
+		const RenderDeviceInfo& device = this->application_->renderer()->device_info();
+		const char* kind = "unknown";
+		switch (device.kind)
+		{
+		case RenderDeviceKind::hardware: kind = "hardware"; break;
+		case RenderDeviceKind::software: kind = "software"; break;
+		case RenderDeviceKind::null_device: kind = "null_device"; break;
+		}
+		lines.push_back("renderer: backend=" + device.backend + " kind=" + kind +
+			" vendor=" + std::to_string(device.vendor_id) + " device=" + std::to_string(device.device_id) +
+			" name=" + device.device_name);
+	}
 
 	if (this->match_ != nullptr)
 	{

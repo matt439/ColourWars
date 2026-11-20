@@ -2,6 +2,7 @@
 #include "game/input/input_slots.h"
 #include "game/contracts/simulation.h"
 #include "game/objects/level_builder.h"
+#include "game/config/locale.h"
 #include "game/states/pause_menu.h"
 #include "game/config/presentation/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
@@ -212,24 +213,33 @@ namespace
             "A dead player sees no lesson");
     }
 
-    // REV#56: the sub lesson's station is a place where every sub works. A
-    // player stood there in its lesson presses Sub aimed along the runway and
-    // pays the sub's cost, whichever of the three they chose.
+    // Rebuild with every choice at the same station, then use the fitted
+    // sub's ordinary reserve cost in the rebuilt course.
     void check_sub_station(World& world)
     {
         const std::vector<LevelStation> stations = world.course().stations();
         const auto station = std::find_if(stations.begin(), stations.end(),
             [](const LevelStation& candidate) { return candidate.name == "sub"; });
         require(station != stations.end(), "The course has a sub station");
-        const Vector2F position = station->position;
+        const WeaponType main_tool = WeaponType::roller;
+        std::unique_ptr<Level> level = world.build(true, 1, 1.0f, main_tool);
+        level->start_without_countdown();
+        require(level->place_player(level->participant_for_view(0), station->position), "goto sub");
+        step(*level, 0.5f);
         for (const SubType sub : { SubType::grenade, SubType::sprinkler, SubType::wall })
         {
-            std::unique_ptr<Level> level = world.build(true, 1, 1.0f, WeaponType::sprayer, sub);
-            step(*level, world.tuning.match().countdown + 0.1f);
-            const int participant = level->participant_for_view(0);
-            require(level->place_player(participant, position), "goto sub");
+            const std::optional<Vector2F> place = level->loadout_change_place();
+            require(place.has_value(), "Living sub user has no place to return to");
+            level.reset();
+            level = world.build(true, 1, 1.0f, main_tool, sub);
+            level->enter_after_loadout_change(place);
             step(*level, dt);
+            const int participant = level->participant_for_view(0);
             require(level->active_lesson() == lesson_index(*level, "sub"), "At the sub station its lesson shows");
+            const Player& player = level->player(participant);
+            require((player.rectangle().position() - *place).length_squared() < 0.25f &&
+                player.primary_weapon().type() == main_tool && player.sub_weapon() != nullptr &&
+                player.sub_weapon()->type() == sub, "Rebuilding at the sub station changed position or equipped loadout");
             const float full = level->player(participant).weapon_ammo();
             std::vector<PlayerInputData> inputs(input_slots::count, input());
             inputs[0].sub_pressed = true;
@@ -261,9 +271,7 @@ namespace
         return info.team_a_area + info.team_b_area;
     }
 
-    // S2: the Tool row's rebuild as GameLevel's change_tool handler runs it
-    // (game_states.cpp): the old level's tool_change_place, a fresh build
-    // from settings holding the chosen tool, then enter_after_tool_change.
+    // S2: the Tool row's rebuild as GameLevel's change_loadout handler runs it.
     void check_tool_change_start(World& world)
     {
         const int lesson = lesson_index(*world.build(true), "long_gap");
@@ -276,14 +284,14 @@ namespace
             step(*old, world.tuning.match().countdown + 0.1f);
             require(old->place_player(old->participant_for_view(0), stood), name + ": goto long_gap");
             step(*old, 1.0f); // settled where they stand
-            const std::optional<Vector2F> place = old->tool_change_place();
+            const std::optional<Vector2F> place = old->loadout_change_place();
             require(place.has_value(), name + ": a living player has no place to return to");
             const Vector2F before = *place;
 
             std::unique_ptr<Level> level = world.build(true, 1, 1.0f, tool);
             require(level->state() == LevelState::start_countdown,
                 name + ": the rebuilt course starts in its countdown");
-            level->enter_after_tool_change(place);
+            level->enter_after_loadout_change(place);
             step(*level, dt);
             const int rebuilt = level->participant_for_view(0);
             require(level->state() == LevelState::active && level->match_started(),
@@ -305,14 +313,14 @@ namespace
         step(*old, dt);
         require(old->player(old->participant_for_view(0)).state() != PlayerState::alive,
             "The killed player is still alive");
-        const std::optional<Vector2F> place = old->tool_change_place();
+        const std::optional<Vector2F> place = old->loadout_change_place();
         require(!place.has_value(), "A dead player returns to where they died");
         std::unique_ptr<Level> fresh = world.build(true);
         fresh->start_without_countdown();
         step(*fresh, dt);
         const Vector2F spawn = fresh->player(fresh->participant_for_view(0)).rectangle().position();
         std::unique_ptr<Level> level = world.build(true, 1, 1.0f, WeaponType::roller);
-        level->enter_after_tool_change(place);
+        level->enter_after_loadout_change(place);
         step(*level, dt);
         const int rebuilt = level->participant_for_view(0);
         const Vector2F back = level->player(rebuilt).rectangle().position();
@@ -325,7 +333,7 @@ namespace
             "After a death the spawn's lesson does not show");
     }
 
-    // S2: PauseMenuInitial::cycle_tool's step over the five real tools, both
+    // S2: the Pause Tool row's step over the five real tools, both
     // ways, wrapping at each end and never landing on Random.
     void check_tool_row_wraps()
     {
@@ -357,6 +365,57 @@ namespace
         const std::wstring label = text.practice_tool_label(L"Sprayer");
         require(label.find(L"Sprayer") != std::wstring::npos && label.find(L"{tool}") == std::wstring::npos,
             "The Tool row names the tool");
+    }
+
+    void check_sub_row(World& world, const std::filesystem::path& content)
+    {
+        constexpr std::array<SubType, 3> subs{ SubType::grenade, SubType::sprinkler, SubType::wall };
+        for (size_t index = 0; index < subs.size(); ++index)
+        {
+            require(practice_sub_after(subs[index], Direction::right) == subs[(index + 1) % subs.size()] &&
+                practice_sub_after(subs[index], Direction::left) == subs[(index + subs.size() - 1) % subs.size()],
+                "The Practice Sub row does not wrap through the three concrete subs");
+        }
+        const Locales locales = Locales::read((content / "locales").string());
+        const Presentation pseudo(locales.presentation("qps-ploc", (content / "presentation.json").string()));
+        const ApplicationOptions window;
+        world.resolution.set_resolution_exactly({ window.min_window_width, window.min_window_height });
+        const Viewport viewport = world.viewports.fullscreen_viewport();
+        const Camera camera = Camera::frame(menu_geometry::design_area(), viewport);
+        const RectangleF screen(0.0f, 0.0f, viewport.width, viewport.height);
+        for (const Presentation* look : { static_cast<const Presentation*>(&world.presentation), &pseudo })
+        {
+            look->validate_resources(world.render, world.audio);
+            const PauseMenuPresentation& pause = look->pause_menu();
+            const WidgetLayout layout = pause.practice_layout();
+            const MenuText& menu_text = look->menu_text();
+            const FontHandle font = world.render.resolve_sprite_font(look->menu().item_font);
+            const auto fit = [&](int row, const std::wstring& label)
+            {
+                require(world.render.can_render(font, label), "Practice Pause label contains an unavailable glyph");
+                RectangleF bounds(layout.position + Vector2F(0.0f, layout.spacing.y * static_cast<float>(row)),
+                    world.render.measure_text(font, label));
+                bounds.inflate(pause.art.focus_padding);
+                require(screen.contains(camera.calculate_view_rectangle(static_cast<const RectangleF&>(bounds))),
+                    "Practice Pause focus bounds leave the smallest window");
+            };
+            fit(0, menu_text.item(MenuItem::resume));
+            for (size_t tool = 0; tool < tuned_weapon_count; ++tool)
+            {
+                fit(1, menu_text.practice_tool_label(
+                    look->main_menu().weapon_select_art.choice(static_cast<WeaponType>(tool)).name));
+            }
+            for (const SubType sub : subs)
+            {
+                const std::wstring label = menu_text.practice_sub_label(sub);
+                require(label.find(menu_text.subs.names[static_cast<size_t>(sub)]) != std::wstring::npos,
+                    "Practice Sub row lost its Weapon Select name");
+                fit(2, label);
+            }
+            fit(3, menu_text.item(MenuItem::restart));
+            fit(4, menu_text.item(MenuItem::options));
+            fit(5, menu_text.item(MenuItem::quit));
+        }
     }
 
     // A bad lesson is a content bug that fails at startup.
@@ -395,6 +454,7 @@ int main(int argc, char** argv)
         check_tool_change_start(world);
         check_tool_row_wraps();
         check_tool_label(world);
+        check_sub_row(world, content);
         check_rejected_lessons(content);
         std::cout << "PASS practice workshop\n";
         return 0;

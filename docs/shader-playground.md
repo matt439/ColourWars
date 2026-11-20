@@ -200,3 +200,34 @@ under `out/validation/shader-playground/`. This is focused functional evidence, 
 a performance measurement or an art-direction acceptance. The author still
 needs to judge team colour recognition, small text and the look in play,
 particularly in four panes. These settings remain experimental values.
+
+### Repeatable shader checks (`DBG#20`)
+
+Build `x64-debug` as above, then run the local hardware check from the repository
+root.
+
+```powershell
+powershell -File scripts/check-shader-playground.ps1
+```
+
+The [runner](../scripts/check-shader-playground.ps1) starts four hidden games,
+each with a private profile. It pauses Movement Course at the same seeded
+simulation update for an ordinary and a playground launch in each layout,
+one pane and four panes, at 1280×720. Both `shader off` captures and every
+zero-strength look must match the ordinary RGB baseline exactly. Each default
+look must change pixels while the simulation checksum and update stay fixed.
+The console must refuse an invalid CRT scanline pitch and keep the previous
+look's settings and pixels intact.
+
+Each run leaves a new evidence folder under `out/validation/shader-playground/`
+or `-OutputDirectory`. `result.json` records the executable hash, the renderer's
+selected device from `status` for each launch and every check's outcome. The
+folder also holds the console scripts, transcripts and PNGs. A failed comparison,
+launch or adapter check exits with an error and keeps the evidence. The check
+requires D3D11 hardware and a display that can fit the capture resolution.
+
+On 2026-11-20, 51 checks passed on D3D11 / NVIDIA GeForce RTX 5080 under
+Windows PowerShell 5.1. A separate one-second deadline run returned failure,
+retained its partial evidence and cleaned up all four owned processes.
+The author judges team colours and small text at couch distance if a look is
+pursued further.

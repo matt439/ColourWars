@@ -10,21 +10,12 @@
 
 #include <algorithm>
 #include <cstdio>
-#include <cwctype>
 #include <system_error>
 
 using namespace labrador;
 
 namespace
 {
-	bool json_extension(const std::filesystem::path& path)
-	{
-		std::wstring extension = path.extension().wstring();
-		std::transform(extension.begin(), extension.end(), extension.begin(),
-			[](wchar_t character) { return static_cast<wchar_t>(std::towlower(character)); });
-		return extension == L".json";
-	}
-
 	// A refusal is one stderr line, whatever the diagnostic it carries.
 	std::string one_line(std::string text)
 	{
@@ -96,11 +87,9 @@ UserStageScan load_user_stages(const std::filesystem::path& directory,
 	std::filesystem::directory_iterator entries(directory, error);
 	for (; !error && entries != std::filesystem::directory_iterator(); entries.increment(error))
 	{
-		const std::filesystem::directory_entry& entry = *entries;
-		std::error_code kind_error;
-		if (json_extension(entry.path()) && entry.is_regular_file(kind_error))
+		if (user_stage_contract::is_stage_file(*entries))
 		{
-			files.push_back(entry.path());
+			files.push_back(entries->path());
 		}
 	}
 	if (error)
@@ -111,11 +100,7 @@ UserStageScan load_user_stages(const std::filesystem::path& directory,
 	}
 	// File-name order, so the Stage Select order does not depend on the
 	// file system's.
-	std::sort(files.begin(), files.end(),
-		[](const std::filesystem::path& first, const std::filesystem::path& second)
-		{
-			return first.filename().native() < second.filename().native();
-		});
+	std::sort(files.begin(), files.end(), user_stage_contract::filename_less);
 	// The format's folder limit: the rest are named by count, not read.
 	if (files.size() > level_format::limit::max_user_stage_files)
 	{

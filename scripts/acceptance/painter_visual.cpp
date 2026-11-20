@@ -138,6 +138,7 @@ namespace
 #include "scripts/acceptance/painter_visual/painter_fixtures.h"
 #include "scripts/acceptance/painter_visual/graphics_settings_checks.h"
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+#include "scripts/acceptance/painter_visual/setup_status_checks.h"
 #include "scripts/acceptance/painter_visual/how_to_play_checks.h"
 #include "scripts/acceptance/painter_visual/first_match_flow_checks.h"
 #include "scripts/acceptance/painter_visual/duel_flow_checks.h"
@@ -440,11 +441,11 @@ int wmain(int argc, wchar_t** argv)
         require(!crack_tune_colour_only, "CrackTuneColourOnly requires the normal gamepad reader");
         require(!limb_tune_colours_only, "LimbTuneColoursOnly requires the normal gamepad reader");
 
-        require(argc == 4 && (std::wstring(argv[3]) == L"first-match-flow" || std::wstring(argv[3]) == L"how-to-play" || std::wstring(argv[3]) == L"team-setup" || bot_players_only || remembered_setup_only || connection_text_only || stick_readouts_only || team_focus_only || team_tune_colours_only || weapon_tune_colours_only || stage_summary_only || stage_preview_background_tune_colour_only || menu_labels_only || menu_text_only || keyboard_jump_only || rumble_only ||
+        require(argc == 4 && (std::wstring(argv[3]) == L"first-match-flow" || std::wstring(argv[3]) == L"how-to-play" || std::wstring(argv[3]) == L"team-setup" || bot_players_only || remembered_setup_only || connection_text_only || stick_readouts_only || team_focus_only || team_tune_colours_only || weapon_tune_colours_only || stage_summary_only || stage_preview_background_tune_colour_only || menu_labels_only || menu_text_only || keyboard_jump_only || rumble_only || practice_replay_only ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options")),
-            "The scripted gamepad backend is restricted to focused team/setup/menu-text acceptance");
+            "The scripted gamepad backend is restricted to focused input acceptance");
 #else
-        require(argc != 4 || (!rumble_only && !keyboard_jump_only && !bot_players_only && !remembered_setup_only && !connection_text_only && !stick_readouts_only && !team_focus_only && !team_tune_colours_only && !weapon_tune_colours_only && !stage_summary_only && !stage_preview_background_tune_colour_only && !menu_labels_only && std::wstring(argv[3]) != L"team-setup" &&
+        require(argc != 4 || (!rumble_only && !keyboard_jump_only && !bot_players_only && !remembered_setup_only && !connection_text_only && !stick_readouts_only && !team_focus_only && !team_tune_colours_only && !weapon_tune_colours_only && !stage_summary_only && !stage_preview_background_tune_colour_only && !menu_labels_only && !practice_replay_only && std::wstring(argv[3]) != L"team-setup" &&
             std::wstring(argv[3]) != L"setup-motion" && std::wstring(argv[3]) != L"join-stage-motion" && std::wstring(argv[3]) != L"join-paper" && std::wstring(argv[3]) != L"team-paper" && std::wstring(argv[3]) != L"weapon-paper" && std::wstring(argv[3]) != L"stage-paper" && std::wstring(argv[3]) != L"home-return-focus" && std::wstring(argv[3]) != L"home-exit" && std::wstring(argv[3]) != L"options-defaults" && std::wstring(argv[3]) != L"display-trial" && std::wstring(argv[3]) != L"paused-options"),
             "Use check-painter.ps1 focused scripted input switches to compile the scripted input seam");
 #endif

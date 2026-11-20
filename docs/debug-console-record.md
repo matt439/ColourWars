@@ -1,11 +1,25 @@
 # Developer console work record
 
-The finished, deferred and unscoped `DBG` rows of the
-[developer console](debug-console.md), and its `CI#1` row: what each changed,
-why, and how it was checked. They were split out of the reference on
+This record covers work on the [developer console](debug-console.md), including
+the `DBG` rows and its foreground check (`CI#1`). Completed entries describe
+the change and its checks. They were split out of the reference on
 2026-10-30 (`HYG#31`) so that page describes the console as it is; the
 commands these rows added are documented there. [TODO.md](../TODO.md) indexes
 the open ones.
+
+## Show circular shot colliders in F2 (`DBG#21`)
+
+**Done (2026-11-20).** After `shots.round circle`, F2 draws each circular
+projectile as a closed 24-segment ring around its collision centre. Its radius,
+projectile colour and per-pane line thickness come from the current object
+and overlay. Shots already in flight keep the outline of the shape they were
+built with. [Shot shapes](feature-roadmap.md#circle-shapes-for-round-projectiles-road44)
+· [Overlay drawing](../game/debug/debug_overlay_draw.cpp)
+
+`check_collision_outline` in the Debug `debug_console` probe checks an
+off-origin circle for joined edges, radius and all four cardinal points. It
+also checks the rectangle and the left- and right-rising slab outlines.
+[Probe source](../scripts/acceptance/debug_console/director_checks.cpp)
 
 ## Bind word round trips (`DBG#9`)
 

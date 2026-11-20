@@ -121,6 +121,7 @@
     "brand": "C O L O U R W A R S   /   LOCAL PAINT BATTLES",
     "solo_practice_hint": "Solo practice: choose Single Match",
     "practice_tool": "Tool:  < {tool} >",
+    "practice_sub": "Sub:  < {sub} >",
     "options_palette_timing": "Palette applies next round or restart.",
     "title": {
       "wordmark": "COLOUR\nWARS",
@@ -365,6 +366,13 @@
       "team_b": "TEAM B",
       "health": "HEALTH",
       "paint": "PAINT"
+    },
+    "setup": {
+      "choose_team": "Choose a team",
+      "confirm_team": "Confirm team",
+      "choose_tool": "Choose tool",
+      "choose_sub": "Choose sub",
+      "ready": "Ready"
     },
     "subs": {
       "_comment": "ROAD#11: Weapon Select's line under each player's label: the Boost label, then the sub (line while the tool is chosen and once ready, choosing while the sub is). While the sub is chosen, its description takes the tool's place.",
@@ -695,7 +703,7 @@
       "size": { "x": 100.0, "y": 50.0 },
       "spacing": { "x": 0.0, "y": 120.0 }
     },
-    "practice_row_spacing": 96.0,
+    "practice_row_spacing": 95.0,
     "window_open_sound": { "name": "ui.pause_open", "volume": 1.0 },
     "sounds": {
       "pad_lost": { "name": "ui.pad_lost", "volume": 0.65 },

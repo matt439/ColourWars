@@ -350,7 +350,7 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	{
 		validate_stage_text(presentation, render, *level_infos.get(stage.name), stage);
 	}
-	// Practice's pause row names each real tool.
+	// Practice Pause names each real tool and sub.
 	for (int tool = 0; tool < static_cast<int>(WeaponType::max_prim_wep); ++tool)
 	{
 		drawable_text::check_font_can_draw(render, menu.item_font,
@@ -358,4 +358,9 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 				main_menu.weapon_select_art.choice(static_cast<WeaponType>(tool)).name),
 			"menu_text.practice_tool");
 	}
+	for_each_sub([&](SubType sub, const char*)
+	{
+		drawable_text::check_font_can_draw(render, menu.item_font,
+			presentation.menu_text().practice_sub_label(sub), "menu_text.practice_sub");
+	});
 }

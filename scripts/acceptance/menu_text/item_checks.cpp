@@ -342,8 +342,13 @@ namespace menu_text_acceptance
         {
             d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
             for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
-            // Practice's Tool row shares the column; keep it narrower than Fit.
+            // The two practice choices share the column; keep them narrower than Fit.
             d["menu_text"]["practice_tool"].SetString("{tool}");
+            d["menu_text"]["practice_sub"].SetString("{sub}");
+            for (auto& sub : d["menu_text"]["subs"]["choices"].GetObject())
+            {
+                sub.value["name"].SetString("Fa");
+            }
             const char* tools[]{ "Fa", "Fb", "Fc", "Fd", "Fe", "Ff", "Fg" };
             size_t tool = 0;
             auto& choices = d["main_menu"]["weapon_select"]["choices"];
@@ -375,8 +380,8 @@ namespace menu_text_acceptance
         const auto bottom = top + pause.box_size - labrador::Vector2F(pause.art.shadow_offset);
         const float left_position = top.x + pause.art.focus_padding.x;
         const float right_position = bottom.x - 24.0f - pause.art.focus_padding.x;
-        // Practice's Quit is the deepest row: the fifth, at the practice spacing.
-        const float bottom_position = bottom.y - 4.0f * pause.practice_row_spacing -
+        // Practice's Quit is the sixth row, with the first half a step up.
+        const float bottom_position = bottom.y - 4.5f * pause.practice_row_spacing -
             20.0f - pause.art.focus_padding.y;
         const auto paper_edge = [&](const char* axis, float position, const char* field, float outside)
         {
@@ -401,13 +406,12 @@ namespace menu_text_acceptance
         // Practice Quit's last row reaches the full-height Pause paper face, below the menu footer.
         paper_edge("y", bottom_position, "items.quit", bottom_position + 0.25f);
         // The edge follows practice_row_spacing itself, not 0.8 of the layout
-        // spacing: at 100 (not 96) practice Quit sits 16 pixels lower, so a
-        // validator still spacing the rows at 96 would accept the step past it.
-        // Plain Pause's four rows (3 * 120 = 360 < 400) stay inside.
+        // spacing: at 100 practice Quit sits lower, so a validator spacing
+        // the rows at 96 would accept the step past it. Plain Pause stays inside.
         const float own_spacing = 100.0f;
-        require(own_spacing != pause.layout.spacing.y * 0.8f && 4.0f * own_spacing > 3.0f * pause.layout.spacing.y,
+        require(own_spacing != pause.layout.spacing.y * 0.8f && 4.5f * own_spacing > 3.0f * pause.layout.spacing.y,
             "Practice spacing fixture no longer separates the key from 0.8 of the layout spacing");
-        const float own_bottom = bottom.y - 4.0f * own_spacing - 20.0f - pause.art.focus_padding.y;
+        const float own_bottom = bottom.y - 4.5f * own_spacing - 20.0f - pause.art.focus_padding.y;
         const auto own_edge = [&](float position)
         {
             return [&, position](rapidjson::Document& d)
@@ -423,6 +427,14 @@ namespace menu_text_acceptance
         variants.rejects("practice_tool", [](rapidjson::Document& d)
         {
             d["menu_text"]["practice_tool"].SetString(("{tool} " + std::string(60, 'W')).c_str(), d.GetAllocator());
+        }, &world);
+        variants.rejects("practice_sub", [](rapidjson::Document& d)
+        {
+            d["menu_text"]["practice_sub"].SetString("Sub");
+        });
+        variants.rejects("practice_sub with menu_text.subs.choices", [](rapidjson::Document& d)
+        {
+            d["menu_text"]["practice_sub"].SetString(("{sub} " + std::string(60, 'W')).c_str(), d.GetAllocator());
         }, &world);
 
         const float row_height = 20.0f + 2.0f * pause.art.focus_padding.y;

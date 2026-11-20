@@ -210,8 +210,10 @@ expected. No new test matrix, device session or detailed observations are
 implied by this approval. The reference-match finish review (`POL#24`) was
 waived by the author on 2026-11-05 and not performed.
 
-`POL#16` no longer waits on arena selection (settled 2026-11-05) but stays
-deferred as a later art pass. The listening/mix choices (`POL#23`) were accepted
+The four Random arena backdrops were built on 2026-11-14. `POL#16` now awaits
+the author's in-play review and Close Quarters material decision. UI art follows
+later. [Arena backdrops](polish-terrain.md#per-arena-backdrops-pol16-2026-11-14).
+The listening/mix choices (`POL#23`) were accepted
 as they stand on 2026-11-05; the physical-pad sessions and the attended
 performance/hardware acceptance (`POL#25`) were waived the same day and not
 performed.
@@ -1805,7 +1807,7 @@ match; each is a `presentation.json` or one-function change in
 chosen relation.
 
 A second overlay question, found 2026-10-31 while making the validator check
-the practice Pause layout: practice Pause puts its five rows (Resume, Tool,
+the practice Pause layout: practice Pause put its five rows (Resume, Tool,
 Restart, Options, Quit) 96 pixels apart (0.8 of the 120 row spacing), but a
 shipped item's focus card is 113 tall (77 text plus 2 x 18 focus padding), so
 neighbouring focus cards overlap by 17 pixels. Only one card is drawn at a time,
@@ -1813,6 +1815,7 @@ so the overlap shows only as a focused card reaching into its neighbours' text.
 The validator checks the practice rows against the paper only, because the
 normal row rule would refuse the shipped file. The author accepted that as
 intended on 2026-11-05, so the validator keeps its paper-only practice check.
+The addition of Sub brought the paper to six rows. [Practice Pause](polish-movement-course.md#try-each-sub-from-practice-pause-road48).
 Changing it later means widening the spacing, shrinking the padding for that
 page or dropping a row, with the validator taking the row rule.
 
@@ -1893,11 +1896,9 @@ effects On when Windows' **Animation effects** setting is off. The authored
 default is still `bool reduce_effects = false;`
 ([play_settings.h](../game/config/play_settings.h)).
 
-`initial_reduce_effects_from_system()` in
-[initial_display.cpp](../game/config/initial_display.cpp) reads
-`SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, ...)` beside the
-monitor-fit read, before the save loads, and [main.cpp](../game/main.cpp)
-passes the answer to `Save`'s first-run constructor with the display defaults.
+[main.cpp](../game/main.cpp) calls Labrador's `prefers_reduced_motion()`
+beside the monitor-fit read, before the save loads, and passes the answer to
+`Save`'s first-run constructor with the display defaults.
 Only a missing save without a legacy file uses it, so the first-run write
 records it and `SettingsSession` sees it at once. Existing, legacy-imported and
 unreadable saves keep their own value or the authored default, and a failed
@@ -1917,11 +1918,8 @@ scripts that launch the real executable with a fresh save would start it with
 Reduce effects On on such a runner. That changes presentation only, never the
 simulation or a seeded replay.
 
-The read is the client exhibit for engine `REV#60` on Labrador's `master`,
-which proposes a read-only reduced-motion fact and notes that no native client
-reads the setting. The note for that row, citing this call, is drafted in the
-[engine reports](review/engine-reports.md#what-is-deliberately-not-here) and
-waits for the author to post it.
+The client adopted Labrador's reduced-motion query from `v0.4.0` under
+[PIN#4](review/engine-reports.md#first-run-reduced-motion-preference-pin4).
 
 ### Help players read the tool and the fight
 

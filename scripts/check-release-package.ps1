@@ -47,10 +47,10 @@ if (-not (Test-Path -LiteralPath (Join-Path $package 'ColourWars.exe') -PathType
 }
 $checks = 0
 
-# Checking mere presence misses stale settings, guide text and art. Compare
-# extracted bytes with the same reviewed allow-list used by the packager.
+# Check extracted runtime assets, notices and provenance using the same
+# source paths and installed names as the packager.
 & cmake "-DPACKAGE_DIR=$package" -P (Join-Path $repository 'cmake/check_packaged_assets.cmake')
-if ($LASTEXITCODE -ne 0) { throw 'Packaged runtime assets do not match reviewed source.' }
+if ($LASTEXITCODE -ne 0) { throw 'Packaged assets, notices or provenance failed validation.' }
 $checks++
 
 $files = @(Get-ChildItem -LiteralPath $package -File -Recurse)
@@ -64,13 +64,8 @@ if ($leaked.Count -gt 0) {
 }
 $checks++
 
-foreach ($required in 'ColourWars.exe', 'DirectXTK.dll', 'xaudio2_9redist.dll',
-    'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'build-info.txt',
-    'HOW-TO-PLAY.txt',
-    'sounds/paint_exe.json', 'sounds/paint_exe.xwb',
-    'licenses/paint_exe/PROVENANCE.md', 'licenses/paint_exe/CC0-1.0.txt',
-    'licenses/paint_exe/runtime-bank.json', 'licenses/fonts/Lato-OFL.txt',
-    'licenses/fonts/BowlbyOne-OFL.txt', 'licenses/fonts/CourierPrime-OFL.txt') {
+foreach ($required in 'DirectXTK.dll', 'xaudio2_9redist.dll', 'msvcp140.dll',
+    'vcruntime140.dll', 'vcruntime140_1.dll', 'build-info.txt') {
     if (-not (Test-Path -LiteralPath (Join-Path $package $required))) {
         throw "Package is missing $required"
     }

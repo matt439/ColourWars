@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <cwctype>
 #include <memory>
 #include <stdexcept>
 #include <system_error>
@@ -16,13 +15,6 @@ namespace colourwars_editor
     namespace
     {
         namespace fs = std::filesystem;
-
-        std::wstring folded(std::wstring text)
-        {
-            std::transform(text.begin(), text.end(), text.begin(),
-                [](wchar_t character) { return static_cast<wchar_t>(std::towlower(character)); });
-            return text;
-        }
 
         bool shipped_name(const std::vector<std::string>& shipped, const std::string& name,
             std::string& taken)
@@ -78,7 +70,7 @@ namespace colourwars_editor
             throw std::runtime_error("Save to My Stages saves directly in " + path_text(folder) +
                 ", which the game reads at startup and when Stage Select opens. "
                 "Use Save As for any other folder.");
-        if (folded(chosen.extension().native()) != L".json")
+        if (!user_stage_contract::has_json_extension(chosen))
             throw std::runtime_error("The game reads only .json files from My Stages.");
         const std::string name = stem_of(chosen);
         if (!user_stage_contract::usable_name(name))
@@ -96,7 +88,7 @@ namespace colourwars_editor
             entries.increment(error))
         {
             const fs::directory_entry& entry = *entries;
-            if (folded(entry.path().extension().native()) != L".json") continue;
+            if (!user_stage_contract::has_json_extension(entry.path())) continue;
             if (!user_stage_contract::same_name(stem_of(entry.path()), name)) continue;
             std::error_code kind;
             if (!entry.is_regular_file(kind))

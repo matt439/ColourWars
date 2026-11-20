@@ -15,9 +15,8 @@ muzzle drip, tool settling and environmental life. Start with one complete
 reference match and review its feel in motion. That work is planned, apart from
 the backstory's opening, respawn and reveal, which its "Building it" section
 records as built, including the accepted pop, sigh and chair-creak sounds.
-Existing live audio bindings now use the accepted replacement set; further cue
-hooks and the gameplay mix remain open. The sections below record implemented
-increments and their remaining acceptance checks.
+The author accepted the replacement cues and gameplay mix on 2026-11-05.
+An additional cue hook would be new work. [Audio inventory](audio-inventory.md#63-decisions-and-what-is-still-open).
 
 ## Match scope decisions (2026-10-15)
 
@@ -2714,11 +2713,10 @@ balance runner's `engaged_ticks` uses the same sight.
 
 ### Umbrella tool proposal (`ROAD#13`)
 
-**Proposed 2026-11-12; questions answered 2026-11-13; nothing is built.** This
-is the first step the 2026-11-12 audit set for `ROAD#13`: a scope proposal for
-one new tool archetype, written in the shape [Sub weapons](#sub-weapons-road11)
-used. No code, tuning or content changed. The author's answers are at the end;
-whether to build slices 2-4 is a separate call, below them.
+**DECISION.** The author chose the umbrella on 2026-11-13. Slice 1 already
+stops shots on the existing paint wall. Slices 2–4 would build the tool
+itself. The proposal below follows the [sub-weapons plan](#sub-weapons-road11)
+and ends with the author's answers and the remaining build decision.
 
 **The archetype: an umbrella (Splatoon's brella).** It fires a short fan of
 paint pellets. While Shoot is held, a canopy opens in front of the player and
@@ -4856,8 +4854,8 @@ been built says so and when.
 A 2026-11-12 audit of the open-work index looked for work no row carried and
 checked each candidate against the existing rows, the declines under
 [Not tracked, by choice](#not-tracked-by-choice) and the 2026-11-10 review.
-These five survived. None is engineer-ready: the first was answered no on
-2026-11-13, and the rest need a written scope or the next engine pin first.
+The five entries below retain their original proposals. The 2026-11-20 audit
+scoped two design tasks here, for the practice target and the flood-fill object.
 
 ### Series side swap (`ROAD#40`)
 
@@ -4884,7 +4882,7 @@ remembered-setup key and the replay format.
 
 ### Practice targets in the workshop (`ROAD#41`)
 
-**UNSCOPED, LOW, M.** The Movement Course workshop teaches that eliminations
+**Design drafted 2026-11-20.** The Movement Course workshop teaches that eliminations
 clear room ([stations](polish-movement-course.md)), but a solo practice has
 nobody to eliminate and no station gives the player something to shoot. The
 workshop proposal asks for "cover around which the different shot shapes can
@@ -4895,12 +4893,67 @@ numbers into a game that shows none
 A grey, non-scoring figure that pops and redraws through the existing wordless
 respawn, with no HUD element or number, avoids that objection.
 
-First step: a scope section for a new station kind that places such a figure,
-which takes hits through the existing `Collider` path, in untimed solo practice
-only, with the `practice_workshop` checks it adds. It is a new subclass beside
-the existing ones and flattens nothing. Related: `REV#56` (the Sub lesson, done 2026-11-13);
-solo practice on any stage (`REV#55`) was declined on 2026-11-13, so the
-figure stays in the workshop.
+**Placement.** Put one stationary grey figure at x 324–376, y 880–1000,
+with its feet on `spawn_a_runway`. The figure has the ordinary 52 × 120
+player silhouette and faces left. The [course file](../game/content/levels/movement_course.json)
+puts the default solo spawn's top-left at (100, 875), the `workshop` station at
+(200, 875), and the next lesson at x 440. Both start poses have open aim
+to the figure's centre at (350, 940). A Sprayer aimed right from the
+settled spawn crosses the left edge of the target over the clear runway.
+Walk closer for the roller. Turn left and try the bare wall at x 0, or
+aim down to paint the runway. The nearest overhead platform starts at x 470.
+A retained Team B seat still starts on the right and can reach the same
+station by the course's return route.
+
+```text
+x 0          100             200          324   376          440      470
+bare wall    solo spawn      workshop     grey figure        lesson   platform
+│                  ← wall aim          target aim →          edge     starts
+└────────────────────────── runway top, y 1000 ────────────────────────────
+```
+
+**Contact.** Admit the figure through the existing untimed Movement Course
+practice predicate. Give it its own projectile-only `Collider` role so it
+stays out of the roster, player movement, camera, HUD, paint surfaces and
+results. Add it to the scene before [`LevelStructures::admit`](../game/objects/level_structures.cpp)
+so its non-projectile collider is already in the stable target span for
+launch, travel and burst sweeps. The target accepts both projectile layers.
+Only shots with positive `player_damage()` include the target layer in
+their mask, so zero-damage Paint Wall bodies and drops pass through before
+the sweep can select the figure as an obstruction. The roller's one-step
+volume and damaging grenade and sprinkler bodies and drops qualify. Players
+pass through the figure.
+
+A swept Sprayer shot finds the figure at the first eligible overlap in
+[`Projectile::resolve_sweep`](../game/objects/projectile_contacts.cpp).
+`Collider::on_contact` calls `Projectile::touch`, which calls the figure's
+`on_projectile_contact`. The figure pops once and immediately empties its
+mask. On the reciprocal contact, the figure's `touch` calls a target-specific
+handler on the shot. Flying shots share the player-hit retirement operation
+with that handler, so a grenade also bursts normally. The roller's handler
+leaves its multi-contact volume active. A later shot through the empty
+position can still paint a real surface under the ordinary terrain rules.
+There is no damage meter, splat, paint award or extra territory for the
+figure itself.
+
+**Redraw.** Play `player.pop` on the accepted hit and reuse the
+[`RespawnRedraw`](../game/objects/respawn_redraw.cpp) strokes and the existing
+player respawn delay, currently three match seconds, at the same spot. A
+redrawing figure has an empty collision mask until the delay expires, even
+during the final grey fill. The timer advances during live simulation and
+freezes on pause. Restart or a clean workshop rebuild creates a fully drawn
+figure with an unused timer. The Sub lesson (`REV#56`) keeps its own station.
+
+**Acceptance sketch.** Extend [practice_workshop](../scripts/acceptance/practice_workshop.cpp)
+with an actual Sprayer shot from the settled spawn and check that the target
+pops once, the shot retires, and paint area, paint credit and elimination
+counts stay the same. Send a second shot through the same
+spot during redraw, then hit the restored figure after the respawn delay.
+Exercise an overlapping roller volume and a zero-damage Paint Wall body.
+Restart while redrawing and check the figure and paint have reset. Assert
+that timed solo (including developer start), human-versus-human, and a human
+with a bot admit no target. In a practice play check, look for the figure
+from spawn, the unobstructed left wall, the single pop and the visible redraw.
 
 ### Shot shapes on Weapon Select (`ROAD#42`)
 
@@ -4922,7 +4975,7 @@ it may wait for `POL#16`'s UI pass.
 
 ### Flood-fill paint object (`ROAD#43`)
 
-**UNSCOPED, LOW, L.** The paint objects so far are the ferry, the gate and the
+**Design drafted 2026-11-20.** The paint objects so far are the ferry, the gate and the
 lifts, with sponges (`ROAD#29`), a bounce pad (`REV#52`) and an eraser
 (`REV#53`) proposed. None borrows the paint program's defining tool, the fill
 ([classic paint research](classic-paint-research.md)). A swatch that fills one
@@ -4931,12 +4984,94 @@ charge ([Rules for anything new](backstory.md#rules-for-anything-new)), only
 lays paint, so it keeps the invariant `REV#53` breaks, and fills a fixed area,
 so it needs none of the sponge's changing-area contracts.
 
-First step: a contract draft in the manner of the
-[vertical-lift draft](#vertical-lift-contract-draft-road28): the trigger rule
-(the gate's held-paint rule is the precedent), the region as authored
-paintable structures, a cooldown, `PaintCredit` for the triggering team, bot
-awareness and a Yard trial stage. It ends with the author's question whether a
-bulk territory swing fits the balance accepted on 2026-11-05.
+**Trial and region.** Derive an explicit-only **Turbulence Yard - Fill Trial**
+from the [Yard blockout](../game/content/levels/turbulence_blockout.json) with
+its existing geometry. The `centre_baffle` at (1940, 720), size 120 × 160,
+uses both exposed side strips at x 1940 and 2060, y 720–800, as a shared
+trigger. Paint on either strip contributes to the same held shares. Each
+strip has 20 tiles and 960 square world units of paintable area. The lower
+part of each side is buried by its crossover shoulder. Fill only the top
+at y 720, x 1940–2060. The underside, shoulders and other objects keep
+ordinary paint. Keep the trial out of Random as with the
+[Lift Trial](#vertical-lift-first-slice-road28).
+
+The target is 30 tiles and 1,440 square units at the shipped 4-unit tile
+pitch and 12-unit paint depth. Summing enabled face lengths after
+[outside coverage](../game/contracts/paint_face_geometry.h) and multiplying
+by paint depth gives the Yard 148,800 square units over all teams and neutral
+paint. The top is 0.97% of that area. Filling it from neutral raises the
+winner's held-area lead by at most 1,440. Taking it entirely from the other
+team transfers 1,440 between the teams and moves their lead by at most
+2,880, or 1.94% of the full arena area.
+
+**Trigger and settlement.** Use the [gate's strict leader rule](../game/contracts/team_gate_contract.h)
+over the two side strips, with a provisional 25% threshold across their
+1,920 square units. A qualifying team holds at least 480 square units
+(10 tiles) and more than the other team. Apply ordinary trigger and target
+paint contacts first. Settle the final leader once per live simulation step.
+If it qualifies, differs from the last fill team, and the cooldown is clear,
+fill the top and store the new last fill team. Start a provisional three-second
+cooldown measured in live match time. Remember the last fill team through
+ties and loss of qualification. Painting the trigger cannot make the same
+team fill again until the other team fires a fill. An opposing lead acquired
+during cooldown can fill on expiry if it still qualifies. The trigger starts
+neutral, with no last fill team and no cooldown. Give the active trigger and
+the receiving strip matching fill marks. Show readiness with a shape change
+and show the fill as one sweep over the changed strip, readable with Reduce
+effects and without sound or hue.
+
+**Credit.** As each colour-changing trigger contact settles its own tiles,
+record its [paint owner](../game/objects/paintable_object.h) when the qualifying
+leader changes to its team. Keep that owner while the team leads and clear
+the candidate during a tie or loss of qualification. This makes the pending
+credit during cooldown come from the contact that established the surviving
+lead. Preserve ordinary stable contact order for same-step captures, then
+use the pending owner only for the final settled leader. For each target
+tile that changes, award laid area to that owner, and recaptured area when
+the tile was held by the opponent. Friendly tiles retain their current owners.
+The trigger itself earns its usual per-tile credit from direct shots. A fill
+with an already friendly top changes zero area and still consumes that
+activation. Count the existing tiles once in arena and owner totals.
+
+**Worked match.** A starts by painting 10 neutral trigger tiles and claims
+480 laid on the trigger. At settlement A fills the neutral top and its
+triggering owner gets another 1,440 laid. A keeps the lead through the
+cooldown and earns no second fill. A human on B paints 10
+other trigger tiles for 480 laid, making a tie. The tie fires nothing and
+clears pending attribution. A B bot captures an eleventh B trigger tile
+from neutral (48 laid), giving B 528 to A's 480. If that lead survives to
+settlement and cooldown has expired, the bot gets 1,440 laid and 1,440
+recaptured from the A-held top. The B human keeps the trigger tiles they
+captured. If the lead disappears before cooldown expiry, B needs to establish
+it again for a new fill.
+
+The totals below hold all other paint fixed. A's 480 trigger area is already
+in its total before the first fill. B's 528 ordinary trigger paint comes
+between the fills and is visible in its total before the recapture. The
+two-team [Results](../game/objects/level_end_info.cpp) denominator is A plus B
+painted area, and the display truncates to one decimal place.
+
+| Fill event | A before | B before | Results before (A / B) | A after | B after | Results after (A / B) |
+|---|---:|---:|---|---:|---:|---|
+| A fills neutral | 24,000 | 24,000 | 50.0% / 50.0% | 25,440 | 24,000 | 51.4% / 48.5% |
+| B takes the A-held top | 25,440 | 24,528 | 50.9% / 49.0% | 24,000 | 25,968 | 48.0% / 51.9% |
+
+**Trial checks.** Author one fixed source and target resolved to existing
+scoring tiles. Refuse unknown object or face references, empty or buried
+faces, overlapping trigger and target tiles, and moving objects. Check that
+the target and arena denominators stay fixed across all transitions, that
+same-step opposing paint produces one settled outcome, and that friendly,
+neutral and opponent-owned destination tiles account separately. Pin the
+sequence above and repeat with the B bot taking the lead during cooldown.
+Let the B human add another tile while B leads and confirm that the fill still
+credits the bot on expiry. Reset the trigger and top on a fresh round. To test a
+human/bot match, expose only the trigger faces the bot can see, its side's
+qualification progress and leader, fill readiness and last fill team, and
+the visible region's current ownership. Offer reachable non-team trigger
+tiles as aim points when a capture would paint useful area. Keep the first
+trial's routes and seek behaviour on the Yard's existing supports. The
+worked swing and a readable bilateral trigger are the proposal for deciding
+whether to prototype.
 
 ### Circle shapes for round projectiles (`ROAD#44`)
 
@@ -5191,6 +5326,18 @@ shrinking at 720p and 1080p. The Team setup matrix's real best-of-three series
 records its two drawn rounds once each and reloads them from disk; it and the
 Resume matrix, whose matches also finish, now save into nested profiles so the
 probe's shared save fixture stays byte-identical.
+
+### Stage record counters at their limit (`ROAD#47`)
+
+**Done, 2026-11-20.** [MatchRecords::add](../game/save/match_records.cpp) caps
+each of the five match counts independently at `2147483647`, the largest
+value the existing save format accepts for those counts. Wins and solo
+coverage can still improve a best and draws preserve the best winning share.
+
+The isolated [match_records probe](../scripts/acceptance/match_records.cpp)
+loads counts one below and at the limit, records wins for both teams, a draw,
+and solo results through `record_result_and_save`, and reloads the resulting
+save to verify the exact counts and bests.
 
 ## Remembered match setup (`GAP#6.1`)
 

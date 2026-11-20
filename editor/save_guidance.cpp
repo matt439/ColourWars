@@ -2,22 +2,39 @@
 #include "editor/content_catalog.h"
 #include "editor/path_text.h"
 #include "editor/user_stage_save.h"
+#include "game/contracts/level_format.h"
 #include "game/contracts/user_stage_contract.h"
 
 #include <algorithm>
-#include <cwctype>
 #include <stdexcept>
+#include <system_error>
 
 namespace colourwars_editor
 {
     namespace
     {
-        bool json_file(const std::filesystem::path& path)
+        // Only the number of files before the chosen name determines whether
+        // the game reads it. The file can be new or an existing replacement.
+        std::wstring user_stage_scan_warning(const std::filesystem::path& file)
         {
-            std::wstring extension = path.extension().native();
-            std::transform(extension.begin(), extension.end(), extension.begin(),
-                [](wchar_t character) { return static_cast<wchar_t>(std::towlower(character)); });
-            return extension == L".json";
+            namespace fs = std::filesystem;
+            constexpr std::size_t limit = level_format::limit::max_user_stage_files;
+            const fs::path folder = file.parent_path();
+            std::error_code error;
+            if (!fs::exists(folder, error) && !error) return {};
+
+            std::size_t earlier = 0;
+            for (fs::directory_iterator entries(folder, error); !error && entries != fs::directory_iterator();
+                entries.increment(error))
+            {
+                if (user_stage_contract::is_stage_file(*entries) &&
+                    user_stage_contract::filename_less(entries->path(), file) && ++earlier == limit)
+                {
+                    return L"This file sorts after the first " + std::to_wstring(limit) +
+                        L" .json files. Move earlier .json files out of My Stages, then reopen Stage Select from the main menu.";
+                }
+            }
+            return error ? L"The editor could not check which files Stage Select will read." : L"";
         }
 
         // UTF-8 for a status line; std::filesystem does the conversion.
@@ -27,11 +44,18 @@ namespace colourwars_editor
         }
     }
 
+    std::wstring user_stage_replacement_prompt(const UserStageTarget& target)
+    {
+        const std::wstring warning = user_stage_scan_warning(target.file);
+        return L"Replace your stage '" + widen(target.name) + L"' in My Stages?\n\n" +
+            (warning.empty() ? L"The game plays the new version the next time Stage Select opens from the main menu." : warning);
+    }
+
     std::wstring stage_name_warning(const std::filesystem::path& destination,
         const std::filesystem::path& source_levels, const ContentCatalog& catalog,
         const std::string& display_name)
     {
-        if (destination.empty() || !catalog.manifest_read || !json_file(destination) ||
+        if (destination.empty() || !catalog.manifest_read || !user_stage_contract::has_json_extension(destination) ||
             !same_stage_folder(destination.parent_path(), source_levels))
             return {};
         const std::string name = path_text(destination.stem());
@@ -69,7 +93,9 @@ namespace colourwars_editor
             }
             try
             {
-                check_user_stage_target(*my_stages, destination, catalog.stages);
+                const UserStageTarget target = check_user_stage_target(*my_stages, destination, catalog.stages);
+                const std::wstring warning = user_stage_scan_warning(target.file);
+                if (!warning.empty()) return warning;
                 return (saved ? L"Open" : L"Save changes, then open") +
                     std::wstring(L" Stage Select from the game's main menu to play it; no rebuild needed.");
             }
@@ -78,7 +104,7 @@ namespace colourwars_editor
                 return L"The game cannot discover this file as a user stage. Use Save to My Stages to choose a valid name.";
             }
         }
-        if (json_file(destination) && same_stage_folder(destination.parent_path(), source_levels))
+        if (user_stage_contract::has_json_extension(destination) && same_stage_folder(destination.parent_path(), source_levels))
         {
             const std::string name = path_text(destination.stem());
             const bool registered = catalog.manifest_read && std::any_of(catalog.stages.begin(), catalog.stages.end(),

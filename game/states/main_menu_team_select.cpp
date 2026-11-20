@@ -260,10 +260,13 @@ void MainMenuTeamSelect::update_team_select_visuals()
 
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		this->displayed_teams_[static_cast<size_t>(i)] = this->selected_team(i);
-		this->displayed_confirmations_[static_cast<size_t>(i)] = this->confirmations_[i];
+		const size_t row = static_cast<size_t>(i);
+		const PlayerTeam team = this->selected_team(i);
+		const bool ready = this->confirmations_[row] == ConfirmationState::confirmed;
+		this->displayed_teams_[row] = team;
+		this->displayed_confirmations_[row] = this->confirmations_[row];
 		MenuChoiceIcon* selected_widget = nullptr;
-		switch (this->selected_team(i))
+		switch (team)
 		{
 		case PlayerTeam::a:
 			this->player_widgets_[i]->player_a->set_sprite_frame(
@@ -283,8 +286,10 @@ void MainMenuTeamSelect::update_team_select_visuals()
 		}
 		this->player_widgets_[i]->motion.observe(selected_widget);
 		selected_widget->set_motion_selected(true);
-		if (this->confirmations_[i] ==
-			ConfirmationState::confirmed)
+		const std::wstring& status = ready ? this->setup_text_.ready :
+			team == PlayerTeam::none ? this->setup_text_.choose_team : this->setup_text_.confirm_team;
+		this->player_widgets_[row]->status->set_text(status);
+		if (ready)
 		{
 			// Readiness locks only this row's chosen icon; its cursor stays put.
 			this->team_focus_.set_enabled(selected_widget, false);
@@ -346,6 +351,7 @@ void MainMenuTeamSelect::init()
 	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
 	this->team_select_frames_ = look.team_select_frames;
 	this->team_select_selected_frames_ = look.team_select_selected_frames;
+	this->setup_text_ = this->text().setup;
 	this->set_player_prompts(this->level_settings()->bot_count() > 0 ? MenuPrompt::bot_team :
 		this->player_count() >= 2 ? MenuPrompt::team_shuffle : MenuPrompt::team);
 
@@ -456,6 +462,15 @@ void MainMenuTeamSelect::init()
 		row = RectangleF::union_of(row, widgets->player_a->bounds());
 		row = RectangleF::union_of(row, widgets->player_center->bounds());
 		row = RectangleF::union_of(row, widgets->player_b->bounds());
+		const Vector2F status_position = menu_geometry::team_status_position(this->calculate_widget_position(0, i + 2), look);
+		widgets->status = std::make_unique<UiText>(name + "_status", this->setup_text_.choose_team,
+			style.detail_font, status_position, this->render_resources(), this->setup_art_.ink);
+		// Give every readiness state room on the same card.
+		const FontHandle status_font = this->render_resources()->resolve_sprite_font(style.detail_font);
+		for (const std::wstring* words : { &this->setup_text_.choose_team, &this->setup_text_.confirm_team, &this->setup_text_.ready })
+		{
+			row = RectangleF::union_of(row, RectangleF(status_position, this->render_resources()->measure_text(status_font, *words)));
+		}
 		row.inflate(this->setup_art_.focus_padding);
 		widgets->paper = std::make_unique<MenuPaperArtwork>(row,
 			this->render_resources(), &style, &this->row_art_, &this->focus_);
@@ -467,6 +482,7 @@ void MainMenuTeamSelect::init()
 		this->texture_container_->add_child(widgets->badge.get());
 
 		this->text_container_->add_child(widgets->player.get());
+		this->text_container_->add_child(widgets->status.get());
 
 		this->register_selection_motion(&widgets->motion);
 		this->player_widgets_.push_back(std::move(widgets));

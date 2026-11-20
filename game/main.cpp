@@ -2,6 +2,7 @@
 #include "game/config/crt_trial.h"
 #include "engine/app/application.h"
 #include "engine/app/content_root.h"
+#include "engine/app/motion_preference.h"
 #include "engine/core/file_path.h"
 #include "game/config/content_validation.h"
 #include "game/states/menu_content_validation.h"
@@ -65,7 +66,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		const InitialDisplay initial_display = initial_display_for_primary_monitor();
 		// Reduce effects from Windows applies only to a fresh save (POL#49).
 		Save save(initial_display.resolution, initial_display.fullscreen,
-			initial_reduce_effects_from_system());
+			labrador::prefers_reduced_motion());
 		save.load_save_file();
 		// This run's settings: the save's, with any worn profiles laid over them.
 		SettingsSession settings_session(save);

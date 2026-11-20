@@ -4,6 +4,9 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
     const std::filesystem::path& content, const std::filesystem::path& output, const crt_trial::Runtime& crt_runtime)
 {
     const auto catalog = acceptance::manifest_catalog(content);
+    const bool pseudo_localized = locale_selection::requested_from_environment() == "qps-ploc";
+    const auto& sprayer = presentation.main_menu().weapon_descriptions[static_cast<size_t>(WeaponType::sprayer)];
+    const auto& grenade = presentation.menu_text().subs.descriptions[static_cast<size_t>(SubType::grenade)];
     StateContext& stack = app;
     struct Clear { StateContext& stack; ~Clear() { stack.clear(); painter_scripted_pads::states = {}; } } clear{stack};
     for (bool quick : {false, true})
@@ -52,6 +55,10 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
             tick(); painter_scripted_pads::states[0].buttons=0; app.keyboard()->on_key_up(key); tick(); tick(0.51f);
         };
         const auto confirm = [&](const char* phase) { tap(GamepadButton::a); capture(phase); };
+        const auto check_status = [&](std::initializer_list<SetupStatusSample> statuses)
+        {
+            check_setup_status_pixels(app, presentation, stack_frame(app), pseudo_localized, statuses);
+        };
         if(quick)
         {
             const InputBindings before = session.input_bindings();
@@ -72,8 +79,8 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
             std::ignore=app.renderer()->window_size_changed(1280,720);
             tap(GamepadButton::b);
             require(!preferences.last_match_setup() && session.input_bindings()==before,
-                "Cancelling prototype changed saved setup/controls");
-            tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_right); tap(GamepadButton::a);
+                "Cancelling the preset review changed saved setup/controls");
+            confirm("preflight-reopened-review");
             tap(GamepadButton::dpad_down); tap(GamepadButton::a); capture("preflight-customise");
             MatchSetup proposed; proposed.set_player_count(2); proposed.set_player_bot(1,BotDifficulty::normal);
             proposed.begin_input_claims(pad ? 0 : input_slots::keyboard_and_mouse);
@@ -127,6 +134,48 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
                 require(!preferences.last_match_setup(),"Join interruption committed an unstarted match");
                 destination.clear(); stack.clear();
             }
+            if (!pad)
+            {
+                // A sparse guest pad still controls its own seat as the
+                // keyboard host shifts focus from P1 to the intervening bot.
+                proposed = MatchSetup{};
+                proposed.set_player_count(3);
+                proposed.set_player_bot(1, BotDifficulty::normal);
+                proposed.begin_input_claims(input_slots::keyboard_and_mouse);
+                require(proposed.claim_input_slot(3), "Mixed first-match fixture did not claim a guest");
+                proposed.set_screen_layout(ScreenLayout::two_player);
+                proposed.set_player_team(0, PlayerTeam::a);
+                proposed.set_player_team(1, PlayerTeam::b);
+                proposed.set_player_team(2, PlayerTeam::b);
+                auto& guest = painter_scripted_pads::states[3];
+                guest.connected = true;
+                tick(); tick();
+                const auto guest_confirm = [&]
+                {
+                    guest.buttons = static_cast<uint16_t>(1u << static_cast<unsigned int>(GamepadButton::a));
+                    tick(); guest.buttons = 0; tick();
+                };
+                stack.push(std::make_unique<MainMenuTeamSelect>(&reference_context));
+                tick(); tick();
+                tap(GamepadButton::dpad_down);
+                tap(GamepadButton::a);
+                check_status({ { 0, L"Confirm team" }, { 1, L"Ready" }, { 2, L"Confirm team" } });
+                guest_confirm();
+                check_status({ { 0, L"Confirm team" }, { 1, L"Ready" }, { 2, L"Ready" } });
+                capture("mixed-team-status");
+                tap(GamepadButton::dpad_up);
+                tap(GamepadButton::a);
+                check_status({ { 0, L"Choose tool", &sprayer }, { 1, L"Choose tool", &sprayer }, { 2, L"Choose tool", &sprayer } });
+                tap(GamepadButton::dpad_down);
+                tap(GamepadButton::a);
+                guest_confirm();
+                guest_confirm();
+                check_status({ { 0, L"Choose tool", &sprayer }, { 1, L"Choose sub", &grenade }, { 2, L"Ready", &sprayer } });
+                capture("mixed-weapon-status");
+                stack.clear();
+                guest = {};
+                tick(); tick();
+            }
             stack.push(std::make_unique<GameMenu>(&data)); tick(); tick();
             confirmations=0; directions=0; // timed/count comparison begins at fresh Title, after separate recovery rehearsal.
         }
@@ -167,6 +216,7 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
         {
             tap(GamepadButton::dpad_down); confirm("join-two");
             tap(GamepadButton::dpad_right); capture("bot-filled"); confirm("teams");
+            check_status({ { 0, L"Choose a team" }, { 1, L"Choose a team" } });
             // Preserve #93's negative regression checks, separate from the
             // valid-path confirmation count being compared with the shortcut.
             const Frame neutral_team=stack_frame(app);
@@ -176,10 +226,19 @@ void first_match_flow(Application& app, GameTuning& tuning, Presentation& presen
             require(!preferences.last_match_setup(),"Rejected team Ready saved or started the match");
             tap(GamepadButton::a); --confirmations; capture("negative-neutral-ready-repeated");
             require(refused_team.pixels==stack_frame(app).pixels,"Repeated refused Ready changed team or warning");
-            tap(GamepadButton::dpad_left); confirm("host-team-ready");
+            tap(GamepadButton::dpad_left);
+            check_status({ { 0, L"Confirm team" }, { 1, L"Choose a team" } });
+            confirm("host-team-ready");
+            check_status({ { 0, L"Ready" }, { 1, L"Choose a team" } });
             tap(GamepadButton::dpad_down); tap(GamepadButton::dpad_right); confirm("tool");
-            confirm("host-tool"); confirm("host-sub");
-            tap(GamepadButton::dpad_down); confirm("bot-tool"); confirm("stage");
+            check_status({ { 0, L"Choose tool", &sprayer }, { 1, L"Choose tool", &sprayer } });
+            confirm("host-tool");
+            check_status({ { 0, L"Choose sub", &grenade }, { 1, L"Choose tool", &sprayer } });
+            confirm("host-sub");
+            check_status({ { 0, L"Ready", &sprayer }, { 1, L"Choose tool", &sprayer } });
+            tap(GamepadButton::dpad_down); confirm("bot-tool");
+            check_status({ { 0, L"Ready", &sprayer }, { 1, L"Choose sub", &grenade } });
+            confirm("stage");
         }
         }
         int movement = -1;

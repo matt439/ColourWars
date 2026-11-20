@@ -5,6 +5,7 @@
         $practiceRows = @(Import-Csv -LiteralPath (Join-Path $captures 'practice-replay.csv'))
         $expectedPracticeSteps = if ($debug) { 4920 } else { 4800 }
         $expectedPracticeCases = @('sustained-practice-60-seconds', 'practice-pause-focus-resume', 'practice-restart',
+            'practice-subs-keyboard-mouse', 'practice-subs-scripted-pad',
             'timed-menu-solo', 'timed-developer-course', 'timed-multiplayer', 'timed-to-practice-clears-old-tape')
         if ($debug) { $expectedPracticeCases += 'independent-debug-recorder' }
         if ($practice.outcome -cne 'passed' -or $practice.scope -cne 'actual-GameLevel-practice-replay' -or

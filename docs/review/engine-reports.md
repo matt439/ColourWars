@@ -157,9 +157,9 @@ report, 37 is withdrawn and [closed](#closed), 38 waits on `PIN#2`, the
 mouse-button ask under [What is deliberately not here](#what-is-deliberately-not-here)
 is drafted as a comment on labrador#122 and waits for the author's approval
 of its text, and engine `REV#60` leaves the parked list once the game's
-`POL#49` first-run read lands. That read landed the same day, so engine
-`REV#60` has left the parked list and its note is drafted below. Labrador#122
-had no comments that day.
+`POL#49` first-run read lands. That read landed and the note was drafted
+the same day. Labrador#122 had no comments that day. The subsequent engine
+release answered the reduced-motion request. [Client follow-up](#first-run-reduced-motion-preference-pin4).
 
 **Moved 2026-11-13 to upstream master `1dc8533c`**, 129 commits past
 `e7fc50e`, still untagged since `v0.3.0`, with a green `build and test` push
@@ -176,6 +176,14 @@ Report 30 has an exception type but no backend migration, so its message
 match stays; 33, 34's remaining selection change and 39 remain open. These
 local decisions do not claim tracker responses or closure. See
 [What the 2026-11-17 bump changed](#what-the-2026-11-17-bump-changed).
+
+**Rechecked 2026-11-20.** The pinned `v0.4.0` is still the latest tag.
+Upstream `master` is one documentation commit ahead. The four filed issues
+linked above are open with zero comments. The pin already supplies the
+reduced-motion query and sample shape outlines. Retire both unfiled asks and
+consume the query under [PIN#4](#first-run-reduced-motion-preference-pin4).
+[Release](https://github.com/matt439/Labrador/releases/tag/v0.4.0) ·
+[Changes since the tag](https://github.com/matt439/Labrador/compare/v0.4.0...f7b717c42199c1f5098a8c3fccbc17e970f1df67).
 
 ## The rule that governs this file
 
@@ -2243,48 +2251,23 @@ still only reads.
   if a feature here needs a non-multiplicative treatment and writes the code
   that shows it.
 
-- **Engine rows that say no client asks** (added 2026-11-12). Three `DECISION`
-  rows in Labrador's own `TODO.md` at master `3fe88f64` ask for a client, and
-  this one has something to say to each. None is filed; whether to add this
-  evidence to an engine row, file it alone or let it wait for a carrier report
-  is the author's call, already made for `REV#60` below.
-  - **`REV#83`** (`TODO.md:226`): no option for a window's size, position,
-    monitor or maximised start, "and no monitor query is exposed; no client
-    asks for any". This client does, by hand:
+- **Three engine rows with client exhibits** (first checked 2026-11-12,
+  rechecked 2026-11-20). Only the desktop-size exhibit is still parked.
+  - **`REV#83`**: Labrador deferred selecting individual window options until
+    a caller needs one. This game queries the monitor's work area directly:
     `fit_initial_window` (`game/config/initial_display.cpp:48-86`) calls
     `GetMonitorInfoW(MonitorFromWindow(...))` and `AdjustWindowRectExForDpi`
     on the native handle to fit the first-run window. That is the
     "nothing reports the desktop size" half of the `window_size_changed` entry
     above, so this is its exhibit and the engine row is its natural vehicle.
-  - **`GAP#6`** (`TODO.md:131`): circles, polygons and debug drawing of
-    collision shapes. The F2 collision overlay draws each object's
-    `shape()->bounding_box()` with a `Pen` that draws only axis-aligned boxes
-    and dots from a fill sprite (`game/debug/debug_overlay_draw.cpp:29-51`,
-    `:99`), so a rotated fixed slab is
-    drawn as its box. That is a client defect first, not yet an exhibit: the
-    exhibit is whatever code drawing the rotated shape turns out to need.
-  - **`REV#60`** (`TODO.md:203`): a read-only reduced-motion fact from the
-    browser or Windows' client-area animation setting. **No longer parked:
-    the game's `POL#49` landed on 2026-11-13.** A fresh save now starts with
-    the shared Reduce effects on when Windows' Animation effects is off, read
-    by `initial_reduce_effects_from_system()`
-    (`game/config/initial_display.cpp:93-102`) before the save loads. That one
-    `SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, ...)` call is this
-    client's exhibit. The note below goes to Labrador as a comment on its
-    `REV#60` under the [publication gate](#publication-gate-engpublish).
-    **Drafted, not posted:** it waits for the author to approve its text and
-    for a fresh master recheck of the engine row.
-
-    > A native client reads this fact by hand today. To choose a fresh save's
-    > reduced-motion default, it calls
-    > `SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &animation, 0)`
-    > before the window opens and treats a failed query as "animations on".
-    > That one call is the whole workaround. A read-only fact from the engine
-    > would replace it, for example `bool prefers_reduced_motion()` backed by
-    > that call on Win32 and by `matchMedia("(prefers-reduced-motion: reduce)")`
-    > on the web. The read needs no window, so it can be available before the
-    > window exists. The client reads the fact only once, for a first-run
-    > default, so a change notification is not needed.
+  - **`GAP#6`**: Labrador closed `OCA-102` with a copyable, tested outline
+    component in `v0.4.0`. ColourWars already draws a fixed slab's four
+    rotated edges in F2. The upstream request is spent.
+    [Sample component](../../external/labrador/samples/components/README.md#drawing-collision-shape-outlines) ·
+    [Client fix](../debug-console-record.md#fixed-slabs-in-the-collision-overlay-dbg19).
+  - **`REV#60`**: the report drafted on 2026-11-13 is retired. Labrador
+    shipped the requested reduced-motion query under `OCA-92` in `v0.4.0`.
+    The game adopted it under [PIN#4](#first-run-reduced-motion-preference-pin4).
 
 - **The write side of `json.h`.** Still absent, still correct (the engine's
   OCA-53 plans a guide, not an API, and declines a save facility under T1):
@@ -3462,3 +3445,17 @@ passed before this pin was selected.
 
 Not run here: the full focused-leaf painter sweep, physical pads or rumble,
 listening, attended gameplay/performance, or a new hosted ColourWars gate.
+
+## First-run reduced-motion preference (`PIN#4`)
+
+**Done, 2026-11-20.** Startup calls `labrador::prefers_reduced_motion()` on the
+application thread before loading the save or opening a window. Its failed-read
+result, `false`, matches the game's authored default.
+[Client caller](../../game/main.cpp) · [Engine contract](../../external/labrador/engine/app/motion_preference.h).
+
+The `POL#49` save policy still applies to first runs. The isolated
+`initial_display` probe covers both fresh defaults and their persisted values,
+an existing choice, and an unreadable save. It compares the engine's live
+result with an independent read of the Windows animation setting.
+[First-run policy](../polish-plan.md#reduce-effects-default-from-windows-pol49) ·
+[Acceptance case](../../scripts/acceptance/initial_display.cpp).

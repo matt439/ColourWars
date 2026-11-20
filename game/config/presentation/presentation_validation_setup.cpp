@@ -320,6 +320,7 @@ void Presentation::Validation::validate_team_and_weapon_labels(const RosterPaper
 	LabelRows team_rows;
 	LabelRows weapon_rows;
 	const SpriteSheet* team_sheet = render.sprite_sheet(main.team_select_sheet);
+	const MenuSetupText& setup_text = this->presentation.menu_text_.setup;
 	for (int player = 0; player < max_players; ++player)
 	{
 		const float row = static_cast<float>(player + 2);
@@ -327,6 +328,7 @@ void Presentation::Validation::validate_team_and_weapon_labels(const RosterPaper
 		const Vector2F weapon_position = this->presentation.menu_.layout.position + Vector2F(0.0f, main.weapon_select.spacing.y * row);
 		RectangleF team_icons;
 		float first_team_x = std::numeric_limits<float>::infinity();
+		float last_team_x = 0.0f;
 		for (size_t icon = 0; icon < main.team_select_frames.size(); ++icon)
 		{
 			const Vector2F position = team_position + Vector2F(main.team_select.spacing.x * 2.0f +
@@ -336,39 +338,66 @@ void Presentation::Validation::validate_team_and_weapon_labels(const RosterPaper
 			const RectangleF bounds = sprite_world_bounds(canvas, frame.source_rectangle(), 0.0f, frame.origin());
 			check_label_bounds("menu_text.labels.roster_row at Team Select icons", bounds, team_inside);
 			team_icons = icon == 0 ? bounds : RectangleF::union_of(team_icons, bounds);
+			const SpriteFrame& selected = team_sheet->sprite_frame(team_sheet->resolve_sprite_frame(main.team_select_selected_frames[icon]));
+			const RectangleF selected_bounds = sprite_world_bounds(canvas, selected.source_rectangle(), 0.0f, selected.origin());
+			last_team_x = std::max({ last_team_x, bounds.right(), selected_bounds.right() });
 			if (icon == 0)
 			{
-				const SpriteFrame& selected = team_sheet->sprite_frame(team_sheet->resolve_sprite_frame(main.team_select_selected_frames[icon]));
-				const RectangleF selected_bounds = sprite_world_bounds(canvas, selected.source_rectangle(), 0.0f, selected.origin());
 				check_label_bounds("menu_text.labels.roster_row at Team Select selected icon", selected_bounds, team_inside);
 				first_team_x = std::min(bounds.x, selected_bounds.x);
 			}
+		}
+		const Vector2F team_status_position = menu_geometry::team_status_position(team_position, main);
+		for (const auto& status : { std::pair("choose_team", &setup_text.choose_team),
+			std::pair("confirm_team", &setup_text.confirm_team), std::pair("ready", &setup_text.ready) })
+		{
+			const std::string key = std::string("menu_text.setup.") + status.first + " at Team Select";
+			const RectangleF bounds(team_status_position,
+				label_size(key, *status.second, this->presentation.menu_.detail_font));
+			check_label_bounds(key, bounds, team_inside);
+			if (bounds.x < last_team_x)
+			{
+				throw std::runtime_error(this->presentation.source_path_ + ": " + key + " must follow the team choice icons.");
+			}
+			team_icons = RectangleF::union_of(team_icons, bounds);
 		}
 		const Vector2F weapon_canvas_position = weapon_position + Vector2F(main.weapon_select.spacing.x * 2.0f, 0.0f);
 		RectangleF weapon_tile(weapon_canvas_position, main.weapon_select.size);
 		weapon_tile.inflate(this->presentation.menu_.icon_padding);
 		weapon_tile.inflate(this->presentation.menu_.rule_height);
 		RectangleF weapon_contents = weapon_tile;
+		const Vector2F name_position = weapon_canvas_position + Vector2F(0.0f,
+			main.weapon_select.size.y + this->presentation.menu_.icon_padding.y + this->presentation.menu_.rule_height);
+		const float name_y = name_position.y + std::min(0.0f, this->presentation.menu_.detail_shadow_offset.y);
+		const Vector2F description_position = weapon_canvas_position + Vector2F(main.weapon_description_x_offset, 0.0f);
+		RectangleF description_bounds(description_position, Vector2F::zero);
+		const auto include_description = [&](const std::wstring& description)
+		{
+			const std::wstring wrapped = render.wrap_text(name_font, description, main.weapon_description_max_width);
+			description_bounds = RectangleF::union_of(description_bounds, shadow_bounds(description_position,
+				render.measure_text(name_font, wrapped), main.weapon_description_shadow_offset));
+		};
 		for (size_t choice = 0; choice < artwork.choices.size(); ++choice)
 		{
-			const Vector2F name_position = weapon_canvas_position + Vector2F(0.0f,
-				main.weapon_select.size.y + this->presentation.menu_.icon_padding.y + this->presentation.menu_.rule_height);
 			const Vector2F name_size = render.measure_text(name_font, artwork.choices[choice].name);
 			weapon_contents = RectangleF::union_of(weapon_contents,
 				shadow_bounds(name_position, name_size, this->presentation.menu_.detail_shadow_offset));
-			const Vector2F description_position = weapon_canvas_position + Vector2F(main.weapon_description_x_offset, 0.0f);
-			const std::wstring wrapped = render.wrap_text(name_font, main.weapon_descriptions[choice], main.weapon_description_max_width);
-			const Vector2F description_size = render.measure_text(name_font, wrapped);
-			weapon_contents = RectangleF::union_of(weapon_contents,
-				shadow_bounds(description_position, description_size, main.weapon_description_shadow_offset));
+			include_description(main.weapon_descriptions[choice]);
 		}
 		// A sub's description takes the tool's place while the sub is chosen (ROAD#11).
 		for (const std::wstring& sub_description : this->presentation.menu_text_.subs.descriptions)
 		{
-			const Vector2F description_position = weapon_canvas_position + Vector2F(main.weapon_description_x_offset, 0.0f);
-			const std::wstring wrapped = render.wrap_text(name_font, sub_description, main.weapon_description_max_width);
-			weapon_contents = RectangleF::union_of(weapon_contents, shadow_bounds(description_position,
-				render.measure_text(name_font, wrapped), main.weapon_description_shadow_offset));
+			include_description(sub_description);
+		}
+		weapon_contents = RectangleF::union_of(weapon_contents, description_bounds);
+		const Vector2F weapon_status_position = menu_geometry::weapon_status_position(description_bounds, name_y);
+		for (const auto& status : { std::pair("choose_tool", &setup_text.choose_tool),
+			std::pair("choose_sub", &setup_text.choose_sub), std::pair("ready", &setup_text.ready) })
+		{
+			const std::string key = std::string("menu_text.setup.") + status.first + " at Weapon Select";
+			const RectangleF bounds(weapon_status_position, label_size(key, *status.second, main.weapon_description_font));
+			check_label_bounds(key, bounds, weapon_inside);
+			weapon_contents = RectangleF::union_of(weapon_contents, bounds);
 		}
 		for (int slot = 0; slot < (player == 0 ? input_slots::count : label_choices); ++slot)
 		{

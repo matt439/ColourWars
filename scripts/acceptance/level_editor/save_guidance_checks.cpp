@@ -2,6 +2,7 @@
 #include "editor/content_catalog.h"
 #include "editor/save_guidance.h"
 #include "editor/user_stage_save.h"
+#include "scripts/acceptance/support/user_stage_limit_fixture.h"
 
 #include <iostream>
 #include <optional>
@@ -21,6 +22,72 @@ namespace level_editor_acceptance
                 "Direct My Stages feedback lost its main-menu rescan workflow");
             require(!has(text, L"register") && !has(text, L"Rebuild the game"),
                 "Direct My Stages feedback added source-registration or rebuild instructions");
+        }
+
+        void check_cutoff_guidance(const std::wstring& text)
+        {
+            const std::wstring cutoff = L"after the first " +
+                std::to_wstring(level_format::limit::max_user_stage_files) + L" .json files";
+            require(has(text, cutoff.c_str()) && has(text, L"Move earlier .json files out of My Stages") &&
+                has(text, L"reopen Stage Select from the main menu") &&
+                !has(text, L"no rebuild needed") && !has(text, L"plays the new version"),
+                "A file past the stage cutoff must explain how to bring it into the scan");
+        }
+
+        void check_user_stage_cutoff(const fs::path& scratch)
+        {
+            const fs::path user = scratch / "save-guidance-cutoff";
+            fs::create_directory(user);
+            const fs::path source = scratch / "unrelated-source-levels";
+            ContentCatalog catalog;
+            catalog.manifest_read = true;
+            LevelDocument document;
+            acceptance::fill_before_user_stage_limit(user, document.serialize());
+            const auto target_for = [&](const char* name) { return check_user_stage_target(user, user / name, catalog.stages); };
+            const auto guidance = [&](const fs::path& path, bool saved) { return save_guidance(path, source, catalog, user, saved); };
+
+            const UserStageTarget edge = target_for("y-edge.json");
+            require(!edge.replaces, "Position 256 fixture must be a new stage");
+            check_user_guidance(guidance(edge.file, false));
+            save_user_stage(document, user, edge);
+            check_user_guidance(guidance(document.path(), true));
+            require(has(user_stage_replacement_prompt(target_for("y-edge.json")), L"plays the new version"),
+                "A replacement within the stage cutoff lost its play guidance");
+
+            const UserStageTarget outside = target_for("zz-last.JSON");
+            require(!outside.replaces, "Position 257 fixture must be a new stage");
+            check_cutoff_guidance(guidance(outside.file, false));
+            save_user_stage(document, user, outside);
+            check_cutoff_guidance(guidance(document.path(), true));
+            const std::string outside_bytes = read_text(outside.file);
+
+            const UserStageTarget replacement = target_for("ZZ-LAST.json");
+            require(replacement.replaces && replacement.file == outside.file,
+                "A differently cased overwrite must keep the actual filename and its position");
+            const std::wstring prompt = user_stage_replacement_prompt(replacement);
+            require(has(prompt, L"Replace your stage 'zz-last' in My Stages?"),
+                "A replacement past the cutoff must still ask whether to overwrite the existing stage");
+            check_cutoff_guidance(prompt);
+            check_cutoff_guidance(guidance(user / "ZZ-LAST.json", false));
+            document.set_property(entry(document, EntryKind::level), "/display_name", "Replacement beyond cutoff");
+            save_user_stage(document, user, replacement);
+            require(document.path() == outside.file && read_text(outside.file) != outside_bytes && !document.dirty(),
+                "A replacement past the cutoff must still write the edited file");
+            check_cutoff_guidance(guidance(document.path(), true));
+
+            // Uppercase Z sorts before lowercase m and y in native order.
+            const UserStageTarget early = target_for("Z-added.json");
+            check_user_guidance(guidance(early.file, false));
+            save_user_stage(document, user, early);
+            check_user_guidance(guidance(document.path(), true));
+            check_cutoff_guidance(guidance(edge.file, true));
+            fs::rename(user / "m-1000.JSON", scratch / "moved-1000.JSON");
+            fs::rename(user / "m-1001.json", scratch / "moved-1001.json");
+            check_user_guidance(guidance(outside.file, true));
+            require(has(user_stage_replacement_prompt(replacement), L"plays the new version"),
+                "Moving earlier files out must restore the normal replacement guidance");
+            std::cout << "PASS My Stages cutoff: positions 256 and 257, oversized-folder early save, case-preserving "
+                "replacement, malformed .JSON counting and restored play guidance after moving files\n";
         }
 
         void check_unicode_stage_folders(const fs::path& scratch)
@@ -142,6 +209,7 @@ namespace level_editor_acceptance
     void check_save_guidance(const fs::path& scratch)
     {
         check_unicode_stage_folders(scratch);
+        check_user_stage_cutoff(scratch);
         const fs::path root = scratch / "save-guidance";
         const fs::path source = root / "source" / "game" / "content" / "levels";
         const fs::path user = root / "profile" / "ColourWars" / "stages";

@@ -2,6 +2,7 @@
 #include "scripts/acceptance/debug_console/fixtures.h"
 
 #if COLOURWARS_DEV_TOOLS
+#include "engine/math/circle.h"
 #include "game/debug/input/debug_chord.h"
 #include "game/debug/capture/debug_screenshot.h"
 #include "game/debug/debug_overlay_draw.h"
@@ -398,12 +399,13 @@ namespace debug_console_acceptance
 	}
 
 	// What F2 draws for a fixed slab: its own rotated edges, in a colour no
-	// other tag uses (DBG#19), where it used to be the projectile-yellow
-	// bounding box. The drawing itself needs a device; this is its input.
+	// other tag uses (DBG#19). Circular shots get their own ring (DBG#21).
+	// The drawing itself needs a device; this is its input.
 	void check_collision_outline()
 	{
 		using labrador::Colour;
 		using labrador::Segment;
+		using labrador::Vector2F;
 		const CollisionObjectType tags[] = {
 			CollisionObjectType::structure, CollisionObjectType::structure_paintable,
 			CollisionObjectType::structure_jump_through, CollisionObjectType::structure_ramp_left,
@@ -441,7 +443,7 @@ namespace debug_console_acceptance
 			}
 		}
 
-		// Every other shape keeps its bounding box, clockwise from top-left.
+		// A rectangle keeps its bounding box, clockwise from top-left.
 		const labrador::RectangleF wall(100.0f, 200.0f, 30.0f, 40.0f);
 		const std::array<Segment, 4> boxed = debug_overlay::collision_outline(wall);
 		require(boxed[0] == Segment(100.0f, 200.0f, 130.0f, 200.0f) &&
@@ -449,7 +451,30 @@ namespace debug_console_acceptance
 			boxed[2] == Segment(130.0f, 240.0f, 100.0f, 240.0f) &&
 			boxed[3] == Segment(100.0f, 240.0f, 100.0f, 200.0f),
 			"A box's collision outline is its four sides");
-		std::cout << "PASS F2 outlines a fixed slab along its slope in a colour of its own; boxes keep their sides\n";
+
+		const Vector2F centre(128.25f, -57.5f);
+		constexpr float radius = 8.75f;
+		constexpr float tolerance = 0.0001f;
+		const labrador::Circle circle(centre, radius);
+		const auto ring = debug_overlay::collision_outline(circle);
+		for (std::size_t index = 0; index < ring.size(); ++index)
+		{
+			const Segment& edge = ring[index];
+			require(edge.point_0 != edge.point_1 && edge.point_1 == ring[(index + 1) % ring.size()].point_0,
+				"A circular collision outline closes without gaps or empty edges");
+			require(std::abs((edge.point_0 - centre).length() - radius) <= tolerance,
+				"Every circular collision outline vertex lies on the circle");
+		}
+		for (const Vector2F offset : { Vector2F(radius, 0.0f), Vector2F(0.0f, radius),
+			Vector2F(-radius, 0.0f), Vector2F(0.0f, -radius) })
+		{
+			const Vector2F cardinal = centre + offset;
+			require(std::any_of(ring.begin(), ring.end(), [cardinal](const Segment& edge)
+			{
+				return (edge.point_0 - cardinal).length() <= tolerance;
+			}), "The ring reaches a cardinal point of the circle");
+		}
+		std::cout << "PASS F2 outlines fixed slabs, boxes and circular shots\n";
 	}
 
 	void check_goto(GameTuning& tuning, Presentation& presentation)

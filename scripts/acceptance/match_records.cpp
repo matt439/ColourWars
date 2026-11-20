@@ -19,6 +19,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -302,6 +303,54 @@ namespace
 		require(quarters != nullptr && quarters->practice_played == 1 &&
 			percentage_tenths(*quarters->best_coverage_percentage) == 424,
 			"Recorded practice results did not reload");
+	}
+
+	void check_saturated_counts(const IsolatedSaveDirectory& directory)
+	{
+		constexpr int limit = std::numeric_limits<int>::max();
+		const std::string near_limit = std::to_string(limit - 1);
+		directory.write_save("{\"records\":[{\"stage\":\"arena\",\"versus_played\":" + near_limit +
+			",\"team_a_wins\":" + near_limit + ",\"team_b_wins\":" + near_limit +
+			",\"draws\":" + near_limit + ",\"practice_played\":" + near_limit + "}]}");
+		Save save;
+		save.load_save_file();
+		save.record_result_and_save("arena", versus(125.0f, 75.0f));
+		const StageRecord* record = save.records().find("arena");
+		require(record != nullptr && record->versus_played == limit && record->team_a_wins == limit &&
+			record->team_b_wins == limit - 1 && record->draws == limit - 1 &&
+			record->practice_played == limit - 1, "The first win did not advance only its own counts");
+		save.record_result_and_save("arena", versus(75.0f, 125.0f));
+		save.record_result_and_save("arena", versus(100.0f, 100.0f));
+		save.record_result_and_save("arena", practice(25.0f));
+		require(record->versus_played == limit && record->team_a_wins == limit &&
+			record->team_b_wins == limit && record->draws == limit && record->practice_played == limit,
+			"A match count stopped early or overflowed while another count advanced");
+
+		Save full;
+		full.load_save_file();
+		const StageRecord* loaded = full.records().find("arena");
+		require(loaded != nullptr && same(*record, *loaded),
+			"Counts at the limit did not load exactly");
+		const RecordOutcome a_win = full.record_result_and_save("arena", versus(150.0f, 50.0f));
+		const RecordOutcome b_win = full.record_result_and_save("arena", versus(25.0f, 175.0f));
+		const RecordOutcome draw = full.record_result_and_save("arena", versus(100.0f, 100.0f));
+		const RecordOutcome solo = full.record_result_and_save("arena", practice(50.0f));
+		require(a_win.new_best && a_win.best == 75.0f && b_win.new_best && b_win.best == 87.5f,
+			"Full counters prevented a new best after a win");
+		require(draw.recorded && !draw.new_best && !draw.value && draw.best == 87.5f,
+			"A draw at the count limit lost or replaced the best winning share");
+		require(solo.coverage && solo.new_best && solo.best == 50.0f,
+			"A full practice count prevented a new coverage best");
+		require(loaded->versus_played == limit && loaded->team_a_wins == limit &&
+			loaded->team_b_wins == limit && loaded->draws == limit && loaded->practice_played == limit,
+			"A full count changed after recording a match");
+
+		Save restored;
+		restored.load_save_file();
+		const StageRecord* reloaded = restored.records().find("arena");
+		require(reloaded != nullptr && same(*loaded, *reloaded) && reloaded->best_win_percentage == 87.5f &&
+			reloaded->best_coverage_percentage == 50.0f,
+			"Full counts and updated bests did not survive reloading exactly");
 	}
 
 	// What `body` writes to stderr (the C stream), with \r\n read back as \n.
@@ -619,6 +668,7 @@ int main(int argc, char** argv)
 		check_versions(directory);
 		check_section_isolation(directory);
 		check_round_trip(directory);
+		check_saturated_counts(directory);
 		check_section_reset_report(directory);
 		check_newer_save(directory);
 		check_unreadable_save(directory);
@@ -627,7 +677,7 @@ int main(int argc, char** argv)
 		std::cout << "PASS match records: display-precision bests, side/draw/practice tallies, "
 			"results line, version 0/1/newer saves, newer saves copied aside before a downgrade "
 			"write, the stages folder made on a save write, per-section and per-entry recovery, "
-			"bounded values, retired-stage retention, exact round trip, unreadable and "
+			"bounded values, saturated counts with new bests, retired-stage retention, exact round trip, unreadable and "
 			"unopenable saves kept aside, and unloadable legacy saves reported and left\n";
 		return 0;
 	});

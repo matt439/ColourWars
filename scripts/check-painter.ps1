@@ -169,7 +169,7 @@ if ($CompileOnly -and $focusedSelectors.Count -gt 0) {
     throw 'CompileOnly compiles both pad readers and takes no focused painter selector.'
 }
 # Each entry is one compile: $true selects the scripted gamepad reader.
-$painterCompileVariants = if ($CompileOnly) { @($false, $true) } else {
+$painterCompileVariants = if ($CompileOnly) { @($false, $true) } elseif ($PracticeReplayOnly) { @($true) } else {
     @([bool]($FirstMatchFlowOnly -or $HowToPlayOnly -or $RumbleOnly -or $KeyboardJumpOnly -or $StageSummaryOnly -or $WeaponTuneColoursOnly -or $MenuLabelsOnly -or $TeamTuneColoursOnly -or $TeamFocusOnly -or $StickReadoutsOnly -or $ConnectionTextOnly -or $RememberedSetupOnly -or $BotPlayersOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $StagePreviewBackgroundTuneColourOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly))
 }
 

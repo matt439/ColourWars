@@ -10,6 +10,7 @@
 #include <array>
 
 class Player;
+namespace labrador { struct Circle; }
 
 // The per-pane developer overlays (overlay.collision, overlay.camera), drawn
 // by Level::draw_player_overlay on the worker that owns the pane. Read-only
@@ -25,9 +26,11 @@ namespace debug_overlay
 	// draw_pane reads from the object. Every structure tag has one of its own,
 	// and anything else (the projectiles) is yellow.
 	labrador::Colour collision_colour(CollisionObjectType type);
-	// The four edges outlined: a rotated rectangle's own (a fixed slab along
-	// its slope), any other shape's bounding box.
+	// A fixed slab follows its own rotated edges. Other polygonal shapes
+	// use their bounding box. A circle follows its own centre and radius.
 	std::array<labrador::Segment, 4> collision_outline(const labrador::Shape& shape);
+	constexpr std::size_t circle_outline_segments = 24;
+	std::array<labrador::Segment, circle_outline_segments> collision_outline(const labrador::Circle& circle);
 
 	void draw_pane(labrador::DrawList& list, const LevelOverlays& overlays,
 		const labrador::Scene& scene, const labrador::Scene::View& view,

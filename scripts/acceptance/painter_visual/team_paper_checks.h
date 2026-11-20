@@ -25,6 +25,21 @@ void team_paper_badge(DrawList& list, RenderResources& resources, const PlayerId
     }
 }
 
+constexpr std::array<const wchar_t*, 3> team_status_words{ L"Choose a team", L"Confirm team", L"Ready" };
+
+RectangleF team_status_reference_bounds(RenderResources& render, const std::string& font, Vector2F position)
+{
+    const FontHandle handle = render.resolve_sprite_font(font);
+    Vector2F size;
+    for (const wchar_t* words : team_status_words)
+    {
+        const Vector2F measured = render.measure_text(handle, words);
+        size.x = std::max(size.x, measured.x);
+        size.y = std::max(size.y, measured.y);
+    }
+    return RectangleF(position, size);
+}
+
 void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
@@ -85,7 +100,9 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         const auto position = [&](int column, int row) { return style.layout.position + Vector2F(look.team_select.spacing.x * static_cast<float>(column), look.team_select.spacing.y * static_cast<float>(row)); };
         const colourwars::UiTextDropShadow title("independent-team-title", heading, style.heading_font, position(0, 0), app.render_resources(), art.ink, Colour{}, style.heading_shadow_offset);
         const colourwars::UiTextDropShadow message("independent-team-warning", choice_warning ? L"Choose a team with Left/Right, then Ready." : L"Both teams need a player", style.detail_font, look.team_warning_position, app.render_resources(), art.ink, Colour{}, style.detail_shadow_offset);
-        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels; std::vector<RectangleF> rows, badges;
+        std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> labels;
+        std::vector<std::unique_ptr<UiText>> statuses;
+        std::vector<RectangleF> rows, badges;
         const std::array<std::wstring, 4> devices{ L"Keyboard/mouse", L"Pad 4", L"Pad 1", L"Pad 3" };
         for (size_t i = 0; i < teams.size(); ++i)
         {
@@ -94,6 +111,12 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             const RectangleF badge(bounds.x - identity.ui_size.x - identity.ui_gap, bounds.y + (bounds.height - identity.ui_size.y) / 2.0f, identity.ui_size.x, identity.ui_size.y);
             RectangleF row = RectangleF::union_of(bounds, badge); row = RectangleF::union_of(row,
                 RectangleF(position(2, static_cast<int>(i) + 2), Vector2F(look.team_select.size.x * 3.0f, look.team_select.size.y)));
+            const Vector2F status_position = position(2, static_cast<int>(i) + 2) +
+                Vector2F(look.team_select.size.x * 3.0f + art.focus_padding.x, 0.0f);
+            const size_t status = ready[i] ? 2 : teams[i] == PlayerTeam::none ? 0 : 1;
+            statuses.push_back(std::make_unique<UiText>("independent-team-status", team_status_words[status],
+                style.detail_font, status_position, app.render_resources(), art.ink));
+            row = RectangleF::union_of(row, team_status_reference_bounds(*app.render_resources(), style.detail_font, status_position));
             row.inflate(art.focus_padding); require(inside.contains(row), "Independent Team row/card escapes paper interior");
             rows.push_back(row); badges.push_back(badge); labels.push_back(std::move(text));
         }
@@ -123,7 +146,8 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
         }
         fill_sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::design_resolution.x, menu_consts::design_resolution.y - style.footer_y), style.scrim_colour);
         fill_sheet->draw(list, fill, RectangleF(style.brand_position.x, style.footer_y, menu_consts::design_resolution.x - style.brand_position.x * 2.0f, style.rule_height), style.panel_edge_colour);
-        list.set_filter(TextureFilter::linear); title.draw(list); if (warning) { message.draw(list); } for (const auto& label : labels) { label->draw(list); }
+        list.set_filter(TextureFilter::linear); title.draw(list); if (warning) { message.draw(list); }
+        for (size_t row = 0; row < labels.size(); ++row) { labels[row]->draw(list); statuses[row]->draw(list); }
         const auto& footer = snapshot.prompt_bar(); const std::wstring prompt = missing ? L" Reconnect controller    B/Esc Change players" : teams.size() < 2 ?
             L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel" : L"Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams";
         const colourwars::UiTextDropShadow legend("independent-team-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
@@ -136,7 +160,9 @@ void team_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, cons
             for (int y = box.y; y < box.bottom(); ++y) { for (int x = box.x; x < box.right(); ++x) { const float value = srgb_luminance(actual, pixel_offset(actual, x, y)); dark = std::min(dark, value); light = std::max(light, value); if (value < 0.1f) { ++ink; } if (value > 0.5f) { ++pale; } } }
             require(ink > 2 && pale > 2 && (light + 0.05f) / (dark + 0.05f) >= 7.0f, "Team paper lost native dark lettering/pale-paper contrast");
         };
-        contrast(title.bounds()); for (const auto& label : labels) { contrast(label->bounds()); } if (warning) { contrast(message.bounds()); }
+        contrast(title.bounds());
+        for (size_t row = 0; row < labels.size(); ++row) { contrast(labels[row]->bounds()); contrast(statuses[row]->bounds()); }
+        if (warning) { contrast(message.bounds()); }
         if (capture) { save(actual, output / (stem + ".ppm")); save(foreground_crop(actual, pixel_bounds(camera.calculate_view_rectangle(paper)), 0), output / (stem + "-detail.ppm")); }
         std::srand(7919); const int next = std::rand(); std::srand(7919); require(actual.pixels == frame().pixels && actual.pixels == frame().pixels && std::rand() == next, "Frozen Team paper changed pixels or RNG"); plan();
         records << name << ',' << actual.width << ',' << actual.height << ',' << teams.size() << ',' << warning << ',' << missing << ',' << std::count_if(insets.begin(), insets.end(), [](float value) { return value > 0.0f; }) << ",true\n"; return actual;

@@ -3,12 +3,16 @@
 void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
+    constexpr int quick_action = 3;
+    constexpr std::array initial_focuses{ MainMenuHome::InitialFocus::play, MainMenuHome::InitialFocus::options,
+        MainMenuHome::InitialFocus::credits, MainMenuHome::InitialFocus::quick_match };
     const auto& style = presentation.menu(); const auto& look = presentation.main_menu();
     const auto& art = look.art; const auto& words = presentation.menu_text();
     require(words.heading(MenuHeading::home) == L"Make your mark." &&
         words.home_subtitle == L"Paint the arena. Claim the win." &&
         words.item(MenuItem::play) == L"Play" && words.item(MenuItem::options) == L"Options" &&
-        words.item(MenuItem::credits) == L"Credits" && words.item(MenuItem::exit) == L"Exit",
+        words.item(MenuItem::credits) == L"Credits" && words.item(MenuItem::exit) == L"Exit" &&
+        words.quick_title == L"Play a bot",
         "Home return-focus copy drifted from its independent literals");
     Save preferences; seed_play_settings(preferences, [](PlaySettings& play) { play.music_volume = play.sfx_volume = 0; play.reduce_effects = false; });
     SettingsSession preferences_session(preferences); PlaySettings& play = live_play_settings(preferences_session);
@@ -38,7 +42,8 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         {
             const Key key = button == GamepadButton::a ? Key::enter :
                 button == GamepadButton::b ? Key::escape :
-                button == GamepadButton::dpad_up ? Key::up : Key::down;
+                button == GamepadButton::dpad_up ? Key::up :
+                button == GamepadButton::dpad_right ? Key::right : Key::down;
             if (down) { app.keyboard()->on_key_down(key); } else { app.keyboard()->on_key_up(key); }
         }
     };
@@ -53,7 +58,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
     const auto open = [&](int page, int initial_focus = 0)
     {
         stack.clear(); stack.notify_activation(true); app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
-        for (Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::space }) { app.keyboard()->on_key_up(key); }
+        for (Key key : { Key::enter, Key::escape, Key::up, Key::down, Key::right, Key::space }) { app.keyboard()->on_key_up(key); }
         painter_scripted_pads::states = {}; painter_scripted_pads::states[3].connected = pad;
         poll_gamepads(app); poll_gamepads(app); app.keyboard()->poll(); app.keyboard()->poll();
         app.mouse()->poll(); app.mouse()->poll(); input.reset_actions(); settings = MatchSetup();
@@ -61,14 +66,14 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         if (page == 0)
         {
             auto home = initial_focus == 0 ? std::make_unique<MainMenuHome>(&context) :
-                std::make_unique<MainMenuHome>(&context, initial_focus == 1 ?
-                    MainMenuHome::InitialFocus::options : MainMenuHome::InitialFocus::credits);
+                std::make_unique<MainMenuHome>(&context, initial_focuses[static_cast<size_t>(initial_focus)]);
             active_home = home.get(); stack.push(std::move(home));
         }
         else if (page == 1) { stack.push(std::make_unique<MainMenuTitle>(&context)); }
         else if (page == 2) { stack.push(std::make_unique<MainMenuModeSelect>(&context)); }
         else if (page == 3) { stack.push(std::make_unique<MainMenuOptions>(&context)); }
-        else { stack.push(std::make_unique<MainMenuCredits>(&context)); }
+        else if (page == 4) { stack.push(std::make_unique<MainMenuCredits>(&context)); }
+        else { stack.push(std::make_unique<MainMenuQuickMatch>(&context)); }
         tick(); tick(); require(stack.depth() == 2 && !context.music_exit_pending(), "Home return fixture did not open a neutral real page");
     };
     const auto reference = [&](int selected)
@@ -82,15 +87,17 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         label(L"Make your mark.", style.heading_font, look.home_position, art.ink);
         label(L"Paint the arena. Claim the win.", style.detail_font, look.home_subtitle_position, art.ink);
         label(L"How to play", style.item_font, look.home_help_position, art.ink);
-        label(L"Play a bot", style.detail_font, look.home_quick_position, art.ink);
-        const std::array<std::wstring, 4> actions{ L"Play", L"Options", L"Credits", L"Exit" };
         std::array<RectangleF, 4> rows;
-        for (int row = 0; row < 4; ++row)
+        rows[quick_action] = label(L"Play a bot", style.detail_font, look.home_quick_position,
+            selected == quick_action ? art.focus_ink : art.ink)->bounds();
+        const std::array<std::wstring, 3> actions{ L"Play", L"Options", L"Credits" };
+        for (int row = 0; row < 3; ++row)
         {
             rows[static_cast<size_t>(row)] = label(actions[static_cast<size_t>(row)], style.item_font,
                 look.home_position + Vector2F(0.0f, look.home_spacing.y * static_cast<float>(row + 2)),
                 row == selected ? art.focus_ink : art.ink)->bounds();
         }
+        label(L"Exit", style.item_font, look.home_position + Vector2F(0.0f, look.home_spacing.y * 5), art.ink);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const auto viewport = app.viewport_manager()->fullscreen_viewport();
         const Camera camera = Camera::frame(RectangleF(Vector2F::zero, menu_consts::design_resolution), viewport);
@@ -166,27 +173,41 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
     };
     const auto focus = [&](int selected)
     {
-        for (int move = 0; move < selected; ++move) { tap(GamepadButton::dpad_down); }
+        if (selected == quick_action)
+        {
+            tap(GamepadButton::dpad_down);
+            tap(GamepadButton::dpad_right);
+        }
+        else
+        {
+            for (int move = 0; move < selected; ++move) { tap(GamepadButton::dpad_down); }
+        }
         tick(settled);
+    };
+    const auto back_row = [&](int selected)
+    {
+        tick();
+        const int moves = selected == 1 ? 8 : selected == quick_action ? 2 : 0;
+        for (int row = 0; row < moves; ++row) { tap(GamepadButton::dpad_down); }
+        tap(GamepadButton::a);
     };
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440),
         Vector2I(1600, 1200), Vector2I(1920, 1200), Vector2I(2560, 1080) })
     {
         resize(size); pad = false;
-        std::array<Frame, 3> children;
-        for (int child = 0; child < 3; ++child) { open(child + 2); children[static_cast<size_t>(child)] = frame(); }
+        std::array<Frame, initial_focuses.size()> children;
+        for (int child = 0; child < static_cast<int>(children.size()); ++child) { open(child + 2); children[static_cast<size_t>(child)] = frame(); }
         open(0); still("initial-default", 0, true);
         open(1); tap(GamepadButton::a); still("title-entry", 0);
         tap(GamepadButton::a); child_matches(children[0]); tap(GamepadButton::b); still("mode-back", 0);
-        for (int selected : { 1, 2 })
+        for (int selected : { 1, 2, quick_action })
         {
             open(0); focus(selected); compare("before-child-" + std::to_string(selected), selected);
             tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]);
             tap(GamepadButton::b); still("back-action-" + std::to_string(selected), selected, true);
             // No direction is sent: the newly restored cursor must reopen its origin.
-            tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]); tick();
-            if (selected == 1) { for (int row = 0; row < 8; ++row) { tap(GamepadButton::dpad_down); } }
-            tap(GamepadButton::a); still("back-row-" + std::to_string(selected), selected, true);
+            tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]);
+            back_row(selected); still("back-row-" + std::to_string(selected), selected, true);
             tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]);
             tap(GamepadButton::b); still("repeat-back-" + std::to_string(selected), selected);
         }
@@ -195,9 +216,9 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
     resize({ 1280, 720 });
     for (bool use_pad : { false, true })
     {
-        pad = use_pad; std::array<Frame, 3> children;
-        for (int child = 0; child < 3; ++child) { open(child + 2); children[static_cast<size_t>(child)] = frame(); }
-        for (int selected : { 0, 1, 2 })
+        pad = use_pad; std::array<Frame, initial_focuses.size()> children;
+        for (int child = 0; child < static_cast<int>(children.size()); ++child) { open(child + 2); children[static_cast<size_t>(child)] = frame(); }
+        for (int selected : { 0, 1, 2, quick_action })
         {
             open(0, selected); still("explicit-initial-" + std::to_string(selected), selected, pad);
             hold(GamepadButton::a, true); tick(); compare("held-confirm-" + std::to_string(selected), selected);
@@ -213,9 +234,9 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
             // Exercise each on-screen Back route again with the sparse pad.
             if (selected != 0)
             {
-                tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]); tick();
-                if (selected == 1) { for (int row = 0; row < 8; ++row) { tap(GamepadButton::dpad_down); } }
-                tap(GamepadButton::a); still("repeat-back-row-" + std::to_string(selected), selected);
+                tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]);
+                back_row(selected); still("repeat-back-row-" + std::to_string(selected), selected);
+                tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]);
             }
         }
         open(0, 1); tap(GamepadButton::dpad_down); const Frame moving = frame();
@@ -235,5 +256,5 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
         require(before.pixels == frame().pixels, "Home restored focus changed after a resize round-trip");
     }
     require(records.good(), "Home return-focus evidence write failed");
-    std::cout << "PASS Home origin focus: independent complete rasters; default/Title/Mode Play, both Options/Credits returns, fresh reopen, keyboard/sparse-pad rearming, lifecycle/reduction/frozen RNG\n";
+    std::cout << "PASS Home origin focus: independent complete rasters; default/Title/Mode Play, both Play a bot/Options/Credits returns, fresh reopen, keyboard/sparse-pad rearming, lifecycle/reduction/frozen RNG\n";
 }

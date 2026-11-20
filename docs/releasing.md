@@ -2,8 +2,9 @@
 
 The Release ZIP is the player download. Its version comes from
 `project(VERSION)` in [CMakeLists.txt](../CMakeLists.txt). The first release,
-`v0.1.0`, is [published](#first-release-v010); `master` is now `0.1.1`, the
-next patch under the [versioning rule](#versioning-rule-rel6). [The development guide](development.md#release-zip) describes
+`v0.1.0`, is [published](#first-release-v010). The development build identifies
+itself as `0.2.0` following the [content changes since that tag](#apply-the-next-minor-version-rel9).
+[The development guide](development.md#release-zip) describes
 what it contains. [AGENTS.md](../AGENTS.md#commits-and-pull-requests) owns the
 branch, required `gate` and publication rules.
 
@@ -102,10 +103,10 @@ moves the parent, relative to the caller's location), it:
 1. builds and packages `x64-release` through `scripts/build.ps1 -Package`,
    which loads the Visual Studio C++ environment and usable vcpkg itself, and
    keeps the build log;
-2. inspects the ZIP with `scripts/check-release-package.ps1`: required
-   runtimes, help, licences, the accepted bank's hash, no PDB and no
-   developer-console classes, and the executable naming its symbols as plain
-   `ColourWars.pdb`;
+2. inspects the ZIP with `scripts/check-release-package.ps1`. It checks required
+   runtimes, reviewed content, help, licences, audio provenance and the
+   accepted bank's hash. It rejects PDBs and developer-console classes and
+   checks that the executable names its symbols as plain `ColourWars.pdb`.
 3. checks that the packaged `build-info.txt` names this commit, the engine
    pin, the version and `Release`;
 4. starts the extracted game with `scripts/check-startup.ps1 -RequireAudio
@@ -219,10 +220,9 @@ The author's distribution calls (2026-11-13):
 
 ## Release work items (`REL`)
 
-Work this guide owns, found by the 2026-11-12 audit of [TODO.md](../TODO.md).
-Each item has a row there. Ids are `REL#n` and are never reused. Line numbers
-were checked against `68e3dc2` with the engine pin at `e7fc50e` (`v0.3.0` plus
-nine commits).
+[TODO.md](../TODO.md) indexes the open release work. The 2026-11-12 audit
+found `REL#1` to `REL#7` at `68e3dc2` with engine pin `e7fc50e`
+(`v0.3.0` plus nine commits).
 
 `REL#5` and `REL#7` changed the executable. A candidate built before they
 landed proves the procedure, not the archive the first tag will publish.
@@ -373,3 +373,34 @@ says where the symbols are. The crash half of `REV#63` was decided on
 record goes to `last-error.log`, its `crash_rva` symbolicated against this PDB;
 the [failure-reporting guide](failure-reporting.md#crash-record-rev63)
 describes it.
+
+### Verify packaged notices and provenance (`REL#8`)
+
+The [install rules](../cmake/release_package.cmake) and the
+[extracted-asset check](../cmake/check_packaged_assets.cmake) share the
+[source and installed paths](../cmake/packaged_documents.cmake) for the player
+guide, licences, notices and audio provenance. The check compares the
+repository-owned files byte-for-byte, including the pinned Labrador and
+vendored RapidJSON notices. It requires the three vcpkg notices at their
+installed paths and can run independently of a configured build.
+
+The [package fixture](../scripts/ci/test_packaged_assets.py) verifies a complete
+asset and documentation set and expects diagnostics naming the installed files
+when the root `NOTICE`, the audio source inventory or any vcpkg notice is
+missing, or when a font licence differs.
+
+Run the [ZIP check](../scripts/check-release-package.ps1) after packaging with
+`x64-release` to verify the extracted files against that checkout.
+
+### Apply the next minor version (`REL#9`)
+
+After `v0.1.0`, ColourWars added new backdrops for the four Random arenas and a
+saved CRT preference. The [versioning rule](#versioning-rule-rel6) calls for the
+next minor as soon as a content, gameplay or save-format change lands.
+[CMakeLists.txt](../CMakeLists.txt) declares `0.2.0` for development. Tagging and
+publishing follow the [publication procedure](#publish-only-after-the-author-authorizes-publication).
+
+On 2026-11-20 the local Release build produced `ColourWars-0.2.0-windows-x64.zip`.
+The extracted `build-info.txt` gave `0.2.0` and the
+[startup check](../scripts/check-startup.ps1) confirmed the executable's Windows
+version resource.
