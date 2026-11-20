@@ -13,11 +13,11 @@ All rows marked `OPEN` in the 2026-11-20 queue are complete.
 
 **Author calls** (every `DECISION` row):
 
-- `POL#16`: review the four arena backdrops on a real GPU and in play; rule on Close Quarters' centre cover material.
+- `POL#16`: review the November 14 backdrops for Crossfeed, Close Quarters, Press Tower and Slab Yard on a real GPU and in play. Decide on Close Quarters' centre cover material.
 - `ROAD#13`: play the Umbrella and judge its six-tool balance, canopy feedback and four new cues.
 - `ENG#PARKED`: decide whether to post the drafted mouse-button comment on labrador#122.
 - `ENG#39`: file the `FLT_MAX` round-trip draft as an issue, or fix it in the engine.
-- `ROAD#44`: whether the ball and grenade keep circle collision shapes (hit feel; numbers in the item).
+- `ROAD#44`: decide whether to keep circle collision shapes for the ball and grenade after a play comparison.
 
 ## Art direction, characters and the UI
 
@@ -27,7 +27,7 @@ questions in the polish sub-docs are superseded, not open.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#16` | DECISION | MED | S | Backdrops for the four Random arenas built 2026-11-14. Author: look at them on a real GPU and in play (any prop reading as a platform), and rule on Close Quarters' centre cover moving from eraser to paint tin; the remaining UI art stays a later pass. [Backdrops](docs/polish-terrain.md#per-arena-backdrops-pol16-2026-11-14). |
+| `POL#16` | DECISION | MED | S | Review the four November 14 backdrops for props that read as platforms or cover. Decide whether Close Quarters' centre cover stays a paint tin. [Backdrops](docs/polish-terrain.md#per-arena-backdrops-pol16-2026-11-14). |
 | `POL#35` | DEFERRED | LOW | S | Signage and captioned Paint-artefact jokes need the author's wording; with `POL#16`. [Terrain](docs/polish-terrain.md#stage-approval-and-remaining-environment-work-2026-10-20). |
 
 ## Comparable-game gaps
@@ -46,12 +46,12 @@ or above (2026-10-27). The owner records the gaps left out by choice and the exc
 | `ROAD#23` | DEFERRED | MED | L | Non-XInput pads (PlayStation, Switch Pro). The engine ask is parked in `ENG#PARKED` and there is no client exhibit; resumes when such a pad is in hand or a store release is chosen (`REV#68`). [Input](docs/feature-roadmap.md#input). |
 | `ROAD#24` | DEFERRED | LOW | M | Pad aim assist against the one mouse seat. Deferred until attended play shows pad seats consistently losing to the mouse seat (story B8); relates to `POL#3`, `POL#18` and `ROAD#5`. [Input](docs/feature-roadmap.md#input). |
 | `ROAD#42` | UNSCOPED | LOW | M | Weapon Select could show each tool's shot shape, drawn from its tuning, beside the text (story A6). No problem has been observed; it may wait on `POL#16`. [Item](docs/feature-roadmap.md#shot-shapes-on-weapon-select-road42). |
-| `ROAD#44` | DECISION | LOW | M | Circle round shots landed behind Debug `shots.round` and runner `--round-shots`, default rectangle (unchanged). 128 seeded 1v1s: bucket player contacts 8.3% -> 9.0% of shots, muzzle stops -3%; grenade drops stopped at launch -32%. Author: keep circles (flip the default, rebaseline) or drop the switch. [Item](docs/feature-roadmap.md#circle-shapes-for-round-projectiles-road44). |
+| `ROAD#44` | DECISION | LOW | M | Compare rectangle and circle hit feel with Debug `shots.round`. Decide whether to make circles the default and rebaseline, or remove the switch. [Measurements](docs/feature-roadmap.md#circle-shapes-for-round-projectiles-road44). |
 
 ## Engine demonstration
 
 **Owner:** [docs/review/gap-audit.md, Class 2](docs/review/gap-audit.md#class-2--gaps-in-the-role-as-the-engines-demonstration),
-frozen as above, with live [menu and demonstration scopes](docs/feature-roadmap.md#per-player-menu-focus-gapd1).
+a frozen review, with live [menu and demonstration scopes](docs/feature-roadmap.md#per-player-menu-focus-gapd1).
 These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 
 | id | status | sev | size | item |
@@ -61,16 +61,15 @@ These add to the hierarchies, never flatten them (AGENTS.md); D6 is `GAP#4.2`.
 ## Engine reports
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
-engine master before filing, not the pin. The pin is `v0.4.0` (2026-11-17).
-At this bump 26 closed on the engine's declined Registry rider, and 27's supported
-scripted source replaced five reader fixtures; the exception-injection fixture remains.
-30 has an exception category but no backend migration yet. The tracker responses
-remain open. A pin bump that answers one is when its workaround is deleted.
+engine master before filing. The ledger records which workarounds each pin bump can remove.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ENG#PARKED` | DECISION | LOW | S | The mouse-button naming draft awaits the author's call on posting to labrador#122. The ledger lists the other requests and what would justify filing them. [Parked requests](docs/review/engine-reports.md#what-is-deliberately-not-here). |
-| `ENG#27`, `ENG#30`, `ENG#33`, `ENG#34` | DEFERRED | LOW | S | Filed as [labrador#122](https://github.com/matt439/Labrador/issues/122), #123, #124 and #125. At `v0.4.0`, 27 is partly spent (only the throwing rumble transport keeps a reader link fixture); 30's category exists but backends still need it; 33's mutable contact and 34's Release software refusal remain planned. 34's truthful classification and explicit hosted/strict hardware lanes were already consumed. Tracker responses remain open. [Ledger](docs/review/engine-reports.md#live) |
+| `ENG#27` | DEFERRED | LOW | S | The throwing rumble transport still needs a link fixture. Replace it when Labrador supports exception injection. [Ledger](docs/review/engine-reports.md#live). |
+| `ENG#30` | DEFERRED | LOW | S | Replace the startup message match when Labrador's render backends throw `RenderDeviceUnavailable`. [Ledger](docs/review/engine-reports.md#live). |
+| `ENG#33` | DEFERRED | LOW | S | Remove the contact `const_cast` when Labrador provides a mutable contact parameter. [Ledger](docs/review/engine-reports.md#live). |
+| `ENG#34` | DEFERRED | LOW | S | Recheck ordinary Release adapter selection when Labrador implements its software-adapter refusal. [Ledger](docs/review/engine-reports.md#live). |
 | `ENG#39` | DECISION | LOW | S | `FLT_MAX` written to JSON reads back one double step above it, so `gameplay_tuning` tests one float below. Drafted 2026-11-13, not filed. Author: issue route or engine fix. [Report](docs/review/engine-reports.md#39-a-float-written-as-flt_max-does-not-read-back---draft-not-filed) |
 
 ## Developer console
@@ -115,7 +114,7 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `REV#19` | UNSCOPED | LOW | M | Bots chase any sighted enemy and ignore the clock, health and score. The sight ladder (2026-11-12) found that shorter sight cuts fights but does not raise paint, so there is no paint case for the four behaviour slices; they stay undesigned. [Record](docs/gameplay-tuning.md#sight-distance-ladder-rev19-2026-11-12) |
-| `REV#20` | UNSCOPED | MED | L | One bot policy plays all five tools. Aim/reaction sensitivity is measured (`TOOL#5`, closed 2026-11-13); exact event counters reopen only with per-tool roles, which remain unscoped. Sniper's low paint is intended. [Record](docs/review/2026-11-10-project-review.md#one-bot-policy-plays-all-five-tools-rev20). |
+| `REV#20` | UNSCOPED | MED | L | Six primaries share `MatchBot`, with tool-specific behavior such as the Umbrella's canopy defence. Scope broader per-tool roles before adding exact event counters. [Record](docs/review/2026-11-10-project-review.md#one-bot-policy-plays-all-five-tools-rev20). |
 
 **Player-facing UX**
 
@@ -125,7 +124,7 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 | `REV#29` | DEFERRED | MED | M | No split-pane HUD text floor (2026-11-13). Trigger: a player finds the text unreadable, or `POL#16` rebaselines the HUD fixtures; then an opt-in Options Normal/Large row, not a floor. [HUD](docs/polish-hud.md#split-pane-text-size-rev29-2026-11-12). |
 | `REV#30` | DEFERRED | MED | M | Direct entry from Home to solo Movement Course. How to play now explains the route, and Play a bot starts a versus setup. [Guide](docs/review/2026-11-15-first-match-guide.md), [proposal](docs/review/2026-11-10-project-review.md#direct-entry-to-the-practice-course-rev30). |
 | `REV#32` | UNSCOPED | LOW | M | Home has no play-again shortcut. GAP#6.1 already pre-fills every setup page and Join cannot be skipped, so it saves about four confirm presses for a conditional Home row and a second route into Join and Stage. [Record](docs/review/2026-11-10-project-review.md#play-again-with-last-setup-rev32). |
-| `REV#36` | DEFERRED | LOW | M | Respawn grace is already a recorded POL#17 fallback, to add only on observed spawn pressure; the sprinkler is a reason to look for it. ROAD#11's review was waived 2026-11-13, so it waits on pressure seen in play. Choosing among the team's spawns is new and undesigned. [Record](docs/review/2026-11-10-project-review.md#respawn-grace-and-spawn-choice-rev36). |
+| `REV#36` | DEFERRED | LOW | M | Revisit the `POL#17` respawn-grace fallback if play shows spawn pressure, including from sprinklers. Choosing a team spawn remains undesigned. [Record](docs/review/2026-11-10-project-review.md#respawn-grace-and-spawn-choice-rev36). |
 
 **Presentation and feedback**
 
@@ -210,16 +209,15 @@ the owner; a second copy here goes stale unnoticed.
 1. **A row leaves this file in the same commit that finishes it.** Update the owner (for a live
    doc) and delete the row; no closed rows stay here. An emptied section becomes one line under
    [Areas with no open rows](#areas-with-no-open-rows).
-2. **A live owner is the source of truth for status;** when the two disagree, this file is stale.
-   The frozen reviews (`docs/review/gap-audit.md`, `docs/review/2026-09-26-*.md`) are records and
-   are never edited to match: for their rows this file holds the status, and the commit that
-   closes one says so.
+2. **A live owner is the source of truth for status.** For rows owned by a review marked frozen,
+   record status here and close it in the commit that finishes the work. Keep the review as written.
 3. **When part of an item lands, replace the clause with what's left;** don't append to it. Keep a
    row under about 350 characters.
 4. **New work starts in an owner.** Add it to the doc it belongs to (the polish plan, the
    backstory, the ledger, the console's Not done), then give it a row here. Engine work belongs
    in Labrador; what this repository owes it is a report in the ledger.
-5. **NOW changes only when its items finish or the author reorders them.**
+5. **Keep NOW in sync with the rows.** Update author calls as `DECISION` rows change. The author
+   sets the order of work, and completed items leave the list.
 6. **Keep readiness honest.** `OPEN` needs a concrete local next step in its owner. A human
    acceptance session is `DECISION`, a named dependency is `BLOCKED`, and a broad capability
    wishlist stays `UNSCOPED` or `DEFERRED`. Implementation does not close a human review gate.

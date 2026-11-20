@@ -22,7 +22,7 @@ full.
 
 | Script | What |
 |---|---|
-| [run-acceptance.ps1](run-acceptance.ps1) | builds the game and runs the consumer probes declared in [acceptance/cases.psd1](acceptance/cases.psd1) (`-Preset`, where `x64-asan` runs Release's list under AddressSanitizer, `-Cases`, `-ExcludeCases`, `-OptIn`, `-QuickOptIn`, `-OwnLegOnly`, `-SkipOwnLeg`, `-SkipSlowDebug`, `-CompileOnly`, `-Parallel`, `-RunTimeoutSeconds`); writes `acceptance-summary.json` |
+| [run-acceptance.ps1](run-acceptance.ps1) | builds the game and runs the consumer probes declared in [acceptance/cases.psd1](acceptance/cases.psd1) (`-Preset`, where `x64-asan` runs Release's list under AddressSanitizer, `-Cases`, `-ExcludeCases`, `-OptIn`, `-QuickOptIn`, `-OwnLegOnly`, `-SkipOwnLeg`, `-SkipSlowDebug`, `-CompileOnly`, `-Parallel`, `-RunTimeoutSeconds`). Writes `acceptance-summary.json` for runs that reach case scheduling. |
 | [acceptance-process.ps1](acceptance-process.ps1), [acceptance-process/](acceptance-process/) | the runner's native helper: one Windows Job Object, deadline and log per probe |
 | [check-acceptance-selection.ps1](check-acceptance-selection.ps1) | checks the runner's case selection rules without CMake, a compiler or the helper |
 | [check-acceptance-process.ps1](check-acceptance-process.ps1) | qualifies the helper's ownership, deadlines, logging and cancellation with isolated processes |
@@ -97,7 +97,7 @@ to `cases.psd1`.
 | [check-paint-fx.ps1](check-paint-fx.ps1) | renders and checks projectile and fresh-paint frames ([polish-paint-effects.md](../docs/polish-paint-effects.md)); `-CompileOnly` builds the probe without a window, as CI does |
 | [check-painter.ps1](check-painter.ps1), [check-painter/](check-painter/) | the painter visual probe and its focused leaves, evidence records and contact sheets; a passing run deletes the probe it compiled and records that in `result.json` (`removed_after_pass`), a failed one keeps it |
 | [compare-crt-captures.py](compare-crt-captures.py) | compares focused CRT off/on captures for neutral gameplay and Reduce effects, glass containment and unchanged score interiors; requires Pillow/numpy; run from the repository root (see [CRT validation](../docs/crt-trial.md#reproduction)) |
-| [check-painter-sweep.ps1](check-painter-sweep.ps1) | runs every focused painter leaf or one shard of them, one `check-painter.ps1` run each; [nightly.yml](../.github/workflows/nightly.yml) runs it with [check-painter/hosted-known-failures.txt](check-painter/hosted-known-failures.txt) |
+| [check-painter-sweep.ps1](check-painter-sweep.ps1) | runs the focused painter leaves supported by the preset, optionally one shard at a time. The three private `-TrialPath` leaves need individual runs. Debug includes three extra leaves, which `-DebugOnlyLeaves` selects on their own. Run the plain matrix with `check-painter.ps1`. [nightly.yml](../.github/workflows/nightly.yml) passes [check-painter/hosted-known-failures.txt](check-painter/hosted-known-failures.txt). |
 | [check-painter-selection.ps1](check-painter-selection.ps1) | checks the painter probe's selectors and routing without a compiler or GPU |
 | [check-painter-evidence.ps1](check-painter-evidence.ps1) | checks the shared painter PPM, finite-number, key-set, CSV, save and PNG evidence helpers without the game or a GPU |
 | [check-frame-pacing.ps1](check-frame-pacing.ps1) | frame-pacing capture ([polish-frame-pacing.md](../docs/polish-frame-pacing.md)); analysed by [perf/](perf/) |
@@ -120,7 +120,7 @@ to `cases.psd1`.
 | [sandbox-release.ps1](sandbox-release.ps1), [sandbox/](sandbox/) | prepares, and optionally runs, a Windows Sandbox trial of the Release ZIP (`ROAD#37`) |
 | [check-sandbox-release.ps1](check-sandbox-release.ps1) | checks that generator's output on the host without starting a sandbox |
 | [release-package-path.ps1](release-package-path.ps1) | dot-sourced helper that reads `project(VERSION)` from `CMakeLists.txt` and returns the Release ZIP's path; used by `build.ps1`, `sandbox-release.ps1`, `check-release-package.ps1`, `release-candidate.ps1` and [releasing.md](../docs/releasing.md)'s fallback check |
-| [check-release-package.ps1](check-release-package.ps1) | extracts the Release ZIP and checks its packaging rules: no development files or unreviewed audio, every required file, the accepted bank's hash, no developer-console RTTI and the executable naming its symbols as plain `ColourWars.pdb` (`CI#6`, `REL#7`; CI's inspection step) |
+| [check-release-package.ps1](check-release-package.ps1) | extracts the Release ZIP and checks its packaging rules: no development files or unreviewed audio, every required file, the accepted bank's hash, no developer-console RTTI and the executable naming its symbols as plain `ColourWars.pdb` (`CI#6`, `REL#7`). Requires `cmake` on `PATH`. |
 
 ## Content builds
 
@@ -134,10 +134,17 @@ to `cases.psd1`.
 
 ## Disk use
 
-Every check writes a fresh run folder, named by a GUID, under
-`out/validation`, `out/acceptance` or its `-OutputDirectory`, and nothing local
-expires: on 2026-11-12 MattPC held about 570 GB of them. A passing painter run
-keeps only its evidence; everything else stays until it is removed.
+Many checks write a fresh GUID folder under `out/validation` or the requested
+`-OutputDirectory`. Acceptance reuses its output folder for each preset. The
+package check replaces the extracted `ColourWars-windows-x64` folder, and the
+finish-details check replaces its private profile and transcript. Use distinct
+output roots to retain multiple runs of those checks. A passing painter run
+deletes its compiled probe and keeps the evidence.
+
+Retained run folders accumulate until pruned. On 2026-11-12 MattPC held about
+570 GB of them. The cleaner recognises GUID folders and painter sweep shards.
+Release candidates use commit-and-timestamp folders, so the cleaner can prune
+their nested startup runs while leaving the candidate ZIP and receipt in place.
 
 | Script | What |
 |---|---|

@@ -129,8 +129,8 @@ built, and `Presentation` is not rebuilt in Release.
 `reload` and `tune` rebuild `Presentation` through the run's locale, so the
 copy stays in that language. Both read `presentation.json` again; the locale
 files are read once, at startup. A `tune` of a key the locale overrides edits
-the base, and the locale's text still wins. `tune.save` writes only
-`presentation.json`.
+the base, and the locale's text still wins. `tune.save presentation` writes
+those edits to the base `presentation.json`.
 
 ## Fallback
 
@@ -180,18 +180,20 @@ tokens a template must carry are checked whatever the language.
 
 ## The test locale
 
-`qps-ploc` is Windows' pseudo-locale tag. Each line of copy is wrapped in
-`[ ]`, so text that is cut off or still English shows at a glance:
+`qps-ploc` is Windows' pseudo-locale tag. It wraps each line it overrides in
+`[ ]` to make clipping and English fallback visible. Run it from the repository
+root in PowerShell.
 
-```text
-COLOURWARS_LOCALE=qps-ploc out/build/x64-debug/game/ColourWars.exe
+```powershell
+$env:COLOURWARS_LOCALE = 'qps-ploc'
+.\out\build\x64-debug\game\ColourWars.exe
 ```
 
-It covers every copy role a locale may change. It leaves out the two strings
-with no room for two more characters, which fall back to English:
-`menu_text.labels.keyboard_mouse` and `menu_text.labels.roster_row` (the Team
-Select roster row must end before the first choice icon). A translation longer
-than English by more than a few characters will meet the same limit there.
+As of 2026-11-20, 20 `menu_text` strings fall back to English, including the
+Graphics and How to play copy, the prompt to choose a team before readying and
+the tightly fitted labels `menu_text.labels.keyboard_mouse` and
+`menu_text.labels.roster_row`. The Team Select roster row must end before the
+first choice icon.
 
 ## Control labels
 

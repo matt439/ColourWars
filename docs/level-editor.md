@@ -268,19 +268,20 @@ To play a level without rebuilding, choose **File > Save to My Stages...**
 the save, which is the folder the game reads player-made stages from. It
 offers the open file's name. A copy of a shipped stage is offered `my_<name>`,
 and a new level `my_stage`. The editor then applies the game's own rules
-(`game/contracts/user_stage_contract.h`, shared with the game's scan). The name must be
-1 to 64 ASCII letters, digits, `_` or `-`, not starting with `-`. It may not
-be a shipped stage's name in any case; the names come from the source
-manifest. The file must go directly in that folder: use Save As for any other
-folder. If one of your stages already has that name (in any case), the editor
-asks whether to replace it; No is the default. The replacement keeps the
-existing file's spelling. The game creates the folder on its first save
-write; if it is not there yet, this command creates it. If you cancel, or the
-name is refused, a folder the command created is removed again while it is
-still empty. After the save, the open document edits the saved
-file, so Ctrl+S saves there too. Without `LOCALAPPDATA` the command refuses:
-the game would then read `save/stages` beside its own executable, which the
-editor cannot know. Like the other saves, it never touches the player's save.
+(`game/contracts/user_stage_contract.h`, shared with the game's scan). Use 1 to 64
+ASCII letters, digits, `_` or `-` before the `.json` extension. Start with a letter,
+digit or underscore and avoid Windows device names (`CON`, `PRN`, `AUX`, `NUL`,
+`COM0`–`COM9` and `LPT0`–`LPT9`). The name must differ from the shipped stage
+names in the source manifest, regardless of case. The file must go directly in
+that folder. Use Save As for any other folder. If one of your stages already
+uses that name in any case, the editor asks whether to replace it. No is the
+default. The replacement keeps the existing file's spelling. The game creates
+the folder on its first save write. If it is missing, this command creates it.
+If you cancel or the editor refuses the name, the command removes any empty
+folder it created. After the save, the open document edits the saved file, so
+Ctrl+S saves there too. The command requires `LOCALAPPDATA`. If it is unset, the
+game reads `save/stages` beside its own executable, where the editor cannot
+locate it. Like the other saves, it never touches the player's save.
 
 The game reads that folder at startup and again each time Stage Select opens
 from the main menu. It considers the first 256 regular `.json` files in filename
@@ -575,6 +576,19 @@ startup words. The canvas draws a gate like any eraser block; it does not show
 which team it is open to, which is runtime state. The `level_editor` document
 checks cover the field, palette entry, every refusal and save/reopen of the
 Gate Trial.
+
+## Paint fill authoring
+
+Use the [level format's `paint_fill` declaration](level-format.md#paint-fill)
+to link a set of trigger faces to a destination face. Add or remove the
+declaration, or change the `trigger.faces` array, in the level JSON and reopen
+the file in the editor. For an existing binding, the Level entry's inspector
+exposes `paint_fill/trigger/object`, `paint_fill/target/object` and
+`paint_fill/target/face`.
+
+The editor validates each change with the same decoder the game uses. Edit the
+JSON first when several fields must change together, such as renaming a bound
+object and updating its references.
 
 ## Fixed scored-slab authoring (`GAP#D5`)
 

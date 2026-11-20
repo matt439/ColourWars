@@ -3292,12 +3292,12 @@ are controlled inspection states; attended clarity/preference remains
 
 ### Unscoped paint-object contracts (`ROAD#28`, `ROAD#29`)
 
-**UNSCOPED (2026-10-28); `ROAD#28`'s first slice was promoted on 2026-11-03,
-below, and its paint-driven second slice built the same day. Regraded
-2026-11-12: `ROAD#28`'s remainder is deferred, and `ROAD#29`'s contract draft
-is recorded, both below. `ROAD#29` was parked behind `REV#27` on 2026-11-13.** These are the remaining capabilities from
-`ROAD#15`, not ready implementations or prerequisites of the three slices
-above:
+**Deferred.** The October 28 scope for `ROAD#15` included vertical lifts and
+growing sponges. Both lift slices landed on 2026-11-03. The November 12 audit
+deferred deliberate bot lift routing and recorded the sponge draft, which was
+parked on November 13. `REV#27` added the [Sluice Works gate arena](sluice-works.md)
+to Random on November 20. Lift routing and sponges still await arenas that need
+them.
 
 - **Vertical lifts (`ROAD#28`, L left):** define vertical admission and swept
   displacement, rider support identity and carry, ceilings/crush refusal,
@@ -3308,12 +3308,11 @@ above:
   [cycling](#vertical-lift-first-slice-road28) and
   [paint-driven](#paint-driven-lift-second-slice-road28) slices are built;
   deliberate bot lift routing, including a stuck check that discounts carried
-  y, is left. **Deferred, LOW, behind `REV#27` (2026-11-12).** Lifts stand
-  only on the Lift and Paint Lift Trials, and both have
+  y, is left. **Deferred, LOW.** Lifts stand only on the Lift and Paint Lift
+  Trials, and both have
   `"include_in_random": false` (`game/content/levels/turbulence_lift_trial.json`,
-  `turbulence_paint_lift_trial.json`), so no match a bot plays from Random
-  meets a lift and routing has no consumer. It resumes if `REV#27` sets an
-  arena with lifts as an aim.
+  `turbulence_paint_lift_trial.json`). Resume when a Random arena needs a bot
+  route that uses a lift.
 - **Growing sponges (`ROAD#29`, XL):** define occupied growth/shrink behavior,
   paint-tile identity, changing scored area and retained paint/contribution
   credit before choosing an implementation. `PaintSurfaceSample` explicitly
@@ -3322,10 +3321,8 @@ above:
   [growing-sponge contract draft](#growing-sponge-contract-draft-road29)
   resolves the fixed-area sites against `220d4809`, answers each one
   (E1-E12), and leaves the gameplay sets G1-G7 to the author. It changed no
-  code, tuning or content and chose no trial. **Deferred behind `REV#27`
-  (2026-11-13):** the author picked none of G1-G7; they are picked from the
-  draft's recommendations when `REV#27` sets a Random arena that wants a
-  sponge.
+  code, tuning or content and chose no trial. **Deferred.** Resume G1-G7 from
+  the draft's recommendations when a Random arena needs a sponge.
 
 Promote a bounded slice only once its owner records those choices and its
 acceptance. Neither adds a new physics/scoring requirement to an accepted
@@ -3712,10 +3709,9 @@ it reads there, or should be a fixed indicator above the shaft instead, is a
 
 #### Growing-sponge contract draft (`ROAD#29`)
 
-**Draft recorded 2026-11-12; parked behind `REV#27` (2026-11-13).** The
-author picked none of G1-G7. No Random arena wants a sponge, so nothing would
-consume one; when `REV#27` sets a Random arena that does, G1-G7 are picked
-starting from this draft's recommendations, and the draft is the resume point.
+**Draft recorded 2026-11-12 and parked 2026-11-13.** The author left G1-G7
+undecided. When a Random arena needs a sponge, resume from this draft's
+recommendations for those choices.
 This is the written step
 the 2026-11-12 audit set, on the
 [vertical-lift precedent](#vertical-lift-contract-draft-road28). It changes no
@@ -3881,12 +3877,12 @@ reference points only, and none of these gates the engineering.
   *Recommended:* (a).
 - **G7. Bots.** (a) Bots ride a sponge they happen to stand on and paint it,
   with no routing by it, as for lifts. (b) Deliberate routing in the first
-  slice. *Recommended:* (a). Routing waits on a consumer, as lift routing waits
-  on `REV#27`.
+  slice. *Recommended:* (a). Add deliberate routing when a stage needs bots to
+  plan a route that uses the sponge.
 
-Once `REV#27` sets a consumer and the author has chosen, a bounded first slice
-is promoted with `moving_structure`, `level_format`, `paint_ferry`-style scoring checks and
-editor acceptance on its trial, as the lift's was.
+When a Random arena needs the sponge and the author has made the choices,
+promote a first slice with `moving_structure`, `level_format`,
+`paint_ferry`-style scoring checks and editor acceptance on its trial.
 
 ### Paint-object trial play (`ROAD#30`)
 

@@ -31,9 +31,9 @@ out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4
 Every argument that starts with `+` and a letter begins a statement; the words
 after it are its arguments, so `+timescale +0.5` keeps `+0.5` as a number.
 Statements run in order, before the first frame, through the same registry as
-the console. The match starts directly, without menu navigation, and you are
-returned to the real main menu on `menu` or when the match ends normally. The
-launch arguments are themselves a [script](#scripts): `+wait match`,
+the console. The match starts directly. A finished round opens Results, then
+the End menu. Use `menu` to leave the match for the main menu. The launch
+arguments are themselves a [script](#scripts): `+wait match`,
 `+exec <name>` and `+screenshot` hold the statements after them until they are
 done, so `+stage movement_course +wait match +screenshot start +quit` works.
 
@@ -238,9 +238,9 @@ registry as a menu page: the same entries as the console, grouped.
 
 | Category | Entries |
 |---|---|
-| match | intro, menu, players, restart, stage, weapon |
+| match | intro, menu, players, restart, shots.round, stage, weapon |
 | player | ammo, bot (picker: `bot all <behaviour>`), god, goto, kill, respawn |
-| view | feedback, overlay, overlay.camera, overlay.collision, overlay.paint, overlay.perf, overlay.player, overlay.stations |
+| view | feedback, overlay, overlay.camera, overlay.collision, overlay.paint, overlay.perf, overlay.player, overlay.stations, shader |
 | time | pause, step, timescale |
 | tuning | the `tuning` and `presentation` trees, then tune.diff, tune.reset, tune.save |
 | replay | checksum, play (picker over the recordings), record, replay.timelapse, replays |
@@ -255,9 +255,11 @@ registry as a menu page: the same entries as the console, grouped.
 - An audited colour row shows its quoted token and `(console)`. **A/Enter**
   prints its current value and adoption scope; **Left/Right** leave it alone.
   Enter a literal colour through `tune` in the console.
-- `stage`, `players`, `weapon` (for every seat), `overlay` and `goto` open a
-  picker over their choices. Lists longer than twelve rows end with a note to
-  use the console.
+- `stage`, `players`, `weapon`, `overlay`, `goto` and `shader` open pickers.
+  The `weapon` picker sets every seat to the chosen weapon. To set a single
+  seat, use `weapon <seat> <name>` in the console. Applying a shader look
+  requires the [shader playground](#shader-playground). Lists longer than
+  twelve rows end with a note to use the console.
 - Every action runs as a console line and is echoed `[menu] <line>`, so the
   log and a `logfile` transcript say what the menu did. The last three log lines
   show at the bottom of the menu, so a refused `goto` says why.
@@ -1127,9 +1129,10 @@ hash every 60 updates and the final state. In memory a recording is the same
 `RoundTape` the shipping instant replay keeps (`game/match/round_tape.h`); the file
 is that tape plus the checks.
 
-Files use **format 12**. Umbrella seats record whether the canopy is open,
-its remaining hits and the exact recovery timer. Playback requires the
-current format and checks those fields even when paint and player health match.
+Files use **format 12**. Each checkpoint hash includes whether an Umbrella
+seat's canopy is open, its remaining hits and the exact recovery timer. The
+final fingerprint also stores those fields separately. Playback checks them
+even when paint and player health match.
 `DBG#2` added later rounds in format 8.
 `ROAD#28` had moved the motion block to schema 2 for vertical lifts, `ROAD#22`
 made each round's variant required in format 9, and `ROAD#11` added the Sub
@@ -1147,12 +1150,10 @@ was noted at, which is where playback repeats it. A recording that crossed a
 round boundary adds `rounds`: one object per later round, each with its own
 `seed`, `stage_hash`, `settings`, `updates`, `gaps`, `inputs`, `checkpoints` and
 `final`, as the top level has them for the first round; the build, step,
-content hashes, `tune_diff` and cheats are shared. A one-round file has no
-`rounds` and is otherwise format 7's bytes.
-Formats 3 and 4 (which noted suspends only), 5 (whose `seed` was the
-optional developer seed), 6 to 9 are refused: a replay holds only on the
-build that recorded it. The metadata is strict; bot seats cannot own devices and P1 must
-be human. Human difficulty is unused and written as
+content hashes, `tune_diff` and cheats are shared. A one-round file omits
+`rounds`. Playback requires format 12. For a bit-exact match, use the same
+build that recorded the file. Bot seats cannot own devices, and P1 must be
+human. Human difficulty is unused and written as
 Normal. Normal setup now supports playable bots
 (`ROAD#10`); recording captures their final inputs, and playback bypasses their
 live decision driver. Arena navigation/combat and attended difficulty acceptance
@@ -1474,11 +1475,11 @@ The match's key table: a key (with `ctrl+` and/or `shift+`) to a console line.
   says. **`grave`, `f10` and `f11` are reserved** (console, debug menu). Bare
   binds on A, D, S, Space, Down, Escape and F1 keep their existing warning;
   Space still skips the opening after Jump is rebound, and Enter retains its
-  existing omission. A bare bind on any effective saved keyboard key (Move
-  left/right, Jump, Drop, a keyed Shoot or the extra Pause) also warns: it
-  does both. The Keyboard Keys page warns about an existing bare bind on any
-  of its pending keys. These are warnings, so the bind and gameplay source both
-  remain available. See the [keyboard Jump slice](feature-roadmap.md#action-bindings-gap42)
+  existing omission. A bare bind on any effective saved keyboard key also
+  warns that both actions will run. This covers Move left/right, Jump, Drop,
+  Shoot or Sub assigned to a key, and the extra Pause. The Keyboard Keys page
+  warns about an existing bare bind on any of its pending keys. See the
+  [keyboard Jump slice](feature-roadmap.md#action-bindings-gap42)
   and the [keyboard actions slice](feature-roadmap.md#keyboard-actions-slice-gap42).
 - Modifiers match exactly: Shift+F5 does not run F5's bind. (Before phase 4,
   Shift+F5 restarted like F5.)

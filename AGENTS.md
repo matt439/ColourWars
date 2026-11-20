@@ -7,8 +7,8 @@ This file provides guidance to AI coding agents when working with code in this r
 ColourWars is a local split-screen paint-shooter (up to four players, two teams,
 score is painted surface) and the first client of the **Labrador** 2D game
 engine, consumed as a submodule at `external/labrador`. This repository is an
-ordinary C++ application that links the engine; the engine is the larger
-project. Windows-only, inherited from the engine's XAudio2 backend.
+ordinary C++ application that links the engine. The game uses a Win32 entry
+point and Windows implementations of rendering, audio and gamepad input.
 
 The engine now has **five render backends** — `d3d11`, `d3d12`, `gl`, `vulkan`
 and `null`, chosen at configure time by `LABRADOR_RENDER_BACKEND`, **three
@@ -69,11 +69,11 @@ needs in order to pass is a bypass in disguise, and its body must say so.
 
 ## Build and run
 
-Requires **VCPKG_ROOT** set (`CMakePresets.json` reads it for the toolchain
-file; configure fails without it), VS 2022+ with the C++ workload, and the
-Windows SDK. The presets use the Ninja generator, so from a plain shell every
-`cmake` step needs the MSVC environment (`vcvars64.bat`) — a Developer prompt or
-the VS-integrated CMake handles this for you.
+The manual build needs **VCPKG_ROOT** set for the toolchain in `CMakePresets.json`,
+CMake 3.26 or newer, Ninja, Visual Studio 2022 or newer with the C++ workload,
+and the Windows SDK. Configure and build from an x64 Developer shell
+(`vcvars64.bat`) or Visual Studio's integrated CMake. For the desktop build helper
+and full prerequisites, see [the development guide](docs/development.md#building).
 
 ```
 git clone --recurse-submodules https://github.com/matt439/ColourWars.git
@@ -130,8 +130,8 @@ target, which runs every build so asset-only edits are picked up), so the game
 runs from anywhere. It resolves content beside the executable, not against the
 working directory — the engine's rule (`engine/app/content_root.h`), which
 `Application::load_manifest` applies to the manifest and
-[game/main.cpp](game/main.cpp) applies by hand to the two files it reads before
-the manifest. See [game/directory_consts.h](game/directory_consts.h).
+[game/main.cpp](game/main.cpp) applies to startup reads for tuning, presentation
+and locales. See [game/directory_consts.h](game/directory_consts.h).
 
 ## Tests
 
@@ -182,14 +182,14 @@ line and exit code 1.
 Use `-Cases ammo,text_wrap` to select a subset, including with `pwsh -File`.
 PowerShell arrays also work; names are trimmed and case-insensitive, while
 empty names, unknown names and duplicate selections are refused. `-ExcludeCases`
-removes cases from the chosen/default list. `-OptIn` selects the opt-in group
-instead of the default list, leaving out the two `NeedsTrial` cases unless
-`-CompileOnly` is set, because they take a private file the runner cannot
-supply; naming one with `-Cases` is refused for the same reason. `-QuickOptIn`
-selects the opt-in cases declared `Quick`, `-OwnLegOnly` and `-SkipOwnLeg` split
-the list as CI's Debug legs do, and `-SkipSlowDebug` (Debug only) leaves out the
-cases declared slow in Debug. `scripts/check-acceptance-selection.ps1`
-checks these rules without starting CMake, a compiler or the native helper.
+removes cases from the chosen/default list. `-OptIn` selects the opt-in group.
+The two `NeedsTrial` cases take a private file and require `-CompileOnly`.
+Compile them with `-OptIn -CompileOnly` or name them with `-Cases` and
+`-CompileOnly`. `-QuickOptIn` selects the opt-in cases declared `Quick`.
+`-OwnLegOnly` and `-SkipOwnLeg` split the list as CI's Debug legs do, and
+`-SkipSlowDebug` (Debug only) leaves out the cases declared slow in Debug.
+`scripts/check-acceptance-selection.ps1` checks these rules without starting
+CMake, a compiler or the native helper.
 
 `scripts/check-painter-selection.ps1` checks every focused painter selector,
 false/conflicting switches, `-CompileOnly` routing and trial-path preflight in
@@ -213,11 +213,12 @@ with `-RunTimeoutSeconds`. Its merged output is retained while it runs in a
 Timeout or cancellation cleans only that probe's private Windows Job Object;
 compilation and the initial CMake build have no new deadline. Already-running
 parallel compiles finish during cancellation; queued compiles are skipped.
-`-CompileOnly` does not load the native process helper. Every run past
-preflight, passing or not, writes `acceptance-summary.json` beside its
-evidence: each case's compile and run seconds and outcome, longest first. CI
-uploads it. From the same Developer shell, `scripts/check-acceptance-process.ps1` qualifies ownership, deadlines,
-logging and cancellation with isolated processes under PowerShell 5.1 and pwsh.
+`-CompileOnly` does not load the native process helper. Once setup reaches case
+scheduling, the runner writes `acceptance-summary.json` even if a case fails or
+the run is cancelled. It lists each case's compile and run times and outcome,
+longest first. CI uploads it. From the same Developer shell,
+`scripts/check-acceptance-process.ps1` qualifies ownership, deadlines, logging
+and cancellation with isolated processes under PowerShell 5.1 and pwsh.
 
 To run engine tests, configure the submodule as its own top-level project:
 
@@ -245,26 +246,25 @@ the Windows jobs passed or were rightly skipped. A pull request that moves the
 engine pin must pin a revision on Labrador's `master` whose push run passed
 there, which `lint.py` asks Labrador's API. Such a pull request stays red until
 then, so a branch pin cannot merge; pin the merge commit or a tag, because a
-commit that was never `master`'s tip never gets a push run. A tag on `master` whose name matches
-`project(VERSION)` then publishes that run's checked Release ZIP as a GitHub
-Release (the `publish` job); the first tag is the author's call. Change detection and its regression checks live in `scripts/ci/`.
+commit that was never `master`'s tip never gets a push run. An author-authorized
+version tag on `master` that matches `project(VERSION)` publishes that run's
+checked Release ZIP and matching PDB. See [the release guide](docs/releasing.md#publish-only-after-the-author-authorizes-publication).
+Change detection and its regression checks live in `scripts/ci/`.
 
 Full CI runs five parallel Windows legs, each building for itself: Debug
 `crossfeed`, the rest of Debug's cases, Debug's other checks, Release's cases
-and Release's other checks. It compiles without running the opt-in probes
-(the seventeen opt-in acceptance cases, `-OptIn`, `check-painter.ps1 -CompileOnly` with
-both pad readers, `check-paint-fx.ps1 -CompileOnly` and, in Debug,
-`check-frame-pacing.ps1 -CompileOnly`), runs consumer acceptance, the `Quick`
-opt-in cases in Release, movement feedback and display awake in both presets,
-and checks startup. Once a leg's build is good every check runs, so one failure
-does not hide the others.
-Acceptance runs four cases at a
-time (`-Parallel 4`), and every event runs every case: `crossfeed`,
-`press_tower`, `menu_text` and `debug_console` take minutes each under Debug's
-checked iterators, and `-SkipSlowDebug` leaves them out of a local Debug run,
-but a pull request runs them because its merge is not built again. Startup is
-required in both presets. The runner has no GPU: its Microsoft Basic Render
-Driver is now correctly classified as software (`ENG#34`). Movement feedback
+and Release's other checks. The acceptance legs run the default cases for their
+preset and the Release leg also runs the `Quick` opt-in cases. They use
+`-Parallel 4`. The slow Debug cases (`crossfeed`, `press_tower`, `menu_text`
+and `debug_console`) run in full CI and can be left out locally with
+`-SkipSlowDebug`.
+
+The checks legs compile all opt-in cases, the painter with both pad readers
+and paint effects. The Debug leg also compiles the frame-pacing probe and
+builds and queries the console's CPU menu model. Both presets run movement
+feedback, display-awake and startup checks. After a successful build, independent
+check steps run even when earlier checks fail. The runner's Microsoft Basic
+Render Driver is classified as software (`ENG#34`). Movement feedback
 uses the explicitly named hosted-software functional lane in both presets,
 with all pixel assertions intact; it is not hardware or performance acceptance.
 The default probe remains hardware-only, and pin/renderer changes require
@@ -304,7 +304,10 @@ change touches it, and is not a reason to rerun anything:
   `check-finish-details`, `CI#1`);
 - how it plays.
 
-`build.cmd` remains unexercised, by choice. The
+The [first-run review](docs/review/2026-11-10-first-run-review.md) ran the
+PowerShell build helper from a fresh clone without a developer environment.
+CI runs [build-helper fixtures](scripts/check-build.ps1) for tool discovery,
+diagnostics and streamed output. The
 [2026-11-17 pin qualification](docs/review/engine-reports.md#verification-of-the-2026-11-17-bump)
 ran default acceptance in both presets and the selected optional checks under
 Windows PowerShell 5.1. A failing scheduled nightly is the signal to look;

@@ -64,11 +64,12 @@ creation it checks the monitor Windows actually selected and centres the
 window in its work area. Save writes that preference; later launches and
 legacy imports keep the saved choice. The `initial_display` CPU probe checks
 the thresholds and save behavior, and `check-startup.ps1` checks the actual
-fresh-save window rectangle. This completes first-run review `FTR#12`;
-mixed-monitor/DPI hardware combinations are not exhaustively exercised. The
-same file chooses a fresh save's shared Reduce effects from Windows' Animation
-effects, read before the save loads (`POL#49`); `initial_display` covers it and
-`check-startup.ps1` checks the fresh save's value.
+fresh-save window rectangle. This completes first-run review `FTR#12`.
+Mixed-monitor/DPI hardware combinations are not exhaustively exercised.
+Before loading the save, `wWinMain` reads Windows' Animation effects through
+`labrador::prefers_reduced_motion()` to choose a fresh save's shared Reduce
+effects setting (`POL#49`). The `initial_display` probe covers the save behavior
+and `check-startup.ps1` checks the fresh save's value.
 
 [game/CMakeLists.txt](../game/CMakeLists.txt) builds every game source except
 `main.cpp` and the two platform adapters into the `colourwars_game` static
@@ -223,15 +224,14 @@ brings the types back.
 
 ## Services: `GameData`
 
-[game/game_data.h](../game/game_data.h) is a bag of eight borrowed pointers:
-the engine `Application`, this game's `Save`, its `SettingsSession`, the
-`StageCatalog`, the tuning, the presentation, the `ActiveLocale` and the
-developer `DebugDirector`
-(inert in Release, and `DebugDirector::inert()` when unset). Everything else
-that looks like a service (`ThreadPool`, `Gamepads`, `RenderResources`, ...) is
-a forward to the `Application`. `wWinMain` in [game/main.cpp](../game/main.cpp)
-declares the other seven before the `Application`, so they outlive every state that
-borrows them.
+[game/game_data.h](../game/game_data.h) borrows the engine `Application`, the
+game's `Save` and `SettingsSession`, the `StageCatalog`, the tuning, the
+presentation, the `ActiveLocale`, the launch's `crt_trial::Runtime` and the
+developer `DebugDirector` (inert in Release and `DebugDirector::inert()` when
+unset). Requests for `ThreadPool`, `Gamepads` and `RenderResources` go through
+the `Application`. `wWinMain` declares the other services before the
+`Application`, so they outlive every state that borrows them. See
+[game/main.cpp](../game/main.cpp).
 
 The `Save` ([game/save/save.h](../game/save/save.h)) is what the file holds, each pad slot
 as itself. The [`SettingsSession`](../game/config/settings_session.h) borrows it and
@@ -280,6 +280,7 @@ as one graph. The shapes that occur:
 [GameMenu, MainMenuHome, MainMenuExitConfirmation]
 [GameMenu, MainMenuStageSelect, UserStageRefusalsMenu]
 [GameMenu, MainMenuOptions, MainMenuDisplayConfirmation]
+[GameMenu, MainMenuOptions, GraphicsSettingsMenu]
 [GameMenu, MainMenuOptions, ControlsSettingsMenu]
 [GameMenu, MainMenuOptions, ControlsSettingsMenu,
     StickSettingsMenu | KeyboardKeysMenu | PadButtonsMenu | ProfilesMenu]
@@ -295,10 +296,10 @@ In Debug, the console (`DebugConsoleState`) and the debug menu
 
 The page bases are named by role. `MainMenuPage` is a page in the main menu's
 frame, and `RosterSetupPage` under it adds the roster machinery that Player
-Count, Join, Team, Weapon and Stage Select share. `SettingsPanelPage` is the five
-settings panels, pushed with no result over Options or Pause, so their only way
-out is to pop. `PauseMenuPage` is the two pause pages, which return a
-`PauseMenuAction` through `finish`.
+Count, Join, Team, Weapon and Stage Select share. `SettingsPanelPage` is the
+base for Graphics, Controls / audio and the four children of Controls / audio.
+They pop without returning a result. `PauseMenuPage` is the base for the two
+pause pages, which return a `PauseMenuAction` through `finish`.
 
 A main-menu page finishes by popping its frame with a `MatchStart`, and
 `GameMenu` then pushes a `GameLevel` above itself, so a match never replaces
@@ -398,8 +399,9 @@ match carried. Save version 9 adds the Sub action to `input_bindings`
 (`keyboard.sub` and each pad profile's `sub`, also in `profiles`); absent reads
 as the right mouse button (the left when Shoot has the right) and RB (else LB,
 else the first free control), where older builds put it. Save version 10 adds
-`"toggle_fire"` to each `pad_comfort` and `profiles` entry; absent is false,
-hold to fire, as older builds played.
+`"toggle_fire"` to each `pad_comfort` and `profiles` entry. A missing value
+keeps hold to fire. Save version 11 adds `crt_monitor`, which defaults to Off
+and takes effect on the next launch. See [CRT monitor graphics](crt-trial.md).
 
 Content resolves beside the executable, not the working directory: the engine's
 rule (`engine/app/content_root.h`), which `Application::load_manifest` applies

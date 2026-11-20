@@ -660,9 +660,9 @@ stays with `POL#16`/`POL#21`.
 
 ## Per-arena backdrops (`POL#16`, 2026-11-14)
 
-The four Random arenas now have backdrops of their own, drawn in the same kit:
-24 arena props (`press_*`, `yard_*`, `cq_*`, `cf_*`) follow the original eleven
-in the [recipe](../game/art/terrain/terrain.json), and the build packs them on the
+The four arenas in Random on 2026-11-14 gained backdrops in the same kit.
+Twenty-four arena props (`press_*`, `yard_*`, `cq_*`, `cf_*`) follow the original
+eleven in the [recipe](../game/art/terrain/terrain.json). The build packs them on the
 landmark shelves, growing the atlas to 2048x3232 while every original frame keeps
 its coordinates. Each arena's brief, prop list, layering and checks are in its
 own doc: [Press Tower](polish-press-tower.md), [Slab Yard](polish-turbulence.md),
@@ -677,5 +677,8 @@ own doc: [Press Tower](polish-press-tower.md), [Slab Yard](polish-turbulence.md)
   dated record of the old composition; Movement Course, King of the Hill and
   Turbulence keep the drifting clouds.
 - No arena carries lettering: signs and labels are blank boards (`POL#35`).
-- What only a person can judge stays open: how the art looks on a real GPU,
-  and whether any prop reads as a platform or cover in play.
+- The author still needs to review these four backdrops on a real GPU and in
+  play for props that read as platforms or cover.
+
+Sluice Works joined Random on 2026-11-20. Its stage guide describes the pump-hall
+art and the [couch check for tanks and trestles](sluice-works.md#play-review).

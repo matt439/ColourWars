@@ -10,7 +10,8 @@ What is in `docs/`, grouped by what you would come for. Open work is indexed in
 
 | Doc | What |
 |---|---|
-| [HOW-TO-PLAY.txt](HOW-TO-PLAY.txt) | extracting and starting the game, controllers and bots, controls, settings and removal; also included beside the executable |
+| [HOW-TO-PLAY.txt](HOW-TO-PLAY.txt) | current source-build player guide, covering startup, controls, settings and removal. Each Release ZIP includes its own version beside the executable |
+| [crt-trial.md](crt-trial.md) | the optional CRT setting in current builds, its restart behavior and renderer qualification |
 | [If something goes wrong](../README.md#if-something-goes-wrong) | help with startup, downloads, controllers and building; where to report an error |
 | [level-editor.md](level-editor.md), [level-format.md](level-format.md) | building and sharing a stage of your own; the editor currently needs a source build |
 | [backstory.md](backstory.md) | why the arena is an unsaved picture in a paint program |
@@ -26,14 +27,15 @@ records and reviews. The open-work index is [TODO.md](../TODO.md).
 | [architecture.md](architecture.md) | the directory map, dependency direction, services, state stack, builders and startup data |
 | [oop-guide.md](oop-guide.md) | the class hierarchies as an OOP example, one shot from input to score, adding a weapon or a scored object |
 | [failure-reporting.md](failure-reporting.md) | how `wWinMain` reports an escaping exception |
-| [code-hygiene.md](code-hygiene.md) | owner of the `HYG` and `CI` maintenance rows, including the architecture review's |
+| [code-hygiene.md](code-hygiene.md) | maintenance scopes and records for the `HYG` rows and most `CI` rows |
 
 ## Using the tools
 
 | Doc | What |
 |---|---|
 | [development.md](development.md) | source builds, acceptance, packaging, engine pin, audio and repository history |
-| [releasing.md](releasing.md) | the current release-preparation scope, clean candidate checks and publication gates |
+| [Scripts index](../scripts/README.md) | build, validation, capture and research commands and where they write evidence |
+| [releasing.md](releasing.md) | clean candidate checks, publication steps and release records |
 | [Shipped v0.1.0 package check](review/2026-11-15-shipped-package-qualification.md) | the 2026-11-15 published ZIP inspection and isolated startup evidence, with its acceptance limits |
 | [debug-console.md](debug-console.md) | the Debug-only console, debug menu, launch arguments, live tuning, bots, record and play, scripts: the reference |
 | [shader-playground.md](shader-playground.md) | compare CRT monitor presets and other full-screen looks in Debug, adjust their parameters and edit the game-authored HLSL shader |
@@ -84,16 +86,16 @@ how it was checked and what is still open.
 
 ## Reviews
 
-[review/](review/) holds records, frozen as written, except
-[engine-reports.md](review/engine-reports.md), the live ledger of reports this
-client owes Labrador, and [gap-audit.md](review/gap-audit.md), the 2026-08-11
-audit of missing functionality that still owns the `GAP` rows. The rest are the
+[review/](review/) holds records, frozen as written, and the live
+[engine-report ledger](review/engine-reports.md). The 2026-08-11
+[gap audit](review/gap-audit.md) supplies the `GAP` IDs. The
 [2026-10-30 architecture review](review/2026-10-30-architecture-review.md), the
 [2026-11-05 code hygiene review](review/2026-11-05-code-hygiene-review.md), the
-[2026-11-10 project review](review/2026-11-10-project-review.md), which owns the
-`REV` rows, the
-[2026-11-10 first-run review](review/2026-11-10-first-run-review.md), which owns the `FTR` rows,
-the three 2026-09-26 fix records and the
-[hidden-window-resize](review/hidden-window-resize/README.md) request and exhibit (`ENG#23`).
+[2026-11-10 project review](review/2026-11-10-project-review.md) (`REV`) and the
+[2026-11-10 first-run review](review/2026-11-10-first-run-review.md) (`FTR`)
+record their findings as of those dates. [TODO.md](../TODO.md) gives their
+current status and points to any live scope. The directory also holds the three
+2026-09-26 fix records and the [hidden-window-resize request and
+exhibit](review/hidden-window-resize/README.md) (`ENG#23`).
 
 `images/` holds the screenshots and clips the docs embed.
