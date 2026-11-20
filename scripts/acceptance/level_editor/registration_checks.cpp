@@ -209,15 +209,16 @@ namespace level_editor_acceptance
                 require(begin != std::string::npos && closing != std::string::npos,
                     "The registration runtime fixture needs its reviewed literal list");
                 expected_runtime.insert(closing + newline.size(), "    levels/acceptance_arena.json" + newline);
-                // And one stage_names member after the last stage's, carrying
-                // the level's display_name (close_quarters.json's).
+                // The title map has its own order, independent of Stage Select.
+                // Append the copied level's display_name after the last title.
                 std::string expected_presentation = presentation;
-                const std::string last_title = "\"" + fixture.last_level_name + "\": \"";
-                const std::size_t title = expected_presentation.find(last_title);
-                require(title != std::string::npos && expected_presentation.rfind(last_title) == title,
-                    "The independent registration byte oracle needs the last stage's title exactly once");
-                const std::size_t title_end = expected_presentation.find('"', title + last_title.size());
-                expected_presentation.insert(title_end + 1, "," + newline + "      \"acceptance_arena\": \"Close Quarters\"");
+                const std::string table = newline + "    \"stage_names\": {";
+                const std::size_t titles = expected_presentation.find(table);
+                const std::size_t titles_end = expected_presentation.find(newline + "    }", titles);
+                require(titles != std::string::npos && expected_presentation.rfind(table) == titles &&
+                    titles_end != std::string::npos && expected_presentation.at(titles_end - 1) == '"',
+                    "The independent registration byte oracle needs one nonempty stage title table");
+                expected_presentation.insert(titles_end, "," + newline + "      \"acceptance_arena\": \"Close Quarters\"");
                 require(preview.manifest.proposed == expected_manifest && preview.runtime_assets.proposed == expected_runtime &&
                     preview.presentation.proposed == expected_presentation,
                     "Registration changed bytes outside its single name/path/title append, including BOM, comments or line endings");

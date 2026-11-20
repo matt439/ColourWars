@@ -32,8 +32,8 @@ namespace
 		// must stay cloudless and motionless rather than be held to either
 		// sky contract. Close Quarters became one under POL#16 (2026-11-14):
 		// a paint warehouse whose sky is only drawn inside its high windows.
-		// Every other stage is unaffected.
-		const bool interior = stage == "press_tower" || stage == "close_quarters";
+		// Sluice Works also has an industrial interior.
+		const bool interior = stage == "press_tower" || stage == "close_quarters" || stage == "sluice_works";
 		// Turbulence's provisional static skeleton has only the approved paper
 		// backing. Clouds and landmark dressing belong to its later art/framing
 		// slice; it is cloudless for that reason, rather than an interior.

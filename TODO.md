@@ -14,6 +14,7 @@ All rows marked `OPEN` in the 2026-11-20 queue are complete.
 **Author calls** (every `DECISION` row):
 
 - `POL#16`: review the four arena backdrops on a real GPU and in play; rule on Close Quarters' centre cover material.
+- `REV#27`: play Sluice Works from both sides and decide whether it joins Random.
 - `ROAD#13`: whether to build umbrella slices 2-4 (`PIN#2` is done).
 - `ENG#PARKED`: decide whether to post the drafted mouse-button comment on labrador#122.
 - `ENG#39`: file the `FLT_MAX` round-trip draft as an issue, or fix it in the engine.
@@ -116,7 +117,7 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 |---|---|---|---|---|
 | `REV#19` | UNSCOPED | LOW | M | Bots chase any sighted enemy and ignore the clock, health and score. The sight ladder (2026-11-12) found that shorter sight cuts fights but does not raise paint, so there is no paint case for the four behaviour slices; they stay undesigned. [Record](docs/gameplay-tuning.md#sight-distance-ladder-rev19-2026-11-12) |
 | `REV#20` | UNSCOPED | MED | L | One bot policy plays all five tools. Aim/reaction sensitivity is measured (`TOOL#5`, closed 2026-11-13); exact event counters reopen only with per-tool roles, which remain unscoped. Sniper's low paint is intended. [Record](docs/review/2026-11-10-project-review.md#one-bot-policy-plays-all-five-tools-rev20). |
-| `REV#27` | DEFERRED | MED | XL | The gate, ferry and lifts appear only on single-purpose Yard trial blockouts; Random is four stages. A finished gate or ferry arena in Random is a candidate aim, the author's to set; deferred with `POL#16`. Bot lift routing is `ROAD#28`. [Record](docs/review/2026-11-10-project-review.md#no-random-arena-uses-the-gate-ferry-or-lifts-rev27). |
+| `REV#27` | DECISION | MED | S | Sluice Works is available through Stage Select. Author: judge the gate contest, bridge bypass and readability in split screen, then decide whether to add the arena to Random. [Play review](docs/sluice-works.md#play-review). |
 
 **Player-facing UX**
 

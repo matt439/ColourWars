@@ -45,8 +45,10 @@ your sub.
 
 Choose teams, a tool and a sub weapon for each player, then an arena. Random
 uses Crossfeed, Press Tower, Close Quarters and Slab Yard, which Stage Select
-lists first; the other stages can be selected explicitly. Stage Select previews the arena
-before a separate confirmation starts the match.
+lists first; the other stages can be selected explicitly. In this source build,
+choose **Sluice Works** to play the paint gate. Paint its sides to claim the
+passage under the bridge, or climb over it from either loading dock. Stage
+Select previews the arena before a separate confirmation starts the match.
 
 The arena is an unsaved picture in a paint program
 ([the backstory](docs/backstory.md)). **A, B or Start** (**Space, Escape or

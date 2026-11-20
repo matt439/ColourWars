@@ -65,6 +65,7 @@ records and reviews. The open-work index is [TODO.md](../TODO.md).
 | [polish-crossfeed.md](polish-crossfeed.md) | Crossfeed, the accepted reference arena |
 | [polish-press-tower.md](polish-press-tower.md) | Press Tower, the accepted King of the Hill arena |
 | [polish-turbulence.md](polish-turbulence.md) | Turbulence, its accepted slab trial and the mover, gate, ferry and lift comparisons |
+| [sluice-works.md](sluice-works.md) | Sluice Works, the selectable paint-gate arena and its Random play review |
 | [polish-close-quarters.md](polish-close-quarters.md) | Close Quarters, the first playable blockout |
 | [polish-movement-course.md](polish-movement-course.md) | the Movement Course and its stations |
 

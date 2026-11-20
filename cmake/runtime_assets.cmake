@@ -32,6 +32,7 @@ set(COLOURWARS_RUNTIME_ASSETS
     levels/movement_course.json
     levels/crossfeed.json
     levels/press_tower.json
+    levels/sluice_works.json
     sounds/paint_exe.json
     sounds/paint_exe.xwb
     levels/turbulence_blockout.json

@@ -128,7 +128,7 @@ namespace
 
 	void check_shipped_stages(const std::filesystem::path& content)
 	{
-		// The exact pins: the thirteen registered stages, and which of them
+		// The exact pins: the registered stages, and which of them
 		// Random may draw. Every other probe walks the manifest instead.
 		const std::map<std::string, bool> expected_random{
 			{ "movement_course", false }, { "king_of_the_hill", false }, { "turbulence", false },
@@ -136,7 +136,7 @@ namespace
 			{ "turbulence_blockout", false }, { "turbulence_mover_trial", false },
 			{ "turbulence_slab_trial", true }, { "turbulence_ferry_trial", false },
 			{ "turbulence_gate_trial", false }, { "turbulence_lift_trial", false },
-			{ "turbulence_paint_lift_trial", false } };
+			{ "turbulence_paint_lift_trial", false }, { "sluice_works", false } };
 		StageList stages;
 		std::vector<std::string> order;
 		std::set<std::string> names_seen;
@@ -165,14 +165,14 @@ namespace
 			}
 		}
 		require(defaulted_arenas == 1, "Acceptance needs exactly one arena without include_in_random");
-		require(stages.size() == expected_random.size() && stages.size() == 13,
-			"Stage selection must expose exactly the thirteen registered stages");
+		require(stages.size() == expected_random.size(),
+			"Stage selection must expose exactly the registered stages");
 		// REV#26 (2026-11-13): the Random arenas first, then the course, the
 		// originals and the Turbulence Yard trials.
 		require(order == std::vector<std::string>{ "crossfeed", "press_tower", "close_quarters",
 			"turbulence_slab_trial", "movement_course", "king_of_the_hill", "turbulence",
 			"turbulence_blockout", "turbulence_mover_trial", "turbulence_ferry_trial",
-			"turbulence_gate_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial" },
+			"turbulence_gate_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial", "sluice_works" },
 			"Stage Select's shipped order changed from REV#26's");
 		require(stage_select_slot(stages, "") == stages.size(),
 			"A fresh save must open the shipped Stage Select on Random");
