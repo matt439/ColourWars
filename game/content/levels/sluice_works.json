@@ -1,7 +1,7 @@
 {
     "format": 1,
     "display_name": "Sluice Works",
-    "include_in_random": false,
+    "include_in_random": true,
     "icon_frame": "stage_turbulence",
     "sound": {
         "sound_bank_name": "paint_exe",

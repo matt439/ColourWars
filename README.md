@@ -44,9 +44,9 @@ moving, jumping, dropping through platforms, refilling your paint and using
 your sub.
 
 Choose teams, a tool and a sub weapon for each player, then an arena. Random
-uses Crossfeed, Press Tower, Close Quarters and Slab Yard, which Stage Select
-lists first; the other stages can be selected explicitly. In this source build,
-choose **Sluice Works** to play the paint gate. Paint its sides to claim the
+in this source build draws from Crossfeed, Press Tower, Close Quarters, Slab
+Yard and **Sluice Works**. Stage Select lists these five first, in series
+rotation order. On Sluice Works, paint the sides of the gate to claim the
 passage under the bridge, or climb over it from either loading dock. Stage
 Select previews the arena before a separate confirmation starts the match.
 

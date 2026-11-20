@@ -17,13 +17,17 @@ the existing Yard music, terrain materials and pump-room props.
 
 ## Play review
 
-The arena is available by name. The four existing arenas remain the Random
-pool until the author plays this one. Try the lower route against a player
+The author approved Sluice Works for Random on 2026-11-20 (`REV#27`). It
+is the fifth arena in Stage Select and in series rotation, after Slab Yard.
+Series rotation wraps from Sluice Works to Crossfeed. The recorded evidence
+comes from scripted routes, bot matches and split-screen captures.
+
+For a couch play review, try the lower route against a player
 holding the gate, then use the bridge to approach them from the other side.
 Switch teams and repeat. In four-player split screen, check whether the
 permission mark reads at couch distance, whether the tanks and trestles look
 like scenery, and whether contesting the gate is worth giving up the high
-route. These observations decide admission to Random under `REV#27`.
+route.
 
 ![Four split-screen views of the A-held gate, bridge and left inspection landing](images/sluice-works/four-player.png)
 
