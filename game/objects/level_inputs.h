@@ -4,6 +4,7 @@ namespace crt_trial { class Runtime; }
 
 #include "engine/math/rectanglef.h"
 #include "game/objects/level_station.h"
+#include "game/objects/paint_fill.h"
 #include "game/objects/match_random.h"
 #include "game/objects/opening_mode.h"
 #include "game/objects/team_colour.h"
@@ -40,6 +41,8 @@ struct LevelWorld
 	std::unique_ptr<labrador::Scene> scene;
 	std::vector<Player*> players;
 	std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers;
+	// Borrows two static paintables from scene; destroy before the scene.
+	std::unique_ptr<PaintFill> paint_fill;
 };
 
 // The services and records a Level borrows for its lifetime. Tuning,

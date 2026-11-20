@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/weapon_builder.h"
+#include "game/objects/weapon_umbrella.h"
 
 using namespace labrador;
 
@@ -35,6 +36,10 @@ std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
         weapon = std::make_unique<WeaponRoller>(tuning, team, player_num, sound_index,
             team_colour, type, player_center,
             render_resources, audio_resources, preferences);
+        break;
+    case WeaponType::umbrella:
+        weapon = std::make_unique<WeaponUmbrella>(tuning, team, player_num, sound_index,
+            team_colour, type, player_center, render_resources, audio_resources, preferences);
         break;
     case WeaponType::bucket:
         weapon = std::make_unique<WeaponBucket>(tuning, team, player_num, sound_index,

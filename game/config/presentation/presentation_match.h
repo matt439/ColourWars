@@ -97,6 +97,14 @@ struct FerryDirectionPresentation
 	float lift_width = 0.0f;
 };
 
+struct PaintFillPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour paper;
+	float mark_size = 0.0f; // world units
+	float sweep_seconds = 0.0f;
+};
+
 // World-camera accent sizes in world units, and their timing in seconds.
 struct ViewShakePresentation
 {
@@ -408,6 +416,10 @@ struct BlockedShotPresentation
 	float stroke_width = 0.0f;
 	float keyline_width = 0.0f;
 };
+
+// Tools with a painted lip that can retain a bead while settled.
+inline constexpr std::array idle_drip_tools{
+    WeaponType::sprayer, WeaponType::sniper, WeaponType::bucket, WeaponType::umbrella };
 
 // Residual tool paint, entirely separate from projectiles and scoring.
 struct IdleDripPresentation

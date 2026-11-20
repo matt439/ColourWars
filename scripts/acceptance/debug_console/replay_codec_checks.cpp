@@ -197,14 +197,17 @@ namespace debug_console_acceptance
         file.final_print.seats[0].paint_underfoot = true;
         file.final_print.seats[0].support_paint_team = static_cast<int>(PlayerTeam::a);
         file.final_print.seats[0].step_paint_team = static_cast<int>(PlayerTeam::b);
+        file.final_print.paint_fill_hash = 0x123456789abcdef0ull;
         file.write(path);
         const ReplayFile active = ReplayFile::read(path);
         require(active.final_print.seats[0].paint_underfoot &&
+            active.final_print.paint_fill_hash == file.final_print.paint_fill_hash &&
             active.final_print.seats[0].support_paint_team == static_cast<int>(PlayerTeam::a) &&
             active.final_print.seats[0].step_paint_team == static_cast<int>(PlayerTeam::b) &&
             MatchFingerprint::difference(file.final_print, active.final_print).empty(),
             "Active underfoot state did not survive actual replay encoding/decoding");
         file.final_print.seats[0].paint_underfoot = false;
+        file.final_print.paint_fill_hash.reset();
         file.write(path);
         require(read_text(path) == legacy_encoding, "Off replay serialization appended active state or changed legacy bytes");
 		// A replay is replaced whole (replace_file_atomically): a refused write
@@ -242,17 +245,17 @@ namespace debug_console_acceptance
 
 		std::string text;
 		std::string message;
-		for (const int rejected_version : { 2, 3, 4, 5, 6, 7, 8, 9, 10, 12 })
+		for (const int rejected_version : { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13 })
 		{
 			file.write(path);
 			text = read_text(path);
-			text.replace(text.find("\"version\": 11"), 13,
+			text.replace(text.find("\"version\": 12"), 13,
 				"\"version\": " + std::to_string(rejected_version));
 			write_text(path, text);
 			message.clear();
 			try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
 			require(message.find("format version " + std::to_string(rejected_version) +
-				"; this build reads only 11") != std::string::npos,
+				"; this build reads only 12") != std::string::npos,
 				"A previous workshop recording, an older replay or another format is refused: " + message);
 		}
 		// A missing, malformed or unknown option may not silently replay as

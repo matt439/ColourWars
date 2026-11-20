@@ -14,7 +14,7 @@ All rows marked `OPEN` in the 2026-11-20 queue are complete.
 **Author calls** (every `DECISION` row):
 
 - `POL#16`: review the four arena backdrops on a real GPU and in play; rule on Close Quarters' centre cover material.
-- `ROAD#13`: whether to build umbrella slices 2-4 (`PIN#2` is done).
+- `ROAD#13`: play the Umbrella and judge its six-tool balance, canopy feedback and four new cues.
 - `ENG#PARKED`: decide whether to post the drafted mouse-button comment on labrador#122.
 - `ENG#39`: file the `FLT_MAX` round-trip draft as an issue, or fix it in the engine.
 - `ROAD#44`: whether the ball and grenade keep circle collision shapes (hit feel; numbers in the item).
@@ -39,10 +39,10 @@ or above (2026-10-27). The owner records the gaps left out by choice and the exc
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ROAD#13` | DECISION | LOW | M | Umbrella answers recorded 2026-11-13 (Q1 umbrella, Q3-Q7 as recommended). Left: the author's call, now that `PIN#2` is done, whether to build slices 2-4, which reopens the five-tool balance and adds four unheard cues. Slice 1 (`REV#3`) is done. [Proposal](docs/feature-roadmap.md#umbrella-tool-proposal-road13). |
+| `ROAD#13` | DECISION | LOW | S | Umbrella built with bots, canopy, art and four cues. Author to judge balance and mix in an attended match. [Play review](docs/feature-roadmap.md#umbrella-tool-proposal-road13). |
 | `ROAD#14` | UNSCOPED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
-| `ROAD#28` | DEFERRED | LOW | L | Cycling and paint-driven lifts are done. Left: deliberate bot lift routing. Deferred behind `REV#27`, because lifts stand only on the two trials that are out of Random, so routing has no consumer yet. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
-| `ROAD#29` | DEFERRED | LOW | M | Growing sponges parked 2026-11-13 behind `REV#27`: no G1-G7 picks until a Random arena wants a sponge, then resume from the [contract draft](docs/feature-roadmap.md#growing-sponge-contract-draft-road29)'s recommendations. |
+| `ROAD#28` | DEFERRED | LOW | L | Cycling and paint-driven lifts are done. Left: deliberate bot lift routing. Lifts appear only on the two explicit trials. Resume when a Random arena needs a bot lift route. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
+| `ROAD#29` | DEFERRED | LOW | M | Growing sponges were parked on 2026-11-13. When a Random arena wants a sponge, resume G1-G7 from the [contract draft](docs/feature-roadmap.md#growing-sponge-contract-draft-road29)'s recommendations. |
 | `ROAD#23` | DEFERRED | MED | L | Non-XInput pads (PlayStation, Switch Pro). The engine ask is parked in `ENG#PARKED` and there is no client exhibit; resumes when such a pad is in hand or a store release is chosen (`REV#68`). [Input](docs/feature-roadmap.md#input). |
 | `ROAD#24` | DEFERRED | LOW | M | Pad aim assist against the one mouse seat. Deferred until attended play shows pad seats consistently losing to the mouse seat (story B8); relates to `POL#3`, `POL#18` and `ROAD#5`. [Input](docs/feature-roadmap.md#input). |
 | `ROAD#42` | UNSCOPED | LOW | M | Weapon Select could show each tool's shot shape, drawn from its tuning, beside the text (story A6). No problem has been observed; it may wait on `POL#16`. [Item](docs/feature-roadmap.md#shot-shapes-on-weapon-select-road42). |
@@ -116,7 +116,6 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 |---|---|---|---|---|
 | `REV#19` | UNSCOPED | LOW | M | Bots chase any sighted enemy and ignore the clock, health and score. The sight ladder (2026-11-12) found that shorter sight cuts fights but does not raise paint, so there is no paint case for the four behaviour slices; they stay undesigned. [Record](docs/gameplay-tuning.md#sight-distance-ladder-rev19-2026-11-12) |
 | `REV#20` | UNSCOPED | MED | L | One bot policy plays all five tools. Aim/reaction sensitivity is measured (`TOOL#5`, closed 2026-11-13); exact event counters reopen only with per-tool roles, which remain unscoped. Sniper's low paint is intended. [Record](docs/review/2026-11-10-project-review.md#one-bot-policy-plays-all-five-tools-rev20). |
-| `REV#27` | DEFERRED | MED | XL | The gate, ferry and lifts appear only on single-purpose Yard trial blockouts; Random is four stages. A finished gate or ferry arena in Random is a candidate aim, the author's to set; deferred with `POL#16`. Bot lift routing is `ROAD#28`. [Record](docs/review/2026-11-10-project-review.md#no-random-arena-uses-the-gate-ferry-or-lifts-rev27). |
 
 **Player-facing UX**
 
@@ -156,7 +155,7 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `REV#66` | UNSCOPED | LOW | L | Editor has no multi-select, recent files, drag-and-drop open or autosave. Group move is the one with authoring value; a textured canvas contradicts the schematic scope. Scope with the next editor slice. [Record](docs/review/2026-11-10-project-review.md#editor-lacks-multi-select-and-recent-files-rev66). |
+| `REV#66` | UNSCOPED | LOW | L | [Editor group movement](docs/level-editor.md#editing) is built. Recent files, drag-and-drop open and autosave remain unscoped conveniences from the [editor review](docs/review/2026-11-10-project-review.md#editor-lacks-multi-select-and-recent-files-rev66). |
 | `REV#67` | DEFERRED | LOW | M | No signing or separate checksum (2026-11-13). An itch.io page with a butler publish step waits for the first non-pre-release tag or a wanted store page. [Calls](docs/feature-roadmap.md#project-review-calls-2026-11-13), [record](docs/review/2026-11-10-project-review.md#distribution-is-one-unsigned-github-zip-rev67). |
 | `REV#68` | DEFERRED | LOW | L | No document scopes a Steam release (store page, Remote Play Together, prompts, Deck pass); a note beside `ROAD#23`. Deferred behind `REV#67`'s itch.io trigger. [Record](docs/review/2026-11-10-project-review.md#steam-release-is-not-scoped-rev68). |
 

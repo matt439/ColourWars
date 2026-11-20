@@ -56,13 +56,13 @@ namespace
 }
 
 MatchBotDriver::MatchBotDriver(const GameTuning* tuning, const MatchSetup& settings,
-	std::uint64_t seed) : MatchBotDriver(tuning, roster_bots(settings), seed)
+	std::uint64_t seed) : MatchBotDriver(tuning, roster_bots(settings), seed, settings.variant())
 {
-	this->refill_enabled_ = settings.variant() != MatchVariant::endless_paint;
 }
 
 MatchBotDriver::MatchBotDriver(const GameTuning* tuning,
-	const std::vector<std::optional<BotDifficulty>>& seats, std::uint64_t seed) : tuning_(tuning)
+	const std::vector<std::optional<BotDifficulty>>& seats, std::uint64_t seed, MatchVariant variant) :
+	tuning_(tuning), refill_enabled_(variant != MatchVariant::endless_paint)
 {
 	if (tuning == nullptr) { throw std::invalid_argument("A match bot driver requires tuning"); }
 	this->bots_.resize(seats.size());
@@ -213,6 +213,7 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 		view.shot_empty = player.tool_empty;
 		view.engage_distance = engagement_distance(player, *this->tuning_);
 		view.weapon = player.weapon;
+		view.canopy_broken = player.canopy_broken;
 		view.sub = player.sub;
 		view.sub_ready = player.sub_ready;
 		view.obstacles = gates.empty() ? obstacles : world.obstacles(player.team);
@@ -241,6 +242,31 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 					Vector2F::distance_squared(centre, view.center) > sight * sight ||
 					!sees(view.center, centre)) { continue; }
 				view.enemy_sprinklers.push_back(centre);
+			}
+			if (player.tool_ready && view.enemies.empty() && view.enemy_sprinklers.empty())
+			{
+				const auto fill = world.visible_fill(player.team, [&](Vector2F point)
+				{
+					return Vector2F::distance_squared(view.center, point) <= sight * sight &&
+						sees(view.center, point);
+				});
+				// A lead built during cooldown can still fire on expiry. Our own
+				// existing lead needs no more trigger paint to activate.
+				if (fill && fill->leader != player.team && fill->last_team != player.team &&
+					std::any_of(fill->target_tiles.begin(), fill->target_tiles.end(),
+						[&](const BotFillTile& tile) { return tile.team != player.team; }))
+				{
+					const float reach_squared = view.engage_distance * view.engage_distance;
+					for (const BotFillTile& tile : fill->trigger_tiles)
+					{
+						if (tile.team != player.team && Vector2F::distance_squared(view.center, tile.point) <= reach_squared)
+						{ view.fill_triggers.push_back(tile.point); }
+					}
+					std::stable_sort(view.fill_triggers.begin(), view.fill_triggers.end(), [&](Vector2F lhs, Vector2F rhs)
+					{
+						return Vector2F::distance_squared(view.center, lhs) < Vector2F::distance_squared(view.center, rhs);
+					});
+				}
 			}
 			const bool replan = bot->needs_territory();
 			if ((replan || support_shot(*bot, player)) && !surfaces.empty())

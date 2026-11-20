@@ -32,6 +32,7 @@ set(COLOURWARS_RUNTIME_ASSETS
     levels/movement_course.json
     levels/crossfeed.json
     levels/press_tower.json
+    levels/sluice_works.json
     sounds/paint_exe.json
     sounds/paint_exe.xwb
     levels/turbulence_blockout.json
@@ -41,6 +42,7 @@ set(COLOURWARS_RUNTIME_ASSETS
     levels/turbulence_gate_trial.json
     levels/turbulence_lift_trial.json
     levels/turbulence_paint_lift_trial.json
+    levels/turbulence_fill_trial.json
 )
 
 # Only these directories belong to the staging mirror. Root files such as

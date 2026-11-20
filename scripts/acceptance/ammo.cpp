@@ -64,8 +64,10 @@ namespace
         { WeaponType::sniper, "sniper", 1 },
         { WeaponType::roller, "roller", 1 },
         { WeaponType::mister, "mister", 5 },
-        { WeaponType::bucket, "bucket", 1 }
+        { WeaponType::bucket, "bucket", 1 },
+        { WeaponType::umbrella, "umbrella", 1 }
     };
+    static_assert(std::size(cases) == tuned_weapon_count);
 
     auto update(Weapon& weapon, bool held, float dt)
     {
@@ -166,6 +168,10 @@ int main(int argc, char** argv)
             auto stock = builder.build_weapon(&tuning, PlayerTeam::a, 0, 0,
                 Colour::white, item.type, Vector2F::zero, &render, &audio,
                 &preferences);
+            // The base probe launches one pellet; the equipped umbrella releases
+            // an entire fan per paid shot.
+            const size_t volley_size = item.type == WeaponType::umbrella ?
+                static_cast<size_t>(tuning.weapon(item.type).pellets) : item.projectile_count;
             bool saw_insufficient = false;
             bool recovered = false;
             int shots = 0;
@@ -179,7 +185,7 @@ int main(int argc, char** argv)
                 }
                 if (!projectiles.empty())
                 {
-                    require(projectiles.size() == item.projectile_count,
+                    require(projectiles.size() == volley_size,
                         "stock weapon changed its volley size");
                     // This independent bound allows at most one part per
                     // million of rounding and excludes the former free shots.

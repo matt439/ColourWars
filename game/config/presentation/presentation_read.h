@@ -70,6 +70,7 @@ namespace presentation_read
 	PlayerIdentityPresentation read_player_identity(const labrador::JsonValue& root);
 	GatePermissionPresentation read_gate_permission(const labrador::JsonValue& root);
 	FerryDirectionPresentation read_ferry_direction(const labrador::JsonValue& root);
+	PaintFillPresentation read_paint_fill(const labrador::JsonValue& root);
 	std::array<IdleDripPresentation, tuned_weapon_count> read_idle_drips(const labrador::JsonValue& root);
 	WeaponFeedbackPresentation read_weapon_feedback(const labrador::JsonValue& root);
 	BlockedShotPresentation read_blocked_shot(const labrador::JsonValue& root);

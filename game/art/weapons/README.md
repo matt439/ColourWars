@@ -1,6 +1,6 @@
 # Paint.exe tool source
 
-[`weapons.json`](weapons.json) is the editable production drawing for all five
+[`weapons.json`](weapons.json) is the editable production drawing for all six
 tools. It follows the accepted
 [`p2_figures_sheet.webp`](../references/style-board/img/p2_figures_sheet.webp):
 black outlines, neutral white/grey hardware, simple worn materials and a round
@@ -54,6 +54,7 @@ describes selection and validation.
 | Roller | 400x200 | 100x50 | (0,0), (16,0) | Sleeve wear/index rotates in three phases; contact compresses around the fixed axle. Lift exposes the raised bracket. |
 | Mister | 240x120 | 60x30 | (4,8), (18,4) | Pump and outlet valve depress, release and return above a bulbous tank. |
 | Bucket | 240x240 | 60x60 | (4,-8), (16,-8) | Wire bail swings above a fixed hand bar; wet fill tilts and recovers around the dented tin. |
+| Umbrella | 240x128 | 60x32 | (0,3), (21,3) | A hooked wooden grip and steel ferrule hold a folded paint canopy. The pleats spring apart on the pellet shot and draw tight during the lift. The upright shield has its own [paint effects artwork](../paint-fx/README.md). |
 
 All poses keep the same source dimensions and left-centre origin. The three
 firearms end on the existing local aim line at `x = world width`. Existing
@@ -63,8 +64,9 @@ origin; compression never translates it. The grip regions remain opaque at
 the `presentation.figure.grips` points. No tuning, collisions, launch positions,
 coverage or ammunition values are part of the art recipe.
 
-The 2560x1280 atlas packs all 40 material frames and both supply strips with
-four transparent texels around each packed rectangle. Supply frames retain
+The 2560x1416 atlas packs all 48 material frames and both supply strips with
+four transparent texels around each packed rectangle. The umbrella occupies a
+136-texel shelf below the five original tools. Supply frames retain
 the body's transparent canvas borders. The `random`, `error`, `pixel` and `nozzle` utility frames
 are exact copies from the historical player/projectile source. The PNG has
 straight alpha, which the engine's PNG loader premultiplies into RGBA8 with one

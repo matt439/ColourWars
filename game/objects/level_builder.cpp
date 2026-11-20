@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_builder.h"
+#include "game/objects/structure_paintable.h"
 #include "game/config/presentation/presentation.h"
 
 using namespace labrador;
@@ -70,6 +71,19 @@ std::unique_ptr<Level>
 
 	auto collision_objects = this->level_object_builder_->build_collision_objects(
 		load_info->collision_objects_json(), team_colours, random.hand());
+	const auto& region = load_info->paint_fill();
+	StructurePaintable* fill_trigger = nullptr;
+	StructurePaintable* fill_target = nullptr;
+	if (region)
+	{
+		const auto paintable = [&](std::size_t index) {
+			auto* block = dynamic_cast<StructurePaintable*>(collision_objects.at(index).get());
+			if (!block) { throw std::runtime_error("level '" + settings.stage() + "': paint_fill needs flat paintable structures"); }
+			return block;
+		};
+		fill_trigger = paintable(region->trigger_object);
+		fill_target = paintable(region->target_object);
+	}
 	for (std::unique_ptr<GameObject>& shadow :
 		this->level_object_builder_->build_moving_shadows(load_info->collision_objects_json(), collision_objects))
 	{
@@ -100,6 +114,14 @@ std::unique_ptr<Level>
 			.players = std::move(players),
 			.viewport_dividers = this->level_object_builder_->build_viewport_dividers(
 				this->viewport_manager_) };
+		// Install the observer only after both structures are owned by world's
+		// scene. From here, world and Level both destroy the observer first.
+		if (region)
+		{
+			world.paint_fill = std::make_unique<PaintFill>(*fill_trigger, region->trigger_faces,
+				*fill_target, region->target_face, this->tuning_->paint().fill.open_share,
+				this->tuning_->paint().fill.cooldown);
+		}
 		const LevelServices services{
 			.tuning = this->tuning_,
 			.presentation = this->presentation_,

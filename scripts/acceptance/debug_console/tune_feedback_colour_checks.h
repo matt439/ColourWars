@@ -214,16 +214,16 @@
 		TestDirector test(tuning, presentation);
 		DebugDirectorImpl& impl = test.impl;
 		impl.set_content_directories(scratch.source, scratch.staged);
-		const std::array<WeaponType, 5> types{ WeaponType::sprayer, WeaponType::sniper,
-			WeaponType::roller, WeaponType::mister, WeaponType::bucket };
-		std::array<const IdleDripPresentation*, 5> looks{};
-		std::array<IdleDripPresentation, 5> original{};
+		const std::array<WeaponType, 6> types{ WeaponType::sprayer, WeaponType::sniper,
+			WeaponType::roller, WeaponType::mister, WeaponType::bucket, WeaponType::umbrella };
+		std::array<const IdleDripPresentation*, types.size()> looks{};
+		std::array<IdleDripPresentation, types.size()> original{};
 		for (std::size_t index = 0; index < types.size(); ++index)
 		{
 			looks[index] = &presentation.idle_drip(types[index]);
 			original[index] = *looks[index];
-			require(looks[index]->enabled == (index == 0 || index == 1 || index == 4),
-				"Idle-drip colour fixtures retain the three eligible tools and disabled Roller/Mister profiles");
+			require(looks[index]->enabled == (types[index] != WeaponType::roller && types[index] != WeaponType::mister),
+				"Idle-drip colour fixtures retain the four eligible tools and disabled Roller/Mister profiles");
 		}
 		const auto geometry = [](const IdleDripPresentation& look)
 		{
@@ -236,8 +236,8 @@
 			(game_directory / L"textures" / (original.front().sprite_sheet + ".json")).string().c_str(), labrador::TextureHandle{}));
 		// Separate consumers are necessary: the next quiet interval exceeds a
 		// falling drop's lifetime. Do not pretend both states coexist by default.
-		std::array<std::unique_ptr<IdleDrip>, 6> cues;
-		const std::array<WeaponType, 3> eligible{ WeaponType::sprayer, WeaponType::sniper, WeaponType::bucket };
+		constexpr std::array eligible{ WeaponType::sprayer, WeaponType::sniper, WeaponType::bucket, WeaponType::umbrella };
+		std::array<std::unique_ptr<IdleDrip>, eligible.size() * 2> cues;
 		for (std::size_t index = 0; index < cues.size(); ++index)
 		{
 			const IdleDripPresentation& look = presentation.idle_drip(eligible[index / 2]);
@@ -281,7 +281,7 @@
 				require(&look == looks[index] && look.keyline == keyline && look.enabled == original[index].enabled &&
 					look.sprite_sheet == original[index].sprite_sheet && look.fill_frame == original[index].fill_frame &&
 					geometry(look) == geometry(original[index]),
-					"The one common keyline reaches all five stable borrowed records without changing eligibility, assets or tool geometry");
+					"The one common keyline reaches all six stable borrowed records without changing eligibility, assets or tool geometry");
 			}
 			require(state() == held_state,
 				"Idle-drip colour adoption retains every attached/falling age, interval, position, bead rectangle and cull bound");
@@ -318,7 +318,7 @@
 			impl.execute("tune.save presentation").ok && read_text(scratch.source / L"presentation.json") == saved &&
 			read_text(scratch.staged / L"presentation.json") == saved && pending->edits().empty() &&
 			pending->baseline().text() == saved && pending->current().text() == saved,
-			"Saving the common keyline changes one authored token and rebases all five retained tool profiles");
+			"Saving the common keyline changes one authored token and rebases all six retained tool profiles");
 		unchanged(labrador::Colour(32, 96, 192, 128));
 		require(impl.execute("tune presentation.idle_drip.keyline A532D600").ok,
 			"An independent nonblack zero-alpha keyline is pending before invalid merged candidate saves");

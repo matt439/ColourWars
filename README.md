@@ -44,9 +44,19 @@ moving, jumping, dropping through platforms, refilling your paint and using
 your sub.
 
 Choose teams, a tool and a sub weapon for each player, then an arena. Random
-uses Crossfeed, Press Tower, Close Quarters and Slab Yard, which Stage Select
-lists first; the other stages can be selected explicitly. Stage Select previews the arena
-before a separate confirmation starts the match.
+in this source build draws from Crossfeed, Press Tower, Close Quarters, Slab
+Yard and **Sluice Works**. Stage Select lists these five first, in series
+rotation order. On Sluice Works, paint the sides of the gate to claim the
+passage under the bridge, or climb over it from either loading dock. Stage
+Select previews the arena before a separate confirmation starts the match.
+
+To try the fill mechanic, choose **Turbulence Yard - Fill Trial** by name.
+Paint the marked sides of the centre block to claim the strip across its top.
+
+Choose **Umbrella** in Weapon Select to fire a short fan of paint. Hold Shoot
+and aim toward incoming shots to block them with the canopy. Teammates can
+fire through it. If it breaks, you can still fire while it recovers.
+[Umbrellas facing off on Sluice Works](docs/images/umbrella/in-play.png)
 
 The arena is an unsaved picture in a paint program
 ([the backstory](docs/backstory.md)). **A, B or Start** (**Space, Escape or

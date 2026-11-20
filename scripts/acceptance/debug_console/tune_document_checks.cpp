@@ -174,6 +174,7 @@ namespace debug_console_acceptance
 			"presentation.idle_drip.fill_frame", "presentation.idle_drip.keyline.r",
 			"presentation.idle_drip.keyline_extra", "presentation.idle_drip.tools.sprayer.keyline",
 			"presentation.idle_drip.tools.sniper.keyline", "presentation.idle_drip.tools.bucket.keyline",
+			"presentation.idle_drip.tools.umbrella.keyline",
 			"presentation.idle_drip.grow_time", "presentation.idle_drip.enabled",
 			"respawn_redraw.pen_colour", "tuning.respawn_redraw.pen_colour",
 			"presentation.respawn_redraw.sprite_sheet", "presentation.respawn_redraw.pen_frame",

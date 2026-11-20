@@ -84,6 +84,12 @@ void GameTuning::validate_resources(const RenderResources& render,
 		const WeaponDetails& details = entry.details;
 		const std::string prefix = std::string("weapons.") + key;
 		check.frame(prefix + ".frame", details.sheet_name, details.frame_name);
+		if (type == WeaponType::umbrella)
+		{
+			check.frame(prefix + ".canopy.open_frame", entry.canopy.sheet, entry.canopy.open_frame);
+			check.frame(prefix + ".canopy.cracked_frame", entry.canopy.sheet, entry.canopy.cracked_frame);
+			check.frame(prefix + ".canopy.shut_frame", entry.canopy.sheet, entry.canopy.shut_frame);
+		}
 		const std::string paint_name = details.frame_name + "_paint";
 		check.frame(prefix + ".frame (paint overlay)", details.sheet_name, paint_name);
 		const SpriteSheet* sheet = render.sprite_sheet(details.sheet_name);
@@ -195,6 +201,12 @@ std::vector<SoundReference> GameTuning::sound_references() const
 		const std::string prefix = std::string("weapons.") + key;
 		wave(prefix + ".shoot_sound.name", details.sound_bank_name,
 			details.shoot_sound_name);
+		if (type == WeaponType::umbrella)
+		{
+			wave(prefix + ".canopy.open_sound.name", details.sound_bank_name, entry.canopy.open_sound.name);
+			wave(prefix + ".canopy.block_sound.name", details.sound_bank_name, entry.canopy.block_sound.name);
+			wave(prefix + ".canopy.break_sound.name", details.sound_bank_name, entry.canopy.break_sound.name);
+		}
 		wave(prefix + ".feedback_sounds.empty.name", details.sound_bank_name,
 			entry.feedback_sounds.empty.name);
 		wave(prefix + ".feedback_sounds.recovered.name", details.sound_bank_name,

@@ -303,6 +303,13 @@ show subclasses with different behavior. Reuse an existing concrete class when
 it already expresses the new weapon; introduce a subclass when it has a new
 rule to implement.
 
+[WeaponUmbrella](../game/objects/weapon_umbrella.cpp) inherits the Bucket's
+relative-velocity base and overrides `shoot` to build a fan from one paid
+shot. The weapon owns canopy durability and recovery. Level prepares canopy
+poses before resolving projectiles, so an incoming shot sees this step's
+aim and Shoot input. Later shots in the same step see a canopy that an
+earlier shot has broken. [Projectile contacts](../game/objects/projectile_contacts.cpp)
+
 For a new selectable primary weapon, keep these registrations together:
 
 1. Add its enumerator in [weapon_type.h](../game/objects/weapon_type.h) among
@@ -312,7 +319,7 @@ For a new selectable primary weapon, keep these registrations together:
    primaries; [GameTuning](../game/config/tuning.h)'s `weapon_count_` and the
    presentation's per-weapon arrays are sized from it, so no count is edited by
    hand. `max_prim_wep` aliases `random_primary`. Compile-time checks beside the
-   enum enforce this contiguous order and the boundary after `bucket`; update
+   enum enforce this contiguous order and the boundary after `umbrella`; update
    them with the registrations.
    `none` marks an unset weapon (and is the ignored secondary `Player` still
    takes); it does not belong in the primary range. Sub weapons are a separate
@@ -354,7 +361,7 @@ For a new selectable primary weapon, keep these registrations together:
    `weapon_feedback.muzzle_sizes`, the tool motion under `tool_motion.tools`
    (`shot_recovery`, `valve_time`) and the figure's grip under `figure.grips`
    (`rear`, `front`). Idle drips are read only for the tools
-   `read_idle_drips` names (sprayer, sniper and bucket); a new tool has none
+   `idle_drip_tools` names (sprayer, sniper, bucket and umbrella); a new tool has none
    until it is added there.
 5. Supply any new frames/animations in the sprite-sheet definition and texture,
    and any new wave/effect names in the live

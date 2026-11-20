@@ -6,6 +6,15 @@
 
 namespace acceptance::route_run
 {
+    namespace
+    {
+        int volley_size(WeaponType primary, const GameTuning& tuning)
+        {
+            if (primary == WeaponType::umbrella) { return tuning.weapon(primary).pellets; }
+            return primary == WeaponType::mister ? 5 : 1;
+        }
+    }
+
     std::string fixed(float value, int precision)
     {
         std::ostringstream text;
@@ -242,10 +251,9 @@ namespace acceptance::route_run
         if (paid)
         {
             this->paid_ticks.push_back(this->ticks);
-            // The builder emits five mist pellets and one object for every
-            // other primary. Player removes launch contacts before returning
-            // survivors; these retirements include enemies as well as cover.
-            const int created = this->player->primary_weapon().type() == WeaponType::mister ? 5 : 1;
+            // Player removes launch contacts before returning survivors;
+            // these retirements include enemies as well as cover.
+            const int created = volley_size(this->player->primary_weapon().type(), this->services.tuning);
             require(emitted.size() <= static_cast<size_t>(created),
                 this->services.map.label + " paid-event object count exceeds the projectile builder contract");
             this->launch_retired_objects += created - static_cast<int>(emitted.size());
@@ -275,7 +283,7 @@ namespace acceptance::route_run
                 ++stats.paid_events;
                 stats.paid_ticks.push_back(this->ticks);
                 if (stats.first_paid_tick < 0) { stats.first_paid_tick = this->ticks; }
-                const int created = opponent->primary_weapon().type() == WeaponType::mister ? 5 : 1;
+                const int created = volley_size(opponent->primary_weapon().type(), this->services.tuning);
                 require(opponent_emitted.size() <= static_cast<size_t>(created), this->services.map.label +
                     " opponent paid-event object count exceeds the projectile builder contract");
                 stats.launch_retired_objects += created - static_cast<int>(opponent_emitted.size());

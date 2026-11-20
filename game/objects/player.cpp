@@ -997,6 +997,7 @@ void Player::on_projectile_contact(const Projectile& source,
     }
     if (vulnerable && this->health_ <= 0.0f)
     {
+        this->primary_->reset_canopy();
         // Capture the fatal contact now: the dead state arrives next update.
         // Later hits cannot replace credit. This metadata changes no damage,
         // contact, feedback, timer, or random-number decision.
@@ -1150,7 +1151,7 @@ void Player::update(float dt)
 std::vector<std::unique_ptr<Projectile>>
     Player::update_weapon_and_get_projectiles(float dt,
     std::span<CollisionObject* const> objects,
-    std::optional<ProjectileTargetFlags> known)
+    std::optional<ProjectileTargetFlags> known, std::span<Player* const> canopy_holders)
 {
     this->weapon_contact_dt_ = dt;
     // Moving projectile contacts can be fatal before this phase, while state_
@@ -1207,7 +1208,7 @@ std::vector<std::unique_ptr<Projectile>>
         Projectile& projectile = *projectiles[index];
         projectile.resolve_launch_obstruction(index < launched ?
             projectile.launch_origin(this->center()) : projectile.bounds().center(), objects,
-            known);
+            known, canopy_holders);
         if (this->paint_audio_ != nullptr)
         {
             projectile.flush_paint_audio(*this->paint_audio_);
@@ -1230,6 +1231,22 @@ std::vector<std::unique_ptr<Projectile>>
         });
     return projectiles;
 }
+void Player::prepare_canopy(float dt)
+{
+    if (this->can_act())
+    { this->primary_->prepare_canopy(this->input(), this->center(), this->facing_right(), dt); }
+}
+
+std::optional<WeaponCanopy> Player::canopy() const
+{
+    return this->can_act() ? this->primary_->canopy() : std::nullopt;
+}
+
+void Player::take_canopy_hit()
+{
+    if (this->can_act()) { this->primary_->take_canopy_hit(); }
+}
+
 void Player::set_paint_audio(PaintAudio* audio)
 {
     this->paint_audio_ = audio;
@@ -1640,6 +1657,7 @@ void Player::force_respawn()
 
 void Player::kill()
 {
+    this->primary_->reset_canopy();
     this->clear_carrier();
     this->fixed_slab_support_.reset();
     this->projected_fixed_slab_support_ = false;
@@ -1676,6 +1694,7 @@ void Player::respawn()
     this->place_at(this->respawn_position_);
 	this->health_ = this->player_tuning().starting_health;
 	this->primary_->reset_ammo();
+	this->primary_->reset_canopy();
 	if (this->sub_ != nullptr) { this->sub_->reset(); }
 	this->state_ = PlayerState::alive;
     this->play_wave(this->respawn_sound_, this->player_tuning().respawn_sound.volume);

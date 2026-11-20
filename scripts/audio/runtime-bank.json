@@ -1,8 +1,8 @@
 {
   "version": 1,
   "bank": "paint_exe.xwb",
-  "bytes": 22918348,
-  "sha256": "9c069081e2386a3d2b76716d0d1016729c154c2c2af3c27ce0d366d68cb367d3",
+  "bytes": 23007316,
+  "sha256": "44997e5ccdc09a24f9485c4e3ac1700a0f811a6c681bfe50f014f765446bdd16",
   "waves": [
     "match.celebrate",
     "match.count_beat",
@@ -109,7 +109,11 @@
     "world.ambience.close_quarters",
     "world.ambience.king_of_the_hill",
     "world.ambience.turbulence",
-    "world.detail"
+    "world.detail",
+    "umbrella.block",
+    "umbrella.break",
+    "umbrella.open",
+    "umbrella.shot"
   ],
   "accepted_master_sha256": {
     "match.celebrate": "33e40aa5c0b4ae9e6da4bd5b3db9fcd5ed699bc90656ff75261d46d3976475e4",
@@ -153,9 +157,6 @@
     "sprayer.loop": "b7d041c18f681dd3dbed6fe53884d7ca698a486eaf29bccd0d07f4c09ffb7f40",
     "sprayer.start": "6b8b7520c8e3858d6649a68b32327153a7509ed87448b8b3e359539616a88a34",
     "sprayer.stop": "1343683426d9f38be146889f5de6ef78f7c09938d0ba8dc007e723d8f5f40c1d",
-    "sub.grenade.throw": "2064b846be298438f4cfbda70d7de877c0d403483848578e784190efd2bf1f54",
-    "sub.sprinkler.throw": "8968e519c313cad0b9b43ef3b94c1d65b4d0ec2815e916e21a54623860dca97c",
-    "sub.wall.set": "64d7b12112138a42e4a57333d936c9bbe26f05019d9a4334c8f69912f5eeeeeb",
     "ui.cancel": "81582253ea91f6c68117a7f1d11ebf72972d57e723850aaeae8d9a4dafd980e9",
     "ui.confirm": "d0af2c59acde686d55b303d264ee3d2b6a77a8ab98b88a9514cc73d794600f54",
     "ui.error": "b83f757fea84bffd1cbc72d39d2c872957322dd18d2c7e668f78abc07a3ba189",
@@ -217,7 +218,16 @@
     "world.ambience.close_quarters": "72c7ce570338646c346c49c25dbfd94173cf442275d87e8d5e5fd9c06e12f484",
     "world.ambience.king_of_the_hill": "ea75daf9d4c9664f3f7c75551291d1a20fb8986e88f92b4fe6c931ef9ab37282",
     "world.ambience.turbulence": "45051e4b21fa048d96e6834f26f442ff14ca10818b0874a5d4bf392a28248fe5",
-    "world.detail": "3018478d708985e9b2e043ab4c932d3e1691e5459495f64271b32d2518bcb340"
+    "world.detail": "3018478d708985e9b2e043ab4c932d3e1691e5459495f64271b32d2518bcb340",
+    "sub.grenade.throw": "2064b846be298438f4cfbda70d7de877c0d403483848578e784190efd2bf1f54",
+    "sub.sprinkler.throw": "8968e519c313cad0b9b43ef3b94c1d65b4d0ec2815e916e21a54623860dca97c",
+    "sub.wall.set": "64d7b12112138a42e4a57333d936c9bbe26f05019d9a4334c8f69912f5eeeeeb"
+  },
+  "pending_listening_master_sha256": {
+    "umbrella.shot": "c5ed751728d7016da2e20ac1465d4749bd772fb7c884600d48ff7e730a346dd0",
+    "umbrella.open": "3e925795378071505a1fba11fa2d6c3c6ef4404d25673e8b2e11a9d9186941cf",
+    "umbrella.block": "946f3553b824846ee42794c4d1b209b7785d50209a114529b0e6b70dd14c479a",
+    "umbrella.break": "02c76bf4419339ba19ad84a57bb897d4d80b8d4ac3e74f1d8fe769420d84eaa1"
   },
   "music_encoding": {
     "format": "MS-ADPCM",

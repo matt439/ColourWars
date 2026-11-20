@@ -187,6 +187,7 @@ match setup, persistence and replay one vocabulary for named variants:
 | `horizontal_motion_contract.h` | authored horizontal and vertical motion, its heading names and its envelope arithmetic (uses `simulation.h`) |
 | `station_contract.h` | a level's review stations and their lessons |
 | `team_gate_contract.h` | a team gate's authored rules |
+| `paint_fill_region.h` | the faces and collision-array indices of a fill region, resolved from authored names by the [shared loader and editor decoder](../game/config/paint_fill_json.h) |
 | `user_stage_contract.h` | the names a player's own stage file may take, which stage registration also applies |
 | `drawable_text_contract.h` | the characters the fonts draw and the punctuation folded to ASCII, for `drawable_text` and the editor's display-name check |
 | `paint_face_geometry.h`, `paint_polygon_geometry.h` | how paint tiles a face and a polygon, for the runtime tiles and the editor's scoring diagnostics |
@@ -348,8 +349,14 @@ tuning and hand finished objects to the scene. `LevelBuilder` owns a
 `Weapon` owns the `ProjectileBuilder` it fires through. `LevelBuilder` hands
 `Level` four records from
 [level_inputs.h](../game/objects/level_inputs.h): the world it owns (scene,
-players, dividers), the services and live records it borrows, what the stage
+players, dividers and an optional paint fill), the services and live records it borrows, what the stage
 says, and this round's decisions.
+
+For a [fill region](level-format.md#paint-fill), the builder resolves the
+two endpoints to scoring structures owned by the scene. `PaintFill` observes
+changes on the trigger and settles the destination once after ordinary
+contacts each live step. The destination uses its existing tiles and credit
+ledger, so the arena's scoring area stays fixed.
 
 `MatchSetup` carries one `MatchVariant`, selected on Mode and retained across
 series rounds. `PlayerBuilder` passes that policy to each `Player`; Endless

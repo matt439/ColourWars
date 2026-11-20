@@ -5,6 +5,8 @@
 #include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
 #include "game/objects/level_station.h"
+#include "game/contracts/paint_fill_region.h"
+#include <optional>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -45,6 +47,7 @@ public:
 	// True only when the file says "include_in_random": true. A shipped stage
 	// without the key is a Random candidate; a user stage (ROAD#16) must ask.
 	bool asks_for_random() const;
+	const std::optional<PaintFillRegion>& paint_fill() const { return this->paint_fill_; }
 
 	std::vector<labrador::Vector2F> team_a_spawns() const;
 	std::vector<labrador::Vector2F> team_b_spawns() const;
@@ -86,6 +89,7 @@ private:
 	// Checked JSON access reports the source file and key on failure.
 	labrador::JsonDocument json_doc_;
 	std::uint64_t semantic_hash_ = 0;
+	std::optional<PaintFillRegion> paint_fill_;
 
 	// The four bounds rectangles differ only in which key they sit under.
 	labrador::RectangleF bounds_rectangle(const char* bounds_key) const;

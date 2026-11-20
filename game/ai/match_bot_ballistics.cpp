@@ -153,6 +153,17 @@ Vector2F match_bot_ballistics::aim_direction(const WeaponTuning& tool, const Pro
 	return { std::cos(angle), std::sin(angle) };
 }
 
+std::optional<float> match_bot_ballistics::paint_angle(const WeaponTuning& tool,
+	const ProjectileTuning& projectile, Vector2F shooter_velocity, Vector2F target_offset)
+{
+	const Vector2F inherited = inherited_velocity(tool.relative, shooter_velocity);
+	float best = 0.0f;
+	const float angle = best_angle(target_offset.angle(), [&](float candidate)
+		{ return miss_squared(candidate, tool, projectile, inherited, target_offset, {}); }, best);
+	const float tolerance = std::min(projectile.details.col_rect_size.x, projectile.details.col_rect_size.y) * 0.5f;
+	return best <= tolerance * tolerance ? std::optional<float>(angle) : std::nullopt;
+}
+
 std::optional<float> match_bot_ballistics::throw_angle(const SubTuning& sub, Vector2F shooter_velocity,
 	Vector2F target_offset, Vector2F target_velocity, std::optional<float> fixed_angle, float tolerance)
 {

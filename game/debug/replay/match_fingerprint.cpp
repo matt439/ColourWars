@@ -6,6 +6,8 @@
 #include "game/debug/replay/hash.h"
 #include "game/objects/level.h"
 #include "game/objects/horizontal_motion.h"
+#include "game/objects/paint_fill.h"
+#include "game/objects/weapon.h"
 #include <bit>
 #include <cstdio>
 #include <limits>
@@ -184,6 +186,16 @@ MatchFingerprint MatchFingerprint::of(const Level& level, int updates)
             hash = mix(hash, static_cast<std::uint32_t>(seat.support_paint_team));
             hash = mix(hash, static_cast<std::uint32_t>(seat.step_paint_team));
         }
+        const Weapon& tool = player.primary_weapon();
+        if (tool.type() == WeaponType::umbrella)
+        {
+            const WeaponCanopyState canopy = tool.canopy_state();
+            seat.canopy = Canopy{ canopy.open, canopy.hits_left, bits_from_float(canopy.recovery_remaining) };
+            hash = fnv1a("colourwars-umbrella-canopy-1", hash);
+            hash = mix(hash, canopy.open ? 1u : 0u);
+            hash = mix(hash, static_cast<std::uint32_t>(canopy.hits_left));
+            hash = mix(hash, seat.canopy->recovery);
+        }
 		print.seats.push_back(seat);
 	}
 	const LevelEndInfo info = level.level_end_info();
@@ -203,6 +215,26 @@ MatchFingerprint MatchFingerprint::of(const Level& level, int updates)
     // All static/POL#36 hash operations above retain their original order. The
     // Level owns completed-boundary scratch overwrite/consume invariants.
     append_motion(print, level, hash);
+    if (const PaintFill* fill = level.paint_fill())
+    {
+        std::uint64_t state = fnv1a("colourwars-paint-fill-1");
+        state = mix(state, static_cast<std::uint32_t>(fill->last_team()));
+        state = mix(state, static_cast<std::uint32_t>(fill->leader()));
+        state = mix(state, static_cast<std::uint32_t>(fill->pending_owner()));
+        const auto cooldown = std::bit_cast<std::uint64_t>(fill->cooldown_remaining());
+        state = mix(state, static_cast<std::uint32_t>(cooldown));
+        state = mix(state, static_cast<std::uint32_t>(cooldown >> 32));
+        state = mix(state, bits_from_float(fill->trigger_area(PlayerTeam::a)));
+        state = mix(state, bits_from_float(fill->trigger_area(PlayerTeam::b)));
+        for (std::size_t i = 0; i < info.laid_areas.size(); ++i)
+        {
+            state = mix(state, bits_from_float(info.laid_areas[i]));
+            state = mix(state, bits_from_float(info.recaptured_areas[i]));
+        }
+        print.paint_fill_hash = state;
+        hash = mix(hash, static_cast<std::uint32_t>(state));
+        hash = mix(hash, static_cast<std::uint32_t>(state >> 32));
+    }
 	print.hash = hash;
 	return print;
 }
@@ -225,6 +257,13 @@ std::string MatchFingerprint::difference(const MatchFingerprint& expected,
 		const Seat& e = expected.seats[i];
 		const Seat& a = actual.seats[i];
 		const std::string seat = "P" + std::to_string(i + 1) + " ";
+        if (e.canopy.has_value() != a.canopy.has_value()) { return seat + "canopy presence differs"; }
+        if (e.canopy)
+        {
+            if (e.canopy->open != a.canopy->open) { return seat + "canopy open differs"; }
+            if (e.canopy->hits_left != a.canopy->hits_left) { return seat + "canopy hits left differs"; }
+            if (e.canopy->recovery != a.canopy->recovery) { return seat + "canopy recovery differs"; }
+        }
 		const struct { const char* name; std::uint32_t want; std::uint32_t got; } fields[] = {
 			{ "x", e.x, a.x }, { "y", e.y, a.y }, { "vx", e.vx, a.vx }, { "vy", e.vy, a.vy },
 			{ "health", e.health, a.health }, { "ammo", e.ammo, a.ammo },
@@ -270,6 +309,7 @@ std::string MatchFingerprint::difference(const MatchFingerprint& expected,
         if (!difference.empty()) { return difference; }
     }
 
+    if (expected.paint_fill_hash != actual.paint_fill_hash) { return "paint fill state or paint credit differs"; }
 	if (expected.hash != actual.hash)
 	{
 		return "per-slot paint (hash " + hex64(actual.hash) + " != " + hex64(expected.hash) + ")";

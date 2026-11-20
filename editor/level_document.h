@@ -85,6 +85,9 @@ namespace colourwars_editor
         std::optional<PaintPolygon> slab_guide(const Entry& entry,
             const std::optional<Rect>& preview = std::nullopt) const;
         void set_rectangle(const Entry& entry, const Rect& rectangle);
+        // Translate the selected objects, spawns and stations together. Validate
+        // their final positions as one edit, including mover clearances.
+        void move_group(const std::vector<Entry>& entries, double dx, double dy);
         // Align the shape origin (the stored endpoint for fixed slabs) in one
         // validated edit. An already aligned origin preserves undo/redo state.
         void align_origin(const Entry& entry, int grid);

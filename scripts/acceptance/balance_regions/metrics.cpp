@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/balance_regions/metrics.h"
+#include "game/objects/weapon_type.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -50,7 +51,10 @@ namespace balance_regions
             }
         }
         bool concrete_tool(const std::string& tool)
-        { return tool == "sprayer" || tool == "sniper" || tool == "roller" || tool == "mister" || tool == "bucket"; }
+        {
+            const auto type = weapon_from_name(tool);
+            return type && static_cast<std::size_t>(*type) < tuned_weapon_count;
+        }
         struct Owner { int seat = 0; OwnerStatus status = OwnerStatus::neutral; };
         Owner owner_of(const PaintSurfaceSample& sample, const std::vector<RosterSeat>& roster)
         {
@@ -226,11 +230,11 @@ namespace balance_regions
         }
         else if (stage == "turbulence_blockout" || stage == "turbulence_mover_trial" || stage == "turbulence_gate_trial" ||
             stage == "turbulence_ferry_trial" || stage == "turbulence_slab_trial" || stage == "turbulence_lift_trial" ||
-            stage == "turbulence_paint_lift_trial")
+            stage == "turbulence_paint_lift_trial" || stage == "turbulence_fill_trial")
         {
             // Geographic X bands, distinct from the candidate's object-role
             // budget (which keeps high crossover and lower contest separate).
-            // The six trials share the blockout's bounds, so they share its
+            // These trials share the blockout's bounds, so they share its
             // bands; the self-check pins both. The 6200-wide `turbulence`
             // candidate keeps the whole-arena fallback until it has its own.
             result.name = "x_band";

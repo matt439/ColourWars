@@ -29,6 +29,10 @@ public:
 		ProjectileType type,
 		labrador::RenderResources* render_resources) const;
 
+	// One fan member, on its own heading and the pellet's cached strip.
+	std::unique_ptr<Projectile> build_pellet(const labrador::Vector2F& centre,
+		const labrador::Vector2F& velocity, PlayerTeam team, int owner,
+		const labrador::Colour& colour, labrador::RenderResources* resources) const;
 private:
 	const GameTuning* tuning_ = nullptr;
 	std::array<labrador::RenderResources::SheetStrip,

@@ -72,6 +72,7 @@ namespace colourwars_editor
         std::vector<DrawItem> draw_items_;
         std::vector<Property> properties_;
         std::optional<Entry> selection_;
+        std::vector<Entry> group_; // All selected members when two or more are selected.
         int property_index_ = -1;
         bool refreshing_ = false;
         bool show_bounds_ = false;
@@ -119,6 +120,10 @@ namespace colourwars_editor
         bool save_user_stage();
         std::optional<std::filesystem::path> choose_user_stage(const std::filesystem::path& folder);
         void select(const Entry&);
+        void sync_list_selection();
+        void read_list_selection();
+        bool is_selected(const Entry&) const;
+        void toggle_member(const Entry&);
         void set_status(const std::wstring&);
         void error(const std::exception&);
         void paint(HDC, const RECT&);

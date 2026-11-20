@@ -65,8 +65,12 @@ if ($source.canvas_size -ne 32 -or $source.source_texels_per_cell -ne 4) {
 }
 $expected = @('shot_spray','shot_jet','shot_rolling','shot_mist','shot_ball',
     'impact_spray','impact_jet','impact_rolling','impact_mist','impact_ball',
-    'sub_grenade','sub_sprinkler','sub_wall')
+    'sub_grenade','sub_sprinkler','sub_wall','shot_pellet','impact_pellet')
 if (($source.strips.name -join ',') -ne ($expected -join ',')) { throw 'Paint FX strip contract changed.' }
+if (($source.canopy.frames.name -join ',') -ne 'canopy_open,canopy_cracked,canopy_shut') {
+    throw 'Paint FX needs open, cracked and shut canopy frames.'
+}
+$groups = @($source.strips) + @($source.canopy)
 $size = [int]$source.canvas_size
 $scale = [int]$source.source_texels_per_cell
 $frameSize = $size*$scale
@@ -97,17 +101,30 @@ function Draw-Shapes {
 
 $atlas=[Drawing.Bitmap]::new([int]$source.atlas_width,[int]$source.atlas_height,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $strips=[Collections.Generic.List[object]]::new()
+$spriteFrames=[Collections.Generic.List[object]]::new()
 $drawings=[ordered]@{}
 try {
     $row=0
-    foreach($strip in $source.strips){
+    foreach($strip in $groups){
+        $canopy = $strip.name -eq 'canopy'
         $impact=$strip.name.StartsWith('impact_')
         $count=$strip.frames.Count
-        if(($impact -and ($count -ne 5 -or $strip.looping)) -or
-            (-not $impact -and ($count -ne 3 -or -not $strip.looping))){
+        if(-not $canopy -and (($impact -and ($count -ne 5 -or $strip.looping)) -or
+            (-not $impact -and ($count -ne 3 -or -not $strip.looping)))){
             throw "$($strip.name) has an invalid transient/looping frame contract."
         }
+        $x=4
         $y=4+$row*($frameSize+8)
+        if($canopy){
+            # Three static states fit beside the pellet shot without moving
+            # the original strips or enlarging the atlas.
+            $shelf=$strips | Where-Object name -eq 'shot_pellet'
+            $x=$shelf.first_frame.x+$shelf.frame_count*$frameSize+8
+            $y=$shelf.first_frame.y
+        }
+        if($x+$count*$frameSize -gt $atlas.Width -or $y+$frameSize -gt $atlas.Height){
+            throw "$($strip.name) does not fit on the paint FX sheet."
+        }
         $stripDrawings=[Collections.Generic.List[Drawing.Bitmap]]::new()
         for($index=0;$index -lt $count;++$index){
             $frame=$strip.frames[$index]
@@ -144,23 +161,30 @@ try {
                     }
                 }}
             }
-            [ColourWars.PaintFxArt]::Copy($drawing,$atlas,(4+$index*$frameSize),$y,$scale)
+            $frameX=$x+$index*$frameSize
+            [ColourWars.PaintFxArt]::Copy($drawing,$atlas,$frameX,$y,$scale)
+            if($canopy){
+                $spriteFrames.Add([ordered]@{name=$frame.name;position=[ordered]@{x=$frameX;y=$y};
+                    size=[ordered]@{w=$frameSize;h=$frameSize}})
+            }
             $stripDrawings.Add($drawing)
         }
         $drawings.Add($strip.name,$stripDrawings)
-        $strips.Add([ordered]@{name=$strip.name;first_frame=[ordered]@{x=4;y=$y;w=$frameSize;h=$frameSize};
-            frame_count=$count;frame_time=$strip.frame_time;looping=$strip.looping})
+        if(-not $canopy){
+            $strips.Add([ordered]@{name=$strip.name;first_frame=[ordered]@{x=$x;y=$y;w=$frameSize;h=$frameSize};
+                frame_count=$count;frame_time=$strip.frame_time;looping=$strip.looping})
+        }
         ++$row
     }
     [ColourWars.PaintFxArt]::SavePng($atlas,(Join-Path $working 'paint_fx.png'))
-    $definition=[ordered]@{animation_strips=$strips.ToArray();sprite_frames=@()}
+    $definition=[ordered]@{animation_strips=$strips.ToArray();sprite_frames=$spriteFrames.ToArray()}
     [IO.File]::WriteAllText((Join-Path $textures 'paint_fx.json'),
         (($definition|ConvertTo-Json -Depth 6)+[Environment]::NewLine),[Text.UTF8Encoding]::new($false))
 
     $tuning=Get-Content -Raw (Join-Path $repo 'game/content/tuning.json')|ConvertFrom-Json
     $presentation=Get-Content -Raw (Join-Path $repo 'game/content/presentation.json')|ConvertFrom-Json
     $reviewScale=720.0/$presentation.camera.reference_height
-    $preview=[Drawing.Bitmap]::new(1440,1880,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $preview=[Drawing.Bitmap]::new(1440,(86+$groups.Count*138),[Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g=[Drawing.Graphics]::FromImage($preview)
     $font=[Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace,10)
     $small=[Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace,8)
@@ -174,7 +198,7 @@ try {
         $g.DrawString('Left: authored cells at 3x. Right: actual 720p scale, unchanged shot sizes; impact = thickness x splash_scale.',$small,$ink,12,34)
         $palettes=[ordered]@{blue='0634CC';orange='FF7F00';pink='FF007F';green='00FF00';yellow='FFFF00'}
         $row=0
-        foreach($strip in $source.strips){
+        foreach($strip in $groups){
             $top=66+$row*138
             $g.DrawString($strip.name,$font,$ink,12,$top)
             $frame=0
@@ -191,8 +215,12 @@ try {
             # cell stretches to its taller body at runtime.
             $worldSize=if($strip.name.StartsWith('shot_')){[double]$tuning.projectiles.$kind.size.x}
                 elseif($strip.name.StartsWith('sub_')){[double]$tuning.subs.$kind.body.size.x}
+                elseif($strip.name -eq 'canopy'){[double]$tuning.weapons.umbrella.canopy.size.x}
                 else{[double]$tuning.paint.thickness*[double]$tuning.paint.visual.splash_scale}
             $pixelSize=[Math]::Max(1,[int][Math]::Round($worldSize*$reviewScale))
+            $pixelHeight=if($strip.name -eq 'canopy'){
+                [Math]::Max(1,[int][Math]::Round($tuning.weapons.umbrella.canopy.size.y*$reviewScale))
+            }else{$pixelSize}
             $col=0
             foreach($entry in $palettes.GetEnumerator()){
                 $x=532+$col*178
@@ -205,8 +233,8 @@ try {
                     $sample=[ColourWars.PaintFxArt]::Tint($drawing,[Drawing.ColorTranslator]::FromHtml('#'+$entry.Value))
                     try{
                         $sampleX=if($pixelSize -gt 48){$x+4+47*$frame}else{$x+7+32*$frame}
-                        $sampleY=if($pixelSize -gt 48){$top+28+10*($frame%2)}else{$top+72-[int]($pixelSize/2)}
-                        $g.DrawImage($sample,[Drawing.Rectangle]::new($sampleX,$sampleY,$pixelSize,$pixelSize))
+                        $sampleY=if($pixelSize -gt 48){$top+28+10*($frame%2)}else{$top+72-[int]($pixelHeight/2)}
+                        $g.DrawImage($sample,[Drawing.Rectangle]::new($sampleX,$sampleY,$pixelSize,$pixelHeight))
                     } finally {$sample.Dispose()}
                     ++$frame
                 }
@@ -227,4 +255,4 @@ try {
 Copy-Item -LiteralPath (Join-Path $working 'paint_fx.png') -Destination (Join-Path $textures 'paint_fx.png') -Force
 $staleDds = Join-Path $textures 'paint_fx.dds'
 if (Test-Path -LiteralPath $staleDds) { Remove-Item -LiteralPath $staleDds }
-Write-Output 'Built five looping shots, five liquid impact strips, three sub bodies, runtime PNG and 720p team-colour lineup.'
+Write-Output 'Built six looping shots and impact strips, three sub bodies, three umbrella canopy states, runtime PNG and 720p lineup.'

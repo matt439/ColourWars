@@ -194,7 +194,9 @@ namespace ColourWars
                 throw new InvalidOperationException("Editor controls missing");
             // Entry order is level, four bounds, then team A spawns. Select
             // the first spawn through the same notification as a list click.
-            Send(list, 0x0186, new IntPtr(5), IntPtr.Zero); // LB_SETCURSEL
+            Send(list, 0x0185, IntPtr.Zero, new IntPtr(-1)); // LB_SETSEL: clear all
+            Send(list, 0x0185, new IntPtr(1), new IntPtr(5)); // select the spawn
+            Send(list, 0x019E, new IntPtr(5), IntPtr.Zero); // LB_SETCARETINDEX
             Send(window, 0x0111, new IntPtr(GetDlgCtrlID(list) | (1 << 16)), list);
             // Toggle Blockout aids off/on (the latter reloads source tuning), then frame it.
             MenuCommand(window, blockout);

@@ -37,7 +37,7 @@ protected:
 	// planted subs strike its volume after contacts, not here.
 	void resolve_travel(std::span<labrador::CollisionObject* const> objects,
 		std::optional<ProjectileTargetFlags> known,
-		std::span<Projectile* const> breakables) override;
+		ProjectileBreakables breakables) override;
 	// Enemies between owner and muzzle belong to its ordinary contacts.
 	bool launch_hits_players() const override { return false; }
 	// Touching bare geometry leaves it active to reach exposed paint.

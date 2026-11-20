@@ -313,13 +313,15 @@
       "movement_course": "Movement Course",
       "crossfeed": "Crossfeed",
       "press_tower": "Press Tower",
+      "sluice_works": "Sluice Works",
       "turbulence_blockout": "Turbulence Yard",
       "turbulence_mover_trial": "Turbulence Yard - Mover Trial",
       "turbulence_slab_trial": "Slab Yard",
       "turbulence_ferry_trial": "Turbulence Yard - Ferry Trial",
       "turbulence_gate_trial": "Turbulence Yard - Gate Trial",
       "turbulence_lift_trial": "Turbulence Yard - Lift Trial",
-      "turbulence_paint_lift_trial": "Turbulence Yard - Paint Lift Trial"
+      "turbulence_paint_lift_trial": "Turbulence Yard - Paint Lift Trial",
+      "turbulence_fill_trial": "Turbulence Yard - Fill Trial"
     },
     "records": {
       "new_best": "NEW BEST {percentage}",
@@ -595,6 +597,7 @@
         "roller": { "name": "Roller", "frame": "roller", "paint_frame": "roller_paint", "supply_strip": "" },
         "mister": { "name": "Mister", "frame": "mister", "paint_frame": "mister_paint", "supply_strip": "mister_supply" },
         "bucket": { "name": "Bucket", "frame": "bucket", "paint_frame": "bucket_paint", "supply_strip": "" },
+        "umbrella": { "name": "Umbrella", "frame": "umbrella", "paint_frame": "umbrella_paint", "supply_strip": "" },
         "random": { "name": "Random", "frame": "random", "paint_frame": "", "supply_strip": "" }
       }
     },
@@ -641,6 +644,7 @@
       "roller": "Rolls paint in a wide area in front of you.\nCan be used to cover large floor areas quickly.",
       "mister": "Produces a mist of slow-moving, diffusing paint particles.",
       "bucket": "Throws a bucket of paint in a short arc pattern.\nIdeal for defeating other players.",
+      "umbrella": "Fires a short fan of paint pellets.\nHold Shoot to block incoming shots with the canopy.",
       "random": "Randomly selects a weapon for you.\nIndecisiveness is nothing to be ashamed of."
     }
   },
@@ -960,7 +964,8 @@
     "tools": {
       "sprayer": { "interval_min": 2.8, "interval_max": 6.2, "size": 6, "stretch": 5, "nozzle_inset": 8.5, "nozzle_underside": 3 },
       "sniper": { "interval_min": 4.2, "interval_max": 8.4, "size": 4, "stretch": 3, "nozzle_inset": 11, "nozzle_underside": 3 },
-      "bucket": { "interval_min": 4.8, "interval_max": 9.6, "size": 5, "stretch": 4, "nozzle_inset": 64, "nozzle_underside": 8 }
+      "bucket": { "interval_min": 4.8, "interval_max": 9.6, "size": 5, "stretch": 4, "nozzle_inset": 64, "nozzle_underside": 8 },
+      "umbrella": { "interval_min": 4.0, "interval_max": 8.0, "size": 4, "stretch": 3, "nozzle_inset": 9, "nozzle_underside": 2 }
     }
   },
   "gate_permission": {
@@ -979,6 +984,12 @@
     "gap": 8,
     "keyline_width": 3,
     "lift_width": 144
+  },
+  "paint_fill": {
+    "ink": "17171C",
+    "paper": "FFFFFF",
+    "mark_size": 32,
+    "sweep_seconds": 0.55
   },
   "weapon_feedback": {
     "_comment": "Cosmetic shot/supply pulses and optional local aim/readiness marker. The marker shows direction, not a predicted hit; the roller keeps its contact effect and has no marker.",
@@ -1001,7 +1012,8 @@
       "sniper": { "x": 26, "y": 10 },
       "roller": { "x": 12, "y": 8 },
       "mister": { "x": 20, "y": 18 },
-      "bucket": { "x": 20, "y": 16 }
+      "bucket": { "x": 20, "y": 16 },
+      "umbrella": { "x": 16, "y": 10 }
     },
     "low_paint": {
       "_comment": "POL#38: a keylined tank beside the status slot while the tool is low; its team-colour fill shows paint left down to empty. World units; offset is from the status slot and clears the owner's identity badge. Blinks to dim_alpha, steady under Reduce effects.",
@@ -1039,7 +1051,8 @@
       "sniper": { "shot_recovery": 1.05, "valve_time": 0.16 },
       "roller": { "shot_recovery": 0.12, "valve_time": 0.10 },
       "mister": { "shot_recovery": 0.16, "valve_time": 0.09 },
-      "bucket": { "shot_recovery": 0.42, "valve_time": 0.12 }
+      "bucket": { "shot_recovery": 0.42, "valve_time": 0.12 },
+      "umbrella": { "shot_recovery": 0.32, "valve_time": 0.10 }
     },
     "roller_travel_per_turn": 84,
     "roller_lift_time": 0.12,
@@ -1100,7 +1113,8 @@
       "sniper": { "rear": { "x": 8.0, "y": 8.0 }, "front": { "x": 32.0, "y": 4.0 } },
       "roller": { "rear": { "x": 0.0, "y": 0.0 }, "front": { "x": 16.0, "y": 0.0 } },
       "mister": { "rear": { "x": 0.0, "y": 8.0 }, "front": { "x": 18.0, "y": 4.0 } },
-      "bucket": { "rear": { "x": 0.0, "y": -8.0 }, "front": { "x": 16.0, "y": -8.0 } }
+      "bucket": { "rear": { "x": 0.0, "y": -8.0 }, "front": { "x": 16.0, "y": -8.0 } },
+      "umbrella": { "rear": { "x": 0.0, "y": 3.0 }, "front": { "x": 21.0, "y": 3.0 } }
     },
     "slips": {
       "_comment": [

@@ -19,6 +19,7 @@ int wmain(int argc, wchar_t* argv[])
         require(fs::is_directory(scratch), "Acceptance scratch directory must already exist");
         check_empty_property_keys(scratch);
         check_alignment(repo, scratch);
+        check_sluice_group_move(repo, scratch);
         check_shipped_levels(repo, scratch);
         check_format_versions(scratch);
         check_format_limits(scratch);
@@ -33,6 +34,7 @@ int wmain(int argc, wchar_t* argv[])
         check_motion(repo, scratch);
         check_paint_drive(repo, scratch);
         check_team_gate(repo, scratch);
+        check_paint_fill(repo, scratch);
         check_stations(repo, scratch);
         check_station_editing(repo, scratch);
         check_mirror_copy(repo, scratch);

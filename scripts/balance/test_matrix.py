@@ -25,6 +25,19 @@ class FakeProcess:
     def terminate(self): raise AssertionError('completed fake must not be killed')
 
 class MatrixTests(unittest.TestCase):
+    def test_schema_1_default_and_explicit_sixth_tool(self):
+        historical = design()
+        del historical['Tools']
+        historical_jobs, _ = matrix.design_jobs(historical)
+        self.assertEqual(len(historical_jobs), 25)
+        self.assertFalse(any('umbrella' in job['tools'] for job in historical_jobs))
+
+        focused = design()
+        focused['Tools'] = ['umbrella', 'sniper']
+        jobs, _ = matrix.design_jobs(focused)
+        self.assertEqual({tuple(job['tools']) for job in jobs}, {
+            ('umbrella', 'sniper'), ('sniper', 'umbrella'), ('umbrella', 'umbrella'), ('sniper', 'sniper')})
+
     def test_cartesian_consecutive_seeds_and_side_swaps(self):
         jobs,_=matrix.design_jobs(design())
         self.assertEqual(len(jobs),4)

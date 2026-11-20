@@ -204,6 +204,12 @@ struct PaintRunoffTuning
 	float highlight = 0.0f;
 };
 
+struct PaintFillTuning
+{
+	float open_share = 0.0f;
+	float cooldown = 0.0f;
+};
+
 // Paint coverage granularity, thickness, visuals and sound.
 // Tile lengths affect scoring precision, so geometry belongs with balance data.
 struct PaintTuning
@@ -232,6 +238,7 @@ struct PaintTuning
 	// A team gate opens only for the team holding more of its paint and at
 	// least this share of its paintable area (game/contracts/team_gate_contract.h).
 	float gate_open_share = 0.0f;
+	PaintFillTuning fill;
 
 	std::string sound_bank;
 	std::vector<SoundTuning> splash_sounds;
@@ -348,12 +355,33 @@ struct LowPaintTuning
 	float rearm_fraction = 0.0f;
 };
 
+struct CanopyTuning
+{
+    static constexpr int max_hits = 100;
+	labrador::Vector2F size{};
+	std::string sheet;
+	std::string open_frame;
+	std::string cracked_frame;
+	std::string shut_frame;
+	float reach = 0.0f;
+	int hits = 0;
+	float recover = 0.0f;
+	SoundTuning open_sound;
+	SoundTuning block_sound;
+	SoundTuning break_sound;
+};
+
 struct WeaponTuning
 {
 	WeaponDetails details;
 
 	// Roller's downward tilt from horizontal, in radians. Facing left mirrors it.
 	float aim_tilt = 0.0f;
+
+	// Umbrella's paid fan (full angle, radians) and held canopy.
+	int pellets = 0;
+	float spread = 0.0f;
+	CanopyTuning canopy;
 
 	// Defaults apply when a weapon does not inherit the player's velocity.
 	RelativeWeaponDetails relative;

@@ -60,7 +60,7 @@ namespace colourwars_editor
         const int property_index = editor.property_index_;
         const auto selected_property = property_path();
         const int property_row = ListView_GetNextItem(editor.property_list_, -1, LVNI_SELECTED);
-        const LRESULT object_row = SendMessageW(editor.object_list_, LB_GETCURSEL, 0, 0);
+        const LRESULT object_row = SendMessageW(editor.object_list_, LB_GETCARETINDEX, 0, 0);
         const std::wstring text = window_text(editor.value_edit_), status = window_text(editor.status_);
         const std::wstring title = window_text(editor.window_);
         DWORD text_start = 0, text_end = 0;
@@ -118,7 +118,9 @@ namespace colourwars_editor
                     native_history(editor.document_) == history,
                 editor.selection_.has_value() == selection.has_value() &&
                     (!selection || (same_entry(*editor.selection_, *selection) && editor.selection_->label == selection->label)) &&
-                    SendMessageW(editor.object_list_, LB_GETCURSEL, 0, 0) == object_row,
+                    SendMessageW(editor.object_list_, LB_GETCARETINDEX, 0, 0) == object_row &&
+                    SendMessageW(editor.object_list_, LB_GETSELCOUNT, 0, 0) == 1 &&
+                    SendMessageW(editor.object_list_, LB_GETSEL, object_row, 0) == 1,
                 editor.property_index_ == property_index && property_path() == selected_property &&
                     ListView_GetNextItem(editor.property_list_, -1, LVNI_SELECTED) == property_row &&
                     window_text(editor.value_edit_) == text && start == text_start && end == text_end &&

@@ -55,6 +55,7 @@ struct MatchBotObservation
 	bool shot_empty = false;
 	float engage_distance = 0.0f;
 	WeaponType weapon = WeaponType::sprayer;
+	bool canopy_broken = false;
 	// The sub it carries and whether a Sub press now would throw it (ROAD#11).
 	std::optional<SubType> sub;
 	bool sub_ready = false;
@@ -62,6 +63,8 @@ struct MatchBotObservation
 	// Visible enemy sprinklers' centres: shot at in this tool's reach while no
 	// enemy is engaged, never pursued (REV#21).
 	std::vector<labrador::Vector2F> enemy_sprinklers;
+	// In-range visible fill trigger tiles, nearest first. Aim only.
+	std::vector<labrador::Vector2F> fill_triggers;
 	// Sampled visible non-team scoring tiles, refreshed only for a replan.
 	std::vector<labrador::Vector2F> territory;
 	// Non-team paint beyond a permitted gate: useful route destinations, but
@@ -172,7 +175,7 @@ private:
 	labrador::Vector2F off_enemy_center_;
 
 	float random_unit();
-	void decide(const MatchBotObservation& view);
+	void decide(const MatchBotObservation& view, const MatchBotObservation::Enemy* canopy_threat);
 	void choose_territory(const MatchBotObservation& view);
 	bool standing_goal(const MatchBotObservation& view, labrador::Vector2F aim,
 		labrador::Vector2F& standing) const;

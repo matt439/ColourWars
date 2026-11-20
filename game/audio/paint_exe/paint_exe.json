@@ -105,7 +105,11 @@
     "world.ambience.close_quarters",
     "world.ambience.king_of_the_hill",
     "world.ambience.turbulence",
-    "world.detail"
+    "world.detail",
+    "umbrella.block",
+    "umbrella.break",
+    "umbrella.open",
+    "umbrella.shot"
   ],
   "create_effect_instance_for_each_wave": false,
   "sound_effect_instances": []

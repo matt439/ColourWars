@@ -414,6 +414,18 @@ namespace presentation_read
 
 	}
 
+	PaintFillPresentation read_paint_fill(const JsonValue& root)
+	{
+		const JsonValue json = root.object("paint_fill");
+		PaintFillPresentation cue;
+		cue.ink = read_colour(json, "ink");
+		cue.paper = read_colour(json, "paper");
+		cue.mark_size = read_positive(json, "mark_size");
+		cue.sweep_seconds = read_positive(json, "sweep_seconds");
+		check_plaque(json, cue.ink, cue.paper, { cue.mark_size, cue.mark_size }, cue.mark_size / 9.0f);
+		return cue;
+	}
+
 	std::array<IdleDripPresentation, tuned_weapon_count> read_idle_drips(const JsonValue& root)
 	{
 		const JsonValue json = root.object("idle_drip");
@@ -434,7 +446,7 @@ namespace presentation_read
 			tool.enabled = false;
 		}
 		const JsonValue profiles = json.object("tools");
-		const auto read_tool = [&](WeaponType type)
+		for (const WeaponType type : idle_drip_tools)
 		{
 			const JsonValue profile = profiles.object(weapon_name(type));
 			IdleDripPresentation& tool = tools.at(static_cast<size_t>(type));
@@ -451,10 +463,7 @@ namespace presentation_read
 				throw std::runtime_error(profile.where() +
 					": intervals must be ordered and keylines must leave visible paint.");
 			}
-		};
-		read_tool(WeaponType::sprayer);
-		read_tool(WeaponType::sniper);
-		read_tool(WeaponType::bucket);
+		}
 		return tools;
 	}
 

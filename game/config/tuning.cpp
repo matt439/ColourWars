@@ -355,7 +355,7 @@ namespace
 	PaintTuning read_paint(const JsonValue& root)
 	{
 		const JsonValue json = known_object(root, "paint", { "size", "thickness", "sheet",
-			"frame", "splash", "visual", "gate", "sound_bank", "splash_sounds",
+			"frame", "splash", "visual", "gate", "fill", "sound_bank", "splash_sounds",
 			"capture_sound", "dud_sound", "impact_sounds", "min_impact_interval",
 			"min_capture_interval" });
 
@@ -432,6 +432,9 @@ namespace
 		}
 
 		paint.gate_open_share = read_unit(known_object(json, "gate", { "open_share" }), "open_share");
+		const JsonValue fill = known_object(json, "fill", { "open_share", "cooldown" });
+		paint.fill.open_share = read_unit(fill, "open_share");
+		paint.fill.cooldown = read_positive(fill, "cooldown");
 
 		paint.sound_bank = json.string("sound_bank");
 		const JsonValue choices = json.array("splash_sounds");
@@ -695,7 +698,7 @@ namespace
 		return sounds;
 	}
 
-	// Each weapon's own keys, not a union of all five: a field its class does
+	// Each weapon's own keys, so a field its class does
 	// not act on is a mistake in that weapon's block. The held-fire tools
 	// (sprayer, roller, mister) loop, so they take loop_sounds and a stop cue;
 	// the one-shot tools (sniper, bucket) override the firing sound and wait
@@ -738,6 +741,9 @@ namespace
 			add(keys.weapon, { "add_player_velocity", "player_velocity_amount" });
 			add(keys.feedback, { "ready" });
 			break;
+		case WeaponType::umbrella:
+			add(keys.weapon, { "add_player_velocity", "player_velocity_amount", "pellets", "spread", "canopy" });
+			break;
 		default:
 			throw std::logic_error("weapon " + std::to_string(static_cast<int>(type)) +
 				" has no key list in tuning.cpp");
@@ -765,6 +771,32 @@ namespace
 		details.frame_name = json.string("frame");
 		details.proj_type = read_projectile_type(json, "projectile");
 		details.sound_bank_name = json.string("sound_bank");
+		if (type == WeaponType::umbrella)
+		{
+			if (details.proj_type != ProjectileType::pellet)
+				throw std::runtime_error(json.where() + ": umbrella 'projectile' must be 'pellet'.");
+			weapon.pellets = json.integer("pellets");
+			if (weapon.pellets < 1 || weapon.pellets > 32)
+				throw std::runtime_error(json.where() + ": 'pellets' must be from 1 to 32.");
+			weapon.spread = read_number_in(json, "spread", 0.0f, pi);
+			const JsonValue canopy = known_object(json, "canopy",
+				{ "size", "reach", "hits", "recover", "sheet", "open_frame", "cracked_frame", "shut_frame",
+					"open_sound", "block_sound", "break_sound" });
+			weapon.canopy.size = read_positive_xy(canopy, "size");
+			weapon.canopy.sheet = canopy.string("sheet");
+			weapon.canopy.open_frame = canopy.string("open_frame");
+			weapon.canopy.cracked_frame = canopy.string("cracked_frame");
+			weapon.canopy.shut_frame = canopy.string("shut_frame");
+			weapon.canopy.reach = read_positive(canopy, "reach");
+			weapon.canopy.hits = canopy.integer("hits");
+			if (weapon.canopy.hits < 1 || weapon.canopy.hits > CanopyTuning::max_hits)
+				throw std::runtime_error(canopy.where() + ": 'hits' must be from 1 to " +
+					std::to_string(CanopyTuning::max_hits) + ".");
+			weapon.canopy.recover = read_positive(canopy, "recover");
+			weapon.canopy.open_sound = read_sound(canopy, "open_sound");
+			weapon.canopy.block_sound = read_sound(canopy, "block_sound");
+			weapon.canopy.break_sound = read_sound(canopy, "break_sound");
+		}
 		if (type == WeaponType::roller)
 		{
 			weapon.aim_tilt = read_number_in(json, "aim_tilt", 0.0f, pi_over_2);

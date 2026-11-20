@@ -111,8 +111,7 @@ namespace
 
     void check_readiness(World& world)
     {
-        for (const auto type : { WeaponType::sprayer, WeaponType::sniper,
-            WeaponType::roller, WeaponType::mister, WeaponType::bucket })
+        for_each_tuned_weapon([&](WeaponType type, const char*)
         {
             ProbeWeapon weapon(&world.tuning, PlayerTeam::a, 3, 0, Colour::white,
                 type, Vector2F::zero, &world.render, &world.audio, &world.preferences);
@@ -154,8 +153,8 @@ namespace
                         "Insufficient paint did not take precedence over cooldown or refused shot spent paint");
                 }
             }
-        }
-        std::cout << "PASS aim marker: five real weapon gates, exact/adjacent affordability, strict cooldown, empty precedence and released fire\n";
+        });
+        std::cout << "PASS aim marker: all primary weapon gates, exact/adjacent affordability, strict cooldown, empty precedence and released fire\n";
     }
 
     void check_bounds(World& world)

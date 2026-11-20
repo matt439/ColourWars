@@ -1,0 +1,621 @@
+{
+    "format": 1,
+    "display_name": "Sluice Works",
+    "include_in_random": true,
+    "icon_frame": "stage_turbulence",
+    "sound": {
+        "sound_bank_name": "paint_exe",
+        "music_name": "music.turbulence",
+        "music_volume": 0.65,
+        "end_sting_name": "music.end_sting.turbulence",
+        "end_sting_volume": 0.65
+    },
+    "spawn_locations": {
+        "team_a": [
+            {
+                "x": 30,
+                "y": 1000
+            },
+            {
+                "x": 150,
+                "y": 1000
+            },
+            {
+                "x": 270,
+                "y": 1000
+            },
+            {
+                "x": 390,
+                "y": 1000
+            }
+        ],
+        "team_b": [
+            {
+                "x": 3518,
+                "y": 1000
+            },
+            {
+                "x": 3398,
+                "y": 1000
+            },
+            {
+                "x": 3278,
+                "y": 1000
+            },
+            {
+                "x": 3158,
+                "y": 1000
+            }
+        ]
+    },
+    "stations": [
+        {
+            "name": "loading_dock_a",
+            "x": 294,
+            "y": 1000
+        },
+        {
+            "name": "loading_dock_b",
+            "x": 3254,
+            "y": 1000
+        },
+        {
+            "name": "gauge_step_a",
+            "x": 854,
+            "y": 920
+        },
+        {
+            "name": "gauge_step_b",
+            "x": 2694,
+            "y": 920
+        },
+        {
+            "name": "inspection_landing_a",
+            "x": 1234,
+            "y": 840
+        },
+        {
+            "name": "inspection_landing_b",
+            "x": 2314,
+            "y": 840
+        },
+        {
+            "name": "gate_approach_a",
+            "x": 1500,
+            "y": 1160
+        },
+        {
+            "name": "gate_approach_b",
+            "x": 2048,
+            "y": 1160
+        },
+        {
+            "name": "bridge_centre",
+            "x": 1774,
+            "y": 800
+        }
+    ],
+    "level_bounds": {
+        "out_of_bounds": {
+            "x": -100,
+            "y": -100,
+            "width": 3800,
+            "height": 1900
+        },
+        "camera_bounds": {
+            "x": 0,
+            "y": 380,
+            "width": 3600,
+            "height": 1000
+        },
+        "zoom_out_start_bounds": {
+            "x": 0,
+            "y": 380,
+            "width": 1920,
+            "height": 1080
+        },
+        "zoom_out_finish_bounds": {
+            "x": 0,
+            "y": 380,
+            "width": 3600,
+            "height": 1000
+        }
+    },
+    "collision_objects": [
+        {
+            "name": "boundary_wall_left",
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": -80,
+                "y": 0,
+                "width": 80,
+                "height": 1680
+            },
+            "collision_type": "STRUCTURE",
+            "material": "ground"
+        },
+        {
+            "name": "boundary_wall_right",
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 3600,
+                "y": 0,
+                "width": 80,
+                "height": 1680
+            },
+            "collision_type": "STRUCTURE",
+            "material": "ground"
+        },
+        {
+            "name": "channel_floor",
+            "type": "StructurePaintable",
+            "material": "ground",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 0,
+                "y": 1280,
+                "width": 3600,
+                "height": 400
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": false,
+                "left": false,
+                "right": false
+            }
+        },
+        {
+            "name": "loading_dock_a",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 0,
+                "y": 1120,
+                "width": 640,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "paintable_faces": {
+                "left": false,
+                "top": true,
+                "right": false,
+                "bottom": false
+            },
+            "material": "ruler"
+        },
+        {
+            "name": "loading_dock_b",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 2960,
+                "y": 1120,
+                "width": 640,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "paintable_faces": {
+                "left": false,
+                "top": true,
+                "right": false,
+                "bottom": false
+            },
+            "material": "ruler"
+        },
+        {
+            "name": "gauge_step_a",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 720,
+                "y": 1040,
+                "width": 320,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "paintable_faces": {
+                "left": false,
+                "top": true,
+                "right": false,
+                "bottom": false
+            },
+            "material": "ruler"
+        },
+        {
+            "name": "gauge_step_b",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 2560,
+                "y": 1040,
+                "width": 320,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "paintable_faces": {
+                "left": false,
+                "top": true,
+                "right": false,
+                "bottom": false
+            },
+            "material": "ruler"
+        },
+        {
+            "name": "inspection_landing_a",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 1120,
+                "y": 960,
+                "width": 280,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "paintable_faces": {
+                "left": false,
+                "top": true,
+                "right": false,
+                "bottom": false
+            },
+            "material": "ruler"
+        },
+        {
+            "name": "inspection_landing_b",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 2200,
+                "y": 960,
+                "width": 280,
+                "height": 10
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "paintable_faces": {
+                "left": false,
+                "top": true,
+                "right": false,
+                "bottom": false
+            },
+            "material": "ruler"
+        },
+        {
+            "name": "inspection_bridge",
+            "type": "StructurePaintable",
+            "material": "paint_tin",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1440,
+                "y": 920,
+                "width": 720,
+                "height": 80
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "top": true,
+                "bottom": true,
+                "left": true,
+                "right": true
+            }
+        },
+        {
+            "name": "sluice_gate",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "colour": "WHITE",
+            "rectangle": {
+                "x": 1760,
+                "y": 1000,
+                "width": 80,
+                "height": 280
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "material": "eraser",
+            "paintable_faces": {
+                "left": true,
+                "top": false,
+                "right": true,
+                "bottom": false
+            },
+            "gate": "paint"
+        }
+    ],
+    "non_collision_objects": [
+        {
+            "name": "pump_hall_wall",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_bg_far",
+            "rectangle": {
+                "x": 0,
+                "y": 380,
+                "width": 3600,
+                "height": 1000
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "clerestory",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "swatch_paper",
+            "rectangle": {
+                "x": 0,
+                "y": 380,
+                "width": 3600,
+                "height": 84
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_bay_1",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_roof_bay",
+            "rectangle": {
+                "x": 0,
+                "y": 380,
+                "width": 600,
+                "height": 96
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_bay_2",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_roof_bay",
+            "rectangle": {
+                "x": 600,
+                "y": 380,
+                "width": 600,
+                "height": 96
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_bay_3",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_roof_bay",
+            "rectangle": {
+                "x": 1200,
+                "y": 380,
+                "width": 600,
+                "height": 96
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_bay_4",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_roof_bay",
+            "rectangle": {
+                "x": 1800,
+                "y": 380,
+                "width": 600,
+                "height": 96
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_bay_5",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_roof_bay",
+            "rectangle": {
+                "x": 2400,
+                "y": 380,
+                "width": 600,
+                "height": 96
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "roof_bay_6",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_roof_bay",
+            "rectangle": {
+                "x": 3000,
+                "y": 380,
+                "width": 600,
+                "height": 96
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "intake_window_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_window",
+            "rectangle": {
+                "x": 200,
+                "y": 540,
+                "width": 256,
+                "height": 160
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "header_pipes_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_pipes",
+            "rectangle": {
+                "x": 624,
+                "y": 540,
+                "width": 640,
+                "height": 192
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "pressure_vessel_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_tank",
+            "rectangle": {
+                "x": 1152,
+                "y": 640,
+                "width": 256,
+                "height": 320
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "gauge_trestle_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_trestle",
+            "rectangle": {
+                "x": 808,
+                "y": 1040,
+                "width": 144,
+                "height": 320
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "dock_door_a",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_door",
+            "rectangle": {
+                "x": 64,
+                "y": 720,
+                "width": 384,
+                "height": 400
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "intake_window_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_window",
+            "rectangle": {
+                "x": 3144,
+                "y": 540,
+                "width": 256,
+                "height": 160
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "header_pipes_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_pipes",
+            "rectangle": {
+                "x": 2336,
+                "y": 540,
+                "width": 640,
+                "height": 192
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "pressure_vessel_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_tank",
+            "rectangle": {
+                "x": 2192,
+                "y": 640,
+                "width": 256,
+                "height": 320
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "gauge_trestle_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_trestle",
+            "rectangle": {
+                "x": 2648,
+                "y": 1040,
+                "width": 144,
+                "height": 320
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "dock_door_b",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cq_door",
+            "rectangle": {
+                "x": 3152,
+                "y": 720,
+                "width": 384,
+                "height": 400
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "valve_hoist",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "press_hook",
+            "rectangle": {
+                "x": 1752,
+                "y": 464,
+                "width": 96,
+                "height": 288
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "brush_pot",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "brush_pot",
+            "rectangle": {
+                "x": 400,
+                "y": 804,
+                "width": 256,
+                "height": 320
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "tape_roll",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "tape_roll",
+            "rectangle": {
+                "x": 2980,
+                "y": 964,
+                "width": 256,
+                "height": 160
+            },
+            "colour": "WHITE"
+        }
+    ]
+}

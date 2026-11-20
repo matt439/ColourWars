@@ -22,7 +22,8 @@ namespace
     const float dt = simulation::seconds_per_step;
 
     constexpr WeaponType tools[] = { WeaponType::sprayer, WeaponType::sniper,
-        WeaponType::roller, WeaponType::mister, WeaponType::bucket };
+        WeaponType::roller, WeaponType::mister, WeaponType::bucket, WeaponType::umbrella };
+    static_assert(std::size(tools) == tuned_weapon_count);
 
     auto observation(const Weapon& weapon)
     {
@@ -125,7 +126,7 @@ namespace
                 weapon->ammo() == world.tuning.starting_ammo() && weapon->visual_pose() == 0,
                 "Tool reset did not settle idempotently into its idle pose");
         }
-        std::cout << "PASS tool motion: frozen deltas and idempotent reset for all five tools\n";
+        std::cout << "PASS tool motion: frozen deltas and idempotent reset for all primaries\n";
     }
 
     void check_paid_shot_edges(World& world)
@@ -247,7 +248,7 @@ namespace
             }
             require(changed && shots > 0, "Cosmetic equivalence sequence did not exercise motion and firing");
         }
-        std::cout << "PASS tool motion: enabled/disabled cosmetics preserve five tools' ammo, cadence, muzzle and projectile travel\n";
+        std::cout << "PASS tool motion: enabled/disabled cosmetics preserve every primary's ammo, cadence, muzzle and projectile travel\n";
     }
 
     // The same movement -> weapon -> resolve -> end_contacts ordering as Level.

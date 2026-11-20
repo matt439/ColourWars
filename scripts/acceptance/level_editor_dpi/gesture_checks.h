@@ -22,15 +22,18 @@ namespace colourwars_editor
                 require(GetKeyboardState(original_.data()) != 0, "Could not retain the probe thread's key state");
             }
             ~GestureKeyboardState() { SetKeyboardState(original_.data()); }
-            void shift(bool pressed)
+            void modifiers(bool shift, bool control)
             {
                 auto state = original_;
-                state[VK_SHIFT] = state[VK_LSHIFT] = static_cast<BYTE>(pressed ? 0x80 : 0);
-                state[VK_RSHIFT] = 0;
+                state[VK_SHIFT] = state[VK_LSHIFT] = static_cast<BYTE>(shift ? 0x80 : 0);
+                state[VK_CONTROL] = state[VK_LCONTROL] = static_cast<BYTE>(control ? 0x80 : 0);
+                state[VK_RSHIFT] = state[VK_RCONTROL] = 0;
                 require(SetKeyboardState(state.data()) != 0 &&
-                    ((GetKeyState(VK_SHIFT) & 0x8000) != 0) == pressed,
-                    "Could not establish the probe thread's local Shift state");
+                    ((GetKeyState(VK_SHIFT) & 0x8000) != 0) == shift &&
+                    ((GetKeyState(VK_CONTROL) & 0x8000) != 0) == control,
+                    "Could not establish the probe thread's local modifier state");
             }
+            void shift(bool pressed) { modifiers(pressed, false); }
             void restore()
             {
                 require(SetKeyboardState(original_.data()) != 0, "Could not restore the probe thread's key state");
@@ -237,6 +240,7 @@ namespace colourwars_editor
         struct OwnedHelper { const char* name; Helper run; bool draws; };
         const OwnedHelper helpers[] = {
             { "align_origin", &EditorDpiProbe::check_align_origin, false },
+            { "group_move", &EditorDpiProbe::check_group_move, false },
             { "overlap_selection", &EditorDpiProbe::check_overlap_selection, false },
             { "button_chords", &EditorDpiProbe::check_button_chords, false },
             { "empty_key_properties", &EditorDpiProbe::check_empty_key_properties, true },

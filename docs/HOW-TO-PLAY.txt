@@ -64,6 +64,11 @@ Rather not hold the trigger? Options > Controls / audio > Pad sticks has a
 Toggle fire setting for each controller: turn it On and one press of Shoot
 keeps firing until the next press.
 
+The Umbrella primary fires five pellets in a short fan. Holding Shoot opens
+the canopy on the side you aim toward. Enemy shots wear it down, teammates'
+shots pass through, and players can walk around or through it. A broken
+canopy takes three seconds to recover. You can keep firing during that time.
+
 Sub is your sub weapon, carried beside your tool all match. Choose it on
 Weapon Select: confirm your tool with A / Enter, pick the sub with Left/Right,
 then press A / Enter again.
@@ -85,6 +90,12 @@ only the wait remains.
 Paint on the floor affects you too: your team's paint makes you move and
 refill faster. Enemy paint slows you and stops your paint refilling; step
 onto your own paint or unpainted ground to refill again.
+
+On Sluice Works, paint the sides of the gate to open the lower passage for
+your team. Either team can cross the bridge above it. For a different rule,
+pick Turbulence Yard - Fill Trial in Stage Select. Paint the marked sides of
+the centre block to fill its top, then defend your paint as the other team
+tries to take it back.
 
 Menus: left stick or D-pad / arrow keys to move, A / Enter (or a left
 click) to choose, B / Escape (or a right click) to go back. A click acts on

@@ -18,6 +18,11 @@ namespace match_bot_ballistics
 		labrador::Vector2F shooter_velocity, labrador::Vector2F target_offset,
 		labrador::Vector2F target_velocity);
 
+	// The same primary-shot search, accepting only a flight that comes
+	// within the projectile radius of a stationary scoring face.
+	std::optional<float> paint_angle(const WeaponTuning& tool, const ProjectileTuning& projectile,
+		labrador::Vector2F shooter_velocity, labrador::Vector2F target_offset);
+
 	// The angle to throw a sub (ROAD#11) from the body's centre so its body
 	// passes within tolerance of a target moving at constant velocity, with
 	// the thrower's horizontal run added, as SubWeapon throws it. A tool that

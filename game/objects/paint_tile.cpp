@@ -188,7 +188,7 @@ int PaintTile::player_num() const
 {
 	return this->player_num_;
 }
-void PaintTile::paint(PlayerTeam team, int player_num, ProjectileType type)
+void PaintTile::claim(PlayerTeam team, int player_num)
 {
 	// Friendly repaint retains the capturing player's credit; enemy repaint transfers it.
 	if (this->team_ != team)
@@ -196,8 +196,20 @@ void PaintTile::paint(PlayerTeam team, int player_num, ProjectileType type)
 		this->player_num_ = player_num;
 	}
 	this->team_ = team;
+}
+
+void PaintTile::paint(PlayerTeam team, int player_num, ProjectileType type)
+{
+	this->claim(team, player_num);
 	this->wet_age_ = 0.0f;
 	this->splash_.reset_and_play(this->splash_clips_->by_type.at(static_cast<size_t>(type)));
+}
+
+void PaintTile::fill(PlayerTeam team, int player_num)
+{
+	this->claim(team, player_num);
+	this->wet_age_ = this->paint_->wet_duration;
+	this->splash_.finish();
 }
 RectangleF PaintTile::bounds() const
 {
@@ -261,6 +273,11 @@ bool PaintTileSplash::active() const
 {
 	return this->active_;
 }
+void PaintTileSplash::finish()
+{
+	this->active_ = false;
+	this->stop();
+}
 void PaintTileSplash::set_colour(const Colour& colour)
 {
 	this->colourwars::AnimationObject::set_colour(colour);
@@ -271,8 +288,7 @@ void PaintTileSplash::update(float dt)
 	this->age_ += dt;
 	if (this->age_ >= this->frame_time_ * this->frame_count_)
 	{
-		this->active_ = false;
-		this->stop();
+		this->finish();
 		return;
 	}
 	// Select by elapsed time so a long tick also retires/skips frames correctly.

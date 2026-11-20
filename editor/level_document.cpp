@@ -25,6 +25,7 @@
 #include <exception>
 #include <fstream>
 #include <limits>
+#include <set>
 #include <string_view>
 #include <system_error>
 #include <utility>
@@ -472,6 +473,32 @@ namespace colourwars_editor
                 set_number(value, "y", rectangle.y);
             }
             else { move_shape(value, rectangle); }
+        });
+    }
+
+    void LevelDocument::move_group(const std::vector<Entry>& entries, double dx, double dy)
+    {
+        if (entries.empty() || (dx == 0.0 && dy == 0.0)) { return; }
+        impl_->mutate([&](Document& document)
+        {
+            std::set<std::pair<EntryKind, std::size_t>> visited;
+            for (const Entry& entry : entries)
+            {
+                if (!visited.emplace(entry.kind, entry.index).second) { continue; }
+                if (entry.kind == EntryKind::level || entry.kind == EntryKind::bounds)
+                    fail("Select objects, spawns or stations for a group move.");
+                Rect moved = rectangle(entry);
+                moved.x += dx;
+                moved.y += dy;
+                check_rectangle(moved);
+                Json& object = entry_json(document, entry);
+                if (is_point(entry.kind))
+                {
+                    set_number(object, "x", moved.x);
+                    set_number(object, "y", moved.y);
+                }
+                else { move_shape(object, moved); }
+            }
         });
     }
 

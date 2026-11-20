@@ -195,13 +195,15 @@
         "movement_course": "[Movement Course]",
         "crossfeed": "[Crossfeed]",
         "press_tower": "[Press Tower]",
+        "sluice_works": "[Sluice Works]",
         "turbulence_blockout": "[Turbulence Yard]",
         "turbulence_mover_trial": "[Turbulence Yard - Mover Trial]",
         "turbulence_slab_trial": "[Slab Yard]",
         "turbulence_ferry_trial": "[Turbulence Yard - Ferry Trial]",
         "turbulence_gate_trial": "[Turbulence Yard - Gate Trial]",
         "turbulence_lift_trial": "[Turbulence Yard - Lift Trial]",
-        "turbulence_paint_lift_trial": "[Turbulence Yard - Paint Lift Trial]"
+        "turbulence_paint_lift_trial": "[Turbulence Yard - Paint Lift Trial]",
+        "turbulence_fill_trial": "[Turbulence Yard - Fill Trial]"
       },
       "records": {
         "new_best": "[NEW BEST {percentage}]",
@@ -382,6 +384,7 @@
         "roller": "[Rolls paint in a wide area in front of you.]\n[Can be used to cover large floor areas quickly.]",
         "mister": "[Produces a mist of slow-moving, diffusing paint particles.]",
         "bucket": "[Throws a bucket of paint in a short arc pattern.]\n[Ideal for defeating other players.]",
+        "umbrella": "[Fires a short fan of paint pellets.]\n[Hold Shoot to block incoming shots with the canopy.]",
         "random": "[Randomly selects a weapon for you.]\n[Indecisiveness is nothing to be ashamed of.]"
       },
       "weapon_select": {
@@ -400,6 +403,9 @@
           },
           "bucket": {
             "name": "[Bucket]"
+          },
+          "umbrella": {
+            "name": "[Umbrella]"
           },
           "random": {
             "name": "[Random]"

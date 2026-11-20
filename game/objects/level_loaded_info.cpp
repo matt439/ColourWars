@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/config/content_value.h"
+#include "game/config/paint_fill_json.h"
 #include "game/contracts/level_format.h"
 #include "engine/math/intersects.h"
 #include "game/objects/level_object_builder.h"
@@ -146,7 +147,7 @@ namespace
 		}
 	};
 
-	std::uint64_t hash_stage_snapshot(std::string_view snapshot, const char* source_path)
+	rapidjson::Document parse_stage_snapshot(std::string_view snapshot, const char* source_path)
 	{
 		rapidjson::Document parsed;
 		parsed.Parse<rapidjson::kParseDefaultFlags | rapidjson::kParseValidateEncodingFlag>(snapshot.data(), snapshot.size());
@@ -158,7 +159,7 @@ namespace
 		}
 		// No raw-NUL check here: the constructor's parse_json runs first on the
 		// same snapshot and refuses a raw NUL anywhere in it (engine v0.3.0).
-		return StageSemanticHash{}.of(parsed);
+		return parsed;
 	}
 }
 
@@ -178,7 +179,13 @@ LevelLoadedInfo::LevelLoadedInfo(const char* json_path, std::string snapshot) :
 		throw std::runtime_error(root.where() + ": unsupported 'format'; expected " +
 			std::to_string(level_format::current) + " (or an untagged legacy level).");
 	}
-	this->semantic_hash_ = hash_stage_snapshot(snapshot, json_path);
+	const auto parsed = parse_stage_snapshot(snapshot, json_path);
+	this->semantic_hash_ = StageSemanticHash{}.of(parsed);
+	try { this->paint_fill_ = paint_fill_json::decode(parsed); }
+	catch (const std::invalid_argument& error)
+	{
+		throw std::runtime_error(root.where() + ": " + error.what());
+	}
 }
 
 const std::string& LevelLoadedInfo::source_path() const

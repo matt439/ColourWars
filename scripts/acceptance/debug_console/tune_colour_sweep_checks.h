@@ -181,6 +181,7 @@
 			"presentation.idle_drip.fill_frame", "presentation.idle_drip.keyline.r",
 			"presentation.idle_drip.keyline_extra", "presentation.idle_drip.tools.sprayer.keyline",
 			"presentation.idle_drip.tools.sniper.keyline", "presentation.idle_drip.tools.bucket.keyline",
+			"presentation.idle_drip.tools.umbrella.keyline",
 			"presentation.respawn_redraw.sprite_sheet", "presentation.respawn_redraw.pen_frame",
 			"presentation.respawn_redraw.pen_colour.r", "presentation.respawn_redraw.pen_colour_extra",
 			"presentation.respawn_redraw.strokes[0].part", "presentation.opening.sprite_sheet",

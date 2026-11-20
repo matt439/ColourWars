@@ -16,6 +16,12 @@ class Level;
 // Debug-only.
 struct MatchFingerprint
 {
+    struct Canopy
+    {
+        bool open = false;
+        int hits_left = 0;
+        std::uint32_t recovery = 0;
+    };
 	struct Seat
 	{
 		std::uint32_t x = 0;
@@ -31,6 +37,7 @@ struct MatchFingerprint
         bool paint_underfoot = false;
         int support_paint_team = 0;
         int step_paint_team = 0;
+        std::optional<Canopy> canopy;
 	};
 
     // Unconditional value layout; the optional domain is populated only for
@@ -61,6 +68,9 @@ struct MatchFingerprint
         std::vector<std::uint32_t> carriers;
     };
     std::optional<HorizontalTerrainPrint> horizontal_motion;
+    // Only for stages with a fill. Includes pending credit and the live timer,
+    // which can differ before anyone sees a change in held territory.
+    std::optional<std::uint64_t> paint_fill_hash;
 
 	int updates = 0;
 	std::uint64_t hash = 0;

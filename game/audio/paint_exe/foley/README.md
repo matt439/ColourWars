@@ -10,7 +10,7 @@ the picture stays silent while the person is present.
 `sources.json` records the exact original used by every edit, its primary asset
 page, download URL, creator, licence, redistribution permission and SHA-256.
 The source files are retained without alteration. `recipes.json` is the
-editable production session, in source seconds. `build.py` renders its 67 cues
+editable production session, in source seconds. `build.py` renders its 71 cues
 and writes `cues.json` and the per-output `PROVENANCE.json`.
 
 Run `python game/audio/paint_exe/foley/build.py` from a checkout with Python,
@@ -30,6 +30,11 @@ exhale and the chair uses a recorded wooden chair creak. The three sub cues
 a sponge slosh under a light metal tick and a paper breath, the sprinkler's a
 plug click before a spray-bottle spritz, and the wall's set-down a slowed pond
 splash over a fruit thump and a paper crush.
+
+The four umbrella cues (`ROAD#13`) reuse these recordings. A short spray and two
+wet flecks make the pellet fan. A paper flap latches open with a plug click.
+A muffled fruit tap and sponge catch mark a block. A metal snap and collapsing
+paper mark a broken canopy. The four masters await attended listening.
 
 Masters are 44.1 kHz signed 16-bit PCM, mono except the dual-mono room tone.
 The room source itself is mono; duplicating it preserves that spatial image

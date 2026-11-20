@@ -14,6 +14,22 @@ inline constexpr float slab_span = 160.0f;
 inline constexpr float slab_rise = 80.0f;
 inline constexpr float slab_thickness = 24.0f;
 
+inline PaintPolygon slab_paint_corners(float x0, float y0, float x1, float y1, float nx, float ny)
+{
+    return { PaintPoint{ x0, y0 }, PaintPoint{ x1, y1 },
+        PaintPoint{ x1 + nx * slab_thickness, y1 + ny * slab_thickness },
+        PaintPoint{ x0 + nx * slab_thickness, y0 + ny * slab_thickness } };
+}
+
+inline PaintPolygon authored_slab_paint_polygon(float x, float y, bool rises_right)
+{
+    const float dy = rises_right ? -slab_rise : slab_rise;
+    const float length = std::hypot(slab_span, dy);
+    const float nx = -dy / length, ny = slab_span / length;
+    const float norm = std::sqrt(nx * nx + ny * ny);
+    return slab_paint_corners(x, y, x + slab_span, y + dy, nx / norm, ny / norm);
+}
+
 // The authored top endpoints own static face adjacency. Reconstructing an OBB
 // from its centre/normalized axes can move these joins by a few float ULPs and
 // invent a paintable sliver. Correct only that known reconstruction here: no
@@ -34,9 +50,7 @@ inline PaintPolygon canonical_slab_paint_polygon(const PaintPolygon& represented
     const float nx = as_float(inward.x), ny = as_float(inward.y);
     if (x1 - x0 != slab_span || std::abs(y1 - y0) != slab_rise || !(ny > 0.0f))
     { throw std::invalid_argument("Fixed slab paint requires the selected authored footprint and inward axis"); }
-    const PaintPolygon result{ PaintPoint{ x0, y0 }, PaintPoint{ x1, y1 },
-        PaintPoint{ x1 + nx * slab_thickness, y1 + ny * slab_thickness },
-        PaintPoint{ x0 + nx * slab_thickness, y0 + ny * slab_thickness } };
+    const PaintPolygon result = slab_paint_corners(x0, y0, x1, y1, nx, ny);
     for (std::size_t index = 0; index < result.size(); ++index)
     {
         const auto checked = [&](double actual, double canonical)

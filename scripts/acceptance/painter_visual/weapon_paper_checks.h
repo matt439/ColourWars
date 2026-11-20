@@ -5,18 +5,22 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
 {
     const acceptance::IsolatedSave isolated(output / "weapon-paper-profile");
     const Presentation original = presentation;
-    const std::array<WeaponChoicePresentation, 6> shipped{{
+    const std::array<WeaponChoicePresentation, 7> shipped{{
         { L"Sprayer", "sprayer", "sprayer_paint", "sprayer_supply" },
         { L"Sniper", "sniper", "sniper_paint", "" }, { L"Roller", "roller", "roller_paint", "" },
         { L"Mister", "mister", "mister_paint", "mister_supply" }, { L"Bucket", "bucket", "bucket_paint", "" },
+        { L"Umbrella", "umbrella", "umbrella_paint", "" },
         { L"Random", "random", "", "" } }};
-    const std::array<std::wstring, 6> descriptions{
+    const std::array<std::wstring, 7> descriptions{
         L"Fires a powerful stream of paint in an arc pattern.\nGood for beginners.",
         L"Slowly fires powerful, accurate shots.\nCan dispatch players quickly if you have skill.",
         L"Rolls paint in a wide area in front of you.\nCan be used to cover large floor areas quickly.",
         L"Produces a mist of slow-moving, diffusing paint particles.",
         L"Throws a bucket of paint in a short arc pattern.\nIdeal for defeating other players.",
+        L"Fires a short fan of paint pellets.\nHold Shoot to block incoming shots with the canopy.",
         L"Randomly selects a weapon for you.\nIndecisiveness is nothing to be ashamed of." };
+    const int choice_count = static_cast<int>(shipped.size());
+    const int random_choice = choice_count - 1;
     for (size_t i = 0; i < shipped.size(); ++i)
     {
         const auto& actual = original.main_menu().weapon_select_art.choices[i]; const auto& expected = shipped[i];
@@ -61,7 +65,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         settings.set_screen_layout(players_layout(count));
         settings.begin_input_claims(slots[0]); for (int player = 1; player < count; ++player) { require(settings.claim_input_slot(slots[static_cast<size_t>(player)]), "Weapon paper fixture claim failed"); }
         choices.clear(); ready.assign(static_cast<size_t>(count), false); missing = false;
-        for (int player = 0; player < count; ++player) { choices.push_back((first + player) % 6); settings.set_player_team(player, player % 2 ? PlayerTeam::b : PlayerTeam::a); settings.set_player_weapon(player, static_cast<WeaponType>(choices.back())); }
+        for (int player = 0; player < count; ++player) { choices.push_back((first + player) % choice_count); settings.set_player_team(player, player % 2 ? PlayerTeam::b : PlayerTeam::a); settings.set_player_weapon(player, static_cast<WeaponType>(choices.back())); }
         initial = settings; stack.push(std::make_unique<CanvasProbeRoot>(app, canvas));
         std::srand(617); const int next_random = std::rand(); std::srand(617);
         auto page = std::make_unique<MainMenuWeaponSelect>(&context); active = page.get(); stack.push(std::move(page)); tick(); tick();
@@ -158,14 +162,14 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         for (int count = 1; count <= 4; ++count)
         {
             open(count); const bool capture = count == 4 || size.x == 1280; const Frame first = compare("initial", original, L"Weapon Select", {}, capture);
-            for (int step = 1; step <= 6; ++step)
+            for (int step = 1; step <= choice_count; ++step)
             {
                 for (int player = 0; player < count; ++player) { hold(player, GamepadButton::dpad_right, true); } tick();
-                for (int player = 0; player < count; ++player) { hold(player, GamepadButton::dpad_right, false); choices[static_cast<size_t>(player)] = (choices[static_cast<size_t>(player)] + 1) % 6; } tick(); tick(settled);
-                compare("cycle-" + std::to_string(step), original, L"Weapon Select", {}, capture && step == 5);
+                for (int player = 0; player < count; ++player) { hold(player, GamepadButton::dpad_right, false); choices[static_cast<size_t>(player)] = (choices[static_cast<size_t>(player)] + 1) % choice_count; } tick(); tick(settled);
+                compare("cycle-" + std::to_string(step), original, L"Weapon Select", {}, capture && step == static_cast<int>(WeaponType::umbrella));
             }
             require(first.pixels == frame().pixels, "Weapon paper right wrap did not restore the original full frame");
-            tap(0, GamepadButton::dpad_left); choices[0] = 5; tick(settled); compare("left-wrap", original); tap(0, GamepadButton::dpad_right); choices[0] = 0; tick(settled);
+            tap(0, GamepadButton::dpad_left); choices[0] = random_choice; tick(settled); compare("left-wrap", original); tap(0, GamepadButton::dpad_right); choices[0] = 0; tick(settled);
             if (count > 1)
             {
                 ready_row(0); tick(settled); const Frame confirmed = compare("partly-ready", original, L"Weapon Select", {}, capture);
@@ -173,10 +177,10 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
                 unready_row(0); tick(settled); compare("unready", original);
             }
             tap(0, GamepadButton::b); require(frame().pixels == destination(count == 1 ? 0 : 1).pixels, "Weapon paper Back failed its ordinary Mode/Team route"); plan();
-            open(count, 5); for (int player = 1; player < count; ++player) { while (choices[static_cast<size_t>(player)] != 5) { tap(player, GamepadButton::dpad_right); choices[static_cast<size_t>(player)] = (choices[static_cast<size_t>(player)] + 1) % 6; } }
+            open(count, random_choice); for (int player = 1; player < count; ++player) { while (choices[static_cast<size_t>(player)] != random_choice) { tap(player, GamepadButton::dpad_right); choices[static_cast<size_t>(player)] = (choices[static_cast<size_t>(player)] + 1) % choice_count; } }
             tick(settled); compare("all-random", original, L"Weapon Select", {}, capture);
             for (int player = 0; player < count - 1; ++player) { ready_row(player); } tap(count - 1, GamepadButton::a); tick(settled); // The last row waits on its sub.
-            std::srand(839); for (int& choice : choices) { choice = std::rand() % 5; } const int next_random = std::rand(); std::srand(839); tap(count - 1, GamepadButton::a);
+            std::srand(839); for (int& choice : choices) { choice = std::rand() % random_choice; } const int next_random = std::rand(); std::srand(839); tap(count - 1, GamepadButton::a);
             require(std::rand() == next_random, "Weapon paper Random commit changed its ordered per-seat RNG budget"); plan(true);
             require(frame().pixels == destination(2).pixels, "Weapon paper final confirmation failed its immediate Stage route");
             tap(0, GamepadButton::b); initial = settings; ready.assign(choices.size(), false); compare("stage-back", original);
@@ -190,11 +194,11 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         for (const TeamColourPair palette : { TeamColourPair::blue_orange, TeamColourPair::pink_green, TeamColourPair::blue_yellow })
         {
             open(4, 0, palette); const Frame first = compare("palette-supply", original, L"Weapon Select", {}, true);
-            for (int step = 1; step <= 6; ++step)
+            for (int step = 1; step <= choice_count; ++step)
             {
                 for (int player = 0; player < 4; ++player) { hold(player, GamepadButton::dpad_right, true); } tick();
-                for (int player = 0; player < 4; ++player) { hold(player, GamepadButton::dpad_right, false); choices[static_cast<size_t>(player)] = (choices[static_cast<size_t>(player)] + 1) % 6; } tick(); tick(settled);
-                if (step < 6) { compare("palette-cycle-" + std::to_string(step), original); }
+                for (int player = 0; player < 4; ++player) { hold(player, GamepadButton::dpad_right, false); choices[static_cast<size_t>(player)] = (choices[static_cast<size_t>(player)] + 1) % choice_count; } tick(); tick(settled);
+                if (step < choice_count) { compare("palette-cycle-" + std::to_string(step), original); }
                 else { require(first.pixels == frame().pixels, "Weapon paper palette cycle failed its exact wrap"); }
             }
             ready_row(3); tick(settled); compare("palette-ready", original);
@@ -220,7 +224,7 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         tap(0, GamepadButton::dpad_right); ++choices[0]; stack.push(std::make_unique<MainMenuCredits>(&context)); stack.pop(); compare("cover-return", original); tick();
         tap(0, GamepadButton::dpad_left); --choices[0]; active->debug_reset_input(slots[0]); compare("developer-reset", original);
         play.reduce_effects = true; tap(0, GamepadButton::dpad_right); ++choices[0]; const Frame quiet = compare("reduced-input", original); tick(settled); require(quiet.pixels == frame().pixels, "Reduced Weapon input restarted motion"); play.reduce_effects = false;
-        tap(0, GamepadButton::dpad_right); choices[0] = (choices[0] + 1) % 6; tap(0, GamepadButton::dpad_left); choices[0] = (choices[0] + 5) % 6;
+        tap(0, GamepadButton::dpad_right); choices[0] = (choices[0] + 1) % choice_count; tap(0, GamepadButton::dpad_left); choices[0] = (choices[0] + choice_count - 1) % choice_count;
         compare("rapid-choice", original, L"Weapon Select", { motion.selection_inset_fraction, 0, 0, 0 }); tick(settled); const Frame resize = compare("rapid-rest", original);
         app.resolution_manager()->set_resolution_exactly({ 1600, 1200 }); std::ignore = app.renderer()->window_size_changed(1600, 1200); std::ignore = frame(); app.resolution_manager()->set_resolution_exactly(size); std::ignore = app.renderer()->window_size_changed(size.x, size.y); require(resize.pixels == frame().pixels, "Weapon paper changed after resize round-trip");
     }

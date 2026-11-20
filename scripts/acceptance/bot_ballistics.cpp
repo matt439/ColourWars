@@ -21,7 +21,7 @@ namespace
 	void check_shipped_tools(const GameTuning& tuning)
 	{
 		for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper,
-			WeaponType::roller, WeaponType::mister, WeaponType::bucket })
+			WeaponType::roller, WeaponType::mister, WeaponType::bucket, WeaponType::umbrella })
 		{
 			const WeaponTuning& tool = tuning.weapon(type);
 			const ProjectileTuning& projectile = tuning.projectile(tool.details.proj_type);
@@ -43,6 +43,13 @@ namespace
 			else if (type == WeaponType::mister)
 			{
 				require_near(reach, 300.0f, 0.02f, "Mister's no-gravity local range changed");
+			}
+			else if (type == WeaponType::umbrella)
+			{
+				require(tool.details.proj_type == ProjectileType::pellet && reach > 0.0f &&
+					reach < match_bot_ballistics::horizontal_reach(tuning.weapon(WeaponType::sniper),
+						tuning.projectile(tuning.weapon(WeaponType::sniper).details.proj_type)),
+					"Umbrella reach must use its short-range pellet record");
 			}
 			else
 			{
@@ -90,7 +97,7 @@ namespace
 		const float dt = simulation::seconds_per_step;
 		int contacts = 0;
 		for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper,
-			WeaponType::mister, WeaponType::bucket })
+			WeaponType::mister, WeaponType::bucket, WeaponType::umbrella })
 		{
 			for (const float side : { -1.0f, 1.0f })
 			{
@@ -116,7 +123,7 @@ namespace
 					require(!shots.empty() && weapon->ammo() < world.tuning.starting_ammo(),
 						"Actual bot aim flight did not buy an ordinary shot");
 					// Mist is emitted center-out; the first pellet is its actual centerline.
-					Projectile& shot = *shots.front();
+					Projectile& shot = *shots[type == WeaponType::umbrella ? shots.size() / 2 : 0];
 					Vector2F previous = shot.shape()->bounding_box().center() - target;
 					float closest = (std::numeric_limits<float>::max)();
 					for (int tick = 0; tick < 60; ++tick)
@@ -138,7 +145,7 @@ namespace
 				}
 			}
 		}
-		require(contacts == 16, "Actual projectile aim matrix lost a mirrored/tool/motion case");
+		require(contacts == 20, "Actual projectile aim matrix lost a mirrored/tool/motion case");
 		const WeaponTuning& roller = world.tuning.weapon(WeaponType::roller);
 		require(match_bot_ballistics::aim_direction(roller, world.tuning.projectile(roller.details.proj_type),
 			{}, {}, {}).x == 1.0f, "Stationary contact aim did not handle coincident centers");
@@ -148,7 +155,7 @@ namespace
 	{
 		using namespace labrador;
 		for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
-			WeaponType::mister, WeaponType::bucket })
+			WeaponType::mister, WeaponType::bucket, WeaponType::umbrella })
 		{
 			const WeaponTuning& tool = tuning.weapon(type);
 			const ProjectileTuning& projectile = tuning.projectile(tool.details.proj_type);
@@ -176,7 +183,7 @@ int wmain(int argc, wchar_t** argv)
 		check_finite_fallbacks(tuning);
 		paint_surfaces_acceptance::World world(content);
 		check_actual_flight(world);
-		std::cout << "PASS bot projectile reach and 16 actual paid-shot centerlines: five tools, gravity, reversed launch, lifetime, drag, stationary contact volume, muzzle and inherited/target motion\n";
+		std::cout << "PASS bot projectile reach and 20 actual paid-shot centerlines: six tools, gravity, reversed launch, lifetime, drag, stationary contact volume, muzzle and inherited/target motion\n";
 		return 0;
 	});
 }

@@ -277,7 +277,7 @@ namespace
         const int lesson = lesson_index(*world.build(true), "long_gap");
         const Vector2F stood = world.course().stations()[static_cast<size_t>(lesson)].position;
         for (const WeaponType tool : { WeaponType::sprayer, WeaponType::sniper,
-            WeaponType::roller, WeaponType::mister, WeaponType::bucket })
+            WeaponType::roller, WeaponType::mister, WeaponType::bucket, WeaponType::umbrella })
         {
             const std::string name(weapon_name(tool));
             std::unique_ptr<Level> old = world.build(true);
@@ -333,12 +333,12 @@ namespace
             "After a death the spawn's lesson does not show");
     }
 
-    // S2: the Pause Tool row's step over the five real tools, both
+    // S2: the Pause Tool row's step over the six real tools, both
     // ways, wrapping at each end and never landing on Random.
     void check_tool_row_wraps()
     {
-        constexpr std::array<WeaponType, 5> tools{ WeaponType::sprayer, WeaponType::sniper,
-            WeaponType::roller, WeaponType::mister, WeaponType::bucket };
+        constexpr std::array<WeaponType, tuned_weapon_count> tools{ WeaponType::sprayer, WeaponType::sniper,
+            WeaponType::roller, WeaponType::mister, WeaponType::bucket, WeaponType::umbrella };
         for (size_t index = 0; index < tools.size(); ++index)
         {
             const std::string name(weapon_name(tools[index]));
@@ -350,12 +350,12 @@ namespace
         for (const Direction direction : { Direction::right, Direction::left })
         {
             WeaponType tool = WeaponType::sprayer;
-            for (int press = 0; press < 5; ++press)
+            for (size_t press = 0; press < tools.size(); ++press)
             {
                 tool = practice_tool_after(tool, direction);
                 require(tool != WeaponType::random_primary, "The Tool row offers Random");
             }
-            require(tool == WeaponType::sprayer, "Five presses one way do not come back to the Sprayer");
+            require(tool == WeaponType::sprayer, "A full cycle must return to the Sprayer");
         }
     }
 

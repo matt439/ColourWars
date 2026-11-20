@@ -179,6 +179,32 @@ namespace debug_console_acceptance
 			try { ReplayFile::read(path); } catch (const std::exception& failure) { error = failure.what(); }
 			require(!error.empty(), "Malformed bot replay was accepted: " + reason);
 		};
+        // Format 12. A broken canopy is shut, has no hits and has a live
+        // recovery timer. At expiry all of its hits are restored together.
+        MatchSetup canopy_roster = bot_roster(1, 0, BotDifficulty::normal);
+        canopy_roster.set_player_weapon(0, WeaponType::umbrella);
+        auto umbrella = bot_recording(canopy_roster);
+        umbrella.final_print.seats.resize(1);
+        umbrella.final_print.seats[0].canopy = MatchFingerprint::Canopy{ false, 0, std::bit_cast<std::uint32_t>(1.0f) };
+        umbrella.write(path);
+        const std::string broken = read_text(path);
+        require(ReplayFile::read(path).final_print.seats.at(0).canopy->recovery == std::bit_cast<std::uint32_t>(1.0f),
+            "A broken canopy did not preserve its remaining time");
+        const std::string recovery = "\"recovery\": \"3f800000\"";
+        rejects(replace_once(broken, recovery, "\"recovery\": \"00000000\""), "no hits and no recovery");
+        rejects(replace_once(broken, recovery, "\"recovery\": \"7fc00000\""), "nonfinite recovery");
+        rejects(replace_once(broken, "\"open\": false", "\"open\": true"), "open while broken");
+        rejects(replace_once(broken, "\"hits_left\": 0", "\"hits_left\": 2"), "hits present during recovery");
+        const std::string ready = replace_once(replace_once(broken, recovery, "\"recovery\": \"00000000\""),
+            "\"hits_left\": 0", "\"hits_left\": 100");
+        write_text(path, ready);
+        require(ReplayFile::read(path).final_print.seats.at(0).canopy->hits_left == 100,
+            "The maximum authored hit count was refused");
+        rejects(replace_once(ready, "\"hits_left\": 100", "\"hits_left\": 101"), "hits exceed the tuning range");
+        rejects(replace_once(broken, "\"weapon\": \"umbrella\"", "\"weapon\": \"sprayer\""),
+            "ordinary tool with a canopy");
+        rejects(replace_once(broken, ", \"canopy\": { \"open\": false, \"hits_left\": 0, " + recovery + " }", ""),
+            "umbrella missing its canopy");
 		rejects(replace_once(valid, "\"controller\": \"human\"", "\"controller\": \"bot\""), "bot host");
 		rejects(replace_once(valid, "\"controller\": \"bot\"", "\"controller\": \"other\""), "unknown controller");
 		rejects(replace_once(valid, "\"controller\": \"bot\", ", ""), "missing controller");

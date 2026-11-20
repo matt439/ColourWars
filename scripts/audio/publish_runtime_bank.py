@@ -1,4 +1,4 @@
-"""Publish a technically checked, accepted bank without re-encoding its masters.
+"""Publish the technically checked, hash-pinned bank without re-encoding its masters.
 
     python scripts/audio/audio_pipeline.py build
     python scripts/audio/publish_runtime_bank.py
@@ -18,11 +18,11 @@ import sys
 import audio_pipeline as pipeline
 
 
-def accepted_masters(manifest: dict, report: dict, acceptance: dict) -> dict[str, str]:
+def runtime_masters(manifest: dict, report: dict, acceptance: dict) -> dict[str, str]:
     measured = {cue["id"]: cue["sha256"] for cue in report["cues"]}
     pipeline.require(acceptance.get("status") == "accepted", "production set is not accepted")
-    pipeline.require(acceptance.get("master_sha256") == measured,
-                     "accepted master hashes differ from the current production set")
+    pipeline.require(pipeline.runtime_master_hashes(acceptance) == measured,
+                     "runtime master hashes differ from the current production set")
     pipeline.require([cue["id"] for cue in manifest["cues"]] == [cue["id"] for cue in report["cues"]],
                      "production report cue order differs")
     return measured
@@ -32,7 +32,7 @@ def publish(output: Path, root: Path = pipeline.REPOSITORY) -> dict:
     production = root / "game/audio/paint_exe"
     manifest, measured = pipeline.validate(production / "cues.json", production / "sources.json", root)
     acceptance = json.loads((production / "acceptance.json").read_text(encoding="utf-8-sig"))
-    masters = accepted_masters(manifest, measured, acceptance)
+    masters = runtime_masters(manifest, measured, acceptance)
     report = json.loads((output / "build-report.json").read_text(encoding="utf-8-sig"))
     pipeline.require(report.get("warnings") == [], "build report contains technical listening flags")
     pipeline.require({cue["id"]: cue["sha256"] for cue in report["exports"]} == masters,
@@ -42,7 +42,8 @@ def publish(output: Path, root: Path = pipeline.REPOSITORY) -> dict:
     pipeline.require(bank["sha256"] == report["bank"]["sha256"], "bank differs from its build report")
     receipt = {"version": 1, "bank": "paint_exe.xwb", "bytes": bank["bytes"],
                "sha256": bank["sha256"], "waves": [cue["id"] for cue in manifest["cues"]],
-               "accepted_master_sha256": masters,
+               "accepted_master_sha256": acceptance["master_sha256"],
+               "pending_listening_master_sha256": acceptance.get("pending_listening_master_sha256", {}),
                "music_encoding": {"format": "MS-ADPCM", "samples_per_block": pipeline.ADPCM_FRAMES_PER_BLOCK,
                                   "stereo_block_bytes": 2 * pipeline.ADPCM_BYTES_PER_CHANNEL,
                                   "loop_padding": f"Hold the first boundary sample for at most {pipeline.ADPCM_FRAMES_PER_BLOCK - 1} derived frames; accepted masters remain unchanged.",
@@ -64,7 +65,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         receipt = publish(args.output.resolve())
-        print(f"Published {len(receipt['waves'])} accepted waves ({receipt['bytes']:,} bytes).")
+        print(f"Published {len(receipt['waves'])} runtime waves ({receipt['bytes']:,} bytes).")
         return 0
     except (pipeline.InvalidAudio, OSError, ValueError, KeyError) as error:
         print(f"Runtime bank publication failed: {error}", file=sys.stderr)

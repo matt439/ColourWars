@@ -217,7 +217,7 @@ namespace colourwars_editor
         }
         object_heading_ = control(L"STATIC", L"LEVEL CONTENTS", SS_LEFT, 0);
         inspector_heading_ = control(L"STATIC", L"PROPERTIES", SS_LEFT, 0);
-        object_list_ = control(WC_LISTBOXW, L"Level contents", LBS_NOTIFY | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | WS_BORDER, objects_list);
+        object_list_ = control(WC_LISTBOXW, L"Level contents", LBS_EXTENDEDSEL | LBS_NOTIFY | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | WS_BORDER, objects_list);
         SendMessageW(object_list_, LB_SETHORIZONTALEXTENT, pixels(650), 0);
         property_list_ = control(WC_LISTVIEWW, L"Properties", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_TABSTOP | WS_BORDER, properties_list);
         ListView_SetExtendedListViewStyle(property_list_, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
@@ -232,7 +232,7 @@ namespace colourwars_editor
         SendMessageW(value_edit_, EM_SETLIMITTEXT, 32767, 0);
         apply_ = control(L"BUTTON", L"Apply", WS_TABSTOP, apply_property);
         revert_ = control(L"BUTTON", L"Revert", WS_TABSTOP, revert_property);
-        hint_ = control(L"STATIC", L"Drag: move   White corner: resize\r\nWheel: zoom   Middle drag: pan\r\nF: selection   Home: fit arena\r\nShift: bypass snap   Arrows: nudge\r\nCyan: exposed scoring faces\r\nMovers: white anchor; blue travel;\r\ngold corridor; filled initial pose\r\nCtrl+click: cycle overlaps", SS_LEFT, 0);
+        hint_ = control(L"STATIC", L"Drag: move   White corner: resize\r\nWheel: zoom   Middle drag: pan\r\nF: selection   Home: fit arena\r\nShift: bypass snap   Arrows: nudge\r\nCyan: exposed scoring faces\r\nMovers: white anchor; blue travel;\r\ngold corridor; filled initial pose\r\nCtrl+click: cycle overlaps\r\nCtrl+Shift+click: toggle group", SS_LEFT, 0);
         status_ = control(L"STATIC", L"", SS_LEFT, 0);
         canvas_ = CreateWindowExW(0, L"ColourWarsEditorCanvas", L"Level canvas",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 1, 1, window_, nullptr, instance_, this);
@@ -328,7 +328,7 @@ namespace colourwars_editor
         unresolved_ = document_.unresolved_resources(content_catalog_);
         SendMessageW(object_list_, WM_SETREDRAW, FALSE, 0);
         SendMessageW(object_list_, LB_RESETCONTENT, 0, 0);
-        int selected_index = -1;
+        bool found_selection = false;
         for (size_t index = 0; index < entries_.size(); ++index)
         {
             const Entry& entry = entries_[index];
@@ -336,7 +336,7 @@ namespace colourwars_editor
             SendMessageW(object_list_, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(label.c_str()));
             if (selection_ && same_entry(entry, *selection_))
             {
-                selection_ = entry; selected_index = static_cast<int>(index);
+                selection_ = entry; found_selection = true;
             }
             if (entry.kind != EntryKind::level)
             {
@@ -355,8 +355,8 @@ namespace colourwars_editor
                 draw_items_.push_back(std::move(item));
             }
         }
-        if (selected_index < 0 && !entries_.empty()) { selection_ = entries_[0]; selected_index = 0; }
-        SendMessageW(object_list_, LB_SETCURSEL, static_cast<WPARAM>(selected_index), 0);
+        if (!found_selection && !entries_.empty()) selection_ = entries_.front();
+        sync_list_selection();
         SendMessageW(object_list_, WM_SETREDRAW, TRUE, 0);
         InvalidateRect(object_list_, nullptr, TRUE);
         refreshing_ = false;
@@ -366,11 +366,13 @@ namespace colourwars_editor
         SetWindowTextW(window_, (name + (changed ? L" *" : L"") + L" - ColourWars Level Editor").c_str());
         EnableMenuItem(menu_, edit_undo, MF_BYCOMMAND | (document_.can_undo() ? MF_ENABLED : MF_GRAYED));
         EnableMenuItem(menu_, edit_redo, MF_BYCOMMAND | (document_.can_redo() ? MF_ENABLED : MF_GRAYED));
+        for (const int id : {edit_duplicate, edit_delete})
+            EnableMenuItem(menu_, id, MF_BYCOMMAND | (group_.empty() ? MF_ENABLED : MF_GRAYED));
         EnableMenuItem(menu_, edit_align_origin, MF_BYCOMMAND |
-            (selection_ && selection_->kind != EntryKind::level ? MF_ENABLED : MF_GRAYED));
-        EnableMenuItem(menu_, edit_mirror, MF_BYCOMMAND | (selection_ && selection_->kind != EntryKind::level &&
+            (group_.empty() && selection_ && selection_->kind != EntryKind::level ? MF_ENABLED : MF_GRAYED));
+        EnableMenuItem(menu_, edit_mirror, MF_BYCOMMAND | (group_.empty() && selection_ && selection_->kind != EntryKind::level &&
             selection_->kind != EntryKind::bounds && selection_->kind != EntryKind::station ? MF_ENABLED : MF_GRAYED));
-        EnableMenuItem(menu_, edit_copy, MF_BYCOMMAND | (selection_ && selection_->kind != EntryKind::level &&
+        EnableMenuItem(menu_, edit_copy, MF_BYCOMMAND | (group_.empty() && selection_ && selection_->kind != EntryKind::level &&
             selection_->kind != EntryKind::bounds ? MF_ENABLED : MF_GRAYED));
         EnableWindow(toolbar_[3], document_.can_undo()); EnableWindow(toolbar_[4], document_.can_redo());
         const std::vector<std::string> errors = document_.validate();
@@ -391,7 +393,7 @@ namespace colourwars_editor
         if (keep_property && property_index_ >= 0 && static_cast<size_t>(property_index_) < properties_.size())
             previous = properties_[static_cast<size_t>(property_index_)].path;
         refreshing_ = true;
-        properties_ = selection_ ? document_.properties(*selection_) : std::vector<Property>{};
+        properties_ = selection_ && group_.empty() ? document_.properties(*selection_) : std::vector<Property>{};
         ListView_DeleteAllItems(property_list_);
         property_index_ = -1;
         for (size_t index = 0; index < properties_.size(); ++index)
@@ -420,7 +422,14 @@ namespace colourwars_editor
         EnableWindow(value_edit_, exists);
         SendMessageW(value_edit_, EM_SETREADONLY, read_only, 0);
         EnableWindow(apply_, exists && !read_only); EnableWindow(revert_, exists && !read_only);
-        if (!exists) { SetWindowTextW(value_edit_, L""); SetWindowTextW(property_label_, L"Select a property to edit"); return; }
+        if (!exists)
+        {
+            SetWindowTextW(value_edit_, L"");
+            const std::wstring label = group_.empty() ? L"Select a property to edit" :
+                std::to_wstring(group_.size()) + L" selected. Drag or nudge to move together.";
+            SetWindowTextW(property_label_, label.c_str());
+            return;
+        }
         const Property& property = properties_[static_cast<size_t>(index)];
         SetWindowTextW(value_edit_, property_value_text(property, read_only).c_str());
         const std::wstring label = read_only ? L"Read-only escaped text: " + quoted_preview(property.label)
@@ -451,12 +460,76 @@ namespace colourwars_editor
     {
         if (!apply_pending())
         {
-            for (size_t index = 0; index < entries_.size(); ++index)
-                if (selection_ && same_entry(entries_[index], *selection_))
-                    SendMessageW(object_list_, LB_SETCURSEL, index, 0);
+            sync_list_selection();
             return;
         }
+        group_.clear();
         selection_ = entry;
+        refresh();
+    }
+
+    void Editor::sync_list_selection()
+    {
+        SendMessageW(object_list_, LB_SETSEL, FALSE, -1);
+        for (size_t i = 0; i < entries_.size(); ++i)
+        {
+            if (is_selected(entries_[i])) SendMessageW(object_list_, LB_SETSEL, TRUE, static_cast<LPARAM>(i));
+            if (selection_ && same_entry(entries_[i], *selection_))
+            {
+                SendMessageW(object_list_, LB_SETCARETINDEX, i, FALSE);
+                SendMessageW(object_list_, LB_SETANCHORINDEX, i, 0);
+            }
+        }
+    }
+
+    void Editor::read_list_selection()
+    {
+        const LRESULT caret = SendMessageW(object_list_, LB_GETCARETINDEX, 0, 0);
+        if (caret < 0 || static_cast<size_t>(caret) >= entries_.size()) return;
+        const LRESULT anchor = SendMessageW(object_list_, LB_GETANCHORINDEX, 0, 0);
+        const Entry focused = entries_[static_cast<size_t>(caret)];
+        const bool focus_selected = SendMessageW(object_list_, LB_GETSEL, static_cast<WPARAM>(caret), 0) > 0;
+        std::vector<Entry> members;
+        for (size_t i = 0; i < entries_.size(); ++i)
+            if (SendMessageW(object_list_, LB_GETSEL, i, 0) > 0) members.push_back(entries_[i]);
+        if (!apply_pending())
+        {
+            sync_list_selection();
+            return;
+        }
+        const auto movable = [](const Entry& entry) { return entry.kind != EntryKind::level && entry.kind != EntryKind::bounds; };
+        if (members.size() > 1)
+        {
+            if (!movable(focused) && focus_selected)
+                members = {focused};
+            else std::erase_if(members, [&](const Entry& entry) { return !movable(entry); });
+        }
+        selection_ = members.empty() ? entries_.front() : members.back();
+        if (focus_selected && (members.size() == 1 || movable(focused)))
+            selection_ = focused;
+        group_ = members.size() > 1 ? std::move(members) : std::vector<Entry>{};
+        refresh();
+        SendMessageW(object_list_, LB_SETCARETINDEX, static_cast<WPARAM>(caret), FALSE);
+        if (anchor >= 0) SendMessageW(object_list_, LB_SETANCHORINDEX, static_cast<WPARAM>(anchor), 0);
+    }
+
+    bool Editor::is_selected(const Entry& entry) const
+    {
+        return (selection_ && same_entry(*selection_, entry)) || std::any_of(group_.begin(), group_.end(),
+            [&](const Entry& member) { return same_entry(member, entry); });
+    }
+
+    void Editor::toggle_member(const Entry& entry)
+    {
+        if (entry.kind == EntryKind::level || entry.kind == EntryKind::bounds || !apply_pending()) return;
+        if (group_.empty() && selection_ && selection_->kind != EntryKind::level && selection_->kind != EntryKind::bounds)
+            group_.push_back(*selection_);
+        const auto current = std::find_if(group_.begin(), group_.end(),
+            [&](const Entry& member) { return same_entry(member, entry); });
+        if (current == group_.end()) group_.push_back(entry);
+        else group_.erase(current);
+        selection_ = group_.empty() ? entries_.front() : group_.back();
+        if (group_.size() < 2) group_.clear();
         refresh();
     }
 
@@ -605,7 +678,7 @@ namespace colourwars_editor
                 if (!path) return;
                 document_.load(*path);
             }
-            selection_.reset(); refresh(); command(view_match); return;
+            group_.clear(); selection_.reset(); refresh(); command(view_match); return;
         }
         if (id == file_save || id == file_save_as) { save(id == file_save_as); return; }
         if (id == file_save_user_stage) { save_user_stage(); return; }
@@ -615,6 +688,8 @@ namespace colourwars_editor
             MessageBoxW(window_,
                 L"Open a level from game/content/levels, or start a new one.\n\n"
                 L"Select objects on the canvas or in Level Contents. Drag to move; use the white bottom-right corner to resize. "
+                L"Ctrl+Shift+click toggles group members. Drag any member or use the canvas arrows to move them together. "
+                L"In Level Contents, Ctrl+click toggles a row. Ctrl+Up/Down moves the focus outline and Space toggles that row. Highlighted rows are selected. Enter focuses the canvas for nudging. Click a row to inspect just that object. "
                 L"Ctrl+click cycles through overlapping objects without moving them. "
                 L"Select a property, edit its value and click Apply (or press Enter). Changes apply before selection/save; Escape or Revert discards an uncommitted value.\n\n"
                 L"Wheel zooms around the pointer. Middle drag pans. F frames selection; Home fits the arena. "
@@ -642,12 +717,17 @@ namespace colourwars_editor
                 L"Using the level editor", MB_OK | MB_ICONINFORMATION);
             return;
         }
+        if (!group_.empty() && (id == edit_duplicate || id == edit_delete || id == edit_mirror ||
+            id == edit_copy || id == edit_align_origin)) return;
         if (id == edit_align_origin && (!selection_ || selection_->kind == EntryKind::level)) return;
         if (!apply_pending()) return;
         switch (id)
         {
-        case edit_undo: document_.undo(); refresh(true); break;
-        case edit_redo: document_.redo(); refresh(true); break;
+        case edit_undo:
+        case edit_redo:
+            if (!group_.empty()) { group_.clear(); selection_.reset(); }
+            if (id == edit_undo) document_.undo(); else document_.redo();
+            refresh(true); break;
         case apply_property: break;
         case edit_align_origin: document_.align_origin(*selection_, snap_); refresh(true); break;
         case edit_duplicate:
@@ -663,8 +743,9 @@ namespace colourwars_editor
         case view_selection:
             if (selection_)
             {
+                std::optional<Rect> extent;
                 for (const DrawItem& item : draw_items_)
-                    if (same_entry(item.entry, *selection_))
+                    if (is_selected(item.entry))
                     {
                         Rect area = item.rectangle;
                         if (item.motion)
@@ -674,8 +755,18 @@ namespace colourwars_editor
                                 *item.motion->clearance_envelope : item.motion->travel_envelope;
                             area.height = below.y + below.height - area.y;
                         }
-                        fit(area); break;
+                        if (!extent) extent = area;
+                        else
+                        {
+                            const double right = std::max(extent->x + extent->width, area.x + area.width);
+                            const double bottom = std::max(extent->y + extent->height, area.y + area.height);
+                            extent->x = std::min(extent->x, area.x);
+                            extent->y = std::min(extent->y, area.y);
+                            extent->width = right - extent->x;
+                            extent->height = bottom - extent->y;
+                        }
                     }
+                if (extent) fit(*extent);
             }
             break;
         case view_blockout:
@@ -692,7 +783,7 @@ namespace colourwars_editor
             RECT client{}; GetClientRect(canvas_, &client);
             const Rect rectangle{snapped(view_x_ + client.right / (2.0 * zoom_) - 100.0),
                 snapped(view_y_ + client.bottom / (2.0 * zoom_) - 50.0), 200.0, 100.0};
-            selection_ = document_.add_object(palette_entries[index].type, rectangle); refresh(); SetFocus(canvas_); break;
+            selection_ = document_.add_object(palette_entries[index].type, rectangle); group_.clear(); refresh(); SetFocus(canvas_); break;
         }
         default: break;
         }
@@ -718,11 +809,7 @@ namespace colourwars_editor
         case WM_COMMAND:
             if (LOWORD(wparam) == objects_list && HIWORD(wparam) == LBN_SELCHANGE && !refreshing_)
             {
-                const LRESULT index = SendMessageW(object_list_, LB_GETCURSEL, 0, 0);
-                if (index >= 0 && static_cast<size_t>(index) < entries_.size())
-                {
-                    const Entry entry = entries_[static_cast<size_t>(index)]; select(entry);
-                }
+                read_list_selection();
                 return 0;
             }
             if (LOWORD(wparam) == grid_size && HIWORD(wparam) == CBN_SELCHANGE)
@@ -826,6 +913,24 @@ namespace colourwars_editor
         }
         if (message_data.message == WM_KEYDOWN && focus == object_list_)
         {
+            if ((GetKeyState(VK_CONTROL) & 0x8000) && (message_data.wParam == VK_UP || message_data.wParam == VK_DOWN))
+            {
+                const auto row = SendMessageW(object_list_, LB_GETCARETINDEX, 0, 0) + (message_data.wParam == VK_UP ? -1 : 1);
+                if (row >= 0 && static_cast<size_t>(row) < entries_.size())
+                    SendMessageW(object_list_, LB_SETCARETINDEX, static_cast<WPARAM>(row), FALSE);
+                return;
+            }
+            if (message_data.wParam == VK_RETURN) { SetFocus(canvas_); return; }
+            if (message_data.wParam == VK_SPACE)
+            {
+                const auto row = SendMessageW(object_list_, LB_GETCARETINDEX, 0, 0);
+                if (row >= 0 && static_cast<size_t>(row) < entries_.size())
+                {
+                    SendMessageW(object_list_, LB_SETSEL, SendMessageW(object_list_, LB_GETSEL, static_cast<WPARAM>(row), 0) == 0, row);
+                    read_list_selection();
+                }
+                return;
+            }
             if (message_data.wParam == VK_DELETE) { SendMessageW(window_, WM_COMMAND, edit_delete, 0); return; }
             if (message_data.wParam == 'F') { SendMessageW(window_, WM_COMMAND, view_selection, 0); return; }
         }
@@ -893,6 +998,7 @@ namespace colourwars_editor
             GlobalUnlock(data);
         }
         selection_ = document_.paste_text(narrow(text));
+        group_.clear();
         refresh();
     }
 }

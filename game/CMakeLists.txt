@@ -132,6 +132,8 @@ add_library(colourwars_game STATIC
     objects/fixed_slab_shadow.cpp
     objects/interface_gameplay.cpp
     objects/level.cpp
+    objects/paint_fill.cpp
+    objects/paint_fill_draw.cpp
     objects/level_structures.cpp
     objects/level_bot_world.cpp
     objects/level_audio.cpp
@@ -200,6 +202,9 @@ add_library(colourwars_game STATIC
     objects/weapon_feedback.cpp
     objects/idle_drip.cpp
     objects/weapon_bucket.cpp
+    objects/weapon_umbrella.cpp
+    objects/weapon_umbrella_draw.cpp
+    objects/projectile_pellet.cpp
     objects/weapon_builder.cpp
     objects/weapon_details.cpp
     objects/weapon_roller.cpp

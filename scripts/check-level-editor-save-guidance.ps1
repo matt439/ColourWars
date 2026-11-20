@@ -220,7 +220,9 @@ namespace ColourWars
             IntPtr list = FindWindowEx(window, IntPtr.Zero, "ListBox", null);
             IntPtr canvas = FindWindowEx(window, IntPtr.Zero, "ColourWarsEditorCanvas", null);
             if (list == IntPtr.Zero || canvas == IntPtr.Zero) throw new InvalidOperationException("Editor controls missing");
-            Send(list, 0x0186, new IntPtr(5), IntPtr.Zero);
+            Send(list, 0x0185, IntPtr.Zero, new IntPtr(-1)); // LB_SETSEL: clear all
+            Send(list, 0x0185, new IntPtr(1), new IntPtr(5)); // select the spawn
+            Send(list, 0x019E, new IntPtr(5), IntPtr.Zero); // LB_SETCARETINDEX
             Send(window, 0x0111, new IntPtr(GetDlgCtrlID(list) | (1 << 16)), list);
             Send(canvas, 0x0100, new IntPtr(0x27), IntPtr.Zero);
         }

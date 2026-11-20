@@ -5,7 +5,7 @@ param(
     [uint32[]] $Seed = @(1),
     [ValidateRange(1,4)][int] $Players = 2,
     [ValidateRange(0.05,600.0)][double] $Duration = 60,
-    [ValidateSet('sprayer','sniper','roller','mister','bucket')][string[]] $Tools,
+    [ValidateSet('sprayer','sniper','roller','mister','bucket','umbrella')][string[]] $Tools,
     [ValidateSet('idle','walk','jump','chase','paint','skirmish','match')][string] $Bot = 'paint',
     # match only: the shipping bot's difficulty per seat (default Normal for every seat).
     [ValidateSet('easy','normal','hard')][string[]] $Difficulty,

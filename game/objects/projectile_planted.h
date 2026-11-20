@@ -61,7 +61,7 @@ public:
 protected:
 	void resolve_travel(std::span<labrador::CollisionObject* const> objects,
 		std::optional<ProjectileTargetFlags> known,
-		std::span<Projectile* const> breakables) override;
+		ProjectileBreakables breakables) override;
 	// It sticks to bare cover rather than splashing, so it never duds.
 	bool duds_on_bare_cover() const override { return false; }
 

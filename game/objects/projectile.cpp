@@ -147,6 +147,8 @@ CollisionObjectType Projectile::collision_type() const
             return CollisionObjectType::projectile_rolling_team_a;
         case ProjectileType::ball:
             return CollisionObjectType::projectile_ball_team_a;
+        case ProjectileType::pellet:
+            return CollisionObjectType::projectile_pellet_team_a;
         default:
             throw std::logic_error("Projectile has no collision type for projectile type " +
                 std::to_string(static_cast<int>(type)));
@@ -164,6 +166,8 @@ CollisionObjectType Projectile::collision_type() const
             return CollisionObjectType::projectile_rolling_team_b;
         case ProjectileType::ball:
             return CollisionObjectType::projectile_ball_team_b;
+        case ProjectileType::pellet:
+            return CollisionObjectType::projectile_pellet_team_b;
         default:
             throw std::logic_error("Projectile has no collision type for projectile type " +
                 std::to_string(static_cast<int>(type)));

@@ -155,9 +155,65 @@
                                  "frame_count":  3,
                                  "frame_time":  0.14,
                                  "looping":  true
+                             },
+                             {
+                                 "name":  "shot_pellet",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  1772,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  3,
+                                 "frame_time":  0.06,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "impact_pellet",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  1908,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  5,
+                                 "frame_time":  0.045,
+                                 "looping":  false
                              }
                          ],
     "sprite_frames":  [
-
+                          {
+                              "name":  "canopy_open",
+                              "position":  {
+                                               "x":  396,
+                                               "y":  1772
+                                           },
+                              "size":  {
+                                           "w":  128,
+                                           "h":  128
+                                       }
+                          },
+                          {
+                              "name":  "canopy_cracked",
+                              "position":  {
+                                               "x":  524,
+                                               "y":  1772
+                                           },
+                              "size":  {
+                                           "w":  128,
+                                           "h":  128
+                                       }
+                          },
+                          {
+                              "name":  "canopy_shut",
+                              "position":  {
+                                               "x":  652,
+                                               "y":  1772
+                                           },
+                              "size":  {
+                                           "w":  128,
+                                           "h":  128
+                                       }
+                          }
                       ]
 }

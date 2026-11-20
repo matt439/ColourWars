@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/config/presentation/presentation.h"
 #include "game/states/menu_panel.h"
+#include "game/states/loadout_choice.h"
 #include "scripts/acceptance/support/sprite_sheet.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/math/vector2i.h"
@@ -22,10 +23,10 @@ namespace
 {
     using acceptance::require;
 
-    constexpr const char* keys[]{ "sprayer", "sniper", "roller", "mister", "bucket", "random" };
-    constexpr const wchar_t* names[]{ L"Sprayer", L"Sniper", L"Roller", L"Mister", L"Bucket", L"Random" };
+    constexpr const char* keys[]{ "sprayer", "sniper", "roller", "mister", "bucket", "umbrella", "random" };
+    constexpr const wchar_t* names[]{ L"Sprayer", L"Sniper", L"Roller", L"Mister", L"Bucket", L"Umbrella", L"Random" };
     constexpr WeaponType types[]{ WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
-        WeaponType::mister, WeaponType::bucket, WeaponType::random_primary };
+        WeaponType::mister, WeaponType::bucket, WeaponType::umbrella, WeaponType::random_primary };
 
     using acceptance::read_document;
     using acceptance::write_document;
@@ -93,7 +94,7 @@ namespace
     {
         const auto& art = look.main_menu().weapon_select_art;
         require(selectable_weapon_count == std::size(keys) && art.sheet == "weapon_paint" &&
-            art.fill_frame == "pixel", "Weapon catalog changed the six existing choices or atlas defaults");
+            art.fill_frame == "pixel", "Weapon catalog changed the seven choices or atlas defaults");
         for (size_t index = 0; index < std::size(keys); ++index)
         {
             const auto& entry = art.choice(types[index]);
@@ -104,7 +105,17 @@ namespace
                 entry.supply_strip == (supply ? std::string(keys[index]) + "_supply" : std::string()),
                 "Authored catalog differs from the previous name/base/paint/supply choices");
         }
-        for (const int invalid : { -1, 6, 7, 8, 99 })
+        LoadoutChoice row(WeaponType::sprayer, SubType::wall);
+        for (size_t index = 0; index < std::size(types); ++index)
+        {
+            require(row.tool() == types[index] && row.cycle(Direction::right),
+                "Weapon Select must visit every authored tool, then Random");
+        }
+        require(row.tool() == WeaponType::sprayer && row.cycle(Direction::left) &&
+            row.tool() == WeaponType::random_primary && row.cycle(Direction::left) &&
+            row.tool() == WeaponType::umbrella && row.proceed() && row.proceed() &&
+            row.resolved_sub(0) == SubType::wall, "Umbrella and paint wall must be a selectable loadout");
+        for (const int invalid : { -1, static_cast<int>(WeaponType::none), 8, 99 })
         {
             bool rejected = false;
             try { art.choice(static_cast<WeaponType>(invalid)); }
@@ -373,7 +384,7 @@ int main(int argc, char** argv)
         check_names(variants, world, content);
         check_sparse_catalog(variants, content);
         check_no_legacy_error(variants, world, content);
-        std::cout << "PASS weapon catalog: six keyed defaults, normalized names, enum/content/resource guards, "
+        std::cout << "PASS weapon catalog: seven keyed defaults, normalized names, enum/content/resource guards, "
             "custom sparse icons, overlay/strip geometry and optional legacy error frame.\n";
         return 0;
     });

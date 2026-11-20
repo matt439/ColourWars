@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/match/series_stage_rule.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/stage.h"
 #include "scripts/acceptance/support/probe.h"
@@ -128,7 +129,7 @@ namespace
 
 	void check_shipped_stages(const std::filesystem::path& content)
 	{
-		// The exact pins: the thirteen registered stages, and which of them
+		// The exact pins: the registered stages, and which of them
 		// Random may draw. Every other probe walks the manifest instead.
 		const std::map<std::string, bool> expected_random{
 			{ "movement_course", false }, { "king_of_the_hill", false }, { "turbulence", false },
@@ -136,7 +137,7 @@ namespace
 			{ "turbulence_blockout", false }, { "turbulence_mover_trial", false },
 			{ "turbulence_slab_trial", true }, { "turbulence_ferry_trial", false },
 			{ "turbulence_gate_trial", false }, { "turbulence_lift_trial", false },
-			{ "turbulence_paint_lift_trial", false } };
+			{ "turbulence_paint_lift_trial", false }, { "turbulence_fill_trial", false }, { "sluice_works", true } };
 		StageList stages;
 		std::vector<std::string> order;
 		std::set<std::string> names_seen;
@@ -165,23 +166,25 @@ namespace
 			}
 		}
 		require(defaulted_arenas == 1, "Acceptance needs exactly one arena without include_in_random");
-		require(stages.size() == expected_random.size() && stages.size() == 13,
-			"Stage selection must expose exactly the thirteen registered stages");
+		require(stages.size() == expected_random.size(),
+			"Stage selection must expose exactly the registered stages");
 		// REV#26 (2026-11-13): the Random arenas first, then the course, the
 		// originals and the Turbulence Yard trials.
 		require(order == std::vector<std::string>{ "crossfeed", "press_tower", "close_quarters",
-			"turbulence_slab_trial", "movement_course", "king_of_the_hill", "turbulence",
+			"turbulence_slab_trial", "sluice_works", "movement_course", "king_of_the_hill", "turbulence",
 			"turbulence_blockout", "turbulence_mover_trial", "turbulence_ferry_trial",
-			"turbulence_gate_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial" },
+			"turbulence_gate_trial", "turbulence_lift_trial", "turbulence_paint_lift_trial", "turbulence_fill_trial" },
 			"Stage Select's shipped order changed from REV#26's");
 		require(stage_select_slot(stages, "") == stages.size(),
 			"A fresh save must open the shipped Stage Select on Random");
 		const std::vector<size_t> candidates = random_stage_indices(stages);
-		require(candidates.size() == 4, "Close Quarters, Crossfeed, Press Tower and the slab trial must be the four Random candidates");
+		require(rotated_stage(stages, "turbulence_slab_trial") == "sluice_works" &&
+			rotated_stage(stages, "sluice_works") == "crossfeed",
+			"Series rotation must reach Sluice Works after Slab Yard and wrap to Crossfeed");
 		std::set<std::string> candidate_names;
 		for (const size_t index : candidates) { candidate_names.insert(stages[index].name); }
-		require(candidate_names == std::set<std::string>{ "close_quarters", "crossfeed", "press_tower", "turbulence_slab_trial" },
-			"Random changed its four accepted arena identities");
+		require(candidate_names == std::set<std::string>{ "close_quarters", "crossfeed", "press_tower", "turbulence_slab_trial", "sluice_works" },
+			"Random changed its accepted arena identities");
 		require(std::find(candidates.begin(), candidates.end(), crossfeed_index) != candidates.end(),
 			"Shipped Random selection omitted accepted Crossfeed");
 		for (size_t draw = 0; draw < candidates.size(); ++draw)
@@ -194,7 +197,7 @@ namespace
 		for (const size_t last : candidates)
 		{
 			std::map<size_t, int> hits;
-			for (size_t draw = 0; draw < 12; ++draw)
+			for (size_t draw = 0; draw < (candidates.size() - 1) * 4; ++draw)
 			{
 				const size_t index = random_stage_index(stages, draw, stages[last].name);
 				require(index != last, "Shipped Random repeated the last stage: " + stages[last].name);
@@ -202,7 +205,7 @@ namespace
 					"Shipped Random after a last stage admitted an explicit-only stage");
 				++hits[index];
 			}
-			require(hits.size() == 3, "Shipped Random after a last stage must reach the other three arenas");
+			require(hits.size() == candidates.size() - 1, "Shipped Random after a last stage must reach every other eligible arena");
 			for (const auto& [index, count] : hits)
 			{
 				require(count == 4, "Shipped Random after a last stage favoured " + stages[index].name);
@@ -250,7 +253,7 @@ int main(int argc, char** argv)
 		check_mapping();
 		check_shipped_stages(argv[1]);
 		check_invalid_metadata(argv[1], std::filesystem::absolute(argv[0]).parent_path());
-		std::cout << "PASS stage selection: explicit course, originals and Turbulence trials, Crossfeed, Press Tower and slab trial in Random, eligible Random mapping, no repeat of the last stage, defaults and rejection guards.\n";
+		std::cout << "PASS stage selection: shipped order and rotation, explicit-only stages, Random mapping without an immediate repeat, defaults and rejection guards.\n";
 		return 0;
 	});
 }

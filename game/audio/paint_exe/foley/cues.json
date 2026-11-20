@@ -901,6 +901,63 @@
       ],
       "recommended_gain": 1.0,
       "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "umbrella.shot",
+      "cue_id": "umbrella.shot",
+      "tier": 1,
+      "description": "A fan of paint spatters from a short squeezed spray, with two staggered wet flecks.",
+      "path": "game/audio/paint_exe/foley/masters/umbrella_shot.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_drips",
+        "bsb_small_splash_3",
+        "bsb_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "umbrella.open",
+      "cue_id": "umbrella.open",
+      "tier": 1,
+      "description": "A broad paper flap unfolds and ends on the latch click of the opening canopy.",
+      "path": "game/audio/paint_exe/foley/masters/umbrella_open.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_flips1",
+        "owlish_plug"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "umbrella.block",
+      "cue_id": "umbrella.block",
+      "tier": 1,
+      "description": "A muffled pellet drums on taut fabric with a small wet tap at contact.",
+      "path": "game/audio/paint_exe/foley/masters/umbrella_block.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "umbrella.break",
+      "cue_id": "umbrella.break",
+      "tier": 1,
+      "description": "The canopy ribs give with a sharp metal snap followed by a collapsing paper rattle.",
+      "path": "game/audio/paint_exe/foley/masters/umbrella_break.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_metal_clank",
+        "owlish_paper_crumple2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
     }
   ]
 }

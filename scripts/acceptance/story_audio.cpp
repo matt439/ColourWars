@@ -277,6 +277,7 @@ namespace
 
 #include "scripts/acceptance/story_audio/story_checks.h"
 #include "scripts/acceptance/story_audio/weapon_feedback_checks.h"
+#include "scripts/acceptance/story_audio/umbrella_checks.h"
 #include "scripts/acceptance/story_audio/movement_checks.h"
 #include "scripts/acceptance/story_audio/paint_checks.h"
 #include "scripts/acceptance/story_audio/painted_checks.h"
@@ -347,6 +348,7 @@ int main(int argc, char** argv)
 		check_reveal_details(world);
 		check_long_reveal(world);
 		check_weapon_starts(world);
+		check_umbrella_cues(world);
 		check_empty_and_recovered(world, content);
 		check_sniper_ready(world, content);
 		check_low_warning(world);

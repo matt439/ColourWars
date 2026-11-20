@@ -148,7 +148,7 @@ running.
 |---|---|
 | `stage <name\|next\|prev\|random>` | start that stage (from a menu) or rebuild the match on it |
 | `players <1-4> [bot]` | seats: connected pads in slot order, then keyboard/mouse, then idle dummies. With no pad, seat 1 is keyboard/mouse. A second word is `bot all <bot>` as well (`players 4 paint`). In a menu it is stored for `stage`; a match started from the menus instead drops it (logged), as does a match ending with it still queued |
-| `weapon <seat\|all> <sprayer\|sniper\|roller\|mister\|bucket\|random>` | a seat's weapon (seats are 1-4) |
+| `weapon <seat\|all> <sprayer\|sniper\|roller\|mister\|bucket\|umbrella\|random>` | a seat's weapon (seats are 1-4) |
 | `seat <1-4> team <a\|b>`, `seat <2-4> bot <easy\|normal\|hard>`, `seat <2-4> human`, `seat <1-4> boost <0\|1\|2>`, `seat <1-4> sub <grenade\|sprinkler\|wall\|random>` | what the shipping setup chooses per seat: the team, a [shipping bot](debug-console-record.md#roster-statements-for-bots-teams-and-boost-dbg17) at a difficulty (the seat's controller, with no device or pane), a bot handed back to a human, Boost, and the sub weapon (`ROAD#11`; Random draws when the plan applies). Queued like `weapon`, applied after `players` in typed order; seat 1 stays human. Console only, not in the debug menu |
 | `intro <auto\|full\|quick\|off>` | how the next match begins: `auto` is the game's choice (the whole intro on a match's first build, the quick one from the colour preview on a rematch), `off` starts at the split-screen countdown. `record` and `play`, and any one-player match, always build without one (variable) |
 | `feedback <on\|off\|toggle>` | movement feedback (variable; `1`/`0` too). Immediate |
@@ -438,7 +438,7 @@ The latest validation is recorded under
 | `presentation.combat_feedback.keyline` | live | Outlines of existing hurt ticks and detached elimination fragments, on the next draw. |
 | `presentation.blocked_shot.highlight` | live | Stop ticks of existing blocked-shot cues, on the next draw. |
 | `presentation.blocked_shot.keyline` | live | Outlines of existing blocked-shot stop ticks and rebound beads, on the next draw. |
-| `presentation.idle_drip.keyline` | live | Outlines of existing attached beads and falling drops for Sprayer, Sniper and Bucket, on the next draw. |
+| `presentation.idle_drip.keyline` | live | Outlines of existing attached beads and falling drops for Sprayer, Sniper, Bucket and Umbrella, on the next draw. |
 | `presentation.respawn_redraw.pen_colour` | live | Existing partial respawn outlines, on the next draw. |
 | `presentation.opening.cursor_art.ink` | live | Ink of existing cursor arrows and reveal click ticks, on the next draw. |
 | `presentation.opening.cursor_art.fill` | live | Fill of those same existing arrows and click ticks, on the next draw. |
@@ -533,8 +533,8 @@ The pair's validation is recorded under
 [remaining live-tuning work](debug-console-record.md#remaining-live-tuning-work-dbg1).
 
 Idle-drip keyline is borrowed on every attached-bead and falling-drop draw.
-The common colour propagates into all five fixed tool records while only
-Sprayer, Sniper and Bucket remain enabled and receive Level drip objects.
+The common colour propagates into all six fixed tool records while only
+Sprayer, Sniper, Bucket and Umbrella remain enabled and receive Level drip objects.
 Editing it preserves those record addresses, tool geometry, bead/drop state,
 captured opaque team-paint interiors and captured sheet/frame bindings.
 Only the keyline is premultiplied; these drips have no event fade. Nonblack
@@ -1124,11 +1124,14 @@ hash every 60 updates and the final state. In memory a recording is the same
 `RoundTape` the shipping instant replay keeps (`game/match/round_tape.h`); the file
 is that tape plus the checks.
 
-Files use **format 11** (`DBG#2` added later rounds, so format 7 is refused;
+Files use **format 12**. Umbrella seats record whether the canopy is open,
+its remaining hits and the exact recovery timer. Playback requires the
+current format and checks those fields even when paint and player health match.
+`DBG#2` added later rounds in format 8.
 `ROAD#28` had moved the motion block to schema 2 for vertical lifts, `ROAD#22`
 made each round's variant required in format 9, and `ROAD#11` added the Sub
 action's input flag, 512, in format 10 and each seat's `sub`, written only
-when it is not the grenade, in format 11), with
+when it is not the grenade, in format 11. Each round records
 explicit human/bot controller kind and
 Easy/Normal/Hard difficulty for each participant. `seed` is required and is the
 round seed, which `play` builds from, so a recording made without `seed`
@@ -1397,6 +1400,9 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 | `review_arena <stage>` | the [arena review pack](debug-console-record.md#arena-review-screenshot-pack-dbg18): seed 7, paint bots on every seat, a clean frame at GO and a heavy one after 20 match seconds at 4, 3, 2 and 1 players, each with its checksum, into `screens\review-<stage>-<time>\` |
 | `review_press_tower`, `review_close_quarters`, `review_crossfeed`, `review_turbulence_blockout`, `review_turbulence_mover_trial`, `review_turbulence_slab_trial`, `review_turbulence_ferry_trial`, `review_turbulence_gate_trial`, `review_turbulence_lift_trial`, `review_turbulence_paint_lift_trial` | `review_arena` for that stage, then every station photographed on the one-player heavy frame with the station labels on |
 | `review_king_of_the_hill`, `review_turbulence` | `review_arena` for that stage |
+| `review_sluice_works` | clean and painted two- and four-player views, followed by close views of the gate and bridge on [Sluice Works](sluice-works.md) |
+| `review_umbrella` | the Umbrella's first pellet volley, the damaged canopies in crossfire and a four-player match on Sluice Works. [Gameplay captures](feature-roadmap.md#umbrella-tool-proposal-road13) |
+| `review_turbulence_fill_trial` | the centre baffle before, during and after a fill in two- and four-player views. Run with Reduce effects on for the stationary stroke. |
 | `review_arena_frames`, `review_arena_pass`, `review_arena_end` | helpers of `review_arena` and the wrappers |
 | `turbulence_station_tours` | every Turbulence variant's stations, one screenshot each with the collision overlay: `turbulence_station_tour <stage>` (the ten shared stations) on the blockout and gate trial, `turbulence_mover_station_tour <stage>` (plus the four mover ends, photographed paused as placed) on the mover, ferry and slab trials, and `turbulence_lift_station_tour <stage>` (plus each lift's top and foot) on the lift and paint lift trials, into `screens\turbulence-stations-<stage>-<time>\` |
 | `turbulence_station_tour_shared`, `station_tour_begin`, `station_tour_end` | shared station lists and setup/cleanup for the tours |
