@@ -108,6 +108,7 @@ def join_loop(samples, seconds):
 def main():
     sources = json.loads((HERE / 'sources.json').read_text())['sources']
     recipes = json.loads((HERE / 'recipes.json').read_text())['recipes']
+    pending = json.loads((HERE.parent / 'acceptance.json').read_text()).get('pending_listening_master_sha256', {})
     needed = {layer['source'] for recipe in recipes for layer in recipe['layers']}
     cache = {row['id']: read_source(row) for row in sources if row['id'] in needed}
     cues, provenance = [], []
@@ -159,7 +160,8 @@ def main():
             peak_dbfs=20 * math.log10(max(np.max(np.abs(pcm.astype(float))) / 32768, 1e-12)),
             rms_dbfs=20 * math.log10(max(np.sqrt(np.mean((pcm.astype(float)/32768)**2)), 1e-12)),
             loop_start=0 if loop else None, loop_end_inclusive=len(pcm)-1 if loop else None,
-            review_status='Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed'))
+            review_status=('Shipped for attended listening; master hash in ../acceptance.json.'
+                if recipe['id'] in pending else 'Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed')))
     (HERE / 'cues.json').write_text(json.dumps({'version': 1, 'cues': cues}, indent=2)+'\n')
     (HERE / 'PROVENANCE.json').write_text(json.dumps({'version': 1, 'assets': provenance}, indent=2)+'\n')
     print(f'Rendered {len(cues)} foley candidates from {len(needed)} retained recordings.')

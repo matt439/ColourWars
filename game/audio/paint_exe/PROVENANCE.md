@@ -1,7 +1,7 @@
 # Paint.exe audio provenance
 
-Produced 2026-10-14 for POL#22. Masters stay outside live content; the runtime bank uses accepted exports.
-Author accepted this set on 2026-10-14; the game ships it. On 2026-11-05 the author accepted its in-game hooks and mix as they stand (POL#23) and waived the listening and release checks (ROAD#3), which were not performed.
+The original set was produced on 2026-10-14 for POL#22. The runtime bank uses exports of the listed masters.
+The game ships 106 accepted masters and 4 additional masters pending attended listening. On 2026-11-05 the author accepted the original set's in-game hooks and mix (POL#23) and waived the listening and release checks (ROAD#3), which were not performed.
 [acceptance.json](acceptance.json) records the author's response and the exact accepted master hashes.
 Every source is retained and hashed in [sources.json](sources.json). Every exported wave
 has the record below and a hash in [cues.json](cues.json). No legacy audio was used.
@@ -1235,7 +1235,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: A lobbed paint bomb: a light cap tick over a short wet slosh and a breath of air as it leaves the hand. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14; the game ships it.
+- Production date: 2026-11-09. Status: Author accepted this cue on 2026-11-09; the game ships it.
 
 ### sub.sprinkler.throw
 
@@ -1247,7 +1247,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: A sprinkler head tossed: a dry plastic click, then a short pressurised spritz. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14; the game ships it.
+- Production date: 2026-11-09. Status: Author accepted this cue on 2026-11-09; the game ships it.
 
 ### sub.wall.set
 
@@ -1259,7 +1259,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: A paint wall set down: a heavy, slowed wet slap with a low body thump and a paper crush. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14; the game ships it.
+- Production date: 2026-11-09. Status: Author accepted this cue on 2026-11-09; the game ships it.
 
 ### ui.cancel
 
@@ -2004,3 +2004,51 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Modifications: An occasional real pipe-like droplet; off by default. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
 - Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14; the game ships it.
+
+### umbrella.block
+
+- Bank name: `umbrella.block`; cue: `umbrella.block`; Tier 1.
+- Export: [foley/masters/umbrella_block.wav](foley/masters/umbrella_block.wav); loop: no.
+- Creator/source: Codex arrangement/edit of `bsb_sponge`, `owlish_fruit3`; exact creators and licences above.
+- Licence/permission: CC0 1.0 source recordings; MIT original arrangement/edit recipe.
+- Release ZIP and built-bank use: yes. Source WAV and editable-project redistribution: yes.
+- Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
+- Modifications: A muffled pellet drums on taut fabric with a small wet tap at contact. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
+- Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
+- Production date: 2026-11-20. Status: Shipped for attended listening.
+
+### umbrella.break
+
+- Bank name: `umbrella.break`; cue: `umbrella.break`; Tier 1.
+- Export: [foley/masters/umbrella_break.wav](foley/masters/umbrella_break.wav); loop: no.
+- Creator/source: Codex arrangement/edit of `owlish_metal_clank`, `owlish_paper_crumple2`; exact creators and licences above.
+- Licence/permission: CC0 1.0 source recordings; MIT original arrangement/edit recipe.
+- Release ZIP and built-bank use: yes. Source WAV and editable-project redistribution: yes.
+- Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
+- Modifications: The canopy ribs give with a sharp metal snap followed by a collapsing paper rattle. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
+- Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
+- Production date: 2026-11-20. Status: Shipped for attended listening.
+
+### umbrella.open
+
+- Bank name: `umbrella.open`; cue: `umbrella.open`; Tier 1.
+- Export: [foley/masters/umbrella_open.wav](foley/masters/umbrella_open.wav); loop: no.
+- Creator/source: Codex arrangement/edit of `owlish_paper_flips1`, `owlish_plug`; exact creators and licences above.
+- Licence/permission: CC0 1.0 source recordings; MIT original arrangement/edit recipe.
+- Release ZIP and built-bank use: yes. Source WAV and editable-project redistribution: yes.
+- Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
+- Modifications: A broad paper flap unfolds and ends on the latch click of the opening canopy. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
+- Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
+- Production date: 2026-11-20. Status: Shipped for attended listening.
+
+### umbrella.shot
+
+- Bank name: `umbrella.shot`; cue: `umbrella.shot`; Tier 1.
+- Export: [foley/masters/umbrella_shot.wav](foley/masters/umbrella_shot.wav); loop: no.
+- Creator/source: Codex arrangement/edit of `bsb_drips`, `bsb_small_splash_3`, `bsb_spray`; exact creators and licences above.
+- Licence/permission: CC0 1.0 source recordings; MIT original arrangement/edit recipe.
+- Release ZIP and built-bank use: yes. Source WAV and editable-project redistribution: yes.
+- Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
+- Modifications: A fan of paint spatters from a short squeezed spray, with two staggered wet flecks. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
+- Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
+- Production date: 2026-11-20. Status: Shipped for attended listening.

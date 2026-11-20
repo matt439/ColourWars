@@ -78,7 +78,7 @@ namespace ColourWars {
     // Best-short-side packing, with stable input order and no rotation.
     public class ToolPacker {
         private List<Rectangle> free = new List<Rectangle>();
-        public ToolPacker(int width,int height) { free.Add(new Rectangle(0,0,width,height)); }
+        public ToolPacker(Rectangle shelf) { free.Add(shelf); }
         public Rectangle Add(int width,int height) {
             int best=-1,score=int.MaxValue,longScore=int.MaxValue;
             for(int i=0;i<free.Count;++i) {
@@ -122,7 +122,7 @@ $colours = @{}
 foreach ($entry in $source.palette.PSObject.Properties) {
     $colours[$entry.Name] = [Drawing.ColorTranslator]::FromHtml('#'+$entry.Value)
 }
-$contracts = [ordered]@{ sprayer=@(70,30); sniper=@(100,30); roller=@(100,50); mister=@(60,30); bucket=@(60,60) }
+$contracts = [ordered]@{ sprayer=@(70,30); sniper=@(100,30); roller=@(100,50); mister=@(60,30); bucket=@(60,60); umbrella=@(60,32) }
 
 function Draw-Shape {
     param([Drawing.Graphics] $Graphics, [object[]] $Shape)
@@ -181,7 +181,7 @@ try {
                     throw "$frame has no $hand grip material at presentation.figure.grips.$name.$hand."
                 }
             }
-            if ($name -in @('sprayer','sniper','mister') -and
+            if ($name -in @('sprayer','sniper','mister','umbrella') -and
                 $drawing.GetPixel(($drawing.Width-1),([int]($drawing.Height/2))).A -eq 0) {
                 throw "$frame must end on its unchanged aim-line muzzle."
             }
@@ -213,9 +213,14 @@ try {
             }
         }
     }
-    $packer = [ColourWars.ToolPacker]::new([int]$source.atlas_width,[int]$source.atlas_height)
+    # Keep the original five tools and the utility frames at their shipped
+    # coordinates. The umbrella poses fit on one shelf below them.
+    $shelfY = [int]$source.extension_shelf_y
+    $packer = [ColourWars.ToolPacker]::new([Drawing.Rectangle]::new(0,0,[int]$source.atlas_width,$shelfY))
+    $extension = [ColourWars.ToolPacker]::new([Drawing.Rectangle]::new(0,$shelfY,[int]$source.atlas_width,([int]$source.atlas_height-$shelfY)))
     foreach ($item in ($items | Sort-Object @{Expression={$_.width*$_.height};Descending=$true},@{Expression={$_.name}})) {
-        $allocated = $packer.Add(($item.width+8),($item.height+8))
+        $shelf = if ($item.name -like 'umbrella*') { $extension } else { $packer }
+        $allocated = $shelf.Add(($item.width+8),($item.height+8))
         $box = [Drawing.Rectangle]::new(($allocated.X+4),($allocated.Y+4),$item.width,$item.height)
         if ($item.layer -eq 2) {
             $width = [int]$item.drawing.Width*$scale
@@ -245,7 +250,8 @@ try {
         sprite_frames=@($frames.ToArray()|Sort-Object @{Expression={$_.name}})}
     [IO.File]::WriteAllText((Join-Path $textures 'weapon_paint.json'),(($definition|ConvertTo-Json -Depth 6)+[Environment]::NewLine),[Text.UTF8Encoding]::new($false))
 
-    $preview=[Drawing.Bitmap]::new(1420,2540,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $supplyTop = 105 + $contracts.Count * 435
+    $preview=[Drawing.Bitmap]::new(1420,($supplyTop+260),[Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g=[Drawing.Graphics]::FromImage($preview)
     $font=[Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace,10)
     $small=[Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace,8)
@@ -304,10 +310,10 @@ try {
             }
             ++$row
         }
-        $g.DrawString('Reservoir supply / native 720p scale / full, half, empty; hardware and wet nozzles stay unchanged',$font,$ink,12,2280)
+        $g.DrawString('Reservoir supply / native 720p scale / full, half, empty; hardware and wet nozzles stay unchanged',$font,$ink,12,$supplyTop)
         $row=0
         foreach($name in @('sprayer','mister')) {
-            $top=2310+$row*110
+            $top=$supplyTop+30+$row*110
             $g.DrawString($name,$font,$ink,12,$top)
             $col=0
             foreach($entry in $palettes.GetEnumerator()) {
@@ -342,4 +348,4 @@ try {
 Copy-Item -LiteralPath (Join-Path $working 'weapon_paint.png') -Destination (Join-Path $textures 'weapon_paint.png') -Force
 $staleDds = Join-Path $textures 'weapon_paint.dds'
 if (Test-Path -LiteralPath $staleDds) { Remove-Item -LiteralPath $staleDds }
-Write-Output 'Built 20 tool poses, complementary wet masks, two full-canvas supply strips, retained utility frames, runtime PNG and source lineup.'
+Write-Output 'Built 24 tool poses, complementary wet masks, two full-canvas supply strips, retained utility frames, runtime PNG and source lineup.'

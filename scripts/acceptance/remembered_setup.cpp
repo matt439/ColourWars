@@ -54,9 +54,9 @@ namespace
         labrador::ScreenLayout::two_player, labrador::ScreenLayout::three_player,
         labrador::ScreenLayout::four_player };
     const std::array<const char*, 4> layout_keys{ "one_player", "two_player", "three_player", "four_player" };
-    const std::array<WeaponType, 5> weapons{ WeaponType::sprayer, WeaponType::sniper,
-        WeaponType::roller, WeaponType::mister, WeaponType::bucket };
-    const std::array<const char*, 5> weapon_keys{ "sprayer", "sniper", "roller", "mister", "bucket" };
+    const std::array<WeaponType, 6> weapons{ WeaponType::sprayer, WeaponType::sniper,
+        WeaponType::roller, WeaponType::mister, WeaponType::bucket, WeaponType::umbrella };
+    const std::array<const char*, 6> weapon_keys{ "sprayer", "sniper", "roller", "mister", "bucket", "umbrella" };
 
     Save load(const acceptance::IsolatedSave& directory, const std::string& section,
         const std::string& version = "2")
@@ -494,7 +494,7 @@ int main(int argc, char** /*argv*/)
         check_bot_remembered_setup(directory.save_path());
         check_handicap_remembered_setup(directory.save_path());
         check_sub_remembered_setup(directory.save_path());
-        std::cout << "PASS remembered setup: all 1-4 seat layouts/five tools, concrete schema, solo B, fresh claims, "
+        std::cout << "PASS remembered setup: all 1-4 seat layouts/six tools, concrete schema, solo B, fresh claims, "
             "deterministic stage fallback/no RNG, legacy/newer/independent sections, malformed recovery, "
             "strict capture/save validation, actual staged-write/replacement failures, unchanged bytes/memory and retry; "
             "mixed bot rosters/all difficulties, human-only views, metadata recovery and legacy human defaults; "

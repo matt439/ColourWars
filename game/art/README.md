@@ -16,7 +16,7 @@ choices recorded in the polish plan.
 The workshop kit, comparison modes, atlas and dedicated probes were retired on
 2026-10-15. Its historical concept image and prompt remain in `polish/`; the
 [study records](../../docs/polish-playable-kit.md) and Git history retain the
-review evidence. The production painter and five-tool atlas below now implement
+review evidence. The production painter and tool atlas below now implement
 the accepted drawing language; composition review remains in the polish plan.
 
 ## Painter artwork
@@ -38,10 +38,10 @@ filtering to 48, 64 and 256. `python3 scripts/build_icon.py` rebuilds
 
 ## Weapon artwork
 
-The [five-tool source](weapons/README.md) is the editable Paint.exe production
+The [six-tool source](weapons/README.md) is the editable Paint.exe production
 drawing: integer vectors, neutral hardware and explicit team-paint materials.
 It supplies a pressure sprayer, precision nozzle, round decorator's roller,
-garden atomiser and dented paint tin. Each has idle, two motion and lifted poses.
+garden atomiser, dented paint tin and folded paint umbrella. Each has idle, two motion and lifted poses.
 The original image-generated `weapon_paint_source.png` and
 `weapon_paint_prompt.txt` remain historical authoring material.
 
@@ -51,7 +51,7 @@ From the repository root, run:
 powershell -ExecutionPolicy Bypass -File scripts/build-weapon-art.ps1
 ```
 
-This rasterises and packs the five tools, copies the legacy
+This rasterises and packs the six tools, copies the legacy
 utility frames from `sources/textures/sprite_sheet_1.png`, and regenerates
 `sources/textures/weapon_paint.png` here and
 `game/content/textures/weapon_paint.{json,png}`, plus the authoring
@@ -93,7 +93,7 @@ texconv; the PNG decodes to the same bytes, which is why it could replace it
 ## Projectile and paint artwork
 
 The [effects source and recipe](paint-fx/README.md) supply distinct liquid shot
-and surface-impact strips for all five tools, including the roller's contact
+and surface-impact strips for all six tools, including the roller's contact
 swash. Rebuild the grayscale atlas and team-colour lineup with
 `powershell -ExecutionPolicy Bypass -File scripts/build-paint-fx-art.ps1`.
 Only `game/content/textures/paint_fx.{json,png}` enters runtime content.

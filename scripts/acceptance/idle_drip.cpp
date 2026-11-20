@@ -60,8 +60,8 @@ namespace
             "Grown and stretched bead did not detach into a fresh falling drop");
     }
 
-    constexpr std::array supported_tools{ WeaponType::sprayer, WeaponType::sniper, WeaponType::bucket };
-    constexpr std::array roster{ WeaponType::sprayer, WeaponType::sniper, WeaponType::bucket, WeaponType::roller };
+    constexpr std::array supported_tools{ WeaponType::sprayer, WeaponType::sniper, WeaponType::bucket, WeaponType::umbrella };
+
 
     // Edited copies of one content file, each in its own scratch file.
     class ContentVariant : public acceptance::JsonVariants
@@ -101,7 +101,7 @@ namespace
         }
 
         std::unique_ptr<Level> build(float duration = 300.0f,
-            const std::array<WeaponType, 4>& tools = roster)
+            const std::array<WeaponType, 4>& tools = supported_tools)
         {
             MatchSetup settings;
             settings.set_stage("movement_course");

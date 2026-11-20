@@ -56,6 +56,14 @@ def require(condition: bool, message: str) -> None:
         raise InvalidAudio(message)
 
 
+def runtime_master_hashes(record: dict) -> dict[str, str]:
+    """The exact accepted masters plus any explicitly pinned for listening in game."""
+    accepted = record["master_sha256"]
+    pending = record.get("pending_listening_master_sha256", {})
+    require(not accepted.keys() & pending.keys(), "a master cannot be accepted and pending listening")
+    return accepted | pending
+
+
 def sha256(path: Path) -> str:
     with path.open("rb") as source:
         return hashlib.file_digest(source, "sha256").hexdigest()
@@ -395,6 +403,17 @@ def build(manifest: dict, report: dict, output: Path, root: Path = REPOSITORY) -
     listing = output / "waves.txt"
     listing.write_text("\n".join(exported["export_path"] for exported in exports) + "\n", encoding="utf-8")
     subprocess.run([str(xwbtool), "-nologo", "-nc", "-f", "-y", "-o", str(bank), "-flist", str(listing)], check=True)
+    # XWBTool's WAVEBANKDATA ends with its wall-clock BuildTime (FILETIME).
+    # It has no playback role. Clear it so a fresh export reproduces the receipt.
+    with bank.open("r+b") as output_bank:
+        header = output_bank.read(20)
+        require(len(header) == 20 and struct.unpack_from("<3I", header) == (0x444E4257, 46, 44),
+                "cannot identify XWBTool bank header")
+        metadata, length = struct.unpack_from("<2I", header, 12)
+        require(length == 96 and 52 <= metadata <= bank.stat().st_size - length,
+                "cannot identify XWBTool bank metadata")
+        output_bank.seek(metadata + length - 8)
+        output_bank.write(bytes(8))
     bank_report = inspect_bank(bank, exports)
     definition = {"waves": [cue["id"] for cue in manifest["cues"]],
                   "create_effect_instance_for_each_wave": False, "sound_effect_instances": []}

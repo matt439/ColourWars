@@ -27,6 +27,7 @@ CollisionLayer collision_layer(CollisionObjectType type)
 	case CollisionObjectType::projectile_jet_team_a:
 	case CollisionObjectType::projectile_rolling_team_a:
 	case CollisionObjectType::projectile_ball_team_a:
+	case CollisionObjectType::projectile_pellet_team_a:
 	case CollisionObjectType::projectile_mist_team_a:
 		return collision_layers::projectile_team_a;
 
@@ -34,6 +35,7 @@ CollisionLayer collision_layer(CollisionObjectType type)
 	case CollisionObjectType::projectile_jet_team_b:
 	case CollisionObjectType::projectile_rolling_team_b:
 	case CollisionObjectType::projectile_ball_team_b:
+	case CollisionObjectType::projectile_pellet_team_b:
 	case CollisionObjectType::projectile_mist_team_b:
 		return collision_layers::projectile_team_b;
 
@@ -69,6 +71,7 @@ CollisionMask collision_mask(CollisionObjectType type)
 	case CollisionObjectType::projectile_jet_team_a:
 	case CollisionObjectType::projectile_rolling_team_a:
 	case CollisionObjectType::projectile_ball_team_a:
+	case CollisionObjectType::projectile_pellet_team_a:
 	case CollisionObjectType::projectile_mist_team_a:
 		return collision_layers::structure | collision_layers::player_team_b;
 
@@ -76,6 +79,7 @@ CollisionMask collision_mask(CollisionObjectType type)
 	case CollisionObjectType::projectile_jet_team_b:
 	case CollisionObjectType::projectile_rolling_team_b:
 	case CollisionObjectType::projectile_ball_team_b:
+	case CollisionObjectType::projectile_pellet_team_b:
 	case CollisionObjectType::projectile_mist_team_b:
 		return collision_layers::structure | collision_layers::player_team_a;
 

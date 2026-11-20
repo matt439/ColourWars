@@ -16,6 +16,20 @@ namespace
 		return view.support_open && view.support_paint && view.support_bounds == support.bounds;
 	}
 
+	const MatchBotObservation::Enemy* nearest_canopy_threat(const MatchBotObservation& view)
+	{
+		if (view.weapon != WeaponType::umbrella || view.canopy_broken) { return nullptr; }
+		const MatchBotObservation::Enemy* threat = nullptr;
+		float nearest = std::numeric_limits<float>::max();
+		for (const auto& enemy : view.enemies)
+		{
+			const float distance = Vector2F::distance_squared(enemy.center, view.center);
+			if (distance < nearest && distance <= enemy.engage_distance * enemy.engage_distance)
+			{ nearest = distance; threat = &enemy; }
+		}
+		return threat;
+	}
+
 	const GameTuning& required(const GameTuning* tuning)
 	{
 		if (tuning == nullptr) { throw std::invalid_argument("A match bot requires tuning"); }
@@ -277,7 +291,7 @@ std::optional<float> MatchBot::roller_throw(const MatchBotObservation& view, boo
 	return right ? -tilt : pi + tilt;
 }
 
-void MatchBot::decide(const MatchBotObservation& view)
+void MatchBot::decide(const MatchBotObservation& view, const MatchBotObservation::Enemy* canopy_threat)
 {
 	this->decision_ = {};
 	this->decision_.connected = true;
@@ -447,6 +461,11 @@ void MatchBot::decide(const MatchBotObservation& view)
 		aim = match_bot_ballistics::aim_direction(tool, this->tuning_->projectile(tool.details.proj_type),
 			view.velocity, enemy->center - view.center, enemy->velocity);
 	}
+	else if (canopy_threat != nullptr)
+	{
+		// The pellets fall short, but the canopy can still face incoming fire.
+		aim = canopy_threat->center - view.center;
+	}
 	else if (sprinkler != nullptr)
 	{
 		const WeaponTuning& tool = this->tuning_->weapon(view.weapon);
@@ -482,7 +501,8 @@ void MatchBot::decide(const MatchBotObservation& view)
 	// A sub is used on a reaction, each to its own rule (sub_use), mid-climb
 	// never. The throw takes the aim for this step, with the decision's drawn
 	// error, and the tool holds its shot so the tank pays for the throw.
-	if (!this->refilling_ && !this->ascending_ && !this->climbing_ramp_ && !recovering)
+	if (!this->refilling_ && !this->ascending_ && !this->climbing_ramp_ && !recovering &&
+		(engaging || canopy_threat == nullptr))
 	{
 		if (const std::optional<float> throw_angle = this->sub_use(view, enemy, engaging, this->decision_.x_movement))
 		{
@@ -609,7 +629,8 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		view.enemies.empty() && this->recovery_left_ == 0 && !this->ascending_ && !this->climbing_ramp_)
 	{ this->react_in_ = std::min(this->react_in_, 1); }
 	if (this->recovery_left_ == 0 && this->replan_in_-- <= 0) { this->choose_territory(view); }
-	if (--this->react_in_ <= 0) { this->decide(view); }
+	const auto* canopy_threat = nearest_canopy_threat(view);
+	if (--this->react_in_ <= 0) { this->decide(view, canopy_threat); }
 	PlayerInputData input = this->decision_;
 	// A throw is one press. Its aim lasts only this step: the next reacts
 	// afresh, so the tool does not fire along the throw's arc.
@@ -664,9 +685,20 @@ PlayerInputData MatchBot::think(const MatchBotObservation& view)
 		}
 	}
 	input.connected = true;
-	// The reserve guard is immediate, even between policy reactions. It cannot
-	// buy an unaffordable shot or inherit firing from a depleted decision.
-	if (this->refilling_ || (view.refill_enabled && view.shot_empty)) { input.primary_shoot = false; }
+	// Preserve the refill retreat. A healthy canopy can still block on an
+	// empty tank; while a visible opponent can hit us, defending takes
+	// priority over saving the paint for the next affordable volley.
+	if (this->refilling_ || (view.refill_enabled && view.shot_empty))
+	{
+		input.primary_shoot = canopy_threat != nullptr && input.shoot_direction_requested && !input.sub_pressed;
+		if (input.primary_shoot)
+		{
+			input.shoot_angle = (canopy_threat->center - view.center).angle() + this->aim_error_;
+			input.shoot_direction = Vector2F(std::cos(input.shoot_angle), std::sin(input.shoot_angle));
+			input.right_analog_stick = input.shoot_direction;
+		}
+	}
+	if (view.weapon == WeaponType::umbrella && view.canopy_broken) { input.primary_shoot = false; }
 	input.jump_held = this->jump_left_ > 0;
 	input.jump_pressed = input.jump_held && !this->jump_was_held_;
 	this->jump_was_held_ = input.jump_held;

@@ -102,7 +102,7 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
         origin, flip, this->rotation());
     TextureObject::draw_with(draw_list, draw_rectangle,
         motion_enabled ? this->motion_paint_frames_[pose] : this->paint_frame_,
-        this->paint_override_.value_or(this->paint_colour()),
+        this->displayed_paint_colour(),
         origin, flip, this->rotation());
     if (this->supply_strip_)
     {
@@ -113,7 +113,7 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
         // cropped destination would snap its edges independently at 720p,
         // moving the liquid off its window during rotation or camera motion.
         this->sprite_sheet()->draw(draw_list, supply.frame_rect(level), draw_rectangle,
-            this->paint_override_.value_or(this->paint_colour()), this->rotation(), origin, flip);
+            this->displayed_paint_colour(), this->rotation(), origin, flip);
     }
 
     this->draw_mist_tail(draw_list);

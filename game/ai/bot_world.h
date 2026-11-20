@@ -35,6 +35,7 @@ struct BotBody
 	// The tool can fire its full shot now / has too little ammunition for one.
 	bool tool_ready = false;
 	bool tool_empty = false;
+	bool canopy_broken = false;
 	// From the body's centre to its tool's nozzle.
 	float muzzle_reach = 0.0f;
 	// The sub it carries, if any, and whether a Sub press now would throw it:

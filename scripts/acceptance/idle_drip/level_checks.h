@@ -48,14 +48,14 @@ namespace
         auto enabled = enabled_world.build(900.0f);
         auto disabled = disabled_world.build(900.0f);
         require(enabled->idle_drip(0) != nullptr && enabled->idle_drip(1) != nullptr &&
-            enabled->idle_drip(2) != nullptr && enabled->idle_drip(3) == nullptr,
-            "Level did not attach residual paint to precisely the sprayer, sniper and bucket");
+            enabled->idle_drip(2) != nullptr && enabled->idle_drip(3) != nullptr,
+            "Level did not attach residual paint to the sprayer, sniper, bucket and umbrella");
         {
             auto other = disabled_world.build(300.0f,
-                { WeaponType::mister, WeaponType::sniper, WeaponType::bucket, WeaponType::sprayer });
+                { WeaponType::mister, WeaponType::umbrella, WeaponType::roller, WeaponType::sprayer });
             require(other->idle_drip(0) == nullptr && other->idle_drip(1) != nullptr &&
-                other->idle_drip(2) != nullptr && other->idle_drip(3) != nullptr,
-                "Mister inherited residual paint or supported tools depended on their roster position");
+                other->idle_drip(2) == nullptr && other->idle_drip(3) != nullptr,
+                "Mister or Roller inherited residual paint or supported tools depended on their roster position");
         }
         std::vector<PlayerInputData> inputs(input_slots::count, input());
         const auto tick = [&]
@@ -63,7 +63,7 @@ namespace
             enabled->update(inputs, dt);
             disabled->update(inputs, dt);
             compare_gameplay(*enabled, *disabled);
-            for (int view = 0; view < 3; ++view)
+            for (int view = 0; view < static_cast<int>(supported_tools.size()); ++view)
             {
                 require(!disabled->idle_drip(view)->attached() && disabled->idle_drip(view)->drops().empty(),
                     "Disabled Level emitted a cosmetic drip");
@@ -78,12 +78,12 @@ namespace
         };
         const auto untouched_score = enabled->level_end_info().player_areas;
         const std::array untouched_ammo{ enabled->player(0).weapon_ammo(),
-            enabled->player(1).weapon_ammo(), enabled->player(2).weapon_ammo() };
-        std::array<bool, 3> fell{};
+            enabled->player(1).weapon_ammo(), enabled->player(2).weapon_ammo(), enabled->player(3).weapon_ammo() };
+        std::array<bool, supported_tools.size()> fell{};
         for (int step = 0; step < 1200; ++step)
         {
             tick();
-            for (int view = 0; view < 3; ++view)
+            for (int view = 0; view < static_cast<int>(supported_tools.size()); ++view)
             {
                 fell.at(static_cast<size_t>(view)) = fell.at(static_cast<size_t>(view)) ||
                     !enabled->idle_drip(view)->drops().empty();
@@ -95,7 +95,7 @@ namespace
             enabled->level_end_info().player_areas == untouched_score,
             "A real tool's idle drip failed to fall or captured a surface");
 
-        for (int view = 0; view < 3; ++view)
+        for (int view = 0; view < static_cast<int>(supported_tools.size()); ++view)
         {
             wait_for_bead(view);
             const auto paused = observation(*enabled->idle_drip(view));
@@ -114,8 +114,9 @@ namespace
                 tick();
                 const Weapon& weapon = enabled->player(view).primary_weapon();
                 const auto& look = enabled_world.presentation.idle_drip(weapon.type());
-                Vector2F local = view == 1 ? Vector2F(99.0f, 3.0f) : Vector2F(46.0f, 8.0f);
-                if (view == 0) { local = Vector2F(69.0f, 3.0f); }
+                const std::array wet_lips{ Vector2F(69.0f, 3.0f), Vector2F(99.0f, 3.0f),
+                    Vector2F(46.0f, 8.0f), Vector2F(58.0f, 2.0f) };
+                Vector2F local = wet_lips.at(static_cast<size_t>(view));
                 if (angle > pi * 0.5f || angle < -pi * 0.5f) { local.y = -local.y; }
                 const Vector2F anchor = weapon.draw_pos() + Vector2F::rotate_vector(local, angle);
                 const IdleDrip& drip = *enabled->idle_drip(view);
@@ -161,7 +162,7 @@ namespace
             for (int step = 0; step < 650; ++step)
             {
                 tick();
-                for (int supported = 0; supported < 3; ++supported)
+                for (int supported = 0; supported < static_cast<int>(supported_tools.size()); ++supported)
                 {
                     require(!enabled->idle_drip(supported)->attached() && enabled->idle_drip(supported)->drops().empty(),
                         "Live reduced-effects preference retained or restarted a tool drip");
@@ -171,10 +172,10 @@ namespace
             tick();
             require(!enabled->idle_drip(view)->attached() && enabled->idle_drip(view)->drops().empty() &&
                 enabled->idle_drip(view)->interval_remaining() >=
-                    enabled_world.presentation.idle_drip(roster.at(static_cast<size_t>(view))).interval_min - dt,
+                    enabled_world.presentation.idle_drip(supported_tools.at(static_cast<size_t>(view))).interval_min - dt,
                 "Restoring real Level effects resurrected an old drip or skipped the fresh wait");
         }
-        std::cout << "PASS idle drip: all three real tools, rendered lip transforms, pause/actions/death/respawn, live preference and gameplay equivalence\n";
+        std::cout << "PASS idle drip: all four real tools, rendered lip transforms, pause/actions/death/respawn, live preference and gameplay equivalence\n";
     }
 
     void check_empty_held_fire(const std::filesystem::path& content)
@@ -189,7 +190,7 @@ namespace
         World world(content, tuning);
         auto level = world.build();
         std::vector<PlayerInputData> inputs(input_slots::count, input());
-        for (int view = 0; view < 3; ++view)
+        for (int view = 0; view < static_cast<int>(supported_tools.size()); ++view)
         {
             for (int step = 0; step < 1200 && !level->idle_drip(view)->attached(); ++step)
             {
@@ -206,7 +207,7 @@ namespace
         for (int step = 0; step < 1200; ++step)
         {
             level->update(inputs, dt);
-            for (int view = 0; view < 3; ++view)
+            for (int view = 0; view < static_cast<int>(supported_tools.size()); ++view)
             {
                 require(!level->idle_drip(view)->attached() && level->idle_drip(view)->drops().empty() &&
                     level->player(view).weapon_ammo() == 0.001f,
@@ -214,7 +215,7 @@ namespace
             }
         }
         require(level->projectile_count() == 0, "Empty held-fire fixture emitted gameplay projectiles");
-        std::cout << "PASS idle drip: empty held fire interrupts and suppresses all three tools beyond their quiet intervals\n";
+        std::cout << "PASS idle drip: empty held fire interrupts and suppresses all four tools beyond their quiet intervals\n";
     }
 
     void check_round_end(const std::filesystem::path& content)
@@ -232,12 +233,12 @@ namespace
         }
         auto level = world.build(0.5f);
         const std::vector<PlayerInputData> inputs(input_slots::count, input());
-        std::array<bool, 3> saw_attached{};
-        std::array<bool, 3> saw_falling{};
+        std::array<bool, supported_tools.size()> saw_attached{};
+        std::array<bool, supported_tools.size()> saw_falling{};
         for (int step = 0; step < 600 && level->state() != LevelState::zoom_out; ++step)
         {
             level->update(inputs, dt);
-            for (int view = 0; view < 3; ++view)
+            for (int view = 0; view < static_cast<int>(supported_tools.size()); ++view)
             {
                 saw_attached.at(static_cast<size_t>(view)) = saw_attached.at(static_cast<size_t>(view)) ||
                     level->idle_drip(view)->attached();
@@ -249,13 +250,13 @@ namespace
             std::all_of(saw_falling.begin(), saw_falling.end(), [](bool value) { return value; }) &&
             level->state() == LevelState::zoom_out,
             "Round-end fixture failed to exercise attached and falling paint before time-up");
-        for (int view = 0; view < 3; ++view)
+        for (int view = 0; view < static_cast<int>(supported_tools.size()); ++view)
         {
             require(!level->idle_drip(view)->attached() && level->idle_drip(view)->drops().empty(),
                 "Time-up froze residual paint on screen instead of clearing it with the tool");
         }
         for (int step = 0; step < 60; ++step) { level->update(inputs, dt); }
-        for (int view = 0; view < 3; ++view)
+        for (int view = 0; view < static_cast<int>(supported_tools.size()); ++view)
         {
             require(!level->idle_drip(view)->attached() && level->idle_drip(view)->drops().empty(),
                 "Round reveal restarted residual paint after its tool disappeared");

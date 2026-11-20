@@ -5,26 +5,13 @@ namespace crossfeed_acceptance
 {
     namespace
     {
-        const char* tool_name(WeaponType type)
-        {
-            switch (type)
-            {
-            case WeaponType::sprayer: return "sprayer";
-            case WeaponType::sniper: return "sniper";
-            case WeaponType::roller: return "roller";
-            case WeaponType::mister: return "mister";
-            case WeaponType::bucket: return "bucket";
-            default: throw std::runtime_error("Crossfeed station needs a concrete primary");
-            }
-        }
-
         void launch_checks(Services& s)
         {
             // Injected velocity isolates launch inheritance from route/control
             // feasibility. Observe public collision-rectangle displacement
             // over the first fixed step, including gravity/drag, not ranges.
             for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
-                WeaponType::mister, WeaponType::bucket })
+                WeaponType::mister, WeaponType::bucket, WeaponType::umbrella })
             {
                 for (const bool right : { true, false })
                 {
@@ -59,7 +46,7 @@ namespace crossfeed_acceptance
                                 min_y = std::min(min_y, v.y); max_y = std::max(max_y, v.y);
                                 opposite_aim += v.x * std::cos(angle) + v.y * std::sin(angle) < -tolerance ? 1 : 0;
                             }
-                            std::cout << "MEASURE Crossfeed injected_launch tool=" << tool_name(type) <<
+                            std::cout << "MEASURE Crossfeed injected_launch tool=" << weapon_name(type) <<
                                 " team=" << (right ? 'a' : 'b') << " player_vx=" << fixed(injected.x) <<
                                 " aim_family=" << (retreat ? "retreat" : "forward") << " aim=" << fixed(angle, 3) <<
                                 " paid_events=1 emitted_objects=" << objects.size() <<
@@ -81,7 +68,7 @@ namespace crossfeed_acceptance
         const auto reflected = [&](float value, bool right)
             { return right ? value : bounds.left() + bounds.right() - value; };
         for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
-            WeaponType::mister, WeaponType::bucket })
+            WeaponType::mister, WeaponType::bucket, WeaponType::umbrella })
         {
             for (const PlayerTeam team : { PlayerTeam::a, PlayerTeam::b })
             {
@@ -104,10 +91,10 @@ namespace crossfeed_acceptance
                 }
                 const float area = run.team_area(team, floor.name);
                 require(run.paid_events > 0 && run.minimum_ammo < initial && area > 0.0f,
-                    std::string("Crossfeed ") + tool_name(type) + " did not pay for paint on its connected floor");
+                    std::string("Crossfeed ") + weapon_name(type) + " did not pay for paint on its connected floor");
                 require(run.team_area(right ? PlayerTeam::b : PlayerTeam::a) == 0.0f,
                     "Crossfeed tool station assigned paint to the wrong team");
-                std::cout << "MEASURE Crossfeed contact tool=" << tool_name(type) << " team=" << (right ? 'a' : 'b') <<
+                std::cout << "MEASURE Crossfeed contact tool=" << weapon_name(type) << " team=" << (right ? 'a' : 'b') <<
                     " floor_area=" << fixed(area) << " minimum_ammo=" << fixed(run.minimum_ammo, 4) <<
                     " paid_events=" << run.paid_events << " emitted_objects=" << run.emitted_objects <<
                     " paid_events_without_surviving_flight=" << run.paid_events_without_flight <<
@@ -153,11 +140,11 @@ namespace crossfeed_acceptance
                     const float gap = right ? plinth.rectangle.left() - muzzle.x - half.x :
                         muzzle.x - half.x - plinth.rectangle.right();
                     require(run.paid_events > 0 && run.minimum_ammo < initial && run.emitted_objects > 0 && run.cover_contacts > 0 &&
-                        gap > tolerance && run.first_cover_tick > run.first_paid_tick, std::string("Crossfeed ") + tool_name(type) +
+                        gap > tolerance && run.first_cover_tick > run.first_paid_tick, std::string("Crossfeed ") + weapon_name(type) +
                         " did not reach the plinth by paid flight across the ramp");
                     require(approximately(protected_player->health(), s.tuning.player().starting_health),
                         "Crossfeed lower firing station damaged the opponent behind its solid plinth");
-                    std::cout << "MEASURE Crossfeed flight tool=" << tool_name(type) << " team=" << (right ? 'a' : 'b') <<
+                    std::cout << "MEASURE Crossfeed flight tool=" << weapon_name(type) << " team=" << (right ? 'a' : 'b') <<
                         " movement=" << (moving ? "moving-launch" : "stationary") << " first_paid_vx=" << fixed(run.first_paid_velocity.x) <<
                         " first_paid_nozzle_x=" << fixed(muzzle.x) << " first_paid_nozzle_y=" << fixed(muzzle.y) <<
                         " first_paid_gap=" << fixed(gap) << " aim=" << fixed(angle, 3) <<
@@ -167,7 +154,7 @@ namespace crossfeed_acceptance
                 }
             }
         }
-        std::cout << "PASS Crossfeed five tools paint paid floor contacts from both teams; four aimed tools reach solid "
+        std::cout << "PASS Crossfeed six tools paint paid floor contacts from both teams; four aimed tools reach solid "
             "lower cover by stationary/moving launch across paint-pass ramps without damaging the opponent behind it. "
             "Station results do not establish moving-target counterplay, whole-tank coverage or balance\n";
     }

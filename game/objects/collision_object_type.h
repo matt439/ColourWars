@@ -25,7 +25,9 @@ enum class CollisionObjectType
 	projectile_mist_team_b,
 	none,
 	// Appended so existing replay/debug tag values remain unchanged.
-	structure_fixed_slab
+	structure_fixed_slab,
+	projectile_pellet_team_a,
+	projectile_pellet_team_b
 };
 
 namespace collision_layers
@@ -75,7 +77,9 @@ inline bool is_projectile(CollisionObjectType type)
 		type == CollisionObjectType::projectile_ball_team_a ||
 		type == CollisionObjectType::projectile_ball_team_b ||
 		type == CollisionObjectType::projectile_mist_team_a ||
-		type == CollisionObjectType::projectile_mist_team_b;
+		type == CollisionObjectType::projectile_mist_team_b ||
+		type == CollisionObjectType::projectile_pellet_team_a ||
+		type == CollisionObjectType::projectile_pellet_team_b;
 }
 
 inline bool is_structure(CollisionObjectType type)

@@ -56,13 +56,13 @@ namespace
 }
 
 MatchBotDriver::MatchBotDriver(const GameTuning* tuning, const MatchSetup& settings,
-	std::uint64_t seed) : MatchBotDriver(tuning, roster_bots(settings), seed)
+	std::uint64_t seed) : MatchBotDriver(tuning, roster_bots(settings), seed, settings.variant())
 {
-	this->refill_enabled_ = settings.variant() != MatchVariant::endless_paint;
 }
 
 MatchBotDriver::MatchBotDriver(const GameTuning* tuning,
-	const std::vector<std::optional<BotDifficulty>>& seats, std::uint64_t seed) : tuning_(tuning)
+	const std::vector<std::optional<BotDifficulty>>& seats, std::uint64_t seed, MatchVariant variant) :
+	tuning_(tuning), refill_enabled_(variant != MatchVariant::endless_paint)
 {
 	if (tuning == nullptr) { throw std::invalid_argument("A match bot driver requires tuning"); }
 	this->bots_.resize(seats.size());
@@ -213,6 +213,7 @@ void MatchBotDriver::drive(std::vector<PlayerInputData>& seats, const BotWorld& 
 		view.shot_empty = player.tool_empty;
 		view.engage_distance = engagement_distance(player, *this->tuning_);
 		view.weapon = player.weapon;
+		view.canopy_broken = player.canopy_broken;
 		view.sub = player.sub;
 		view.sub_ready = player.sub_ready;
 		view.obstacles = gates.empty() ? obstacles : world.obstacles(player.team);

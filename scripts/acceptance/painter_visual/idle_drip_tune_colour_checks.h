@@ -1,5 +1,5 @@
 // Narrow both-preset live common IdleDrip keyline consumer proof.
-// Six retained attached/falling Sprayer/Sniper/Bucket consumers; no Level.
+// Eight retained attached/falling Sprayer/Sniper/Bucket/Umbrella consumers; no Level.
 // Local advance calls prepare public cosmetic state only. Drawing's private
 // xorshift invariance is source-audited constness, not an executed stream test.
 enum class IdleDripColourReference { premultiplied, legacy_straight, squared_base_alpha };
@@ -13,18 +13,18 @@ public:
         sheet_(app.render_resources()->sprite_sheet(presentation.idle_drip().sprite_sheet)),
         frame_(this->sheet_->sprite_frame(this->sheet_->resolve_sprite_frame(presentation.idle_drip().fill_frame)))
     {
-        static_assert(static_cast<size_t>(WeaponType::max_prim_wep) == 5);
+        static_assert(tuned_weapon_count == 6);
         for (size_t index = 0; index < this->records_.size(); ++index)
         {
             this->records_[index] = &const_cast<IdleDripPresentation&>(presentation.idle_drip(static_cast<WeaponType>(index)));
             this->geometry_[index] = *this->records_[index];
-            require(this->records_[index]->enabled == (index == 0 || index == 1 || index == 4),
-                "Idle colour fixture requires only Sprayer/Sniper/Bucket enabled");
+            require(this->records_[index]->enabled == (std::ranges::find(eligible, static_cast<WeaponType>(index)) != eligible.end()),
+                "Idle colour fixture requires only Sprayer/Sniper/Bucket/Umbrella enabled");
         }
         std::srand(8451); const int expected_random = std::rand(); std::srand(8451);
         for (size_t index = 0; index < this->cues_.size(); ++index)
         {
-            const size_t column = index % 3, profile = profile_index(column);
+            const size_t column = index % eligible.size(), profile = profile_index(column);
             const auto& look = this->geometry_[profile];
             require(look.interval_min > look.lifetime * 0.5f && look.grow_time > 0.0f && look.stretch_time > 0.0f,
                 "Idle fixture cannot prepare separate natural attached/falling consumers");
@@ -32,7 +32,7 @@ public:
                 111u + static_cast<uint32_t>(index), &this->preferences_);
             const Vector2F point = nozzle(index);
             this->prepare(*cue, point, cue->interval_remaining());
-            if (index < 3)
+            if (index < eligible.size())
             {
                 const float age = look.grow_time + look.stretch_time * 0.5f;
                 this->prepare(*cue, point, age);
@@ -52,7 +52,7 @@ public:
                 "Idle colour crop does not contain every retained bead/drop bound");
             this->states_[index] = snapshot(*cue); this->cues_[index] = std::move(cue);
         }
-        require(this->preparation_updates_ == 15 && std::rand() == expected_random,
+        require(this->preparation_updates_ == 20 && std::rand() == expected_random,
             "Idle local preparation count changed or used gameplay randomness");
     }
 
@@ -61,7 +61,7 @@ public:
     void common(const Colour& expected) const
     {
         for (const IdleDripPresentation* record : this->records_)
-        { require(record->keyline == expected, "The one common idle colour did not reach all five profile records"); }
+        { require(record->keyline == expected, "The one common idle colour did not reach all six profile records"); }
     }
     void unchanged(bool disabled = false, bool reduced = false) const
     {
@@ -118,23 +118,23 @@ public:
             for (size_t index = 0; index < this->cues_.size(); ++index)
             {
                 const RectangleF inside = this->reference_rectangle(index);
-                const float edge = this->geometry_[profile_index(index % 3)].keyline_width;
+                const float edge = this->geometry_[profile_index(index % eligible.size())].keyline_width;
                 const RectangleF outer(inside.x - edge, inside.y - edge, inside.width + edge * 2.0f, inside.height + edge * 2.0f);
                 list.draw_sprite(this->sheet_->texture(), this->frame_.source_rectangle(), outer, line,
                     0.0f, this->frame_.origin(), SpriteFlip::none, 0.0f);
-                list.draw_sprite(this->sheet_->texture(), this->frame_.source_rectangle(), inside, team(index % 3),
+                list.draw_sprite(this->sheet_->texture(), this->frame_.source_rectangle(), inside, team(index % eligible.size()),
                     0.0f, this->frame_.origin(), SpriteFlip::none, 0.0f);
             }
         });
     }
     void check_paint(const Frame& frame) const
     {
-        constexpr std::array<std::uint32_t, 3> colours{ 0x2CA8CE, 0xF58F40, 0xA156BE };
+        constexpr std::array<std::uint32_t, eligible.size()> colours{ 0x2CA8CE, 0xF58F40, 0xA156BE, 0x53AE67 };
         for (size_t index = 0; index < this->cues_.size(); ++index)
         {
             const RectangleF inside = this->reference_rectangle(index);
             require(monitor_rgb(frame, static_cast<int>(inside.x + inside.width * 0.5f),
-                static_cast<int>(inside.y + inside.height * 0.5f)) == colours[index % 3],
+                static_cast<int>(inside.y + inside.height * 0.5f)) == colours[index % eligible.size()],
                 "Idle keyline edit recoloured, faded or erased captured opaque attached/falling paint");
         }
     }
@@ -143,30 +143,31 @@ public:
     static RectangleI panel() { return { 200, 230, 380, 260 }; }
 
 private:
+    static constexpr std::array eligible{ WeaponType::sprayer, WeaponType::sniper, WeaponType::bucket, WeaponType::umbrella };
     static size_t profile_index(size_t column)
     {
-        constexpr std::array<size_t, 3> indices{ 0, 1, 4 }; return indices.at(column);
+        return static_cast<size_t>(eligible.at(column));
     }
     static Colour team(size_t column)
     {
-        const std::array<Colour, 3> colours{ Colour(44, 168, 206), Colour(245, 143, 64), Colour(161, 86, 190) };
+        const std::array<Colour, eligible.size()> colours{ Colour(44, 168, 206), Colour(245, 143, 64), Colour(161, 86, 190), Colour(83, 174, 103) };
         return colours.at(column);
     }
     static Vector2F nozzle(size_t index)
-    { return { 240.0f + static_cast<float>(index % 3) * 180.0f, index < 3 ? 260.0f : 390.0f }; }
+    { return { 240.0f + static_cast<float>(index % eligible.size()) * 100.0f, index < eligible.size() ? 260.0f : 390.0f }; }
     void prepare(IdleDrip& cue, const Vector2F& point, float elapsed)
     { cue.advance(true, point, 0.0f, elapsed, {}); ++this->preparation_updates_; }
     RectangleF reference_rectangle(size_t index) const
     {
-        const auto& look = this->geometry_[profile_index(index % 3)];
+        const auto& look = this->geometry_[profile_index(index % eligible.size())];
         const Vector2F point = nozzle(index);
         const Vector2F attachment(point.x - look.nozzle_inset, point.y + look.nozzle_underside);
-        const float age = look.grow_time + look.stretch_time * (index < 3 ? 0.5f : 1.0f);
+        const float age = look.grow_time + look.stretch_time * (index < eligible.size() ? 0.5f : 1.0f);
         const float growth = std::clamp(age / look.grow_time, 0.0f, 1.0f);
         const float stretch = std::clamp((age - look.grow_time) / look.stretch_time, 0.0f, 1.0f);
         const float width = look.size * (0.35f + 0.65f * growth);
         const RectangleF bead(attachment.x - width * 0.5f, attachment.y, width, width + stretch * look.stretch);
-        if (index < 3) { return bead; }
+        if (index < eligible.size()) { return bead; }
         Vector2F position(bead.x + bead.width * 0.5f, bead.y + bead.height * 0.5f);
         const float elapsed = look.lifetime * 0.5f;
         position.y += look.gravity * (0.0f * elapsed + 0.5f * elapsed * elapsed);
@@ -205,15 +206,15 @@ private:
     PlaySettings preferences_;
     const SpriteSheet* sheet_;
     const SpriteFrame& frame_;
-    std::array<IdleDripPresentation*, 5> records_{};
-    std::array<IdleDripPresentation, 5> geometry_;
-    std::array<std::unique_ptr<IdleDrip>, 6> cues_;
-    std::array<std::vector<float>, 6> states_;
+    std::array<IdleDripPresentation*, tuned_weapon_count> records_{};
+    std::array<IdleDripPresentation, tuned_weapon_count> geometry_;
+    std::array<std::unique_ptr<IdleDrip>, 2 * eligible.size()> cues_;
+    std::array<std::vector<float>, 2 * eligible.size()> states_;
     size_t preparation_updates_ = 0, readbacks_ = 0;
 };
 
 // 32 palette/parity/control readbacks plus 14 disabled/reduced/restored ones.
-// Exactly 15 local advance preparations, no Level/StateContext updates.
+// Exactly 20 local advance preparations, no Level/StateContext updates.
 void idle_drip_colour_consumer_checks(Application& app, const Presentation& presentation,
     const std::filesystem::path& output)
 {
@@ -284,22 +285,22 @@ void idle_drip_colour_consumer_checks(Application& app, const Presentation& pres
                 (std::string("idle-drip-colour-") + palettes[palette].name + (background == 0 ? "-black.ppm" : "-nonblack.ppm"))); ++crops;
         }
     }
-    require(records.good() && guards.good() && probe.readbacks() == 46 && probe.preparation_updates() == 15 &&
+    require(records.good() && guards.good() && probe.readbacks() == 46 && probe.preparation_updates() == 20 &&
         rows == 8 && guard_rows == 2 && crops == 8 && controls == 8 && guard_checks == 6,
         "Idle consumer evidence exceeded its bounded counts");
     std::ofstream summary(output / "idle-drip-colour-consumer-summary.json");
-    summary << "{\"scope\":\"consumer-only\",\"state_updates\":0,\"level_updates\":0,\"effect_preparation_updates\":15,"
-        "\"profiles\":5,\"consumers\":6,\"readbacks\":46,\"csv_rows\":10,\"colour_rows\":8,\"guard_rows\":2,\"crops\":8,"
+    summary << "{\"scope\":\"consumer-only\",\"state_updates\":0,\"level_updates\":0,\"effect_preparation_updates\":20,"
+        "\"profiles\":6,\"consumers\":8,\"readbacks\":46,\"csv_rows\":10,\"colour_rows\":8,\"guard_rows\":2,\"crops\":8,"
         "\"controls\":8,\"guard_checks\":6,\"private_sequence_scope\":\"source-constness-only\"}\n";
     require(summary.good(), "Cannot retain idle consumer summary");
-    std::cout << "PASS idle-drip colour consumers: 46 readbacks, ten rows, eight crops; six attached/falling consumers, "
-        "five stable profiles, single base-alpha conversion/no event fade, captured paint and enabled/Reduce Effects guards. "
-        "Fifteen local advance preparations, zero Level/StateContext updates; private stream source constness only.\n";
+    std::cout << "PASS idle-drip colour consumers: 46 readbacks, ten rows, eight crops; eight attached/falling consumers, "
+        "six stable profiles, single base-alpha conversion/no event fade, captured paint and enabled/Reduce Effects guards. "
+        "Twenty local advance preparations, zero Level/StateContext updates; private stream source constness only.\n";
 }
 
 #if COLOURWARS_DEV_TOOLS
 // Debug adds nine real commands, 60 readbacks and 20 CSV rows; no extra crops.
-// All six consumers borrow their profile records before the first edit.
+// All eight consumers borrow their profile records before the first edit.
 void idle_drip_tune_colour_checks(Application& app, GameTuning& tuning, Presentation& presentation, const std::filesystem::path& content,
     const std::filesystem::path& output)
 {
@@ -400,14 +401,14 @@ void idle_drip_tune_colour_checks(Application& app, GameTuning& tuning, Presenta
     require(impl.tune_document("presentation")->edits().empty() && impl.tune_document("tuning")->edits().empty(),
         "Idle drip final reset left pending private edits");
     unchanged();
-    require(records.good() && commands == 9 && probe.readbacks() == 60 && probe.preparation_updates() == 15 && rows == 20,
+    require(records.good() && commands == 9 && probe.readbacks() == 60 && probe.preparation_updates() == 20 && rows == 20,
         "Idle drip Debug command evidence exceeded its bounded counts");
     std::ofstream summary(output / "idle-drip-tune-summary.json");
-    summary << "{\"scope\":\"debug-validated-commands\",\"state_updates\":0,\"level_updates\":0,\"effect_preparation_updates\":15,"
-        "\"profiles\":5,\"consumers\":6,\"commands\":9,\"readbacks\":60,\"csv_rows\":20,\"crops\":0,\"private_sequence_scope\":\"source-constness-only\"}\n";
+    summary << "{\"scope\":\"debug-validated-commands\",\"state_updates\":0,\"level_updates\":0,\"effect_preparation_updates\":20,"
+        "\"profiles\":6,\"consumers\":8,\"commands\":9,\"readbacks\":60,\"csv_rows\":20,\"crops\":0,\"private_sequence_scope\":\"source-constness-only\"}\n";
     require(summary.good(), "Cannot retain idle drip Debug command summary");
     std::cout << "PASS idle drip tune colours: nine validated named/RGB/RGBA/reset/save commands, 60 readbacks, "
-        "twenty rows; six retained consumers, five stable profiles, one-token private save/rebase, frozen public state/global RNG/preferences. "
-        "Fifteen local advance preparations, zero Level/StateContext updates; private stream source constness only.\n";
+        "twenty rows; eight retained consumers, six stable profiles, one-token private save/rebase, frozen public state/global RNG/preferences. "
+        "Twenty local advance preparations, zero Level/StateContext updates; private stream source constness only.\n";
 }
 #endif

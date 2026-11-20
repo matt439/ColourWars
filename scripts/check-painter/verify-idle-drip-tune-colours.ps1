@@ -19,12 +19,12 @@ $idleDripExpectedPairs = @(foreach ($palette in @('default', 'rgb', 'rgba128', '
 })
 $idleDripObservedPairs = @($idleDripConsumerRows | ForEach-Object { "$($_.palette)/$($_.background)" })
 if ($idleDripConsumerSummary.scope -cne 'consumer-only' -or $idleDripConsumerSummary.state_updates -ne 0 -or
-    $idleDripConsumerSummary.level_updates -ne 0 -or $idleDripConsumerSummary.effect_preparation_updates -ne 15 -or
+    $idleDripConsumerSummary.level_updates -ne 0 -or $idleDripConsumerSummary.effect_preparation_updates -ne 20 -or
     $idleDripConsumerSummary.readbacks -ne 46 -or $idleDripConsumerSummary.csv_rows -ne 10 -or
     $idleDripConsumerSummary.crops -ne 8 -or $idleDripConsumerSummary.controls -ne 8 -or
     $idleDripConsumerSummary.colour_rows -ne 8 -or $idleDripConsumerSummary.guard_rows -ne 2 -or
-    $idleDripConsumerSummary.guard_checks -ne 6 -or $idleDripConsumerSummary.profiles -ne 5 -or
-    $idleDripConsumerSummary.consumers -ne 6 -or
+    $idleDripConsumerSummary.guard_checks -ne 6 -or $idleDripConsumerSummary.profiles -ne 6 -or
+    $idleDripConsumerSummary.consumers -ne 8 -or
     $idleDripConsumerSummary.private_sequence_scope -cne 'source-constness-only' -or
     $idleDripConsumerRows.Count -ne 8 -or
     (-not (Test-PainterCsvColumns $idleDripConsumerRows $idleDripExpectedColumns)) -or
@@ -104,14 +104,14 @@ $idleDripObserved = [ordered]@{
     consumer = $idleDripConsumerSummary
     state_updates = 0
     level_updates = 0
-    effect_preparation_updates = 15
+    effect_preparation_updates = 20
     readbacks = 46
     csv_rows = 10
     crops = $idleDripCrops.Count
     controls = 8
     guard_checks = 6
-    profiles = 5
-    consumers = 6
+    profiles = 6
+    consumers = 8
     colour_rows = 8
     guard_rows = 2
     private_sequence_scope = 'source-constness-only'
@@ -138,10 +138,10 @@ if ($debug) {
     })
     $idleDripObservedTunePairs = @($idleDripTuneRows | ForEach-Object { "$($_.state)/$($_.background)" })
     if ($idleDripTuneSummary.scope -cne 'debug-validated-commands' -or $idleDripTuneSummary.state_updates -ne 0 -or
-        $idleDripTuneSummary.level_updates -ne 0 -or $idleDripTuneSummary.effect_preparation_updates -ne 15 -or
+        $idleDripTuneSummary.level_updates -ne 0 -or $idleDripTuneSummary.effect_preparation_updates -ne 20 -or
         $idleDripTuneSummary.commands -ne 9 -or $idleDripTuneSummary.readbacks -ne 60 -or
         $idleDripTuneSummary.csv_rows -ne 20 -or $idleDripTuneSummary.crops -ne 0 -or
-        $idleDripTuneSummary.profiles -ne 5 -or $idleDripTuneSummary.consumers -ne 6 -or
+        $idleDripTuneSummary.profiles -ne 6 -or $idleDripTuneSummary.consumers -ne 8 -or
         $idleDripTuneSummary.private_sequence_scope -cne 'source-constness-only' -or
         $idleDripTuneRows.Count -ne 20 -or $idleDripTuneTranscript.Length -le 0 -or
         !(Test-Path -LiteralPath (Join-Path $captures 'idle-drip-tune-scratch') -PathType Container) -or
@@ -170,7 +170,7 @@ if ($debug) {
         sha256 = (Get-FileHash -LiteralPath $idleDripTuneTranscriptPath -Algorithm SHA256).Hash
     }
     $idleDripObserved['developer_commands'] = $idleDripTuneSummary
-    $idleDripObserved.effect_preparation_updates = 30
+    $idleDripObserved.effect_preparation_updates = 40
     $idleDripObserved.readbacks += $idleDripTuneSummary.readbacks
     $idleDripObserved.csv_rows += $idleDripTuneSummary.csv_rows
 }

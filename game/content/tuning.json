@@ -120,7 +120,8 @@
         "jet": "impact_jet",
         "rolling": "impact_rolling",
         "mist": "impact_mist",
-        "ball": "impact_ball"
+        "ball": "impact_ball",
+        "pellet": "impact_pellet"
       }
     },
     "visual": {
@@ -169,7 +170,8 @@
       "jet": { "name": "paint.impact.sniper", "volume": 0.15 },
       "rolling": { "name": "paint.impact.roller", "volume": 0.15 },
       "mist": { "name": "paint.impact.mister", "volume": 0.10 },
-      "ball": { "name": "paint.impact.bucket", "volume": 0.15 }
+      "ball": { "name": "paint.impact.bucket", "volume": 0.15 },
+      "pellet": { "name": "paint.impact.sprayer", "volume": 0.12 }
     },
     "min_impact_interval": 0.10,
     "min_capture_interval": 0.25
@@ -397,6 +399,43 @@
             },
             "add_player_velocity": "x_only",
             "player_velocity_amount": 1.0
+        },
+
+        "umbrella": {
+            "offset": { "x": 10.0, "y": -10.0 },
+            "size": { "x": 60.0, "y": 32.0 },
+            "nozzle_offset": { "x": 7.0, "y": 0.0 },
+            "shoot_interval": 0.5,
+            "starting_vel_length": 900.0,
+            "ammo_usage": 0.1,
+            "sheet": "weapon_paint",
+            "frame": "umbrella",
+            "projectile": "pellet",
+            "sound_bank": "paint_exe",
+            "shoot_sound": { "name": "umbrella.shot", "volume": 0.32 },
+            "feedback_sounds": {
+                "empty": { "name": "weapon.empty", "volume": 0.8 },
+                "recovered": { "name": "weapon.recovered", "volume": 0.6 },
+                "empty_repeat_delay": 0.65,
+                "low": { "name": "tool.drip", "volume": 1.0 }
+            },
+            "add_player_velocity": "x_only",
+            "player_velocity_amount": 1.0,
+            "pellets": 5,
+            "spread": 0.6,
+            "canopy": {
+                "size": { "x": 24.0, "y": 140.0 },
+                "reach": 58.0,
+                "hits": 15,
+                "recover": 3.0,
+                "sheet": "paint_fx",
+                "open_frame": "canopy_open",
+                "cracked_frame": "canopy_cracked",
+                "shut_frame": "canopy_shut",
+                "open_sound": { "name": "umbrella.open", "volume": 0.26 },
+                "block_sound": { "name": "umbrella.block", "volume": 0.26 },
+                "break_sound": { "name": "umbrella.break", "volume": 0.36 }
+            }
         }
     },
 
@@ -470,6 +509,17 @@
             "collision_size": { "x": 100.0, "y": 100.0 },
             "sheet": "paint_fx",
             "animation": "shot_ball"
+        },
+
+        "pellet": {
+            "gravity": 600.0,
+            "wind_resistance": 10.0,
+            "delete_timer": 0.45,
+            "player_damage": 0.045,
+            "size": { "x": 14.0, "y": 14.0 },
+            "collision_size": { "x": 12.0, "y": 12.0 },
+            "sheet": "paint_fx",
+            "animation": "shot_pellet"
         }
     },
 

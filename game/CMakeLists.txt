@@ -202,6 +202,9 @@ add_library(colourwars_game STATIC
     objects/weapon_feedback.cpp
     objects/idle_drip.cpp
     objects/weapon_bucket.cpp
+    objects/weapon_umbrella.cpp
+    objects/weapon_umbrella_draw.cpp
+    objects/projectile_pellet.cpp
     objects/weapon_builder.cpp
     objects/weapon_details.cpp
     objects/weapon_roller.cpp

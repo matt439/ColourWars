@@ -45,8 +45,7 @@ namespace
 
     const char* name(WeaponType tool)
     {
-        constexpr const char* names[] = { "sprayer", "sniper", "roller", "mister", "bucket" };
-        return names[static_cast<int>(tool)];
+        return weapon_name(tool);
     }
     char name(PlayerTeam team) { return team == PlayerTeam::a ? 'a' : 'b'; }
     const char* name(BotDifficulty difficulty)
@@ -981,6 +980,35 @@ int main(int argc, char** argv)
         }
         require(crossing_trials == 60 && crossing_replays == 3 && trials == 290 && crossing_csv.good() && csv.good() &&
             regional_csv.good() && exchange_csv.good() && middle_csv.good(), "Turbulence team-trial matrix/report contract failed");
+        // Preserve the original five-tool measurements and seeds, then rotate
+        // the umbrella through all three bot seats against the existing tools.
+        World umbrella_world(std::filesystem::absolute(argv[1]), "bot-team-umbrella", "Team trial needs support '", "crossfeed");
+        const auto umbrella_regions = partition(umbrella_world, "crossfeed");
+        int umbrella_trials = 0;
+        for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+        {
+            for (const PlayerTeam side : { PlayerTeam::a, PlayerTeam::b })
+            {
+                for (int bot = 1; bot < seats; ++bot)
+                {
+                    const int rotation = static_cast<int>(difficulty) * 3 + bot - 1;
+                    Trial trial = mixed("crossfeed", rotation, side, mixed_seeds[static_cast<std::size_t>(bot - 1)]);
+                    trial.tools[static_cast<std::size_t>(bot)] = WeaponType::umbrella;
+                    trial.difficulty = difficulty;
+                    const Metrics metrics = run(umbrella_world, trial, umbrella_regions, umbrella_trials == 0,
+                        ++trials, regional_csv, exchange_csv);
+                    const auto& actor = metrics.actors[static_cast<std::size_t>(bot)];
+                    require(actor.path > 100.0 && actor.paid_fire_steps > 0 && actor.final_paint > 0.0,
+                        "A mixed-team umbrella bot failed to move, buy a shot and retain paint");
+                    write(csv, trials, trial, metrics); write_middle(middle_csv, trials, trial, metrics);
+                    ++umbrella_trials;
+                }
+            }
+        }
+        require(umbrella_trials == 18 && trials == 308 && csv.good() && regional_csv.good() &&
+            exchange_csv.good() && middle_csv.good(), "Umbrella team-trial matrix/report contract failed");
+        std::cout << "PASS 18 mixed-team umbrella rotations across both teams, all three bot seats and difficulties, "
+            "and one final-input replay\n";
         std::cout << "PASS 200 bounded natural-spawn team measurements (40 same-tool and 120 mixed-tool 2v2 over three "
             "independent seeds, 40 sustained 7200-step 1v1) and eight 1800-step plus one 7200-step final-input replays; reports=" <<
             path_to_utf8(output / "bot_team_trials.csv") << ", " << path_to_utf8(output / "bot_team_trials_regions.csv") <<

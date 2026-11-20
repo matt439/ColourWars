@@ -1297,3 +1297,55 @@ a paint case. Main CSV SHA256: baseline
 `A10B3E27E63796421917B3A6E6C366373219015FC945808260C744340538A4D8`. The run
 directory was deleted after recording; the design reproduces it with
 `scripts/run-balance-matrix.ps1 -Design scripts/balance/sight-ladder.psd1`.
+
+## Umbrella bot balance
+
+On 2026-11-20 the [Release qualification](../scripts/balance/umbrella.py) ran
+1,440 one-minute 1v1 rounds with the shipping Normal bots and the
+[umbrella](feature-roadmap.md#umbrella-tool-proposal-road13). Each matchup ran
+on Crossfeed, Close Quarters, Press Tower, Slab Yard and
+Sluice Works. Seeds 1000–1011 each ran from both seats on every stage. The
+match and both bots used the selected paint rule. Both sides carried the
+grenade in the five primary-tool comparisons.
+
+**Paint held at time up.** Each percentage is the umbrella team's share of
+paint held by either side. Each cell covers 120 rounds. Within a seed the
+analysis weights the five stages and both seat orders equally. The intervals
+are unadjusted 95% Student intervals across those 12 seed averages.
+
+| Opposing tool | Standard | Endless paint | Standard rounds with a block / 120 | Endless rounds with a block / 120 |
+|---|---:|---:|---:|---:|
+| Sprayer | 30.8 ± 1.9% | 17.8 ± 2.5% | 113 | 120 |
+| Sniper | 71.8 ± 0.8% | 75.2 ± 0.8% | 98 | 110 |
+| Roller | 26.2 ± 1.1% | 28.0 ± 2.1% | 35 | 116 |
+| Mister | 26.7 ± 1.2% | 25.1 ± 1.5% | 120 | 120 |
+| Bucket | 37.5 ± 1.4% | 43.1 ± 1.9% | 111 | 116 |
+
+**Two shields (Q7).** The other 240 rounds put Umbrella + Paint Wall against
+Sprayer + Grenade. Switching the umbrella's sub from grenade to wall cost it
+3.08 ± 1.68 percentage points of held paint in Standard and 5.39 ± 2.62 in
+Endless. Its eliminations per minute fell by 0.92 ± 0.22 and 1.77 ± 0.21
+respectively. These differences pair the same stage, seat and seed across
+loadouts. They describe Normal bot use of this sub against this opponent.
+
+Across all six matchups, the canopy was open for 55.4% of the umbrella
+holder's living ticks in Standard and 85.1% in Endless. The probe observed
+21,094 and 30,894 points of canopy damage respectively. It counts drops in
+shield health while the holder is alive across a simulation step. A death or
+repair within the step can hide an interception, so these are lower bounds.
+Grenades and their drops can also spend shield health, including in the Roller
+rounds. Human defensive timing and the effect of the shield on human wins
+remain play-review questions.
+
+From an x64 VS Developer shell, use a fresh output directory on each run:
+
+```powershell
+scripts/run-acceptance.ps1 -Preset x64-release -Cases umbrella -CompileOnly -OutputDirectory out/validation/umbrella-native
+python scripts/balance/umbrella.py --runner out/validation/umbrella-native/x64-release/umbrella.exe --content out/build/x64-release/game --output out/validation/umbrella-results --parallel 4
+```
+
+The receipt verifies 651 input hashes from the recorded run. A 24-round
+Crossfeed repeat outside the 1,440 reproduced every measured field. The
+generated report and CSV also give eliminations, deaths, canopy breaks and
+open time by opponent. The recorded matches CSV SHA-256 is
+`BC5BFB324B14FD886223C5C5E2EFBAA7F9D27037C55D374269C2498C562BD714`.

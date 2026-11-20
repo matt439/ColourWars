@@ -12,20 +12,22 @@ enum class WeaponType
     roller,  // Fixed downward aim; fires a short-lived contact volume.
     mister,
     bucket,
+    umbrella,
     random_primary,
     none,
     max_prim_wep = random_primary
 };
 
 // Selection casts indices in [sprayer, random_primary) to concrete primaries.
-// Tuning ends at bucket; menu descriptions include the Random entry as well.
+// Tuning ends at umbrella; menu descriptions include the Random entry as well.
 // Keep these checks with the enum when adding or reordering primary weapons.
 static_assert(static_cast<int>(WeaponType::sprayer) == 0);
 static_assert(static_cast<int>(WeaponType::sniper) == static_cast<int>(WeaponType::sprayer) + 1);
 static_assert(static_cast<int>(WeaponType::roller) == static_cast<int>(WeaponType::sniper) + 1);
 static_assert(static_cast<int>(WeaponType::mister) == static_cast<int>(WeaponType::roller) + 1);
 static_assert(static_cast<int>(WeaponType::bucket) == static_cast<int>(WeaponType::mister) + 1);
-static_assert(static_cast<int>(WeaponType::random_primary) == static_cast<int>(WeaponType::bucket) + 1);
+static_assert(static_cast<int>(WeaponType::umbrella) == static_cast<int>(WeaponType::bucket) + 1);
+static_assert(static_cast<int>(WeaponType::random_primary) == static_cast<int>(WeaponType::umbrella) + 1);
 static_assert(WeaponType::max_prim_wep == WeaponType::random_primary);
 
 // The one spelling of each selectable weapon: the key in tuning.json and
@@ -36,7 +38,7 @@ inline constexpr size_t tuned_weapon_count = static_cast<size_t>(WeaponType::ran
 // The tuned weapons and Random: what Weapon Select offers and describes.
 inline constexpr size_t selectable_weapon_count = tuned_weapon_count + 1;
 inline constexpr std::array<const char*, selectable_weapon_count> weapon_names{
-    "sprayer", "sniper", "roller", "mister", "bucket", "random"
+    "sprayer", "sniper", "roller", "mister", "bucket", "umbrella", "random"
 };
 
 // The name of a tuned weapon or the Random choice; nullptr for the rest.
@@ -56,7 +58,7 @@ constexpr std::optional<WeaponType> weapon_from_name(std::string_view name)
     return std::nullopt;
 }
 
-// Calls visit(type, name) for each tuned weapon, sprayer to bucket, in enum
+// Calls visit(type, name) for each tuned weapon, sprayer to umbrella, in enum
 // order, so readers and validators meet the weapons in one order.
 template <typename Visit>
 constexpr void for_each_tuned_weapon(Visit&& visit)

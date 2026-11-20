@@ -7,6 +7,7 @@
 #include "game/objects/level.h"
 #include "game/objects/horizontal_motion.h"
 #include "game/objects/paint_fill.h"
+#include "game/objects/weapon.h"
 #include <bit>
 #include <cstdio>
 #include <limits>
@@ -185,6 +186,16 @@ MatchFingerprint MatchFingerprint::of(const Level& level, int updates)
             hash = mix(hash, static_cast<std::uint32_t>(seat.support_paint_team));
             hash = mix(hash, static_cast<std::uint32_t>(seat.step_paint_team));
         }
+        const Weapon& tool = player.primary_weapon();
+        if (tool.type() == WeaponType::umbrella)
+        {
+            const WeaponCanopyState canopy = tool.canopy_state();
+            seat.canopy = Canopy{ canopy.open, canopy.hits_left, bits_from_float(canopy.recovery_remaining) };
+            hash = fnv1a("colourwars-umbrella-canopy-1", hash);
+            hash = mix(hash, canopy.open ? 1u : 0u);
+            hash = mix(hash, static_cast<std::uint32_t>(canopy.hits_left));
+            hash = mix(hash, seat.canopy->recovery);
+        }
 		print.seats.push_back(seat);
 	}
 	const LevelEndInfo info = level.level_end_info();
@@ -246,6 +257,13 @@ std::string MatchFingerprint::difference(const MatchFingerprint& expected,
 		const Seat& e = expected.seats[i];
 		const Seat& a = actual.seats[i];
 		const std::string seat = "P" + std::to_string(i + 1) + " ";
+        if (e.canopy.has_value() != a.canopy.has_value()) { return seat + "canopy presence differs"; }
+        if (e.canopy)
+        {
+            if (e.canopy->open != a.canopy->open) { return seat + "canopy open differs"; }
+            if (e.canopy->hits_left != a.canopy->hits_left) { return seat + "canopy hits left differs"; }
+            if (e.canopy->recovery != a.canopy->recovery) { return seat + "canopy recovery differs"; }
+        }
 		const struct { const char* name; std::uint32_t want; std::uint32_t got; } fields[] = {
 			{ "x", e.x, a.x }, { "y", e.y, a.y }, { "vx", e.vx, a.vx }, { "vy", e.vy, a.vy },
 			{ "health", e.health, a.health }, { "ammo", e.ammo, a.ammo },

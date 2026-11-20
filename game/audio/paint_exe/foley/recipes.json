@@ -1569,6 +1569,147 @@
       "rms_db": -21,
       "peak_db": -4,
       "trim_final_tail_dbfs": -48
+    },
+    {
+      "id": "umbrella.shot",
+      "cue_id": "umbrella.shot",
+      "tier": 1,
+      "description": "A fan of paint spatters from a short squeezed spray, with two staggered wet flecks.",
+      "layers": [
+        {
+          "source": "bsb_spray",
+          "seconds": [
+            2.48,
+            2.67
+          ],
+          "speed": 1.25,
+          "highpass": 600,
+          "lowpass": 7500,
+          "level_db": -21
+        },
+        {
+          "source": "bsb_small_splash_3",
+          "seconds": [
+            0.01,
+            0.24
+          ],
+          "speed": 1.7,
+          "lowpass": 5900,
+          "level_db": -24,
+          "offset": 0.013
+        },
+        {
+          "source": "bsb_drips",
+          "seconds": [
+            7.48,
+            7.67
+          ],
+          "speed": 1.45,
+          "lowpass": 5500,
+          "level_db": -25,
+          "offset": 0.043
+        }
+      ],
+      "rms_db": -23,
+      "peak_db": -6
+    },
+    {
+      "id": "umbrella.open",
+      "cue_id": "umbrella.open",
+      "tier": 1,
+      "description": "A broad paper flap unfolds and ends on the latch click of the opening canopy.",
+      "layers": [
+        {
+          "source": "owlish_paper_flips1",
+          "seconds": [
+            0.95,
+            1.28
+          ],
+          "speed": 1.25,
+          "highpass": 240,
+          "lowpass": 7300,
+          "level_db": -20
+        },
+        {
+          "source": "owlish_plug",
+          "seconds": [
+            0,
+            0.16
+          ],
+          "speed": 1.35,
+          "highpass": 430,
+          "lowpass": 5200,
+          "level_db": -22,
+          "offset": 0.15
+        }
+      ],
+      "rms_db": -23,
+      "peak_db": -5
+    },
+    {
+      "id": "umbrella.block",
+      "cue_id": "umbrella.block",
+      "tier": 1,
+      "description": "A muffled pellet drums on taut fabric with a small wet tap at contact.",
+      "layers": [
+        {
+          "source": "owlish_fruit3",
+          "seconds": [
+            0,
+            0.19
+          ],
+          "speed": 1.35,
+          "highpass": 100,
+          "lowpass": 1850,
+          "level_db": -19
+        },
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            5.63,
+            5.78
+          ],
+          "speed": 1.5,
+          "lowpass": 3900,
+          "level_db": -25,
+          "offset": 0.008
+        }
+      ],
+      "rms_db": -25,
+      "peak_db": -7
+    },
+    {
+      "id": "umbrella.break",
+      "cue_id": "umbrella.break",
+      "tier": 1,
+      "description": "The canopy ribs give with a sharp metal snap followed by a collapsing paper rattle.",
+      "layers": [
+        {
+          "source": "owlish_metal_clank",
+          "seconds": [
+            0.01,
+            0.25
+          ],
+          "speed": 1.55,
+          "highpass": 340,
+          "lowpass": 6900,
+          "level_db": -19
+        },
+        {
+          "source": "owlish_paper_crumple2",
+          "seconds": [
+            0,
+            0.4
+          ],
+          "speed": 1.06,
+          "highpass": 240,
+          "lowpass": 6100,
+          "level_db": -20,
+          "offset": 0.051
+        }
+      ],
+      "rms_db": -21,
+      "peak_db": -4
     }
   ]
 }

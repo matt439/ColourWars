@@ -234,6 +234,14 @@ class BalanceAnalysis(unittest.TestCase):
         self.assertEqual(result["profiles"]["roller"]["paint"]["verdict"], "not in data")
         self.assertIn("not in this data: roller", analyze.render([result], [], ""))
 
+    def test_umbrella_measurements_do_not_need_a_stated_profile(self):
+        historical = json.loads(analyze.DEFAULT_PROFILES.read_text(encoding="utf-8"))["tools"]
+        historical.pop("umbrella", None)
+        rows = self.league({("umbrella", tool): 0.4 for tool in historical})
+        result = analyze.analyze(self.load(rows), historical)[0]
+        self.assertAlmostEqual(result["marginals"]["umbrella"]["paint"]["mean"], 0.4)
+        self.assertNotIn("umbrella", result["profiles"])
+
     def test_repeated_match_is_refused(self):
         rows = self.matrix()
         first = self.write(rows, "one")

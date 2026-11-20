@@ -13,6 +13,7 @@ enum class ProjectileType
 	rolling,
 	mist,
 	ball,
+	pellet,
 	// Count of kinds, for tables and loops over them; keep new kinds before
 	// this sentinel.
 	count
@@ -21,7 +22,7 @@ enum class ProjectileType
 // The one spelling of each kind in tuning.json (a weapon's projectile and the
 // paint splash animations), indexed by ProjectileType.
 inline constexpr std::array<const char*, static_cast<size_t>(ProjectileType::count)> projectile_names{
-	"spray", "jet", "rolling", "mist", "ball"
+	"spray", "jet", "rolling", "mist", "ball", "pellet"
 };
 
 // The kind a name spells; empty for any other name.
@@ -59,6 +60,7 @@ constexpr bool is_swept(ProjectileType type)
 	case ProjectileType::jet:
 	case ProjectileType::mist:
 	case ProjectileType::ball:
+	case ProjectileType::pellet:
 		return true;
 	case ProjectileType::rolling:
 		return false;

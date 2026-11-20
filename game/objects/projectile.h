@@ -20,6 +20,17 @@
 
 class PaintAudio;
 class ProjectilePlanted;
+class Projectile;
+class Player;
+struct ProjectileBreakableHit;
+
+// Borrowed only for the current sweep. Handles stay live so an earlier shot
+// may break a shield before the next shot reaches it.
+struct ProjectileBreakables
+{
+	std::span<Projectile* const> planted;
+	std::span<Player* const> canopy_holders;
+};
 
 // The tuning's sheet and animation strip as one resolved pair. Load-time.
 labrador::RenderResources::SheetStrip resolve_projectile_strip(
@@ -115,13 +126,15 @@ public:
 	virtual labrador::Vector2F launch_origin(const labrador::Vector2F& owner_centre) const
 	{ return owner_centre; }
 	// A muzzle can extend through cover even when its owner cannot. Check
-	// the launch volume before Scene defers its first collision sweep.
+	// the launch volume before Scene defers its first collision sweep. A flying
+	// shot checks held canopies here too, as its muzzle can reach behind one.
 	// known, here and below, is what objects answers about movers and fixed
 	// slabs when the caller already asked (a Level, of its own targets). It
 	// must be the answers for exactly this list; without it the sweep asks.
 	void resolve_launch_obstruction(const labrador::Vector2F& origin,
 		std::span<labrador::CollisionObject* const> objects,
-		std::optional<ProjectileTargetFlags> known = std::nullopt);
+		std::optional<ProjectileTargetFlags> known = std::nullopt,
+		std::span<Player* const> canopy_holders = {});
 	// Resolve this tick's travel (resolve_travel) before the scene dispatches
 	// endpoint contacts in object-list order, once per actual update.
 	// breakables are the projectiles enemy shots can break (takes_hits, asked
@@ -132,7 +145,8 @@ public:
 	void resolve_movement_contacts(
 		std::span<labrador::CollisionObject* const> objects,
 		std::optional<ProjectileTargetFlags> known = std::nullopt,
-		std::span<Projectile* const> breakables = {});
+		std::span<Projectile* const> breakables = {},
+		std::span<Player* const> canopy_holders = {});
 	// Completed moving Roller contacts suppress only duplicate endpoint paint.
 	// IDs are Level-local values, never borrowed collision-object pointers.
 	bool moving_paint_completed(HorizontalMotionId id) const;
@@ -169,7 +183,7 @@ protected:
 	// through.
 	virtual void resolve_travel(std::span<labrador::CollisionObject* const> objects,
 		std::optional<ProjectileTargetFlags> known,
-		std::span<Projectile* const> breakables);
+		ProjectileBreakables breakables);
 	// Whether a launch volume crossing an enemy between owner and muzzle hits
 	// them, as it hits cover there.
 	virtual bool launch_hits_players() const { return true; }
@@ -231,22 +245,21 @@ private:
 		const labrador::RectangleF& finish,
 		std::span<labrador::CollisionObject* const> objects, bool launch,
 		std::optional<bool> fixed_slabs = std::nullopt,
-		std::span<Projectile* const> breakables = {});
+		ProjectileBreakables breakables = {});
 	void resolve_fixed_slab_sweep(const labrador::RectangleF& start,
 		const labrador::RectangleF& finish,
 		std::span<labrador::CollisionObject* const> objects, bool launch,
-		std::span<Projectile* const> breakables = {});
+		ProjectileBreakables breakables = {});
 
     void resolve_translating_contacts(const labrador::RectangleF& start,
         const labrador::RectangleF& finish,
         std::span<labrador::CollisionObject* const> objects, bool moving_ready,
-        std::span<Projectile* const> breakables);
+        ProjectileBreakables breakables);
 	// Spend this shot on target, which its travel from start to finish enters
 	// over interval (a breakable that won the sweep): stop it just inside the
 	// face it entered, as cover stops a shot, retire it and hand target a hit.
 	void strike_breakable(const labrador::RectangleF& start,
-		const labrador::RectangleF& finish, Projectile& target,
-		const std::pair<float, float>& interval);
+		const labrador::RectangleF& finish, const ProjectileBreakableHit& hit);
 	int player_num_ = -1;
 	labrador::Colour team_colour_ = labrador::Colour::gray;
 	ProjectileType type_ = ProjectileType::spray;

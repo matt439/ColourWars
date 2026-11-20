@@ -446,7 +446,7 @@ namespace presentation_read
 			tool.enabled = false;
 		}
 		const JsonValue profiles = json.object("tools");
-		const auto read_tool = [&](WeaponType type)
+		for (const WeaponType type : idle_drip_tools)
 		{
 			const JsonValue profile = profiles.object(weapon_name(type));
 			IdleDripPresentation& tool = tools.at(static_cast<size_t>(type));
@@ -463,10 +463,7 @@ namespace presentation_read
 				throw std::runtime_error(profile.where() +
 					": intervals must be ordered and keylines must leave visible paint.");
 			}
-		};
-		read_tool(WeaponType::sprayer);
-		read_tool(WeaponType::sniper);
-		read_tool(WeaponType::bucket);
+		}
 		return tools;
 	}
 

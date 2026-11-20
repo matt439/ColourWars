@@ -1,7 +1,8 @@
 # Paint.exe liquid FX source
 
 [`paint-fx.json`](paint-fx.json) is the editable production recipe for the
-five projectile kinds, their surface impacts and the three sub bodies (ROAD#11). It follows the painter and
+six projectile kinds, their surface impacts, the three sub bodies (ROAD#11)
+and the umbrella canopy (ROAD#13). It follows the painter and
 tool drawing: a black keyline, simple grayscale liquid body, white wet glint,
 uneven joined lobes and detached droplets. Runtime draw colour supplies every
 team hue. No hue or neutral grey background is baked into the art.
@@ -31,6 +32,7 @@ droplets, so contiguous strip frames cannot bleed into one another.
 | Rolling | Three transparent frames; the instantaneous contact volume stays invisible | A low compressed wash with short upward beads |
 | Mist | Three broad small beads with orbiting fine drops | Disconnected fine droplets scatter without a solid central patch |
 | Ball | Three heavy wobbling blobs with a broad wet glint | A wide joined crown separates into three large drops |
+| Pellet | A single glinting bead that rounds and flattens as the fan travels | A small three-pronged splash parts into beads and a low wet streak |
 
 | Sub | Looping body |
 |---|---|
@@ -47,8 +49,15 @@ droplets, settling residue, then a fully transparent terminal frame. Durations
 remain authored per strip. The fixed runtime splash owns its playback; these
 drawings allocate no particles or gameplay objects.
 
-All projectile world sizes, collision sizes, timing, damage, diffusion and
-coverage remain the existing tuning. The jet's drawn silhouette stays inside
+The three canopy frames sit beside `shot_pellet` on its atlas shelf.
+`canopy_open` is a right-facing, scalloped membrane with woven ribs and a wet
+tip. `canopy_cracked` has a notch in its upper edge and two dark tears.
+`canopy_shut` folds the ribs into a short tied bundle at the middle of the
+same canvas. Weapon drawing chooses the frame by state, mirrors it for a
+left-facing shield and draws it at the canopy's tuned width and height.
+
+Projectile world sizes, collision sizes, timing, damage, diffusion and
+coverage live in tuning. The jet's drawn silhouette stays inside
 its inscribed circle so aiming does not move its visible material outside the
 original square canvas. The roller drawing does not expose its short-lived
 50x50 contact volume.

@@ -19,6 +19,10 @@ namespace
             bucket.interval_min > sprayer.interval_min && bucket.interval_max > sprayer.interval_max &&
             bucket.size < sprayer.size && bucket.stretch < sprayer.stretch,
             "Sniper or bucket lost its sparse, tool-specific residual-paint profile");
+        const auto& umbrella = world.presentation.idle_drip(WeaponType::umbrella);
+        require(umbrella.enabled && umbrella.interval_min > sprayer.interval_min &&
+            umbrella.interval_max > sprayer.interval_max && umbrella.size < sprayer.size,
+            "The umbrella ferrule needs a small, occasional bead");
         require(!world.presentation.idle_drip(WeaponType::roller).enabled &&
             !world.presentation.idle_drip(WeaponType::mister).enabled,
             "An unsupported tool inherited an enabled residual-paint profile");
@@ -52,7 +56,8 @@ namespace
         reject("sniper", "interval_max", sniper.interval_min - 0.1f);
         reject("bucket", "size", bucket.keyline_width * 2.0f);
         reject("bucket", "nozzle_underside", 0.0f);
-        std::cout << "PASS idle drip profiles: preserved sprayer, sparse sniper/bucket, unsupported tools and contextual content errors\n";
+        reject("umbrella", "nozzle_inset", 0.0f);
+        std::cout << "PASS idle drip profiles: preserved sprayer, sparse sniper/bucket/umbrella, unsupported tools and contextual content errors\n";
     }
 
     void check_quiet_intervals(World& world)

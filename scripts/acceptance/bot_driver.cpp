@@ -63,7 +63,7 @@ namespace
 		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
 		{
 			for (const WeaponType tool : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
-				WeaponType::mister, WeaponType::bucket })
+				WeaponType::mister, WeaponType::bucket, WeaponType::umbrella })
 			{
 				MatchBot bot(&tuning, difficulty, 23);
 				MatchBotObservation view = fixture(tuning, tool);
@@ -350,12 +350,59 @@ namespace
 		}
 	}
 
+	void check_umbrella_defence(const GameTuning& tuning)
+	{
+		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
+		{
+			for (const bool refill : { false, true })
+			{
+				for (const float side : { -1.0f, 1.0f })
+				{
+					MatchBot bot(&tuning, difficulty, 23);
+					auto view = fixture(tuning, WeaponType::umbrella);
+					view.refill_enabled = refill;
+					view.engage_distance = 180.0f;
+					// Both are outside pellet reach. Only the farther opponent can hit us.
+					view.enemies.push_back({ { -side * 300.0f, 0.0f }, {}, 80.0f });
+					view.enemies.push_back({ { side * 500.0f, 0.0f }, {}, 600.0f });
+					const auto covered = react(bot, view, tuning, difficulty);
+					require(covered.primary_shoot && covered.shoot_direction.x * side > 0.9f,
+						"An umbrella did not face and hold against a visible outranging opponent");
+					view.ammo = 0.0f;
+					view.shot_empty = true;
+					const auto dry = bot.think(view);
+					require(dry.primary_shoot && dry.shoot_direction.x * side > 0.9f && bot.refilling() == refill,
+						"A dry umbrella failed to defend against a credible ranged threat");
+					view.ammo = tuning.bots().reserve_low;
+					view.shot_empty = false;
+					require(bot.think(view).primary_shoot, "Low reserves dropped a healthy canopy under fire");
+					view.canopy_broken = true;
+					require(!bot.think(view).primary_shoot, "An umbrella held Shoot in the step its canopy broke");
+					require(!react(bot, view, tuning, difficulty).primary_shoot,
+						"An umbrella kept consuming paint during canopy recovery");
+					view.canopy_broken = false;
+					require(react(bot, view, tuning, difficulty).primary_shoot,
+						"A recovered umbrella failed to hold against the surviving threat");
+					view.enemies.pop_back();
+					if (refill)
+					{
+						require(!bot.think(view).primary_shoot && bot.refilling(),
+							"The reserve guard did not resume when the ranged threat disappeared");
+						view.ammo = tuning.bots().reserve_resume;
+						react(bot, view, tuning, difficulty);
+						require(!bot.refilling(), "The umbrella refill latch survived ordinary reserve recovery");
+					}
+				}
+			}
+		}
+	}
+
 	void check_disabled_refill(const GameTuning& tuning)
 	{
 		for (const BotDifficulty difficulty : { BotDifficulty::easy, BotDifficulty::normal, BotDifficulty::hard })
 		{
 			for (const WeaponType tool : { WeaponType::sprayer, WeaponType::sniper, WeaponType::roller,
-				WeaponType::mister, WeaponType::bucket })
+				WeaponType::mister, WeaponType::bucket, WeaponType::umbrella })
 			{
 				for (const bool empty : { false, true })
 				{
@@ -393,7 +440,7 @@ namespace
 				view.underfoot = true; view.footing = MatchBotFooting::enemy;
 				view.refuge_left = 100.0f;
 				const PlayerInputData retreat = react(held, view, tuning, difficulty);
-				require(held.refilling() && !retreat.primary_shoot && retreat.x_movement < 0.0f,
+				require(held.refilling() && retreat.primary_shoot == (tool == WeaponType::umbrella) && retreat.x_movement < 0.0f,
 					"The disabled-refill fixture never latched an ordinary refill retreat");
 				view.refill_enabled = false;
 				const PlayerInputData released = held.think(view); ordinary(released);
@@ -595,6 +642,7 @@ int wmain(int argc, wchar_t** argv)
 		check_visible_approach(tuning);
 		check_refill_retreat(tuning);
 		check_disabled_refill(tuning);
+		check_umbrella_defence(tuning);
 		bot_refill_acceptance::check_driver(tuning);
 		bot_fill_acceptance::check_driver(tuning);
 		{
@@ -612,7 +660,7 @@ int wmain(int argc, wchar_t** argv)
 		bot_ascent_acceptance::check(tuning);
 		bot_ascent_approach_acceptance::check(tuning);
 		bot_ramp_acceptance::check(tuning);
-		std::cout << "PASS shipping bot policy: all difficulties/five tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, endless paint bypasses refill holds/retreats/ground scans, refill retreat only within an enemy's reach, refill off enemy paint with paint underfoot (walking on, holding only before enemy paint ahead), bounded moving-support paint hold, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
+		std::cout << "PASS shipping bot policy: all difficulties/six tools reaction, accuracy, ordinary inputs, reserve hysteresis/full-shot gate, endless paint bypasses refill holds/retreats/ground scans, refill retreat only within an enemy's reach, refill off enemy paint with paint underfoot (walking on, holding only before enemy paint ahead), bounded moving-support paint hold, death/respawn, jump/turn/drop and territory decisions, separate paint aim/standing targets, safe known-support descent, private seeded streams and contextual tuning rejection\n";
 		return 0;
 	});
 }

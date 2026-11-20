@@ -21,8 +21,8 @@ namespace
     using acceptance::require;
 
     constexpr ProjectileType projectile_types[]{ ProjectileType::spray, ProjectileType::jet,
-        ProjectileType::rolling, ProjectileType::mist, ProjectileType::ball };
-    constexpr const char* projectile_names[]{ "spray", "jet", "rolling", "mist", "ball" };
+        ProjectileType::rolling, ProjectileType::mist, ProjectileType::ball, ProjectileType::pellet };
+    static_assert(std::size(projectile_types) == static_cast<size_t>(ProjectileType::count));
     constexpr float fan_order[]{ 0.0f, 1.0f, -1.0f, 2.0f, -2.0f };
 
     struct Fixtures : acceptance::JsonVariants
@@ -304,6 +304,24 @@ namespace
 
     void check_validation(Fixtures& fixtures)
     {
+        fixtures.rejects("umbrella", "projectile", [](rapidjson::Document& d)
+            { d["weapons"]["umbrella"]["projectile"].SetString("jet"); }, "pellet");
+        for (const int invalid : { 0, 33 })
+            fixtures.rejects("umbrella", "pellets", [&](rapidjson::Document& d)
+                { d["weapons"]["umbrella"]["pellets"].SetInt(invalid); });
+        fixtures.rejects("umbrella", "pellets", [](rapidjson::Document& d)
+            { d["weapons"]["umbrella"]["pellets"].SetDouble(1.5); });
+        for (const float invalid : { -0.1f, pi + 0.1f })
+            fixtures.rejects("umbrella", "spread", [&](rapidjson::Document& d)
+                { d["weapons"]["umbrella"]["spread"].SetFloat(invalid); });
+        for (const int invalid : { 0, 101 })
+            fixtures.rejects("canopy", "hits", [&](rapidjson::Document& d)
+                { d["weapons"]["umbrella"]["canopy"]["hits"].SetInt(invalid); });
+        for (const char* field : { "reach", "recover" })
+            fixtures.rejects("canopy", field, [&](rapidjson::Document& d)
+                { d["weapons"]["umbrella"]["canopy"][field].SetInt(0); });
+        fixtures.rejects("size", "x", [](rapidjson::Document& d)
+            { d["weapons"]["umbrella"]["canopy"]["size"]["x"].SetInt(0); });
         const auto angle_zero = fixtures.load([](rapidjson::Document& d)
         {
             d["weapons"]["roller"]["aim_tilt"].SetInt(0);

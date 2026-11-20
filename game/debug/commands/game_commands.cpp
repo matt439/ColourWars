@@ -110,7 +110,7 @@ void DebugDirectorImpl::register_commands()
 
 	registry.add_command("weapon", "choose a seat's weapon (seat 1-4 or all)",
 		{ { "seat|all", false, [] { return std::vector<std::string>{ "all", "1", "2", "3", "4" }; } },
-			{ "sprayer|sniper|roller|mister|bucket|random", false, [] { return MatchPlanner::weapon_names(); } } },
+			{ "sprayer|sniper|roller|mister|bucket|umbrella|random", false, [] { return MatchPlanner::weapon_names(); } } },
 		[this](Args args, DebugLog&)
 		{
 			MatchRequest::WeaponChoice choice;

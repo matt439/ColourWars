@@ -14,7 +14,7 @@ All rows marked `OPEN` in the 2026-11-20 queue are complete.
 **Author calls** (every `DECISION` row):
 
 - `POL#16`: review the four arena backdrops on a real GPU and in play; rule on Close Quarters' centre cover material.
-- `ROAD#13`: whether to build umbrella slices 2-4 (`PIN#2` is done).
+- `ROAD#13`: play the Umbrella and judge its six-tool balance, canopy feedback and four new cues.
 - `ENG#PARKED`: decide whether to post the drafted mouse-button comment on labrador#122.
 - `ENG#39`: file the `FLT_MAX` round-trip draft as an issue, or fix it in the engine.
 - `ROAD#44`: whether the ball and grenade keep circle collision shapes (hit feel; numbers in the item).
@@ -39,7 +39,7 @@ or above (2026-10-27). The owner records the gaps left out by choice and the exc
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ROAD#13` | DECISION | LOW | M | Umbrella answers recorded 2026-11-13 (Q1 umbrella, Q3-Q7 as recommended). Left: the author's call, now that `PIN#2` is done, whether to build slices 2-4, which reopens the five-tool balance and adds four unheard cues. Slice 1 (`REV#3`) is done. [Proposal](docs/feature-roadmap.md#umbrella-tool-proposal-road13). |
+| `ROAD#13` | DECISION | LOW | S | Umbrella built with bots, canopy, art and four cues. Author to judge balance and mix in an attended match. [Play review](docs/feature-roadmap.md#umbrella-tool-proposal-road13). |
 | `ROAD#14` | UNSCOPED | LOW | L | Map pickups or power-ups (TowerFall chests, Smash items), behind a match toggle and with bot awareness. No longer blocked by `POL#27`. [Gap](docs/feature-roadmap.md#comparable-game-gaps-2026-10-27). |
 | `ROAD#28` | DEFERRED | LOW | L | Cycling and paint-driven lifts are done. Left: deliberate bot lift routing. Lifts appear only on the two explicit trials. Resume when a Random arena needs a bot lift route. [Boundary](docs/feature-roadmap.md#unscoped-paint-object-contracts-road28-road29). |
 | `ROAD#29` | DEFERRED | LOW | M | Growing sponges were parked on 2026-11-13. When a Random arena wants a sponge, resume G1-G7 from the [contract draft](docs/feature-roadmap.md#growing-sponge-contract-draft-road29)'s recommendations. |

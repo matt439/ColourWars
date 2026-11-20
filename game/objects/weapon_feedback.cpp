@@ -101,6 +101,11 @@ void WeaponFeedback::draw(DrawList& draw_list, const Vector2F& nozzle,
                     static_cast<float>(index) * 0.25f, 0.16f, 0.16f);
             }
             break;
+        case WeaponType::umbrella:
+            mark(0.55f, 0.0f, 0.40f, 0.28f);
+            mark(0.45f, -0.45f, 0.35f, 0.28f, -0.35f);
+            mark(0.45f, 0.45f, 0.35f, 0.28f, 0.35f);
+            break;
         case WeaponType::bucket:
             mark(0.3f, -0.3f, 0.3f, 0.4f, -0.15f);
             mark(0.7f, 0.0f, 0.4f, 0.3f, 0.15f);

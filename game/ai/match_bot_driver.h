@@ -20,7 +20,7 @@ public:
 	// a measurement uses it directly: a roster cannot make P1 a bot, and a
 	// one-on-one bot match needs one.
 	MatchBotDriver(const GameTuning* tuning, const std::vector<std::optional<BotDifficulty>>& seats,
-		std::uint64_t seed);
+		std::uint64_t seed, MatchVariant variant = MatchVariant::standard);
 	bool drives(int participant) const;
 	// The seat's policy, or null for a human seat. Read-only, for measurement.
 	const MatchBot* bot(int participant) const;

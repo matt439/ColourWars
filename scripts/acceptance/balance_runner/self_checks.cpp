@@ -308,9 +308,9 @@ namespace balance_runner
             return parse_options(content, arguments);
         };
         const Options zero = parsed({ L"--seed", L"0", L"--players", L"4", L"--duration", L"0.25",
-            L"--tools", L"sniper,roller,mister,bucket", L"--bot", L"paint" });
+            L"--tools", L"sniper,roller,mister,umbrella", L"--bot", L"paint" });
         require(zero.seeds.size() == 1 && zero.seeds[0] == 0 && zero.players == 4 &&
-            zero.tools[0] == WeaponType::sniper && zero.tools[3] == WeaponType::bucket,
+            zero.tools[0] == WeaponType::sniper && zero.tools[3] == WeaponType::umbrella,
             "Valid zero seed or concrete roster did not survive CLI parsing");
         require(zero.paint_csv == zero.csv.parent_path() / (zero.csv.stem().native() + L".paint.csv"),
             "Default paint companion must be the main stem sibling");
@@ -326,7 +326,7 @@ namespace balance_runner
         require(bounds.seeds[0] == std::numeric_limits<std::uint32_t>::max() && bounds.stages.size() == 2,
             "The complete uint32 seed range and repeated stage options must be supported");
         const Options skirmish = parsed({ L"--seed", L"0", L"--players", L"4", L"--duration", L"0.25",
-            L"--tools", L"sniper,roller,mister,bucket", L"--bot", L"skirmish" });
+            L"--tools", L"sniper,roller,mister,umbrella", L"--bot", L"skirmish" });
         require(skirmish.bot == "skirmish" && skirmish.seeds == zero.seeds &&
             skirmish.players == zero.players && skirmish.tools == zero.tools && skirmish.duration == zero.duration,
             "The registered skirmish bot did not preserve the CLI zero seed, concrete roster and duration");

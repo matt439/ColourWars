@@ -64,6 +64,11 @@ Rather not hold the trigger? Options > Controls / audio > Pad sticks has a
 Toggle fire setting for each controller: turn it On and one press of Shoot
 keeps firing until the next press.
 
+The Umbrella primary fires five pellets in a short fan. Holding Shoot opens
+the canopy on the side you aim toward. Enemy shots wear it down, teammates'
+shots pass through, and players can walk around or through it. A broken
+canopy takes three seconds to recover. You can keep firing during that time.
+
 Sub is your sub weapon, carried beside your tool all match. Choose it on
 Weapon Select: confirm your tool with A / Enter, pick the sub with Left/Right,
 then press A / Enter again.

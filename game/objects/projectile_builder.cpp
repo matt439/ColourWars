@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/projectile_builder.h"
+#include "game/objects/projectile_pellet.h"
 
 using namespace labrador;
 
@@ -39,6 +40,9 @@ std::vector<std::unique_ptr<Projectile>>
 				rectangle, velocity, team, player_num, team_colour,
 				render_resources, strip, &tuning));
 		return projectiles;
+	case ProjectileType::pellet:
+		projectiles.push_back(build_pellet(position, velocity, team, player_num, team_colour, render_resources));
+		return projectiles;
     case ProjectileType::jet:
 		projectiles.push_back(
 			std::make_unique<ProjectileJet>(
@@ -65,6 +69,14 @@ std::vector<std::unique_ptr<Projectile>>
 
 	throw std::runtime_error("Projectile type " +
 		std::to_string(static_cast<int>(type)) + " has no builder.");
+}
+
+std::unique_ptr<Projectile> ProjectileBuilder::build_pellet(const Vector2F& centre, const Vector2F& velocity,
+	PlayerTeam team, int owner, const Colour& colour, RenderResources* resources) const
+{
+	constexpr auto type = ProjectileType::pellet;
+	return std::make_unique<ProjectilePellet>(centre, velocity, team, owner, colour, resources,
+		this->strips_[static_cast<size_t>(type)], &this->tuning_->projectile(type));
 }
 
 std::vector<std::unique_ptr<Projectile>>

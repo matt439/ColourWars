@@ -444,7 +444,7 @@ switch -Exact ($PainterMenuTextScope) {
         $result.scope = 'weapon-paper-only'
         $result.player_counts = @(1, 2, 3, 4)
         $result.palettes = @('random-neutral', 'blue_orange', 'pink_green', 'blue_yellow')
-        $result.weapons = @('sprayer', 'sniper', 'roller', 'mister', 'bucket', 'random')
+        $result.weapons = @('sprayer', 'sniper', 'roller', 'mister', 'bucket', 'umbrella', 'random')
         $result.actions = @('all-choices', 'both-wraps', 'ready-unready', 'confirmed-refusal', 'all-random-commit', 'ordered-rng', 'missing-reconnect', 'back-mode-team', 'commit-stage', 'stage-back', 'missing-back-count', 'choice-motion', 'reduce-effects', 'lifecycle-resets', 'captured-art-font-catalog', 'live-readiness-fill', 'overflow-name-description', 'resize')
         $result.input_slots = @(4, 3, 0, 2)
         $result.inputs = 'Actual Weapon Select and ordinary Mode/Team/Stage/Count destinations in StateContext; local keyboard messages and the existing scripted GamepadReader link seam provide sparse connected seats. Palette changes write only the isolated probe profile. Hidden no-activate window.'
@@ -544,12 +544,12 @@ switch -Exact ($PainterMenuTextScope) {
     'WeaponCatalogOnly' {
         $result.player_counts = @(1)
         $result.palettes = @('runtime-save-default')
-        $result.weapons = @('sprayer', 'sniper', 'roller', 'mister', 'bucket', 'random')
+        $result.weapons = @('sprayer', 'sniper', 'roller', 'mister', 'bucket', 'umbrella', 'random')
         $result.actions = @('browse', 'wrap-left', 'wrap-right', 'confirm-release', 'stage-back', 'mode-back', 'reopen')
         $result.input_slots = @(4)
         $result.inputs = 'Public keyboard input through actual Weapon/Stage/Mode Select pages on the normal GamepadReader backend.'
         foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
-        $result.checks = 'Six historical default names and icon/body/paint/full-supply bindings compared with independent fixtures at 720p/1080p/QHD, both wraps, provisional settings, fresh release confirmation, seeded concrete Random primary, actual Stage/Mode Back preserving all roster and match settings. Edited name/body/paint/supply and a sparse alternate atlas/fill become visible on reopen; existing pages keep their snapshots across edits, reversals and cycling. Frozen raster and draw RNG, native detail/context images and CSV retained. No physical-controller, human readability, performance or listening acceptance.'
+        $result.checks = 'Seven default names and icon/body/paint/full-supply bindings compared with independent fixtures at 720p/1080p/QHD, both wraps, provisional settings, fresh release confirmation, seeded concrete Random primary, actual Stage/Mode Back preserving all roster and match settings. Edited name/body/paint/supply and a sparse alternate atlas/fill become visible on reopen; existing pages keep their snapshots across edits, reversals and cycling. Frozen raster and draw RNG, native detail/context images and CSV retained. No physical-controller, human readability, performance or listening acceptance.'
     }
     'MainMenuOnly' {
         $result.player_counts = @()

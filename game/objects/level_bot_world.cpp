@@ -60,6 +60,7 @@ BotBody LevelBotWorld::body(int participant) const
     body.underfoot_enabled = underfoot.enabled;
     body.underfoot_team = underfoot.step_team;
     body.weapon = weapon.type();
+    body.canopy_broken = body.weapon == WeaponType::umbrella && weapon.canopy_state().recovery_remaining > 0.0f;
     const WeaponReadiness readiness = weapon.readiness();
     body.tool_ready = readiness == WeaponReadiness::ready;
     body.tool_empty = readiness == WeaponReadiness::empty;

@@ -53,6 +53,11 @@ Select previews the arena before a separate confirmation starts the match.
 To try the fill mechanic, choose **Turbulence Yard - Fill Trial** by name.
 Paint the marked sides of the centre block to claim the strip across its top.
 
+Choose **Umbrella** in Weapon Select to fire a short fan of paint. Hold Shoot
+and aim toward incoming shots to block them with the canopy. Teammates can
+fire through it. If it breaks, you can still fire while it recovers.
+[Umbrellas facing off on Sluice Works](docs/images/umbrella/in-play.png)
+
 The arena is an unsaved picture in a paint program
 ([the backstory](docs/backstory.md)). **A, B or Start** (**Space, Escape or
 Enter**) skips the opening. When time runs out, the camera pulls back to

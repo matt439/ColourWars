@@ -121,6 +121,15 @@ namespace debug_console_acceptance
 			seat_choice(1, "sub", "wall"), seat_choice(2, "sub", "random"), seat_choice(0, "sub", "sprinkler") };
 		MatchPlan plan = planner.resolve(nullptr, every, all_pads, random);
 		require(plan.ok, "A plan with every seat field resolves: " + plan.error);
+        MatchRequest umbrella_random;
+        umbrella_random.players = 2;
+        umbrella_random.stage = "movement_course";
+        umbrella_random.weapons = { { 0, "umbrella" }, { 1, "random" } };
+        const MatchPlan chosen = planner.resolve(nullptr, umbrella_random, all_pads,
+            [] { return static_cast<unsigned int>(WeaponType::umbrella); });
+        require(chosen.ok && chosen.settings.player_weapon(0) == WeaponType::umbrella &&
+            chosen.settings.player_weapon(1) == WeaponType::umbrella,
+            "The explicit and sixth Random choices must both resolve to a concrete umbrella");
 		const std::vector<SeatSetup> seats = plan.settings.player_settings();
 		require(seats[0].controller == PlayerController::human && seats[0].num == 0 &&
 			seats[0].team == PlayerTeam::b && seats[0].handicap == 1, "Seat 1: pad 0, team b, Boost 1");
@@ -290,7 +299,7 @@ namespace debug_console_acceptance
 		match.build();
 		for (const char* line : { "seed 211", "bot all paint", "players 4", "seat 2 bot easy",
 			"seat 2 boost 2", "seat 2 team b", "seat 3 bot hard", "seat 3 boost 1", "seat 3 team b",
-			"seat 4 team a", "seat 1 boost 1", "weapon 3 roller", "stage close_quarters" })
+			"seat 4 team a", "seat 1 boost 1", "weapon 2 umbrella", "weapon 3 roller", "stage close_quarters" })
 		{
 			const DebugStatus status = impl.execute(line);
 			require(status.ok, std::string(line) + " is accepted: " + status.message);
@@ -299,6 +308,7 @@ namespace debug_console_acceptance
 		for (int step = 0; step < 10 && match.builds == builds; ++step) { roster_tick(director, match); }
 		require(match.builds == builds + 1 && impl.request().empty(), "The seat statements rebuild the match once");
 		const MatchSetup planned = match.settings;
+        require(planned.player_weapon(1) == WeaponType::umbrella, "The Debug weapon command lost the umbrella");
 		const std::vector<SeatSetup> seats = planned.player_settings();
 		require(planned.stage() == "close_quarters" && seats.size() == 4 &&
 			seats[0].num == input_slots::keyboard_and_mouse && seats[0].team == PlayerTeam::a && seats[0].handicap == 1 &&
@@ -325,6 +335,22 @@ namespace debug_console_acceptance
 		require(recorded_roster(match.settings) == recorded_roster(planned), "Recording rebuilt a different roster");
 		for (int step = 0; step < roster_length + 10 && impl.recording(); ++step) { roster_tick(director, match); }
 		const ReplayFile file = ReplayFile::read(path);
+        require(file.tape.settings().player_weapon(1) == WeaponType::umbrella &&
+            file.final_print.seats.at(1).canopy.has_value() && !file.final_print.seats.at(2).canopy,
+            "The umbrella's roster choice and seat-specific canopy must round-trip in the recording");
+        MatchFingerprint changed_canopy = file.final_print;
+        auto& canopy = *changed_canopy.seats[1].canopy;
+        canopy.open = !canopy.open;
+        require(MatchFingerprint::difference(file.final_print, changed_canopy) == "P2 canopy open differs",
+            "A divergent canopy must name its seat and field");
+        canopy.open = !canopy.open;
+        ++canopy.hits_left;
+        require(MatchFingerprint::difference(file.final_print, changed_canopy) == "P2 canopy hits left differs",
+            "A diverging canopy hit count went undetected");
+        --canopy.hits_left;
+        canopy.recovery ^= 1u;
+        require(MatchFingerprint::difference(file.final_print, changed_canopy) == "P2 canopy recovery differs",
+            "A one-bit canopy recovery difference went undetected");
 		require(!impl.recording() && file.updates == roster_length && file.seed == 211u,
 			"The planned roster's recording is complete and seeded");
 		require(recorded_roster(file.tape.settings()) == recorded_roster(planned),

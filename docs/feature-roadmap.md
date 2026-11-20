@@ -2713,10 +2713,15 @@ balance runner's `engaged_ticks` uses the same sight.
 
 ### Umbrella tool proposal (`ROAD#13`)
 
-**DECISION.** The author chose the umbrella on 2026-11-13. Slice 1 already
-stops shots on the existing paint wall. Slices 2–4 would build the tool
-itself. The proposal below follows the [sub-weapons plan](#sub-weapons-road11)
-and ends with the author's answers and the remaining build decision.
+**Playable, 2026-11-20.** The Umbrella is the sixth primary, available in
+Weapon Select, Random, solo practice and bot loadouts. Hold Shoot to open
+the canopy on the aim side. One tenth of a tank buys all five pellets in a
+fan. The canopy blocks 15 enemy shots before breaking, preserves partial
+damage when folded, and takes three live seconds to recover. A dry tank
+can still defend. The player can move at full speed and carry any sub.
+[Weapon Select](images/umbrella/weapon-select.png) · [First volley](images/umbrella/in-play.png) · [After the canopies take hits](images/umbrella/crossfire.png)
+
+The original proposal and the author's design choices follow.
 
 **The archetype: an umbrella (Splatoon's brella).** It fires a short fan of
 paint pellets. While Shoot is held, a canopy opens in front of the player and
@@ -2817,22 +2822,25 @@ cues stay the tools' shared ones.
 pellet record and judge reach with `horizontal_reach`, as for every tool. The
 canopy needs one new `MatchBot` rule: hold Shoot facing a visible enemy whose
 tool reaches the bot, even when the enemy is beyond the bot's own reach (the
-wall's slice-6 test), and release it while the canopy is broken. The balance
+wall's slice-6 test), and release it while the canopy is broken. During refill a
+bot still retreats but faces and holds Shoot against the nearest visible enemy whose
+weapon can reach it, even on an empty tank. This can spend the next affordable
+volley. When the threat leaves sight or range, the reserve guard resumes. The balance
 pass repeats the slice-6 bot-round method (1,440 one-minute rounds) with the
 umbrella against each tool, against the five-tool balance accepted on
 2026-11-05 (`POL#27`).
 
 **Records and formats.**
-- *Save.* The name joins the save's `last_match`. An older build reads an
-  unknown weapon as the Sprayer (`game/save/last_match_setup.cpp:135-136`), so
-  the save stays at version 9.
+- *Save.* The name joins the save's `last_match`. A build that encounters an
+  unknown weapon name falls back to Sprayer. Umbrella uses the existing
+  named field in save version 11.
 - *Replays.* The Debug match plan and replays carry the name. The match
   fingerprint gains each seat's canopy state (open, hits left, recovery time),
   which moves the Debug replay format from 11 to 12.
 - *Random.* Weapon Select's Random draws `rand() % max_prim_wep`
-  (`game/states/main_menu_weapon_select.cpp:135`), so a sixth tool changes every
-  seeded Random tool pick. The painter pins that count Random draws move with
-  it.
+  (`game/states/main_menu_weapon_select.cpp:135`). With six concrete tools,
+  the same seed can now yield a different loadout. The painter checks the
+  resolved loadout and the number of draws.
 - *Presentation and copy.* The presentation arrays sized by
   `tuned_weapon_count` (grips, muzzle sizes, motion styles, idle drips), the
   choices and the descriptions each gain an entry. The copy lives in
@@ -2903,14 +2911,31 @@ by it, and a host just in front of the face, hit first. No seeded pin moved.
 - **Q7, two shields: yes.** An umbrella may carry the paint wall sub; the
   loadout stays free, as decided for `ROAD#11`.
 
-**Still open: whether to build slices 2-4.** That call is separate and came
-after `PIN#2` ([engine ledger](review/engine-reports.md#qualify-masters-behaviour-changes-pin2)),
-which finished 2026-11-13, so it is the author's to make now.
-Building reopens the five-tool balance accepted on 2026-11-05 (`POL#27`) and
-adds four cues nobody will hear before they ship, which are the reasons
-`REV#50` and `REV#43` were declined
-([review calls](#project-review-calls-2026-11-13)). The row stays DECISION,
-narrowed to that call.
+**Implementation and play review.** The author chose to build slices 2–4
+on 2026-11-20. The [umbrella case](../scripts/acceptance/umbrella.cpp)
+exercises paid fire, canopy durability, same-step breaks, shots from behind,
+friendly fire through the canopy, and player passage. The live replay checks
+exercise the canopy breaking and reopening. Debug replay format 12 records
+the canopy state. The save continues to store the tool by name at version 11.
+
+In 1,440 one-minute Normal bot matches the canopy intercepted shots in
+1,292 rounds. With grenades on both sides, the Umbrella held more paint than
+the Sniper and less than each of the other four primaries in both Standard
+and Endless paint. The measurements leave the initial tuning in place for
+the attended review. [Matchups and method](gameplay-tuning.md#umbrella-bot-balance)
+
+The default Release suite passed all 90 cases. The team probe ran 18
+Umbrella rotations alongside its 290 existing trials. The tool and instant
+replay passed under AddressSanitizer. On the RTX 5080, both builds passed
+the Weapon Select and paint-effects checks for the equipped poses, canopy
+damage and pellets. The Release package started with the 110-wave bank,
+and an isolated copy with the bank removed started with silent audio.
+
+For the attended review, try holding a lane against a Sniper, then approach
+the Umbrella from behind or walk through with a Roller. Try an Umbrella with
+a Paint Wall. Listen for the four separate shot, opening, block and break
+cues while two players are firing. These checks inform the call on retaining
+or adjusting the provisional six-tool balance and mix.
 
 ### Input
 

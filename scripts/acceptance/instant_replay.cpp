@@ -3,7 +3,9 @@
 #include "game/contracts/simulation.h"
 #include "game/match/round_tape.h"
 #include "game/objects/paint_fill.h"
+#include "game/objects/weapon.h"
 #include "scripts/acceptance/support/probe.h"
+#include "scripts/acceptance/support/json_fixture.h"
 #include <iostream>
 
 // ROAD#19: the end-of-round instant replay is the same round built again from
@@ -71,6 +73,14 @@ namespace
         std::vector<PlayerState> states;
         // The palette is drawn from the round seed's stream: the seed's part.
         std::vector<Colour> colours;
+        struct Canopy
+        {
+            bool open;
+            int hits;
+            float recovery;
+            bool operator==(const Canopy&) const = default;
+        };
+        std::vector<Canopy> canopies;
         int projectiles = 0;
         struct Fill
         {
@@ -94,6 +104,12 @@ namespace
             taken.players.push_back(level.player(seat).rectangle());
             taken.states.push_back(level.player(seat).state());
             taken.colours.push_back(level.player(seat).team_colour());
+            const Weapon& weapon = level.player(seat).primary_weapon();
+            if (weapon.type() == WeaponType::umbrella)
+            {
+                const auto canopy = weapon.canopy_state();
+                taken.canopies.push_back({ canopy.open, canopy.hits_left, canopy.recovery_remaining });
+            }
         }
         taken.projectiles = level.projectile_count();
         if (const PaintFill* fill = level.paint_fill())
@@ -160,6 +176,62 @@ namespace
             }
         }
         return shown;
+    }
+
+    void check_canopy_replay(World& world, const std::filesystem::path& content)
+    {
+        // Face two humans across Crossfeed's centre mixer. Only their starting
+        // positions change so the interaction can be captured as ordinary input.
+        acceptance::JsonVariants arena(content / "levels/crossfeed.json", L"canopy-replay");
+        const auto path = arena.write([](auto& doc)
+        {
+            auto& spawns = doc["spawn_locations"];
+            spawns["team_a"][0]["x"].SetInt(1668); spawns["team_a"][0]["y"].SetInt(760);
+            spawns["team_b"][0]["x"].SetInt(1876); spawns["team_b"][0]["y"].SetInt(760);
+        });
+        auto info = std::make_unique<LevelLoadedInfo>(path_to_utf8(path).c_str());
+        info->validate();
+        constexpr char stage[] = "canopy_replay";
+        world.levels.add(stage, std::move(info));
+        MatchSetup settings;
+        settings.set_player_count(2); settings.begin_input_claims(0);
+        require(settings.claim_input_slot(1), "Cannot claim the second canopy-replay pad");
+        settings.set_stage(stage); settings.set_screen_layout(ScreenLayout::two_player);
+        settings.set_player_team(0, PlayerTeam::a); settings.set_player_team(1, PlayerTeam::b);
+        settings.set_player_weapon(0, WeaponType::umbrella); settings.set_player_weapon(1, WeaponType::sprayer);
+        constexpr unsigned int seed = 13013;
+        RoundTape tape;
+        tape.start(seed, settings); tape.set_cheats(true, true);
+        RoundTapeRecorder recorder(&tape);
+        auto level = world.build(settings, OpeningMode::off, MatchRandom(seed));
+        level->set_player_cheats(true, true);
+        level->start_without_countdown();
+        std::vector<PlayerInputData> inputs(input_slots::count);
+        for (std::size_t seat = 0; seat < 2; ++seat)
+        {
+            auto& input = inputs[seat]; input.connected = true; input.primary_shoot = true;
+            input.shoot_direction_requested = true;
+            input.shoot_direction = Vector2F(seat == 0 ? 1.0f : -1.0f, 0.0f);
+            input.shoot_angle = input.shoot_direction.angle(); input.right_analog_stick = input.shoot_direction;
+        }
+        std::vector<Moment> seen;
+        bool opened = false, broke = false, reopened = false;
+        for (int tick = 0; tick < 600; ++tick)
+        {
+            recorder.prepare(nullptr, simulation::seconds_per_step);
+            level->update(inputs, simulation::seconds_per_step, &recorder);
+            seen.push_back(moment(*level));
+            const auto& canopy = seen.back().canopies.at(0);
+            if (canopy.open) { opened = true; if (broke) { reopened = true; } }
+            if (opened && canopy.recovery > 0.0f && canopy.hits == 0) { broke = true; }
+        }
+        require(opened && broke && reopened && tape.steps() == static_cast<int>(seen.size()),
+            "Enemy shots did not break the held canopy and let it reopen on the recorded tape");
+        const auto result = level->level_end_info();
+        level.reset();
+        const auto replay = watch(world, tape, seen, stage, 1);
+        require(same_paint(replay.level->level_end_info(), result), "Canopy tape changed paint or player credit");
+        std::cout << "PASS seeded umbrella replay: 600 steps, enemy shots, break and reopening\n";
     }
 
     void check_stage(World& world, const char* stage, unsigned int seed)
@@ -365,6 +437,7 @@ int main(int argc, char** argv)
         check_tape_rules();
         check_streams(world);
         check_disabled_capture(world);
+        check_canopy_replay(world, std::filesystem::absolute(argv[1]));
         unsigned int seed = 19019;
         // The ferry trial's movers and the gate trial's gate follow the paint,
         // so they replay only if it does; the lift trial's riders are carried

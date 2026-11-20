@@ -16,6 +16,12 @@ class Level;
 // Debug-only.
 struct MatchFingerprint
 {
+    struct Canopy
+    {
+        bool open = false;
+        int hits_left = 0;
+        std::uint32_t recovery = 0;
+    };
 	struct Seat
 	{
 		std::uint32_t x = 0;
@@ -31,6 +37,7 @@ struct MatchFingerprint
         bool paint_underfoot = false;
         int support_paint_team = 0;
         int step_paint_team = 0;
+        std::optional<Canopy> canopy;
 	};
 
     // Unconditional value layout; the optional domain is populated only for

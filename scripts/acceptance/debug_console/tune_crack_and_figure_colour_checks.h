@@ -234,8 +234,8 @@
 		// captured handles, held-tool bounds, draw/alpha/blink pixels and Level
 		// behavior are deliberately not asserted by this CPU fixture.
 		require(original.arm_colour == labrador::Colour::black && original.hand_colour == labrador::Colour::white &&
-			held_handles.size() == 4 && quiet->eyes.size() == 2 && look->grips.size() == 5,
-			"Limb CPU fixture uses authored BLACK/WHITE and all four rest/sleeve frames, two eyes and five tool grips");
+			held_handles.size() == 4 && quiet->eyes.size() == 2 && look->grips.size() == tuned_weapon_count,
+			"Limb CPU fixture uses authored BLACK/WHITE and all four rest/sleeve frames, two eyes and every tool grip");
 		std::srand(0x4c494d42);const int next_random = std::rand();std::srand(0x4c494d42);
 		const std::array<std::size_t, 2> indices{ limb_arm_colour_index, limb_hand_colour_index };
 		const std::array<const char*, 2> words{ "2060C080", "A532D600" };

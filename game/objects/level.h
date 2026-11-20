@@ -350,6 +350,8 @@ private:
 	// emptied within resolve_projectile_movement(), so it never holds a shot
 	// past that walk; a member only to reuse its storage.
 	std::vector<Projectile*> breakables_;
+	// Open canopy holders for this tick's flight and muzzle sweeps.
+	std::vector<Player*> canopy_holders_;
 
 	// What overlay.stations names: the authored stations, then the spawns.
 	std::vector<LevelStation> stations_;

@@ -129,6 +129,24 @@
         "sub.sprinkler.throw",
         "sub.wall.set"
       ]
+    },
+    {
+      "date": "2026-11-20",
+      "task": "ROAD#13",
+      "status": "pending_listening",
+      "scope": "Four pinned masters ship with the playable umbrella. Attended listening and mix review are pending.",
+      "cues": [
+        "umbrella.shot",
+        "umbrella.open",
+        "umbrella.block",
+        "umbrella.break"
+      ]
     }
-  ]
+  ],
+  "pending_listening_master_sha256": {
+    "umbrella.shot": "c5ed751728d7016da2e20ac1465d4749bd772fb7c884600d48ff7e730a346dd0",
+    "umbrella.open": "3e925795378071505a1fba11fa2d6c3c6ef4404d25673e8b2e11a9d9186941cf",
+    "umbrella.block": "946f3553b824846ee42794c4d1b209b7785d50209a114529b0e6b70dd14c479a",
+    "umbrella.break": "02c76bf4419339ba19ad84a57bb897d4d80b8d4ac3e74f1d8fe769420d84eaa1"
+  }
 }

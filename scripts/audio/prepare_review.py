@@ -14,7 +14,7 @@ import wave
 
 import numpy as np
 
-from audio_pipeline import MAX_PEAK, loop_region, riff_chunks
+from audio_pipeline import MAX_PEAK, loop_region, riff_chunks, runtime_master_hashes
 
 ROOT = Path(__file__).resolve().parents[2]
 PRODUCTION = ROOT / "game/audio/paint_exe"
@@ -33,6 +33,7 @@ paint.impact.sniper paint.impact.bucket weapon.blocked bucket.slosh tool.drip
 world.ambience.close_quarters world.ambience.king_of_the_hill world.ambience.turbulence world.detail
 ui.move ui.confirm ui.cancel ui.error ui.ready ui.pause_open ui.unready ui.pad_lost ui.pad_back
 ui.count_in results.fill results.winner results.draw end.series ui.volume_preview
+sub.grenade.throw sub.sprinkler.throw sub.wall.set umbrella.shot umbrella.open umbrella.block umbrella.break
 """.split()
 
 
@@ -42,7 +43,7 @@ def save_json(path: Path, value: dict) -> None:
 
 # What became of the accepted set in the game. It holds only while the
 # masters match acceptance.json; a changed set is a candidate again.
-IN_GAME = ("On 2026-11-05 the author accepted its in-game hooks and mix as they stand (POL#23)"
+IN_GAME = ("On 2026-11-05 the author accepted the original set's in-game hooks and mix (POL#23)"
            " and waived the listening and release checks (ROAD#3), which were not performed.")
 CANDIDATE = "These files do not change the game's live audio."
 
@@ -53,7 +54,7 @@ def accepted(cues: list[dict]) -> dict | None:
         record = json.loads(path.read_text(encoding="utf-8"))
         masters = {cue["id"]: cue["sha256"] for cue in cues}
         if (record.get("status") == "accepted" and len(masters) == len(cues)
-                and record.get("master_sha256") == masters):
+                and runtime_master_hashes(record) == masters):
             return record
     return None
 
@@ -61,6 +62,9 @@ def accepted(cues: list[dict]) -> dict | None:
 def acceptance_status(cues: list[dict]) -> str:
     record = accepted(cues)
     if record is not None:
+        if pending := record.get("pending_listening_master_sha256"):
+            return (f"The game ships {len(record['master_sha256'])} accepted masters and "
+                    f"{len(pending)} additional masters pending attended listening.")
         return f"Author accepted this set on {record['date']}; the game ships it."
     return "Production candidates; listening acceptance pending."
 
@@ -108,7 +112,10 @@ def collect() -> tuple[list[dict], dict[str, dict]]:
                 if loop_region(riff_chunks(path.read_bytes()), frames) != (0, frames):
                     raise ValueError(f"Review requires a full-file loop: {cue['id']}")
             cues.append(cue)
-    cues.sort(key=lambda cue: (cue["tier"], cue["id"]))
+    # A new wave gets a new slot. Published indices stay stable as cues are added.
+    published = json.loads((ROOT / "game/content/sounds/paint_exe.json").read_text(encoding="utf-8"))["waves"]
+    slots = {name: index for index, name in enumerate(published)}
+    cues.sort(key=lambda cue: (slots.get(cue["id"], len(slots)), cue["tier"], cue["id"]))
     save_json(PRODUCTION / "cues.json", {
         "version": 1, "status": acceptance_status(cues),
         "required_cues": REQUIRED, "cues": cues,
@@ -123,8 +130,9 @@ def collect() -> tuple[list[dict], dict[str, dict]]:
 
 def provenance(cues: list[dict], sources: dict[str, dict]) -> None:
     status = acceptance_status(cues)
+    record = accepted(cues)
     lines = ["# Paint.exe audio provenance", "",
-        "Produced 2026-10-14 for POL#22. Masters stay outside live content; the runtime bank uses accepted exports.",
+        "The original set was produced on 2026-10-14 for POL#22. The runtime bank uses exports of the listed masters.",
         status + " " + in_game_status(cues),
         "[acceptance.json](acceptance.json) records the author's response and the exact accepted master hashes.",
         "Every source is retained and hashed in [sources.json](sources.json). Every exported wave",
@@ -152,6 +160,14 @@ def provenance(cues: list[dict], sources: dict[str, dict]) -> None:
             f"- SHA-256: `{source['sha256']}`.", ""]
     lines += ["## One record per exported wave", ""]
     for cue in cues:
+        date = "2026-10-14"
+        cue_status = "Author accepted this set on 2026-10-14; the game ships it." if record else status
+        if record:
+            for amendment in record.get("amendments", []):
+                if cue["id"] in amendment["cues"]:
+                    date = amendment["date"]
+                    cue_status = ("Shipped for attended listening." if amendment["status"] == "pending_listening"
+                                  else f"Author accepted this cue on {date}; the game ships it.")
         path = Path(cue["path"]).relative_to(PRODUCTION.relative_to(ROOT)).as_posix()
         production = cue.get("production_source", f"game/audio/paint_exe/{path.split('/')[0]}/README.md")
         production = Path(production).relative_to(PRODUCTION.relative_to(ROOT)).as_posix()
@@ -164,7 +180,7 @@ def provenance(cues: list[dict], sources: dict[str, dict]) -> None:
             "- Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.",
             f"- Modifications: {cue['description']} Exact trims, layer edits, gains and loop points in [{production}]({production}) and its renderer.",
             "- Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.",
-            f"- Production date: 2026-10-14. Status: {status}", ""]
+            f"- Production date: {date}. Status: {cue_status}", ""]
     (PRODUCTION / "PROVENANCE.md").write_text("\n".join(lines), encoding="utf-8")
 
 

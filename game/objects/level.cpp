@@ -87,7 +87,7 @@ Level::Level(LevelWorld world, const LevelServices& services, LevelStage stage, 
 		player->set_blocked_shot_feedback(this->blocked_shot_feedback_.get());
 		IdleDrip* drip = nullptr;
 		const WeaponType type = player->primary_weapon().type();
-		if (type == WeaponType::sprayer || type == WeaponType::sniper || type == WeaponType::bucket)
+		if (std::find(idle_drip_tools.begin(), idle_drip_tools.end(), type) != idle_drip_tools.end())
 		{
 			drip = this->scene_->add(std::make_unique<IdleDrip>(
 				&presentation->idle_drip(type), render_resources, player->team_colour(),
@@ -383,6 +383,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& commands,
 	this->structures_.settle_gates(this->players_);
 
 	this->scene_->update(dt);
+	for (Player* player : this->players_) { player->prepare_canopy(dt); }
 	this->resolve_projectile_movement();
 
 	this->update_players(dt);
@@ -503,7 +504,7 @@ void Level::update_players(float dt)
 		for (std::unique_ptr<Projectile>& projectile :
 			player->update_weapon_and_get_projectiles(
 				dt, this->structures_.projectile_targets(),
-				this->structures_.target_flags()))
+				this->structures_.target_flags(), this->canopy_holders_))
 		{
 			// Scene owns the shot; the typed pointer add() returns is what the
 			// tick's projectile walks use. Pending until end_tick() admits it.
@@ -548,7 +549,7 @@ void Level::burst_projectiles()
 		// A drop starts inside whatever stopped the grenade only by overlap:
 		// it has not travelled, so its launch is its own position.
 		drop->resolve_launch_obstruction(drop->bounds().center(),
-			this->structures_.projectile_targets(), this->structures_.target_flags());
+			this->structures_.projectile_targets(), this->structures_.target_flags(), this->canopy_holders_);
 		drop->flush_paint_audio(*this->paint_audio_);
 		if (const auto contact = drop->take_blocked_contact())
 		{
@@ -576,6 +577,11 @@ void Level::resolve_projectile_movement()
 	// One planted during the walk takes hits from the next tick, whatever its
 	// place in the scene; one broken during it stops nothing more (the sweep
 	// asks takes_hits again).
+	this->canopy_holders_.clear();
+	for (Player* player : this->players_)
+	{
+		if (player->canopy()) { this->canopy_holders_.push_back(player); }
+	}
 	this->breakables_.clear();
 	for (Projectile* projectile : this->projectiles_)
 	{
@@ -584,7 +590,7 @@ void Level::resolve_projectile_movement()
 	for (Projectile* projectile : this->projectiles_)
 	{
 		projectile->resolve_movement_contacts(this->structures_.projectile_targets(), flags,
-			this->breakables_);
+			this->breakables_, this->canopy_holders_);
 	}
 	// Emptied (its capacity kept) so it never holds a shot the scene frees.
 	this->breakables_.clear();

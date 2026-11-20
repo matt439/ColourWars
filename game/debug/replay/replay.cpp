@@ -11,6 +11,7 @@
 #include "game/debug/replay/hash.h"
 #include "game/save/atomic_file.h"
 #include "game/input/input_slots.h"
+#include "game/config/tuning.h"
 #include "game/match/match_rules.h"
 #include "game/objects/horizontal_motion.h"
 #include <algorithm>
@@ -342,12 +343,34 @@ namespace
 		return result;
 	}
 
+    void validate_canopies(const MatchFingerprint& final, const MatchSetup& roster,
+        const std::filesystem::path& path)
+    {
+        const auto& players = roster.player_settings();
+        const std::size_t count = std::max(players.size(), final.seats.size());
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            const bool expected = i < players.size() && players[i].weapon == WeaponType::umbrella;
+            const bool present = i < final.seats.size() && final.seats[i].canopy.has_value();
+            if (expected != present) { fail(path, "canopy must be present exactly for an umbrella seat"); }
+            if (!present) { continue; }
+            const auto& canopy = *final.seats[i].canopy;
+            const float remaining = float_from_bits(canopy.recovery);
+            const bool broken = canopy.hits_left == 0;
+            if (canopy.hits_left < 0 || canopy.hits_left > CanopyTuning::max_hits ||
+                !std::isfinite(remaining) || std::signbit(remaining) ||
+                broken != (remaining > 0.0f) || (broken && canopy.open))
+            { fail(path, "invalid canopy hit count, open state or recovery time"); }
+        }
+    }
+
 	// One round's settings to final, at the top level's indentation, its last
 	// line unterminated: the file's own round and each of its later rounds (DBG#2).
 	void write_round(std::ostream& out, const ReplayFile& file, const std::filesystem::path& path)
 	{
 		const MatchSetup& roster = file.tape.settings();
 		validate_roster(roster, path);
+        validate_canopies(file.final_print, roster, path);
         if (file.final_print.horizontal_motion)
         { validate_motion(*file.final_print.horizontal_motion, roster.player_settings().size(),
             file.final_print.seats.size(), path); }
@@ -477,6 +500,12 @@ namespace
             {
                 out << ", \"paint_underfoot\": { \"support_team\": " << seat.support_paint_team <<
                     ", \"step_team\": " << seat.step_paint_team << " }";
+            }
+            if (seat.canopy)
+            {
+                out << ", \"canopy\": { \"open\": " << (seat.canopy->open ? "true" : "false") <<
+                    ", \"hits_left\": " << seat.canopy->hits_left <<
+                    ", \"recovery\": " << quoted(hex32(seat.canopy->recovery)) << " }";
             }
             out << " }";
 		}
@@ -777,8 +806,15 @@ namespace
                     seat.step_paint_team < 0 || seat.step_paint_team > 2)
                 { fail(path, "paint_underfoot teams must be a, b or neutral enum values"); }
             }
+            if (entry.has("canopy"))
+            {
+                const labrador::JsonValue canopy = entry.object("canopy");
+                seat.canopy = MatchFingerprint::Canopy{ canopy.boolean("open"), canopy.integer("hits_left"),
+                    hex_field(canopy, "recovery", path) };
+            }
 			print.seats.push_back(seat);
 		}
+        validate_canopies(print, file.tape.settings(), path);
         if (last.has("horizontal_motion"))
         { print.horizontal_motion = read_motion(last.object("horizontal_motion"),
             seats.size(), print.seats.size(), path); }

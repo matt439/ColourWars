@@ -17,7 +17,8 @@ import uuid
 from job_process import start_process
 
 REPO = Path(__file__).resolve().parents[2]
-TOOLS = ('sprayer', 'sniper', 'roller', 'mister', 'bucket')
+SCHEMA_1_DEFAULT_TOOLS = ('sprayer', 'sniper', 'roller', 'mister', 'bucket')
+TOOLS = (*SCHEMA_1_DEFAULT_TOOLS, 'umbrella')
 SUBS = ('grenade', 'sprinkler', 'wall')
 SECTIONS = ('weapons.', 'projectiles.', 'subs.', 'bots.')
 
@@ -39,7 +40,7 @@ def design_jobs(design):
     if set(design) - known or design.get('Schema') != 1 or not safe_name(design.get('Name')):
         raise ValueError('Design needs Schema=1, an identifier Name and only documented keys')
     stages, difficulties = design['Stages'], design['Difficulties']
-    tools = design.get('Tools', list(TOOLS))
+    tools = design.get('Tools', SCHEMA_1_DEFAULT_TOOLS)
     if not stages or len(stages) > 16 or len(set(stages)) != len(stages) or not all(safe_name(x) for x in stages):
         raise ValueError('Stages must name 1..16 unique identifiers')
     if not difficulties or len(set(difficulties)) != len(difficulties) or set(difficulties) - {'easy','normal','hard'}:

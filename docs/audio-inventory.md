@@ -712,7 +712,12 @@ The runtime definition and tracked derived bank are
 music/weapon/transition voices. Music is reblocked from FFmpeg's output into
 512-frame/524-byte stereo blocks for XAudio2; an encoded loop may gain at most
 511 frames of tail padding. This changes the derived encoding, not the accepted
-PCM masters. The corrected bank was 22,765,884 bytes (22,918,348 since the three sub cues of 2026-11-09, `ROAD#11`); its SHA-256, encoded music
+PCM masters. The corrected bank was 22,765,884 bytes and grew to 22,918,348 with the
+three sub cues of 2026-11-09 (`ROAD#11`). On 2026-11-20 `ROAD#13` added the
+umbrella shot, canopy opening, block and break to the end of the bank. Those four
+masters await attended listening. Two full builds reproduced the 110-wave
+23,007,316-byte bank while preserving every previous wave index, format, loop
+and encoded sample payload. Its SHA-256, encoded music
 hashes, padding and decoded measurements are retained in
 [runtime-bank.json](../scripts/audio/runtime-bank.json). The build validates it before staging it; the
 normal Release ZIP includes this bank, provenance and CC0 terms. The bank can

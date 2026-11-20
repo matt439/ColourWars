@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "scripts/acceptance/balance_regions/metrics.h"
+#include "game/objects/weapon_type.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -50,7 +51,10 @@ namespace balance_regions
             }
         }
         bool concrete_tool(const std::string& tool)
-        { return tool == "sprayer" || tool == "sniper" || tool == "roller" || tool == "mister" || tool == "bucket"; }
+        {
+            const auto type = weapon_from_name(tool);
+            return type && static_cast<std::size_t>(*type) < tuned_weapon_count;
+        }
         struct Owner { int seat = 0; OwnerStatus status = OwnerStatus::neutral; };
         Owner owner_of(const PaintSurfaceSample& sample, const std::vector<RosterSeat>& roster)
         {

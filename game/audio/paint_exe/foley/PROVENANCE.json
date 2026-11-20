@@ -91,7 +91,7 @@
       "sha256": "f0749089361726800db03f7b422777330da74dfd6d304e7780bef2a1b3d81bd0",
       "frames": 5880,
       "duration_seconds": 0.13333333333333333,
-      "peak_dbfs": -10.6880375209309,
+      "peak_dbfs": -10.688037520930902,
       "rms_dbfs": -24.00026260811661,
       "loop_start": null,
       "loop_end_inclusive": null,
@@ -623,7 +623,7 @@
       "frames": 17566,
       "duration_seconds": 0.3983219954648526,
       "peak_dbfs": -3.0003622493859567,
-      "rms_dbfs": -24.675683264752735,
+      "rms_dbfs": -24.67568326475273,
       "loop_start": null,
       "loop_end_inclusive": null,
       "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
@@ -1420,7 +1420,7 @@
       "sha256": "058236157f763660eea059ce087d970eaa5c111c4710e104a534dc6ee07a72fd",
       "frames": 20090,
       "duration_seconds": 0.45555555555555555,
-      "peak_dbfs": -6.405401850556292,
+      "peak_dbfs": -6.405401850556293,
       "rms_dbfs": -24.00026304753655,
       "loop_start": 0,
       "loop_end_inclusive": 20089,
@@ -1478,7 +1478,7 @@
       "frames": 24500,
       "duration_seconds": 0.5555555555555556,
       "peak_dbfs": -3.0003622493859567,
-      "rms_dbfs": -24.00954401903329,
+      "rms_dbfs": -24.009544019033285,
       "loop_start": null,
       "loop_end_inclusive": null,
       "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
@@ -1525,7 +1525,7 @@
       "frames": 23664,
       "duration_seconds": 0.5365986394557823,
       "peak_dbfs": -3.0003622493859567,
-      "rms_dbfs": -27.684706893708313,
+      "rms_dbfs": -27.68470689370831,
       "loop_start": null,
       "loop_end_inclusive": null,
       "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
@@ -2049,7 +2049,7 @@
       "frames": 43090,
       "duration_seconds": 0.9770975056689343,
       "peak_dbfs": -3.0003622493859567,
-      "rms_dbfs": -23.55090219660907,
+      "rms_dbfs": -23.550902196609066,
       "loop_start": null,
       "loop_end_inclusive": null,
       "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
@@ -3081,7 +3081,7 @@
       "frames": 28679,
       "duration_seconds": 0.6503174603174603,
       "peak_dbfs": -7.511416971169629,
-      "rms_dbfs": -29.000279307149643,
+      "rms_dbfs": -29.000279307149647,
       "loop_start": null,
       "loop_end_inclusive": null,
       "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
@@ -3281,7 +3281,7 @@
       "sha256": "45051e4b21fa048d96e6834f26f442ff14ca10818b0874a5d4bf392a28248fe5",
       "frames": 418950,
       "duration_seconds": 9.5,
-      "peak_dbfs": -27.075650450439642,
+      "peak_dbfs": -27.07565045043964,
       "rms_dbfs": -40.000274697274065,
       "loop_start": 0,
       "loop_end_inclusive": 418949,
@@ -3542,6 +3542,268 @@
       "loop_start": null,
       "loop_end_inclusive": null,
       "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance (ROAD#3) was waived on 2026-11-05, not performed"
+    },
+    {
+      "id": "umbrella.shot",
+      "cue_id": "umbrella.shot",
+      "tier": 1,
+      "description": "A fan of paint spatters from a short squeezed spray, with two staggered wet flecks.",
+      "path": "game/audio/paint_exe/foley/masters/umbrella_shot.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_drips",
+        "bsb_small_splash_3",
+        "bsb_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "umbrella.shot",
+        "cue_id": "umbrella.shot",
+        "tier": 1,
+        "description": "A fan of paint spatters from a short squeezed spray, with two staggered wet flecks.",
+        "layers": [
+          {
+            "source": "bsb_spray",
+            "seconds": [
+              2.48,
+              2.67
+            ],
+            "speed": 1.25,
+            "highpass": 600,
+            "lowpass": 7500,
+            "level_db": -21
+          },
+          {
+            "source": "bsb_small_splash_3",
+            "seconds": [
+              0.01,
+              0.24
+            ],
+            "speed": 1.7,
+            "lowpass": 5900,
+            "level_db": -24,
+            "offset": 0.013
+          },
+          {
+            "source": "bsb_drips",
+            "seconds": [
+              7.48,
+              7.67
+            ],
+            "speed": 1.45,
+            "lowpass": 5500,
+            "level_db": -25,
+            "offset": 0.043
+          }
+        ],
+        "rms_db": -23,
+        "peak_db": -6
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "c5ed751728d7016da2e20ac1465d4749bd772fb7c884600d48ff7e730a346dd0",
+      "frames": 7675,
+      "duration_seconds": 0.17403628117913833,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -24.084897391979524,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Shipped for attended listening; master hash in ../acceptance.json."
+    },
+    {
+      "id": "umbrella.open",
+      "cue_id": "umbrella.open",
+      "tier": 1,
+      "description": "A broad paper flap unfolds and ends on the latch click of the opening canopy.",
+      "path": "game/audio/paint_exe/foley/masters/umbrella_open.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_flips1",
+        "owlish_plug"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "umbrella.open",
+        "cue_id": "umbrella.open",
+        "tier": 1,
+        "description": "A broad paper flap unfolds and ends on the latch click of the opening canopy.",
+        "layers": [
+          {
+            "source": "owlish_paper_flips1",
+            "seconds": [
+              0.95,
+              1.28
+            ],
+            "speed": 1.25,
+            "highpass": 240,
+            "lowpass": 7300,
+            "level_db": -20
+          },
+          {
+            "source": "owlish_plug",
+            "seconds": [
+              0,
+              0.16
+            ],
+            "speed": 1.35,
+            "highpass": 430,
+            "lowpass": 5200,
+            "level_db": -22,
+            "offset": 0.15
+          }
+        ],
+        "rms_db": -23,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "3e925795378071505a1fba11fa2d6c3c6ef4404d25673e8b2e11a9d9186941cf",
+      "frames": 11842,
+      "duration_seconds": 0.26852607709750564,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -28.443099990102464,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Shipped for attended listening; master hash in ../acceptance.json."
+    },
+    {
+      "id": "umbrella.block",
+      "cue_id": "umbrella.block",
+      "tier": 1,
+      "description": "A muffled pellet drums on taut fabric with a small wet tap at contact.",
+      "path": "game/audio/paint_exe/foley/masters/umbrella_block.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "umbrella.block",
+        "cue_id": "umbrella.block",
+        "tier": 1,
+        "description": "A muffled pellet drums on taut fabric with a small wet tap at contact.",
+        "layers": [
+          {
+            "source": "owlish_fruit3",
+            "seconds": [
+              0,
+              0.19
+            ],
+            "speed": 1.35,
+            "highpass": 100,
+            "lowpass": 1850,
+            "level_db": -19
+          },
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              5.63,
+              5.78
+            ],
+            "speed": 1.5,
+            "lowpass": 3900,
+            "level_db": -25,
+            "offset": 0.008
+          }
+        ],
+        "rms_db": -25,
+        "peak_db": -7
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "946f3553b824846ee42794c4d1b209b7785d50209a114529b0e6b70dd14c479a",
+      "frames": 5898,
+      "duration_seconds": 0.13374149659863946,
+      "peak_dbfs": -8.02078265123762,
+      "rms_dbfs": -25.00025048392331,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Shipped for attended listening; master hash in ../acceptance.json."
+    },
+    {
+      "id": "umbrella.break",
+      "cue_id": "umbrella.break",
+      "tier": 1,
+      "description": "The canopy ribs give with a sharp metal snap followed by a collapsing paper rattle.",
+      "path": "game/audio/paint_exe/foley/masters/umbrella_break.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_metal_clank",
+        "owlish_paper_crumple2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "umbrella.break",
+        "cue_id": "umbrella.break",
+        "tier": 1,
+        "description": "The canopy ribs give with a sharp metal snap followed by a collapsing paper rattle.",
+        "layers": [
+          {
+            "source": "owlish_metal_clank",
+            "seconds": [
+              0.01,
+              0.25
+            ],
+            "speed": 1.55,
+            "highpass": 340,
+            "lowpass": 6900,
+            "level_db": -19
+          },
+          {
+            "source": "owlish_paper_crumple2",
+            "seconds": [
+              0,
+              0.4
+            ],
+            "speed": 1.06,
+            "highpass": 240,
+            "lowpass": 6100,
+            "level_db": -20,
+            "offset": 0.051
+          }
+        ],
+        "rms_db": -21,
+        "peak_db": -4
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "02c76bf4419339ba19ad84a57bb897d4d80b8d4ac3e74f1d8fe769420d84eaa1",
+      "frames": 18891,
+      "duration_seconds": 0.4283673469387755,
+      "peak_dbfs": -4.0000883347026726,
+      "rms_dbfs": -23.957758580885905,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Shipped for attended listening; master hash in ../acceptance.json."
     }
   ]
 }

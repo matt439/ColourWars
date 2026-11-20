@@ -42,7 +42,7 @@ void ProjectileRolling::on_player_contact(const Player& /*other*/,
 {
 }
 void ProjectileRolling::resolve_travel(std::span<CollisionObject* const> objects,
-	std::optional<ProjectileTargetFlags> /*known*/, std::span<Projectile* const> /*breakables*/)
+	std::optional<ProjectileTargetFlags> /*known*/, ProjectileBreakables /*breakables*/)
 {
 	// Its volume is not swept: Level::strike_breakables tests it after contacts.
 	if (this->moving_contact_ready())

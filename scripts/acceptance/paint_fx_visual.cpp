@@ -10,6 +10,7 @@
 #include "game/objects/structure_paintable.h"
 #include "game/objects/paint_fill.h"
 #include "game/objects/paint_fill_draw.h"
+#include "game/objects/weapon_umbrella.h"
 #include "scripts/acceptance/support/probe.h"
 
 #include <filesystem>
@@ -41,10 +42,6 @@ namespace
         ProjectileType::spray, ProjectileType::jet, ProjectileType::mist, ProjectileType::ball };
     constexpr std::array<WeaponType, 4> flying_tools = {
         WeaponType::sprayer, WeaponType::sniper, WeaponType::mister, WeaponType::bucket };
-    constexpr std::array<ProjectileType, 5> kinds = {
-        ProjectileType::spray, ProjectileType::jet, ProjectileType::rolling,
-        ProjectileType::mist, ProjectileType::ball };
-    constexpr std::array<const char*, 5> names = { "spray", "jet", "rolling", "mist", "ball" };
     constexpr std::array<const char*, 4> faces = { "top", "bottom", "left", "right" };
     const RectangleF block(0, 0, 90, 50);
 
@@ -222,6 +219,8 @@ namespace
         return result;
     }
 
+    #include "scripts/acceptance/paint_fx_visual/umbrella.h"
+
     void shots(Application& app, const Canvas& canvas, const GameTuning& tuning,
         const TeamColour& colours, float scale, const std::filesystem::path& output,
         const std::string& prefix, std::ofstream& records)
@@ -256,7 +255,7 @@ namespace
                         const size_t index = static_cast<size_t>(view);
                         cameras[index] = centred(shot_bounds(groups[index]).center(),
                             app.viewport_manager()->player_viewport(view), scale);
-                        suffixes[index] = names[static_cast<size_t>(flying[index])];
+                        suffixes[index] = projectile_names[static_cast<size_t>(flying[index])];
                     }
                     const auto draw = [&](int view, DrawList& list)
                     {
@@ -359,11 +358,12 @@ namespace
             suffixes[static_cast<size_t>(view)] = faces[static_cast<size_t>(view)];
         }
         const Frame blank = matrix(app, canvas, cameras, [](int, DrawList&) {});
-        for (const ProjectileType type : kinds)
+        for (std::size_t kind = 0; kind < projectile_names.size(); ++kind)
         {
+            const auto type = static_cast<ProjectileType>(kind);
             auto objects = surfaces(app, tuning, preferences, colours);
             const auto draw = [&](int view, DrawList& list) { objects[static_cast<size_t>(view)]->draw(list); };
-            const std::string stem = prefix + "-impact-" + names[static_cast<size_t>(type)];
+            const std::string stem = prefix + "-impact-" + projectile_names[kind];
             const auto capture = [&](const char* phase)
             {
                 const auto before = observation(objects);
@@ -665,6 +665,7 @@ int wmain(int argc, wchar_t** argv)
             app.thread_pool(), app.partitioner());
         const Canvas canvas(app.render_resources());
         check_yard_fill(app, canvas, tuning, presentation, preferences);
+        check_umbrella_art(app, canvas, tuning, presentation, preferences, output);
         for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
         {
             app.resolution_manager()->set_resolution_exactly(size);
@@ -706,7 +707,7 @@ int wmain(int argc, wchar_t** argv)
                 runoffs(app, canvas, tuning, preferences, colours,
                     gameplay_scale(presentation.camera(), static_cast<float>(size.x), static_cast<float>(size.y)),
                     output, prefix, records, 1);
-                std::cout << "PASS " << prefix << " real 4P scene, four flying types, five impact types, "
+                std::cout << "PASS " << prefix << " real 4P scene, four flying types, six impact types, "
                     "four faces, immediate friendly/enemy repaint, frozen redraw and raster bounds\n";
             }
         }

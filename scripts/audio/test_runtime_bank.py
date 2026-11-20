@@ -97,10 +97,23 @@ class RuntimeBankChecks(unittest.TestCase):
         manifest = {"cues": [{"id": "ui.confirm"}]}
         report = {"cues": [{"id": "ui.confirm", "sha256": "accepted"}]}
         acceptance = {"status": "accepted", "master_sha256": {"ui.confirm": "accepted"}}
-        self.assertEqual(publication.accepted_masters(manifest, report, acceptance), {"ui.confirm": "accepted"})
+        self.assertEqual(publication.runtime_masters(manifest, report, acceptance), {"ui.confirm": "accepted"})
         report["cues"][0]["sha256"] = "changed"
-        with self.assertRaisesRegex(pipeline.InvalidAudio, "accepted master hashes differ"):
-            publication.accepted_masters(manifest, report, acceptance)
+        with self.assertRaisesRegex(pipeline.InvalidAudio, "runtime master hashes differ"):
+            publication.runtime_masters(manifest, report, acceptance)
+
+    def test_new_runtime_cue_requires_its_own_hash_and_keeps_accepted_hashes(self) -> None:
+        manifest = {"cues": [{"id": "ui.confirm"}, {"id": "umbrella.shot"}]}
+        report = {"cues": [{"id": "ui.confirm", "sha256": "accepted"}, {"id": "umbrella.shot", "sha256": "new"}]}
+        record = {"status": "accepted", "master_sha256": {"ui.confirm": "accepted"}}
+        with self.assertRaisesRegex(pipeline.InvalidAudio, "runtime master hashes differ"):
+            publication.runtime_masters(manifest, report, record)
+        record["pending_listening_master_sha256"] = {"umbrella.shot": "new"}
+        self.assertEqual(publication.runtime_masters(manifest, report, record),
+                         {"ui.confirm": "accepted", "umbrella.shot": "new"})
+        record["pending_listening_master_sha256"]["ui.confirm"] = "new"
+        with self.assertRaisesRegex(pipeline.InvalidAudio, "accepted and pending listening"):
+            publication.runtime_masters(manifest, report, record)
 
     def test_tracked_bank_names_and_hash_match_accepted_receipt(self) -> None:
         receipt = json.loads((ROOT / "scripts/audio/runtime-bank.json").read_text())
@@ -109,10 +122,12 @@ class RuntimeBankChecks(unittest.TestCase):
         self.assertEqual(hashlib.sha256(bank).hexdigest(), receipt["sha256"])
         self.assertEqual(len(bank), receipt["bytes"])
         self.assertEqual(receipt["accepted_master_sha256"], acceptance["master_sha256"])
+        self.assertEqual(receipt["pending_listening_master_sha256"], acceptance["pending_listening_master_sha256"])
         self.assertEqual(struct.unpack_from("<3I", bank), (0x444E4257, 46, 44))
         metadata, _ = struct.unpack_from("<II", bank, 12)
-        flags, count, _, entry_size, name_size, _, _, _ = struct.unpack_from("<II64sIIIIQ", bank, metadata)
-        self.assertEqual((flags, count, entry_size, name_size), (65536, 106, 24, 64))
+        flags, count, _, entry_size, name_size, _, _, build_time = struct.unpack_from("<II64sIIIIQ", bank, metadata)
+        self.assertEqual(build_time, 0, "XWBTool's wall clock leaked into the reproducible bank")
+        self.assertEqual((flags, count, entry_size, name_size), (65536, 110, 24, 64))
         names_at, names_size = struct.unpack_from("<II", bank, 36)
         self.assertEqual(names_size, count * name_size)
         names = [bank[names_at + i * name_size:names_at + (i + 1) * name_size].rstrip(b"\0").decode("ascii")

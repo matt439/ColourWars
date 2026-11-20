@@ -33,7 +33,8 @@ namespace
     const float dt = simulation::seconds_per_step;
 
     constexpr WeaponType tools[] = { WeaponType::sprayer, WeaponType::sniper,
-        WeaponType::roller, WeaponType::mister, WeaponType::bucket };
+        WeaponType::roller, WeaponType::mister, WeaponType::bucket, WeaponType::umbrella };
+    static_assert(std::size(tools) == tuned_weapon_count);
 
     PlayerInputData input(bool held = false, float movement = 0.0f,
         float angle = 0.0f)
@@ -205,7 +206,7 @@ namespace
             require(feedback.state() == WeaponFeedbackState{},
                 "Suppressed muzzle event stopped ageing or survived its lifetime");
         }
-        std::cout << "PASS weapon feedback reduced effects: five-tool muzzle draw suppression, frozen fan-out and ordinary expiry\n";
+        std::cout << "PASS weapon feedback reduced effects: primary muzzle draw suppression, frozen fan-out and ordinary expiry\n";
     }
 
     void check_paid_shots(World& world)
@@ -244,7 +245,7 @@ namespace
             std::ignore = update(*weapon, input(false), 0.0f);
             require(state(*weapon) == frozen, "Zero-delta weapon update changed a live pulse");
         }
-        std::cout << "PASS weapon feedback: five stock paid-shot edges, roller exclusion and precision cooldown rejection\n";
+        std::cout << "PASS weapon feedback: stock primary paid-shot edges, roller exclusion and precision cooldown rejection\n";
     }
 
     void check_empty_and_recovery(World& world)
@@ -488,7 +489,7 @@ namespace
         prime(*omitted, world.tuning);
         require(!update(*omitted, input(true)).empty(),
             "Omitting presentation prevented normal weapon firing");
-        std::cout << "PASS weapon feedback: five-tool reduced-effects paint, cadence, ownership, aim, mechanism, projectile and status-event equivalence\n";
+        std::cout << "PASS weapon feedback: primary reduced-effects paint, cadence, ownership, aim, mechanism, projectile and status-event equivalence\n";
     }
 
     void check_validation(const std::filesystem::path& content)
@@ -514,12 +515,12 @@ namespace
                 look[field].SetDouble(std::numeric_limits<double>::max());
             });
         }
-        for (const char* tool : { "sprayer", "sniper", "roller", "mister", "bucket" })
+        for_each_tuned_weapon([&](WeaponType, const char* tool)
         {
             reject([tool](rapidjson::Value& look) { look["muzzle_sizes"][tool]["x"].SetFloat(0.0f); });
             reject([tool](rapidjson::Value& look) { look["muzzle_sizes"][tool]["y"].SetFloat(-1.0f); });
             reject([tool](rapidjson::Value& look) { look["muzzle_sizes"][tool].SetString("large"); });
-        }
+        });
         reject([](rapidjson::Value& look) { look["enabled"].SetInt(1); });
         reject([](rapidjson::Value& look) { look["sprite_sheet"].SetInt(1); });
         reject([](rapidjson::Value& look) { look["fill_frame"].SetInt(1); });

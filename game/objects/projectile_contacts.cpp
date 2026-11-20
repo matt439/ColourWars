@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/projectile.h"
+#include "game/objects/player.h"
 #include "game/objects/translating_structure_paintable.h"
 #include "game/objects/fixed_slab_geometry.h"
 #include "game/objects/paint_audio.h"
@@ -8,6 +9,19 @@
 #include <limits>
 
 using namespace labrador;
+
+struct ProjectileBreakableHit
+{
+    std::pair<float, float> interval;
+    Projectile* planted;
+    Player* canopy_holder;
+
+    void spend_hit() const
+    {
+        if (planted != nullptr) { planted->take_hit(); }
+        else { canopy_holder->take_canopy_hit(); }
+    }
+};
 
 namespace
 {
@@ -129,30 +143,35 @@ namespace
         return circle_sweep_interval(start.center(), finish.center(), *radius, obstacle);
     }
 
-    // The first breakable (Level's planted subs) this shot's travel from
-    // start to finish enters: an enemy one that takes hits now, the earliest
-    // entry winning and the earlier in the list on a tie. An empty list does
-    // no arithmetic, so a scene without a planted sub sweeps as it always has.
-    struct BreakableHit
-    {
-        Projectile* target;
-        std::pair<float, float> interval;
-    };
+    bool launch_leaves_overlap(const RectangleF& start,
+        const RectangleF& finish, const RectangleF& obstacle);
 
-    std::optional<BreakableHit> first_breakable(const Projectile& shot,
+    // Planted subs win an exact tie with a canopy, then participant order
+    // settles tied canopies. Ask each owner again after every previous hit.
+    std::optional<ProjectileBreakableHit> first_breakable(const Projectile& shot,
         const RectangleF& start, const RectangleF& finish,
-        std::span<Projectile* const> breakables, std::optional<float> radius)
+        ProjectileBreakables breakables, std::optional<float> radius, bool launch = false)
     {
-        std::optional<BreakableHit> first;
-        for (Projectile* target : breakables)
+        std::optional<ProjectileBreakableHit> first;
+        for (Projectile* target : breakables.planted)
         {
-            // Asked now, so one broken earlier this tick stops nothing more.
             if (target == &shot || !target->takes_hits() ||
                 target->team() == shot.team()) { continue; }
             const auto interval = shot_interval(start, finish, target->bounds(), radius);
             if (interval && (!first || interval->first < first->interval.first))
             {
-                first = BreakableHit{ target, *interval };
+                first = ProjectileBreakableHit{ *interval, target, nullptr };
+            }
+        }
+        for (Player* holder : breakables.canopy_holders)
+        {
+            const auto canopy = holder->canopy();
+            if (!canopy || canopy->team == shot.team()) { continue; }
+            if (launch && launch_leaves_overlap(start, finish, canopy->bounds)) { continue; }
+            const auto interval = shot_interval(start, finish, canopy->bounds, radius);
+            if (interval && (!first || interval->first < first->interval.first))
+            {
+                first = ProjectileBreakableHit{ *interval, nullptr, holder };
             }
         }
         return first;
@@ -337,28 +356,29 @@ bool ProjectileTargetFlags::any_fixed_slab(std::span<CollisionObject* const> obj
 
 void Projectile::resolve_launch_obstruction(const Vector2F& origin,
     std::span<CollisionObject* const> objects,
-    std::optional<ProjectileTargetFlags> known)
+    std::optional<ProjectileTargetFlags> known, std::span<Player* const> canopy_holders)
 {
     const RectangleF finish = this->shape()->bounding_box();
     RectangleF start = finish;
     start.set_position_at_center(origin);
     this->resolve_sweep(start, finish, objects, true,
-        known ? std::optional<bool>(known->fixed_slabs) : std::nullopt);
+        known ? std::optional<bool>(known->fixed_slabs) : std::nullopt,
+        { {}, is_swept(this->projectile_type()) ? canopy_holders : std::span<Player* const>{} });
 }
 
 void Projectile::resolve_movement_contacts(
     std::span<CollisionObject* const> objects,
     std::optional<ProjectileTargetFlags> known,
-    std::span<Projectile* const> breakables)
+    std::span<Projectile* const> breakables, std::span<Player* const> canopy_holders)
 {
     if (this->for_deletion_ || !this->first_update_done_) { return; }
-    this->resolve_travel(objects, known, breakables);
+    this->resolve_travel(objects, known, { breakables, canopy_holders });
     // Level supplies one complete target span, once, for this actual update.
     this->moving_contact_ready_ = false;
 }
 
 void Projectile::resolve_travel(std::span<CollisionObject* const> objects,
-    std::optional<ProjectileTargetFlags> known, std::span<Projectile* const> breakables)
+    std::optional<ProjectileTargetFlags> known, ProjectileBreakables breakables)
 {
     if (!is_swept(this->type_)) { return; }
     // Asked only when the caller has no answer, and only for a swept kind.
@@ -386,7 +406,7 @@ bool Projectile::moving_paint_completed(HorizontalMotionId id) const
 
 void Projectile::resolve_translating_contacts(const RectangleF& start,
     const RectangleF& finish, std::span<CollisionObject* const> objects, bool moving_ready,
-    std::span<Projectile* const> breakables)
+    ProjectileBreakables breakables)
 {
     CollisionObject* obstruction = nullptr;
     TranslatingStructurePaintable* moving_obstruction = nullptr;
@@ -457,7 +477,7 @@ void Projectile::resolve_translating_contacts(const RectangleF& start,
         this->sweep_radius());
         breakable && breakable_first(breakable->interval.first, closest_entry, obstruction))
     {
-        this->strike_breakable(start, finish, *breakable->target, breakable->interval);
+        this->strike_breakable(start, finish, *breakable);
         return;
     }
     if (moving_obstruction != nullptr)
@@ -530,7 +550,7 @@ void Projectile::resolve_rolling_translating_contacts(std::span<CollisionObject*
 }
 void Projectile::resolve_sweep(const RectangleF& start,
     const RectangleF& finish, std::span<CollisionObject* const> objects,
-    bool launch, std::optional<bool> fixed_slabs, std::span<Projectile* const> breakables)
+    bool launch, std::optional<bool> fixed_slabs, ProjectileBreakables breakables)
 {
     if (fixed_slabs ? *fixed_slabs : ProjectileTargetFlags::any_fixed_slab(objects))
     {
@@ -576,10 +596,10 @@ void Projectile::resolve_sweep(const RectangleF& start,
         }
     }
     if (const auto breakable = first_breakable(*this, start, finish, breakables,
-        this->sweep_radius());
+        this->sweep_radius(), launch);
         breakable && breakable_first(breakable->interval.first, closest.first, obstruction))
     {
-        this->strike_breakable(start, finish, *breakable->target, breakable->interval);
+        this->strike_breakable(start, finish, *breakable);
         return;
     }
     if (obstruction == nullptr)
@@ -632,7 +652,7 @@ void Projectile::resolve_sweep(const RectangleF& start,
 
 void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
     const RectangleF& finish, std::span<CollisionObject* const> objects, bool launch,
-    std::span<Projectile* const> breakables)
+    ProjectileBreakables breakables)
 {
     // Only scenes containing the new geometry enter this selection path.
     // The legacy rectangle participants still compute their original float
@@ -675,10 +695,10 @@ void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
         }
     }
     if (const auto breakable = first_breakable(*this, start, finish, breakables,
-        this->sweep_radius());
+        this->sweep_radius(), launch);
         breakable && breakable_first(breakable->interval.first, closest, obstruction))
     {
-        this->strike_breakable(start, finish, *breakable->target, breakable->interval);
+        this->strike_breakable(start, finish, *breakable);
         return;
     }
     if (obstruction == nullptr) { return; }
@@ -714,8 +734,9 @@ void Projectile::resolve_fixed_slab_sweep(const RectangleF& start,
 }
 
 void Projectile::strike_breakable(const RectangleF& start,
-    const RectangleF& finish, Projectile& target, const std::pair<float, float>& interval)
+    const RectangleF& finish, const ProjectileBreakableHit& hit)
 {
+    const auto& interval = hit.interval;
     // The same face inset resolve_sweep gives cover, so a grenade struck
     // here bursts at the face it reached, not past it.
     const float edge_travel = std::max({
@@ -731,7 +752,7 @@ void Projectile::strike_breakable(const RectangleF& start,
     // struck it after the tick's contacts.
     this->note_retire_cause(ShotRetireCause::breakable);
     this->set_for_deletion(true);
-    target.take_hit();
+    hit.spend_hit();
 }
 
 void Projectile::on_structure_contact(const Structure& other,

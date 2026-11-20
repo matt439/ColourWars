@@ -26,6 +26,19 @@ enum class ToolMotionPose
 	lift,
 };
 
+struct WeaponCanopy
+{
+	labrador::RectangleF bounds;
+	PlayerTeam team;
+};
+
+struct WeaponCanopyState
+{
+	bool open = false;
+	int hits_left = 0;
+	float recovery_remaining = 0.0f;
+};
+
 // Updated with simulation events, then read unchanged by every render view.
 // Pressure is a paid-shot pulse, not ammunition; travel is turns, modulo one.
 struct ToolMotionState
@@ -86,6 +99,13 @@ public:
 		float dt, float ammo_regen_multiplier = 1.0f);
 
 	float ammo() const;
+	// Prepare held defences before sweeping incoming shots. Standalone firing
+	// updates also advance the canopy when no sweep preceded them.
+	virtual void prepare_canopy(PlayerInputData, const labrador::Vector2F&, bool, float) {}
+	virtual std::optional<WeaponCanopy> canopy() const { return std::nullopt; }
+	virtual WeaponCanopyState canopy_state() const { return {}; }
+	virtual void take_canopy_hit() {}
+	virtual void reset_canopy() {}
 	// A sub weapon's draw on this tank (ROAD#11): takes `cost` and restarts
 	// the refill delay, as a paid shot does, only when the tank holds all of
 	// it. Endless paint pays without spending. False leaves the tank alone.
@@ -159,7 +179,7 @@ public:
 
 	// Visual bounds cover every rotated pose and any detached release haze.
 	// Player::bounds unions this with the body for scene culling.
-	labrador::RectangleF draw_bounds() const;
+	virtual labrador::RectangleF draw_bounds() const;
 
 	// Read-only attachment points for game-owned character artwork. These remain
 	// the same continuous simulation aim and muzzle used to launch projectiles.
@@ -197,6 +217,7 @@ protected:
 
 	// Tint only the paint overlay without mutating shared state during draw.
 	virtual labrador::Colour paint_colour() const;
+	labrador::Colour displayed_paint_colour() const { return this->paint_override_.value_or(this->paint_colour()); }
 
 	// Resolved ground travel's share of the decorative tool motion, called
 	// only while motion presentation is enabled. The default swings a bucket's
@@ -222,6 +243,7 @@ protected:
 
 
 	const WeaponDetails& details() const;
+	const ProjectileBuilder& projectile_builder() const { return *proj_builder_; }
 	float shoot_interval() const;
 	float starting_vel_length() const;
 	float ammo_usage() const;

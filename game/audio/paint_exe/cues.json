@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "Author accepted this set on 2026-10-14; the game ships it.",
+  "status": "The game ships 106 accepted masters and 4 additional masters pending attended listening.",
   "required_cues": [
     "music.menu",
     "music.close_quarters",
@@ -86,7 +86,14 @@
     "results.winner",
     "results.draw",
     "end.series",
-    "ui.volume_preview"
+    "ui.volume_preview",
+    "sub.grenade.throw",
+    "sub.sprinkler.throw",
+    "sub.wall.set",
+    "umbrella.shot",
+    "umbrella.open",
+    "umbrella.block",
+    "umbrella.break"
   ],
   "cues": [
     {
@@ -1716,6 +1723,67 @@
       "recommended_gain": 0,
       "production_source": "game/audio/paint_exe/foley/recipes.json",
       "sha256": "3018478d708985e9b2e043ab4c932d3e1691e5459495f64271b32d2518bcb340"
+    },
+    {
+      "id": "umbrella.block",
+      "cue_id": "umbrella.block",
+      "tier": 1,
+      "description": "A muffled pellet drums on taut fabric with a small wet tap at contact.",
+      "path": "game/audio/paint_exe/foley/masters/umbrella_block.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "946f3553b824846ee42794c4d1b209b7785d50209a114529b0e6b70dd14c479a"
+    },
+    {
+      "id": "umbrella.break",
+      "cue_id": "umbrella.break",
+      "tier": 1,
+      "description": "The canopy ribs give with a sharp metal snap followed by a collapsing paper rattle.",
+      "path": "game/audio/paint_exe/foley/masters/umbrella_break.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_metal_clank",
+        "owlish_paper_crumple2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "02c76bf4419339ba19ad84a57bb897d4d80b8d4ac3e74f1d8fe769420d84eaa1"
+    },
+    {
+      "id": "umbrella.open",
+      "cue_id": "umbrella.open",
+      "tier": 1,
+      "description": "A broad paper flap unfolds and ends on the latch click of the opening canopy.",
+      "path": "game/audio/paint_exe/foley/masters/umbrella_open.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_flips1",
+        "owlish_plug"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "3e925795378071505a1fba11fa2d6c3c6ef4404d25673e8b2e11a9d9186941cf"
+    },
+    {
+      "id": "umbrella.shot",
+      "cue_id": "umbrella.shot",
+      "tier": 1,
+      "description": "A fan of paint spatters from a short squeezed spray, with two staggered wet flecks.",
+      "path": "game/audio/paint_exe/foley/masters/umbrella_shot.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_drips",
+        "bsb_small_splash_3",
+        "bsb_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "c5ed751728d7016da2e20ac1465d4749bd772fb7c884600d48ff7e730a346dd0"
     }
   ]
 }

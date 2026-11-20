@@ -2,10 +2,10 @@
 
 Produced on 2026-10-14 for **POL#22**. Open [index.html](index.html) in a browser
 to hear individual cues and the same scripted scene at one, two and four players.
-Start with Tier 1. There are **106 WAV masters covering all 88 cue groups**:
+Start with Tier 1. There are **110 WAV masters covering 92 cue groups**:
 the 85 in
 [audio-inventory §4](../../../docs/audio-inventory.md#4-the-new-cue-list) and
-the three sub cues (`ROAD#11`); 52 Tier 1 waves, 37 Tier 2 waves and 17 Tier 3
+the three sub cues (`ROAD#11`) and four umbrella cues (`ROAD#13`). There are 56 Tier 1 waves, 37 Tier 2 waves and 17 Tier 3
 waves.
 
 **The author accepted the complete set on 2026-10-14**, replying "sounds good"
@@ -14,9 +14,9 @@ POL#22 is closed; [acceptance.json](acceptance.json) records the exact accepted
 master hashes. No revisions were requested. On 2026-11-09 the author accepted
 three more foley masters for the sub weapons (`ROAD#11`): `sub.grenade.throw`,
 `sub.sprinkler.throw` and `sub.wall.set`, recorded in the same file's
-`amendments`.
-The 2026-10-15 runtime migration uses this set for the existing game bindings and
-included all 103 masters in the live bank, which now holds all 106. On 2026-11-05 the author accepted
+`amendments`. On 2026-11-20 four umbrella masters joined the bank for in-game
+listening. Their hashes are pinned separately from the 106 accepted masters.
+On 2026-11-05 the author accepted
 the cue hooks and gameplay mix as they stand (POL#23) and waived ROAD#3's
 multiplayer, pause/resume, volume and release checks, which were not performed.
 
@@ -28,7 +28,7 @@ multiplayer, pause/resume, volume and release checks, which were not performed.
   recorded CC0 samples. The 76–87 second loops have contrasting sections and
   editable note/event records. No existing song, legacy track or synthesizer
   preset was used.
-- [foley/README.md](foley/README.md): 67 physical cues from marker, paper, water,
+- [foley/README.md](foley/README.md): 71 physical cues from marker, paper, water,
   mechanisms and room recordings. Includes six footsteps, six splashes, four
   landings and four painted-step variants. The pop, sigh and chair creak are
   accepted sourced cues for STORY#1/STORY#2, not recordings by the repository author.
@@ -65,8 +65,7 @@ python game/audio/paint_exe/interface/render.py
 python scripts/audio/prepare_review.py
 python scripts/audio/audio_pipeline.py build
 python scripts/audio/publish_runtime_bank.py
-python -m unittest discover -s scripts/audio -p test_audio_pipeline.py
-python -m unittest discover -s scripts/audio -p test_runtime_bank.py
+python -m unittest discover -s scripts/audio -p "test_*.py"
 ```
 
 The JSON scores/recipes are the editable production sessions. Renderers retain
@@ -89,22 +88,23 @@ it and checks the XWB loop bounds. It decodes the compressed music and checks
 that version too. The validator rejects block formats that XWB's mini-format
 cannot represent.
 
-The separate publication command verifies that the build uses the exact
-accepted master hashes, reinspects the bank, then writes the tracked
+The separate publication command checks every master against its pinned hash,
+reinspects the bank, then writes the tracked
 `game/content/sounds/paint_exe.xwb` and its
 [receipt](../../../scripts/audio/runtime-bank.json). It does not change runtime
 bindings. Normal CMake game builds need neither Python nor FFmpeg: they verify
-the bank's SHA-256/size, accepted wave order and explicit instance references
+the bank's SHA-256/size, published wave order and explicit instance references
 before staging it. Missing audio retains the optional silent fallback; a normal
 Release package requires the validated bank. The bank compiler is retained at
 `scripts/audio/tools/XWBTool.exe`.
 
-The corrected runtime bank is **22,918,348 bytes**. The receipt retains its hash,
+The current runtime bank is **23,007,316 bytes**. The builder clears XWBTool's
+build-time metadata so independent exports reproduce the exact file. Adding
+the umbrella preserved all 106 published wave indices, formats, loops and
+encoded sample payloads. The receipt retains the bank hash,
 the encoded music export hashes, bounded loop padding, decoded measurements and
-tool identities. All accepted PCM masters are unchanged. The current 18
-audio tests cover pipeline/publication integrity; extracted Release startup
-with the real bank and the separate missing-bank fallback also pass. These
-checks do not replace listening or multiplayer mix acceptance.
+tool identities. The 25 audio tests cover rendering, publication, staging and
+the optional silent fallback. Attended umbrella mix review remains open.
 
 ## Recorded technical qualification
 

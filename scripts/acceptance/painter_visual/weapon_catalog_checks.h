@@ -37,14 +37,16 @@ void weapon_paper_icon_reference(DrawList& list, RenderResources& resources,
 void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
-    const std::array<WeaponChoicePresentation, 6> historical{
+    const std::array<WeaponChoicePresentation, 7> shipped{
         WeaponChoicePresentation{ L"Sprayer", "sprayer", "sprayer_paint", "sprayer_supply" },
         WeaponChoicePresentation{ L"Sniper", "sniper", "sniper_paint", "" },
         WeaponChoicePresentation{ L"Roller", "roller", "roller_paint", "" },
         WeaponChoicePresentation{ L"Mister", "mister", "mister_paint", "mister_supply" },
         WeaponChoicePresentation{ L"Bucket", "bucket", "bucket_paint", "" },
+        WeaponChoicePresentation{ L"Umbrella", "umbrella", "umbrella_paint", "" },
         WeaponChoicePresentation{ L"Random", "random", "", "" }
     };
+    const size_t random_choice = shipped.size() - 1;
     Save preferences; seed_play_settings(preferences, quiet_play);
     SettingsSession preferences_session(preferences);
     StageList stages{ acceptance::shipped_stage(levels, "movement_course") };
@@ -179,13 +181,13 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     {
         resize_page(size); open(); const MatchSetup initial = settings;
         const Frame first = frame();
-        for (size_t choice = 0; choice < historical.size(); ++choice)
+        for (size_t choice = 0; choice < shipped.size(); ++choice)
         {
-            compare("default", choice, historical[choice]); tap(Key::right);
+            compare("default", choice, shipped[choice]); tap(Key::right);
             require(same_plan(settings, initial), "Browsing weapon choices committed settings before confirmation");
         }
         require(first.pixels == frame().pixels, "Weapon Select right wrap did not return to Sprayer");
-        tap(Key::left); compare("left-wrap", 5, historical[5]); tap(Key::right);
+        tap(Key::left); compare("left-wrap", random_choice, shipped.back()); tap(Key::right);
         require(first.pixels == frame().pixels, "Weapon Select Random-to-Sprayer wrap changed the default page");
         save(first, output / ("weapon-catalog-default-" + std::to_string(size.x) + "x" +
             std::to_string(size.y) + "-context.ppm"));
@@ -196,7 +198,7 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     catalog.choices[1] = { L"Studio Pail", "bucket", "bucket_paint", "" };
     presentation.validate_resources(*app.render_resources(), *app.audio_resources());
     tick(); require(frame().pixels == baseline.pixels, "Live catalog edit changed an existing page snapshot");
-    tap(Key::right); compare("old-page-after-edit", 1, historical[1]); tap(Key::left);
+    tap(Key::right); compare("old-page-after-edit", 1, shipped[1]); tap(Key::left);
     require(frame().pixels == baseline.pixels, "Cycling an existing page read new catalog metadata");
     const WeaponChoicePresentation custom_hose = catalog.choices[0], custom_pail = catalog.choices[1];
     open(); const Frame custom = compare("custom", 0, custom_hose);
@@ -221,12 +223,12 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         WeaponChoicePresentation{ L"Sparse Study", "backdrop", "", "" }, "menu_paint", "backdrop");
     open(); require(frame().pixels == baseline.pixels, "Reopened default catalog did not restore the exact baseline raster");
 
-    for (size_t choice = 0; choice < historical.size(); ++choice)
+    for (size_t choice = 0; choice < shipped.size(); ++choice)
     {
         open(static_cast<WeaponType>(choice)); const MatchSetup before = settings;
         const Frame selecting = frame();
         constexpr unsigned int seed = 8763;
-        std::srand(seed); const WeaponType random = static_cast<WeaponType>(std::rand() % 5); std::srand(seed);
+        std::srand(seed); const WeaponType random = static_cast<WeaponType>(std::rand() % static_cast<int>(random_choice)); std::srand(seed);
         app.keyboard()->on_key_down(Key::enter); tick();
         require(frame().pixels == selecting.pixels && same_plan(settings, before),
             "Weapon Select confirmed before a fresh Enter release");
@@ -238,20 +240,20 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         app.keyboard()->on_key_down(Key::enter); tick();
         require(same_plan(settings, before), "Weapon Select readied before a fresh second Enter release");
         app.keyboard()->on_key_up(Key::enter); tick();
-        const WeaponType expected = choice == 5 ? random : static_cast<WeaponType>(choice);
+        const WeaponType expected = choice == random_choice ? random : static_cast<WeaponType>(choice);
         require(settings.player_weapon(0) == expected && same_plan(settings, before, false) &&
             stack.depth() == 2 && frame().pixels == reference_page(true).pixels,
             "Confirm did not commit the selected primary and enter actual Stage Select");
         const MatchSetup committed = settings;
         tap(Key::escape); tick(); compare("stage-back", static_cast<size_t>(expected),
-            historical[static_cast<size_t>(expected)]);
+            shipped[static_cast<size_t>(expected)]);
         require(same_plan(settings, committed), "Stage Back changed the committed roster or match settings");
         tap(Key::escape);
         require(stack.depth() == 2 && frame().pixels == reference_page(false).pixels &&
             same_plan(settings, committed), "Unconfirmed Weapon Back did not return to actual Mode Select");
     }
     require(records.good(), "Weapon catalog evidence write failed");
-    std::cout << "PASS actual Weapon Select: six default labels/artwork at 720p/1080p/QHD, both wraps, "
+    std::cout << "PASS actual Weapon Select: seven default labels/artwork at 720p/1080p/QHD, both wraps, "
         "provisional browsing, fresh confirmation, seeded Random primary, Stage/Mode Back, "
         "custom layers and sparse atlas/fill, reopened adoption and retained page snapshots, frozen draw RNG\n";
 }

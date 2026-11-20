@@ -162,7 +162,8 @@ public:
     std::vector<std::unique_ptr<Projectile>>
         update_weapon_and_get_projectiles(float dt,
         std::span<labrador::CollisionObject* const> objects,
-        std::optional<ProjectileTargetFlags> known = std::nullopt);
+        std::optional<ProjectileTargetFlags> known = std::nullopt,
+        std::span<Player* const> canopy_holders = {});
     // Borrowed from the owning Level; launch hits are flushed before retired
     // shots leave this function, rather than disappearing before Scene sees them.
     void set_paint_audio(PaintAudio* audio);
@@ -206,6 +207,9 @@ public:
 
     // The equipped tool, including its current gameplay aim.
     const Weapon& primary_weapon() const;
+    void prepare_canopy(float dt);
+    std::optional<WeaponCanopy> canopy() const;
+    void take_canopy_hit();
     // The sub weapon, which spends this tool's tank; null for a player built
     // without one, who ignores the Sub action. Set before the match starts.
     void set_sub_weapon(std::unique_ptr<SubWeapon> sub);
