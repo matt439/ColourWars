@@ -2,7 +2,9 @@
 param(
     [string] $OutputDirectory,
     [ValidateRange(1, 600)]
-    [int] $RunSeconds = 60
+    [int] $RunSeconds = 60,
+    [ValidateSet('1280x720', '1920x1080', '2560x1440')]
+    [string] $Resolution = '1280x720'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -22,15 +24,17 @@ if (-not (Test-Path -LiteralPath $executable -PathType Leaf) -or
 }
 $output = Join-Path (Resolve-CheckFileSystemPath $OutputDirectory) ([Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $output -Force
-$looks = @('posterise', 'ink', 'halftone', 'crt', 'highcolour', 'dither', 'paint90')
+$rasterLooks = @('vga', 'trinitron', 'arcade')
+$looks = @('posterise', 'ink', 'halftone', 'crt', 'highcolour', 'dither', 'paint90') + $rasterLooks
+$width, $height = $Resolution -split 'x'
 $result = [ordered]@{
     outcome = 'failed'
     executable = $executable
     executable_sha256 = ''
     stage = 'movement_course'
     seed = 7
-    width = 1280
-    height = 720
+    width = [int]$width
+    height = [int]$height
     launches = [Collections.Generic.List[object]]::new()
     checks = [Collections.Generic.List[object]]::new()
     diagnostic = ''
@@ -77,11 +81,17 @@ function Invoke-ShaderLaunch([int] $Players, [bool] $Playground) {
             $commands += @("shader $look 0", "screenshot $look-zero", 'checksum',
                 "shader $look", "screenshot $look-default", 'checksum')
         }
+        foreach ($look in $rasterLooks) {
+            $commands += @("shader $look 1 240", "screenshot $look-240", 'checksum',
+                "shader $look 1 720", "screenshot $look-720", 'checksum')
+        }
         # A refused script command stops the script. Launch statements resume
         # on that same paused match to query and capture the surviving look.
         $commands += @('shader off', 'screenshot off-again', 'checksum', 'shader ink 0.4 2',
             'screenshot before-invalid', 'checksum', 'shader crt 0.5 0')
-        $arguments += @('+shader', '+screenshot', 'after-invalid', '+checksum')
+        $arguments += @('+shader', '+screenshot', 'after-invalid', '+checksum',
+            '+shader', 'vga', '1', '239', '+shader', 'arcade', '1', '721',
+            '+shader', '+screenshot', 'after-invalid-raster', '+checksum')
     }
     else {
         $commands += @('screenshot baseline', 'checksum')
@@ -229,15 +239,28 @@ namespace ColourWars {
         foreach ($look in $looks) {
             Compare-ShaderCapture $layout "$look-default" $baseline (Join-Path $shots "$look-default.png") $false
         }
+        $previousRasters = @()
+        foreach ($look in $rasterLooks) {
+            $coarseRaster = Join-Path $shots "$look-240.png"
+            Compare-ShaderCapture $layout "$look-raster-detail" $coarseRaster (Join-Path $shots "$look-720.png") $false
+            Compare-ShaderCapture $layout "$look-distinct-from-crt" (Join-Path $shots 'crt-default.png') (Join-Path $shots "$look-default.png") $false
+            # Compare at identical strength and line count across the new
+            # monitors so different preset defaults cannot mask a duplicate.
+            foreach ($previous in $previousRasters) {
+                Compare-ShaderCapture $layout "$look-distinct-from-$previous" $coarseRaster (Join-Path $shots "$previous-240.png") $false
+            }
+            $previousRasters += $look
+        }
         $beforeInvalid = Join-Path $shots 'before-invalid.png'
         Compare-ShaderCapture $layout 'look-before-invalid' $baseline $beforeInvalid $false
         Compare-ShaderCapture $layout 'invalid-pixels' $beforeInvalid (Join-Path $shots 'after-invalid.png') $true
+        Compare-ShaderCapture $layout 'invalid-raster-pixels' $beforeInvalid (Join-Path $shots 'after-invalid-raster.png') $true
 
         $checksum = '(?m)^checksum [0-9a-f]{16} at update \d+(?=,)'
         $ordinarySums = @([regex]::Matches($ordinary.transcript, $checksum) | ForEach-Object Value)
         $playgroundSums = @([regex]::Matches($playground.transcript, $checksum) | ForEach-Object Value)
         Add-ShaderCheck $layout 'paused-simulation' ($ordinarySums.Count -eq 1 -and
-            $playgroundSums.Count -eq (2 * $looks.Count + 4) -and
+            $playgroundSums.Count -eq (2 * $looks.Count + 2 * $rasterLooks.Count + 5) -and
             (@(($ordinarySums + $playgroundSums) | Select-Object -Unique).Count -eq 1)) `
             ([ordered]@{ ordinary = $ordinarySums; playground = $playgroundSums })
 
@@ -245,10 +268,12 @@ namespace ColourWars {
         $rejection = 'shader crt: detail must be a whole number from 4 to 12'
         $status = @([regex]::Matches($playground.transcript, '(?m)^shader ink strength 0\.400000 detail 2$') |
             ForEach-Object Value)
-        Add-ShaderCheck $layout 'invalid-settings' ($errors.Count -eq 2 -and
+        Add-ShaderCheck $layout 'invalid-settings' ($errors.Count -eq 4 -and
             $errors[0] -ceq "error: $rejection" -and
             $errors[1] -cmatch ('^error: script shader_check\.cfg:\d+ stopped: ' + [regex]::Escape($rejection) + '$') -and
-            $status.Count -eq 2) ([ordered]@{ errors = $errors; status = $status })
+            $errors[2] -ceq 'error: shader vga: detail must be a whole number from 240 to 720' -and
+            $errors[3] -ceq 'error: shader arcade: detail must be a whole number from 240 to 720' -and
+            $status.Count -eq 3) ([ordered]@{ errors = $errors; status = $status })
         Add-ShaderCheck $layout 'ordinary-console' ($ordinary.transcript -cnotmatch '(?m)^error: ') 'Expect no console errors.'
     }
 

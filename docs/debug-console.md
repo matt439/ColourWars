@@ -345,15 +345,18 @@ are refused (they would change the match outside the recorded input).
 ## Shader playground
 
 An opt-in Debug launch with `COLOURWARS_SHADER_PLAYGROUND=1` enables
-`shader <look> [strength] [detail]`. Looks are `off`, `crt`, `highcolour`,
-`dither`, `paint90`, `posterise`, `ink` and `halftone`. Bare `shader`
-reports the current look; parameters change immediately. `highcolour` uses
-fixed RGB565 channel depths and accepts strength only. The
-[playground guide](shader-playground.md) covers launch, ranges and shader
-editing. It processes the whole picture, including gameplay. Its `crt` and
-combined `paint90` modes keep mouse aim aligned and use stationary display
-texture. The playground replaces the saved monitor-glass CRT effect for that
-session; it does not change that preference.
+`shader <look> [strength] [detail]`. Use `shader vga`, `shader trinitron`
+or `shader arcade` to compare a desktop dot mask, vertical aperture grille
+and arcade slot mask. For these three, detail is the number of raster lines
+across the full picture height (`240..720`). For example, `shader arcade 0.7 480`
+applies the arcade preset at 70% strength with 480 lines.
+
+Other looks are `off`, `crt`, `highcolour`, `dither`, `paint90`, `posterise`,
+`ink` and `halftone`. Bare `shader` reports the current look. Changes apply
+immediately to the whole picture, including HUD text and split-screen borders.
+The playground takes over the monitor-glass CRT pass for the session. The
+[playground guide](shader-playground.md) covers launch, parameter ranges
+and shader editing.
 
 ## Live tuning
 

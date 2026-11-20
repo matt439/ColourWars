@@ -36,7 +36,7 @@ records and reviews. The open-work index is [TODO.md](../TODO.md).
 | [releasing.md](releasing.md) | the current release-preparation scope, clean candidate checks and publication gates |
 | [Shipped v0.1.0 package check](review/2026-11-15-shipped-package-qualification.md) | the 2026-11-15 published ZIP inspection and isolated startup evidence, with its acceptance limits |
 | [debug-console.md](debug-console.md) | the Debug-only console, debug menu, launch arguments, live tuning, bots, record and play, scripts: the reference |
-| [shader-playground.md](shader-playground.md) | opt-in Debug experiments with posterised colour, ink edges and halftone dots, and editing a game-authored HLSL post shader |
+| [shader-playground.md](shader-playground.md) | compare CRT monitor presets and other full-screen looks in Debug, adjust their parameters and edit the game-authored HLSL shader |
 | [debug-console-record.md](debug-console-record.md) | how each `DBG` row was done or why it waits, and `CI#1` |
 | [level-editor.md](level-editor.md) | `ColourWarsEditor.exe`, the desktop level editor |
 | [level-editor-record.md](level-editor-record.md) | how each `ED` slice was built and checked: the 2026-10-28 shortlist and the `ED#7`-`ED#27` backlogs |
