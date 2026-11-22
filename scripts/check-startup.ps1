@@ -203,6 +203,7 @@ $result = [ordered]@{
     first_window_fits_monitor = $false
     first_save_reduce_effects_follows_windows = $false
     shutdown_close_acknowledged = $null
+    shutdown_window_present_on_timeout = $null
     locale = $(if ($Locale) { $Locale } else { 'base' })
     audio_expectation = $(if ($RequireAudio) { 'published-bank' } elseif ($RequireNoAudio) { 'missing-bank' } else { 'optional' })
     graphics_expectation = $(if ($RequireRenderDeviceRefusal) { 'refusal' } elseif ($RequireSoftwareTestAdapter) { 'software-test' } else { 'default' })
@@ -331,6 +332,8 @@ try {
     $result.shutdown_close_acknowledged = [ColourWars.StartupWindow]::RequestGameClose($window, 10000)
     $remainingMilliseconds = [int][Math]::Max(0, 10000 - $shutdownTimer.ElapsedMilliseconds)
     if (-not $process.WaitForExit($remainingMilliseconds)) {
+        $result.shutdown_window_present_on_timeout =
+            [ColourWars.StartupWindow]::FindGame($process.Id) -ne [IntPtr]::Zero
         if (-not $result.shutdown_close_acknowledged) {
             throw 'The game did not acknowledge WM_CLOSE or exit within 10 seconds.'
         }

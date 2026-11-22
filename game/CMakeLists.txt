@@ -306,6 +306,10 @@ add_executable(ColourWars WIN32
     resource.rc
     settings.manifest
 )
+file(CONFIGURE OUTPUT "${PROJECT_BINARY_DIR}/generated/game/graphics_build.h"
+    CONTENT [=[#pragma once
+#cmakedefine01 LABRADOR_D3D_SOFTWARE_TEST
+]=])
 # REL#7: the Release PDB. /DEBUG turns /OPT:REF and /OPT:ICF off unless they
 # are named, and /PDBALTPATH:%_PDB% records the PDB's file name without the
 # build machine's path. CI uploads the PDB; the ZIP leaves it out.
