@@ -115,13 +115,18 @@ texture to the opening/result monitor glass. Reduce effects turns the texture
 off. Gameplay stays clear. Back discards unapplied choices. To quit, choose
 Exit on the main menu.
 
+On Results, choose Save arena PNG to keep a picture of that round's finished
+arena. The image goes in the "screens" subfolder of your save folder. Continue
+goes straight to the rematch choices.
+
 
 Settings, your own stages and removing the game
 -----------------------------------------------
 
-Settings are saved in %LOCALAPPDATA%\ColourWars (paste that into Explorer's
-address bar). Stages you build go in the "stages" folder there, which the
-game makes the first time it saves your settings.
+From Home, choose Options, move right from Graphics and select Open save
+folder. This opens %LOCALAPPDATA%\ColourWars in Explorer. Stages you build go
+in the "stages" subfolder, which the game makes the first time it saves your
+settings.
 
 If your settings file, save_data.json, cannot be read or was written by a
 newer version, the game keeps a copy in the same folder, named

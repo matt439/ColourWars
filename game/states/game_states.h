@@ -247,6 +247,7 @@ private:
 	void open_pause_menu(int player_num);
 	void on_pause_menu_closed(const PauseMenuAction& action);
 	void open_results_menu();
+	bool save_finished_arena();
 	void open_end_menu();
 	void on_end_menu_closed(const EndMenuAction& action);
 

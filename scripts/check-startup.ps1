@@ -8,6 +8,8 @@ param(
     [switch]$RequireNoAudio,
     [switch]$RequireAudio,
     [switch]$SystemOnlyPath,
+    [switch]$RequireSoftwareTestAdapter,
+    [switch]$RequireRenderDeviceRefusal,
     # ROAD#16: seed the isolated profile's stage folder with one valid user
     # stage and one broken file. Startup must go on, with exactly one
     # refusal line for the broken file and no other diagnostic.
@@ -37,6 +39,10 @@ if (-not (Test-Path -LiteralPath $executablePath -PathType Leaf)) {
 $executableDirectory = Split-Path -Parent $executablePath
 if ($RequireNoAudio -and $RequireAudio) {
     throw 'Choose either the audible bank check or the missing-bank check.'
+}
+if ($RequireRenderDeviceRefusal -and ($RequireSoftwareTestAdapter -or $RequireAudio -or
+    $RequireNoAudio -or $UserStageFixture -or $Locale)) {
+    throw 'The renderer startup refusal check cannot also exercise content startup or a software-test device.'
 }
 if ($RequireAudio -and -not (Test-Path -LiteralPath (
     Join-Path $executableDirectory 'sounds/paint_exe.xwb'))) {
@@ -191,6 +197,7 @@ $result = [ordered]@{
     first_save_reduce_effects_follows_windows = $false
     locale = $(if ($Locale) { $Locale } else { 'base' })
     audio_expectation = $(if ($RequireAudio) { 'published-bank' } elseif ($RequireNoAudio) { 'missing-bank' } else { 'optional' })
+    graphics_expectation = $(if ($RequireRenderDeviceRefusal) { 'refusal' } elseif ($RequireSoftwareTestAdapter) { 'software-test' } else { 'default' })
     outcome = 'failed'
     diagnostic = ''
 }
@@ -238,6 +245,27 @@ try {
     while ($timer.Elapsed.TotalSeconds -lt $StartupSeconds) {
         $process.Refresh()
         [string]$stderr = Read-StartupError
+        if ($RequireRenderDeviceRefusal -and $stderr.Contains('startup failure:')) {
+            $recordPath = Join-Path $profileDirectory 'ColourWars/last-error.log'
+            if (-not (Test-Path -LiteralPath $recordPath -PathType Leaf) -or
+                -not (Test-RenderDeviceRefusal (Get-Content -LiteralPath $recordPath -Raw))) {
+                throw "The game reported an unexpected startup failure: $($stderr.Trim())"
+            }
+            Copy-Item -LiteralPath $recordPath -Destination (Join-Path $runDirectory 'last-error.log')
+            # The report is flushed just before the error dialog is created.
+            $closeTimer = [Diagnostics.Stopwatch]::StartNew()
+            while (-not $process.HasExited -and $closeTimer.Elapsed.TotalSeconds -lt 10) {
+                [ColourWars.StartupWindow]::CloseOwnedWindows($process.Id)
+                $null = $process.WaitForExit(100)
+            }
+            if (-not $process.HasExited -or $process.ExitCode -ne 1) {
+                throw 'Expected the renderer startup refusal to close and exit 1.'
+            }
+            $result.outcome = 'passed'
+            $result.diagnostic = 'Release reported a typed renderer startup refusal and exited 1.'
+            Write-Output $result.diagnostic
+            return
+        }
         if ($RequireAudio -and $stderr -match '(?m)^no audio: ') {
             throw 'The audible startup check unexpectedly used a silent bank.'
         }
@@ -249,6 +277,7 @@ try {
         }
         Start-Sleep -Milliseconds 100
     }
+    if ($RequireRenderDeviceRefusal) { throw 'Expected a renderer startup refusal on this host.' }
 
     $window = [ColourWars.StartupWindow]::FindGame($process.Id)
     if ($window -eq [IntPtr]::Zero) {
@@ -281,9 +310,10 @@ try {
     }
     $result.first_save_reduce_effects_follows_windows = $true
     [string]$stderr = Read-StartupError
-    # resource.rc stamps VS_FF_DEBUG only for the Debug executable; a Release
-    # package still refuses all adapter traces. Raw stderr remains evidence.
-    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context startup -RequireAudio:$RequireAudio -RequireNoAudio:$RequireNoAudio -AllowDebugAdapter:$version.IsDebug -AllowedPattern $userStageRefusal
+    # A software-test fixture must identify its device. Ordinary Release
+    # startup still refuses adapter traces. Raw stderr remains evidence.
+    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context startup -RequireAudio:$RequireAudio -RequireNoAudio:$RequireNoAudio `
+        -AllowDebugAdapter:$version.IsDebug -RequireSoftwareTestAdapter:$RequireSoftwareTestAdapter -AllowedPattern $userStageRefusal
     if ($userStageRefusal -and @($stderr -split '\r?\n' | Where-Object { $_ -match $userStageRefusal }).Count -ne 1) {
         throw 'The broken user stage was not refused with exactly one line.'
     }
@@ -297,7 +327,8 @@ try {
     }
     # Destruction can report errors too, after the last running-process read.
     [string]$stderr = Read-StartupError
-    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context shutdown -RequireAudio:$RequireAudio -AllowDebugAdapter:$version.IsDebug -AllowedPattern $userStageRefusal
+    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context shutdown -RequireAudio:$RequireAudio `
+        -AllowDebugAdapter:$version.IsDebug -RequireSoftwareTestAdapter:$RequireSoftwareTestAdapter -AllowedPattern $userStageRefusal
     $result.outcome = 'passed'
     $result.diagnostic = 'Game window, per-monitor v2 DPI awareness, content startup, isolated save with its stages folder and graceful shutdown passed.'
     Write-Output $result.diagnostic

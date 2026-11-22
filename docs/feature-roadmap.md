@@ -4009,6 +4009,28 @@ does not apply. The author declined `REV#54`'s coverage-over-time strip on
 Results on 2026-11-13 in favour of this row; the strip is reopened only if this
 End row is rejected and the author still wants the round's arc shown.
 
+### Save the finished arena as a PNG (`REV#49`)
+
+After the round reveal, Results places **Save arena PNG** beside **Continue**.
+Continue remains focused when Results opens. Save draws the finished level's
+full arena view at the current window's render size, then reads the submitted
+frame and writes an opaque PNG. It uses the same encoder as the Debug
+screenshot command. The image contains the arena and its paint without the
+Results paper or HUD.
+
+The image goes in `%LOCALAPPDATA%\ColourWars\screens` (or the executable's
+`save/screens` folder without LOCALAPPDATA). Names begin with
+`colourwars-arena-` and include the local timestamp and process ID. The file
+appears whole, and an existing destination is preserved. Results confirms a
+successful export or lets the player retry a failure. Saving leaves the
+round, series and replay controls available after Continue.
+
+The `ResultsMenuOnly` painter drives the production action in a timed match
+with a private save folder. It verifies failure and retry, and decodes the PNG
+to compare every RGB pixel against the finished arena before continuing to End.
+The check passed on a D3D11 RTX 5080 in Debug with `qps-ploc` and in Release
+with the default locale on 2026-11-22.
+
 ### Menu cards stay on the paper face (`ROAD#25`)
 
 **Done (2026-10-28).** `check_menu_item` now uses the resting paper face's

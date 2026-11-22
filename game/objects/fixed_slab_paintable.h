@@ -32,7 +32,7 @@ public:
     void draw_miniature(labrador::DrawList& draw_list) const override;
     labrador::RectangleF bounds() const override;
     labrador::RectangleF cull_bounds(float units_per_pixel) const override;
-    void on_projectile_contact(const Projectile& other,
+    void on_projectile_contact(Projectile& other,
         const labrador::Vector2F& normal, float penetration) override;
     PaintableObject* paintable() override { return this; }
     const PaintableObject* paintable() const override { return this; }

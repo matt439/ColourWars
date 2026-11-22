@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/fatal_report.h"
+#include "engine/render/device_unavailable.h"
 #include "game/build_info.h"
 #include "game/directory_consts.h"
 #include "engine/core/file_path.h"
@@ -118,24 +119,26 @@ namespace
             require((saved.find(L"Extract the whole game ZIP") != std::wstring::npos) == content,
                 "Content recovery advice appeared in the wrong failure phase");
         }
-        const FatalReport no_hardware(FailurePhase::initialization,
+        constexpr char device_diagnostic[] = "The selected renderer cannot meet a device requirement.";
+        const auto device_failure = std::make_exception_ptr(labrador::RenderDeviceUnavailable(device_diagnostic));
+        const FatalReport unavailable(FailurePhase::initialization, device_failure);
+        require(unavailable.message() == device_diagnostic, "Renderer startup failure lost its original diagnostic");
+        require(parse_record(unavailable.record_text()).at("cause_0_reason") == "render_device_unavailable",
+            "Typed renderer startup refusal was not classified");
+        require(unavailable.dialog_text("").find(L"could not use Direct3D 11") != std::wstring::npos &&
+            unavailable.dialog_text("").find(L"Remote Desktop") != std::wstring::npos,
+            "Renderer startup dialog gave no driver or local-PC remedy");
+        const FatalReport nested_unavailable(FailurePhase::initialization, nested(device_failure, "renderer failed"));
+        require(nested_unavailable.dialog_text("").find(L"could not use Direct3D 11") != std::wstring::npos,
+            "Nested renderer refusal lost its player remedy");
+        const Record nested_device_record = parse_record(nested_unavailable.record_text());
+        require(!nested_device_record.contains("cause_0_reason") &&
+            nested_device_record.at("cause_1_reason") == "render_device_unavailable",
+            "Nested renderer refusal was not classified at its own cause");
+        const FatalReport legacy_text(FailurePhase::initialization,
             std::make_exception_ptr(std::runtime_error("No Direct3D hardware device found")));
-        require(std::string(no_hardware.stderr_prefix()) + " failure: " + no_hardware.message() + '\n' ==
-            "startup failure: No Direct3D hardware device found\n",
-            "The exact missing-hardware diagnostic used by startup qualification changed");
-        require(parse_record(no_hardware.record_text()).at("cause_0_reason") == "no_hardware_device",
-            "Controlled missing-hardware reason was not classified");
-        require(no_hardware.dialog_text("").find(L"Direct3D 11 graphics card") != std::wstring::npos &&
-            no_hardware.dialog_text("").find(L"Remote Desktop") != std::wstring::npos,
-            "Missing-hardware dialog gave no driver or local-PC remedy");
-        const FatalReport nested_hardware(FailurePhase::initialization,
-            nested(std::make_exception_ptr(std::runtime_error("No Direct3D hardware device found")), "renderer failed"));
-        require(nested_hardware.dialog_text("").find(L"Direct3D 11 graphics card") != std::wstring::npos,
-            "Nested missing-hardware cause lost its player remedy");
-        const Record nested_hardware_record = parse_record(nested_hardware.record_text());
-        require(!nested_hardware_record.contains("cause_0_reason") &&
-            nested_hardware_record.at("cause_1_reason") == "no_hardware_device",
-            "A nested missing-hardware cause was not classified at its own cause");
+        require(!parse_record(legacy_text.record_text()).contains("cause_0_reason"),
+            "Untyped startup failure was classified by its message");
         // Reasons are fixed codes, never read from arbitrary messages: the words
         // of the retired player-out-of-bounds failure (REV#1 made leaving the
         // arena an elimination) give a plain runtime_error no reason, alone or nested.

@@ -65,6 +65,8 @@ jobs:
     runs-on: windows-latest
     # The slowest run so far took 29 minutes as one job per preset.
     timeout-minutes: 60
+    env:
+      COLOURWARS_RELEASE_PACKAGE_BUILD: out/build/x64-release-package
 
     # Each leg builds for itself: a rebuild costs a parallel runner, a shared
     # build would cost every leg a serial wait. crossfeed has a Debug leg of
@@ -95,7 +97,7 @@ jobs:
 
       - name: Configure
         run: |
-          cmake --preset ${{ matrix.preset }}
+          cmake --preset ${{ matrix.preset }} -DLABRADOR_D3D_SOFTWARE_TEST=${{ matrix.checks && 'ON' || 'OFF' }}
 
       # Building also runs Labrador's include-boundary check.
       - name: Build
@@ -253,7 +255,7 @@ jobs:
         run: |
           cmake --build --preset ${{ matrix.preset }} --target ColourWarsRegisterStage
           if errorlevel 1 exit /b 1
-          pwsh -NoProfile -File scripts/check-stage-registration.ps1 -Preset ${{ matrix.preset }} -SkipBuild -OutputDirectory out/validation/stage-registration
+          pwsh -NoProfile -File scripts/check-stage-registration.ps1 -Preset ${{ matrix.preset }} -SkipBuild -RequireSoftwareTestAdapter -OutputDirectory out/validation/stage-registration
 
       - name: Entry-point failure reporting
         if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.checks }}
@@ -313,21 +315,44 @@ jobs:
         id: package
         if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.leg == 'release-checks' }}
         run: |
-          cmake --build --preset x64-release --target package
+          cmake --preset x64-release -B "%COLOURWARS_RELEASE_PACKAGE_BUILD%" -DLABRADOR_D3D_SOFTWARE_TEST=OFF
+          if errorlevel 1 exit /b 1
+          cmake --build "%COLOURWARS_RELEASE_PACKAGE_BUILD%" --target package
 
       # CI#6: the packaging rules are a script, runnable locally the same way.
       - name: Extract and inspect Release package
         id: inspect
         if: ${{ !cancelled() && steps.package.outcome == 'success' }}
         shell: pwsh
-        run: ./scripts/check-release-package.ps1 -OutputDirectory (Join-Path $env:RUNNER_TEMP 'ColourWars-release')
+        run: |
+          $packages = @(Get-ChildItem -LiteralPath (Join-Path $env:COLOURWARS_RELEASE_PACKAGE_BUILD 'packages') -File -Filter 'ColourWars-*-windows-x64.zip')
+          if ($packages.Count -ne 1) { throw 'Expected one ordinary Release ZIP.' }
+          ./scripts/check-release-package.ps1 -Zip $packages[0].FullName -OutputDirectory (Join-Path $env:RUNNER_TEMP 'ColourWars-release')
 
-      # Both presets must start, on the adapter described at the movement
-      # check; Release starts from the inspected package. Losing that adapter,
-      # content errors, crashes, missing windows and shutdown errors fail CI.
+      - name: Ordinary Release reports its renderer refusal on the hosted runner
+        if: ${{ !cancelled() && steps.inspect.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          $exe = Join-Path $env:RUNNER_TEMP 'ColourWars-release/ColourWars-windows-x64/ColourWars.exe'
+          ./scripts/check-startup.ps1 -Executable $exe -SystemOnlyPath -RequireRenderDeviceRefusal -OutputDirectory out/validation/startup/release-refusal
+
+      # Run the same package contents on WARP using a separate fixture, with
+      # only the executable replaced. The original ZIP stays publishable.
+      - name: Stage the hosted Release startup fixture
+        id: startup-fixture
+        if: ${{ !cancelled() && steps.inspect.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          $package = Join-Path $env:RUNNER_TEMP 'ColourWars-release/ColourWars-windows-x64'
+          $fixture = Join-Path $env:RUNNER_TEMP 'ColourWars-release-software'
+          Copy-Item -LiteralPath $package -Destination $fixture -Recurse
+          Copy-Item -LiteralPath 'out/build/x64-release/game/ColourWars.exe' -Destination (Join-Path $fixture 'ColourWars.exe') -Force
+
+      # Both presets must start on the explicit software-test adapter.
+      # Content errors, crashes, missing windows and shutdown errors fail CI.
       # A muted process: this proves the bank opens, not how it sounds.
       - name: The bank opens from anywhere; missing-bank fallback starts separately
-        if: ${{ !cancelled() && matrix.checks && steps.build.outcome == 'success' && (matrix.preset == 'x64-debug' || steps.inspect.outcome == 'success') }}
+        if: ${{ !cancelled() && matrix.checks && steps.build.outcome == 'success' && (matrix.preset == 'x64-debug' || steps.startup-fixture.outcome == 'success') }}
         shell: pwsh
         run: |
           $dir = "out/build/${{ matrix.preset }}/game"
@@ -335,9 +360,10 @@ jobs:
             Executable = Join-Path $dir 'ColourWars.exe'
             OutputDirectory = 'out/validation/startup'
             RequireAudio = $true
+            RequireSoftwareTestAdapter = $true
           }
           if ('${{ matrix.preset }}' -eq 'x64-release') {
-            $dir = Join-Path $env:RUNNER_TEMP "ColourWars-release/ColourWars-windows-x64"
+            $dir = Join-Path $env:RUNNER_TEMP 'ColourWars-release-software'
             $arguments.Executable = Join-Path $dir 'ColourWars.exe'
             $arguments.SystemOnlyPath = $true
           }
@@ -358,43 +384,45 @@ jobs:
       # ROAD#16: one valid and one broken stage in the isolated profile's
       # stage folder; the broken one is one stderr line and startup goes on.
       - name: A broken user stage is refused without stopping startup
-        if: ${{ !cancelled() && matrix.checks && steps.build.outcome == 'success' && (matrix.preset == 'x64-debug' || steps.inspect.outcome == 'success') }}
+        if: ${{ !cancelled() && matrix.checks && steps.build.outcome == 'success' && (matrix.preset == 'x64-debug' || steps.startup-fixture.outcome == 'success') }}
         shell: pwsh
         run: |
           $arguments = @{
             Executable = "out/build/${{ matrix.preset }}/game/ColourWars.exe"
             OutputDirectory = 'out/validation/startup/user-stages'
             UserStageFixture = $true
+            RequireSoftwareTestAdapter = $true
           }
           if ('${{ matrix.preset }}' -eq 'x64-release') {
-            $arguments.Executable = Join-Path $env:RUNNER_TEMP 'ColourWars-release/ColourWars-windows-x64/ColourWars.exe'
+            $arguments.Executable = Join-Path $env:RUNNER_TEMP 'ColourWars-release-software/ColourWars.exe'
             $arguments.SystemOnlyPath = $true
           }
           & ./scripts/check-startup.ps1 @arguments
 
       # GAP#L11: the test locale composes and passes every startup check.
       - name: The test locale starts
-        if: ${{ !cancelled() && matrix.checks && steps.build.outcome == 'success' && (matrix.preset == 'x64-debug' || steps.inspect.outcome == 'success') }}
+        if: ${{ !cancelled() && matrix.checks && steps.build.outcome == 'success' && (matrix.preset == 'x64-debug' || steps.startup-fixture.outcome == 'success') }}
         shell: pwsh
         run: |
           $arguments = @{
             Executable = "out/build/${{ matrix.preset }}/game/ColourWars.exe"
             OutputDirectory = 'out/validation/startup/locale'
             Locale = 'qps-ploc'
+            RequireSoftwareTestAdapter = $true
           }
           if ('${{ matrix.preset }}' -eq 'x64-release') {
-            $arguments.Executable = Join-Path $env:RUNNER_TEMP 'ColourWars-release/ColourWars-windows-x64/ColourWars.exe'
+            $arguments.Executable = Join-Path $env:RUNNER_TEMP 'ColourWars-release-software/ColourWars.exe'
             $arguments.SystemOnlyPath = $true
           }
           & ./scripts/check-startup.ps1 @arguments
 
-      # Only a ZIP that passed inspection, its version stamp and startup.
+      # The ordinary ZIP passed inspection and its hosted renderer refusal.
       - name: Upload Release package
         if: matrix.leg == 'release-checks'
         uses: actions/upload-artifact@v7
         with:
           name: ColourWars-windows-x64
-          path: out/build/x64-release/packages/ColourWars-*-windows-x64.zip
+          path: ${{ env.COLOURWARS_RELEASE_PACKAGE_BUILD }}/packages/ColourWars-*-windows-x64.zip
           if-no-files-found: error
           retention-days: 14
 
@@ -406,7 +434,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ColourWars-symbols-${{ github.sha }}
-          path: out/build/x64-release/game/ColourWars.pdb
+          path: ${{ env.COLOURWARS_RELEASE_PACKAGE_BUILD }}/game/ColourWars.pdb
           if-no-files-found: error
           retention-days: 14
 
@@ -420,7 +448,8 @@ jobs:
           retention-days: 7
 
   # A v* tag on master publishes the ZIP its own run built, inspected and
-  # started, and that executable's PDB. The tag must name the packaged
+  # checked for the hosted renderer refusal, and that executable's PDB.
+  # The tag must name the packaged
   # version, so v0.1.0 needs project(VERSION 0.1.0); the versioning rule
   # (docs/releasing.md, REL#6) moves it in the first commit after a tag. scripts/ci/release.py holds the checks and the notes,
   # tested by the lint job; docs/releasing.md says what to do if this fails.

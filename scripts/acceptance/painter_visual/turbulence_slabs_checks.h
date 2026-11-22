@@ -165,7 +165,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             RectangleF splash = object->shape()->bounding_box(); splash.inflate(32);
             splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
             const auto team = source_index++ % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
-            const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, team == PlayerTeam::a ? 3 : 1,
+            ProjectileSpray shot = controlled_spray(app, tuning, splash, team, team == PlayerTeam::a ? 3 : 1,
                 colours.team_colour(team));
             object->on_contact(shot, Vector2F::zero, 0); object->update(10); ++heavy_contacts;
         }
@@ -426,7 +426,7 @@ void turbulence_slab_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
                 RectangleF splash = slab->bounds(); splash.inflate(32);
                 splash.offset(shot_tuning.details.col_rect_size / 2.0f);
                 const auto team = side == 0 ? PlayerTeam::a : PlayerTeam::b;
-                const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, side == 0 ? 3 : 1, colours.team_colour(team));
+                ProjectileSpray shot = controlled_spray(app, tuning, splash, team, side == 0 ? 3 : 1, colours.team_colour(team));
                 slab->on_contact(shot, Vector2F::zero, 0); ++heavy_contacts; ++wet_contacts;
             }
             require(before_paint == turbulence_slab_surface_state(fixture) && before_players == observation(*fixture.level),

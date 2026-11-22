@@ -21,6 +21,8 @@ namespace menu_text_acceptance
         }, &world);
         variants.rejects("learn.next", [](rapidjson::Document& d)
         { d["menu_text"]["learn"]["next"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
+        variants.rejects("items.open_save_folder", [](rapidjson::Document& d)
+        { d["menu_text"]["items"]["open_save_folder"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         variants.rejects("connection.team_choice_required", [](rapidjson::Document& d)
         { d["menu_text"]["connection"]["team_choice_required"].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
         const auto original = variants.load([](rapidjson::Document&) {});

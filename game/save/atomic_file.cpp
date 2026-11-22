@@ -39,31 +39,41 @@ namespace
 		}
 		return true;
 	}
+	bool write_file_atomically(const std::filesystem::path& path,
+		std::string_view bytes, DWORD move_flags) noexcept
+	{
+		try
+		{
+			if (path.empty() || !path.has_filename()) { return false; }
+			if (path.has_parent_path())
+			{
+				std::error_code error;
+				std::filesystem::create_directories(path.parent_path(), error);
+				if (error) { return false; }
+			}
+			std::filesystem::path temporary;
+			const HANDLE file = create_temporary(path, temporary);
+			if (file == INVALID_HANDLE_VALUE) { return false; }
+			const bool written = write_all(file, bytes) && FlushFileBuffers(file) != FALSE;
+			const bool closed = CloseHandle(file) != FALSE;
+			if (written && closed && MoveFileExW(temporary.c_str(), path.c_str(),
+				move_flags | MOVEFILE_WRITE_THROUGH) != FALSE)
+			{
+				return true;
+			}
+			DeleteFileW(temporary.c_str());
+		}
+		catch (...) { }
+		return false;
+	}
 }
 
 bool replace_file_atomically(const std::filesystem::path& path, std::string_view bytes) noexcept
 {
-	try
-	{
-		if (path.empty() || !path.has_filename()) { return false; }
-		if (path.has_parent_path())
-		{
-			std::error_code error;
-			std::filesystem::create_directories(path.parent_path(), error);
-			if (error) { return false; }
-		}
-		std::filesystem::path temporary;
-		const HANDLE file = create_temporary(path, temporary);
-		if (file == INVALID_HANDLE_VALUE) { return false; }
-		const bool written = write_all(file, bytes) && FlushFileBuffers(file) != FALSE;
-		const bool closed = CloseHandle(file) != FALSE;
-		if (written && closed && MoveFileExW(temporary.c_str(), path.c_str(),
-			MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != FALSE)
-		{
-			return true;
-		}
-		DeleteFileW(temporary.c_str());
-	}
-	catch (...) { }
-	return false;
+	return write_file_atomically(path, bytes, MOVEFILE_REPLACE_EXISTING);
+}
+
+bool create_file_atomically(const std::filesystem::path& path, std::string_view bytes) noexcept
+{
+	return write_file_atomically(path, bytes, 0);
 }

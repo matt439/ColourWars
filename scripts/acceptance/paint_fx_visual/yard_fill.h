@@ -18,7 +18,7 @@ void check_yard_fill(Application& app, const Canvas& canvas, const GameTuning& t
             const auto& spray = tuning.projectile(ProjectileType::spray);
             const Vector2F centre = (tile.corners[0] + tile.corners[2]) / 2.0f;
             const Vector2F launch = centre - Vector2F(0.25f, 0.25f) + spray.details.col_rect_size / 2.0f;
-            const ProjectileSpray shot(RectangleF(launch, Vector2F(0.5f, 0.5f)), Vector2F::zero, PlayerTeam::a,
+            ProjectileSpray shot(RectangleF(launch, Vector2F(0.5f, 0.5f)), Vector2F::zero, PlayerTeam::a,
                 0, Colour::white, app.render_resources(), resolve_projectile_strip(spray, *app.render_resources()), &spray);
             baffle.on_contact(shot, Vector2F::zero, 0.0f);
         };

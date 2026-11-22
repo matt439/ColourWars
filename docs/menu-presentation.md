@@ -83,6 +83,15 @@ paper geometry reuse the shared heading/item/detail fonts and `pause_menu.art`,
 fill. No numeric field or artwork asset is added. The page captures its text
 and uses the existing input rearming, shared motion and Reduce effects policy.
 
+## Open save folder
+
+From Home, open Options, move right from Graphics and select **Open save
+folder**. Windows Explorer opens the folder containing the game's save JSON
+and the `stages` subfolder. The action resolves the same location as the save
+system, including the executable-relative fallback when Local AppData is
+unavailable. Options shows a warning if the folder cannot be opened. The
+action minimises the game in fullscreen so Explorer is visible.
+
 ## Options Vsync
 
 The required `menu_text.items.vsync`, shipped as `Vsync`, is the forty-sixth

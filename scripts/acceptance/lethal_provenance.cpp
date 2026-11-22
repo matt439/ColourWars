@@ -62,7 +62,7 @@ namespace
                 &render, resolve_projectile_strip(tuning.projectile(ProjectileType::spray), render),
                 &tuning.projectile(ProjectileType::spray));
         }
-        void hit(Player& victim, const CollisionObject& shot) const
+        void hit(Player& victim, CollisionObject& shot) const
         {
             const float before = victim.health();
             victim.on_contact(shot, Vector2F::zero, 0.0f);
@@ -70,7 +70,7 @@ namespace
             require(std::bit_cast<std::uint32_t>(victim.health()) == std::bit_cast<std::uint32_t>(expected),
                 "Passive provenance changed the existing contact damage arithmetic");
         }
-        void eliminate(Player& victim, const CollisionObject& shot) const
+        void eliminate(Player& victim, CollisionObject& shot) const
         {
             for (int count = 0; count < 10000 && victim.health() > 0.0f; ++count) { hit(victim, shot); }
             require(victim.health() <= 0.0f, "Real projectile fixture did not reach a lethal health crossing");
@@ -92,7 +92,7 @@ namespace
         CollisionLayer layer() const override { return collision_layers::projectile_team_b; }
         CollisionMask mask() const override { return collision_layers::player_team_a; }
         CollisionTag tag() const override { return to_collision_tag(CollisionObjectType::projectile_spray_team_b); }
-        void on_contact(const CollisionObject&, const Vector2F&, float) override {}
+        void on_contact(CollisionObject&, const Vector2F&, float) override {}
         bool for_deletion() const override { return false; }
     private:
         RectangleF rectangle_{ 0, 0, 200, 200 };

@@ -428,7 +428,7 @@ namespace
         require(course.events.empty(), "Placement settling emitted contact effects");
         course.walk();
         require(course.count(MovementFeedbackKind::step) > 0, "Placement failed to rearm walking effects");
-        const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::zero,
+        ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::zero,
             PlayerTeam::b, 1, Colour::white, &world.render,
             resolve_projectile_strip(world.tuning.projectile(ProjectileType::spray), world.render),
             &world.tuning.projectile(ProjectileType::spray));

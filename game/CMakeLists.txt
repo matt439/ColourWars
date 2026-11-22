@@ -92,6 +92,7 @@ add_library(colourwars_game STATIC
     debug/debug_overlay_draw.cpp
     debug/commands/debug_registry.cpp
     debug/capture/debug_screenshot.cpp
+    save/png_capture.cpp
     debug/script/debug_script.cpp
     debug/script/debug_script_runner.cpp
     debug/debug_status_text.cpp
@@ -274,6 +275,7 @@ target_link_libraries(colourwars_game
     PUBLIC
         LabradorEngine
         comctl32
+        shell32
     PRIVATE
         labrador_settings
 )

@@ -55,7 +55,7 @@ RectangleF Structure::bounds() const
 {
 	return this->sprite_rectangle_;
 }
-void Structure::touch(Collider& receiver, const Vector2F& normal, float penetration) const
+void Structure::touch(Collider& receiver, const Vector2F& normal, float penetration)
 {
 	receiver.on_structure_contact(*this, normal, penetration);
 }

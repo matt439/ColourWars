@@ -67,7 +67,7 @@ public:
     labrador::RectangleF cull_bounds(float units_per_pixel) const override;
     const labrador::Shape* shape() const override;
     // Paint lands in the rest frame: the splash is shifted back by the pose.
-    void on_projectile_contact(const Projectile& other,
+    void on_projectile_contact(Projectile& other,
         const labrador::Vector2F& normal, float penetration) override;
     PlayerTeam top_paint_team(float world_x) const override;
     std::vector<PaintRunoffVisual> runoff_visuals() const override;
@@ -91,7 +91,7 @@ private:
     void publish_zero_step() noexcept;
     // Accepted relative-sweep geometry stays local; it is never re-gated by
     // a final-world narrow phase or reconstructed from a rounded world copy.
-    void paint_projectile_at(const Projectile& source,
+    void paint_projectile_at(Projectile& source,
         const labrador::RectangleF& anchor_rectangle);
     static const labrador::RectangleF& checked_anchor(const HorizontalMotionSpec& spec,
         CollisionObjectType collision_type);

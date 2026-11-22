@@ -7,7 +7,7 @@
 # the driver's -HostTrial runs the same file with -NoShutdown against the same
 # folders, so its logic is exercised without starting a sandbox.
 #
-# The driver copies its window helper too; no checkout is needed in the sandbox.
+# The driver copies its window and diagnostics helpers too, so it needs no checkout.
 # It starts ColourWars.exe muted (COLOURWARS_MUTE=1 unless the caller set it)
 # with LOCALAPPDATA in the results folder, waits for the window, closes it
 # with WM_CLOSE as check-startup.ps1 does and records the ZIP's SHA-256, the
@@ -25,6 +25,7 @@ param(
 )
 
 . (Join-Path $PSScriptRoot 'check-windows.ps1')
+. (Join-Path $PSScriptRoot 'check-diagnostics.ps1')
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 # Windows PowerShell 5.1 leaves PSScriptRoot empty in parameter defaults.
@@ -162,7 +163,7 @@ namespace ColourWarsSandbox
     $stderrPath = Join-Path $Results 'game.err'
     $stdoutPath = Join-Path $Results 'game.out'
     $null = New-Item -ItemType Directory -Path $profileDirectory, $workingDirectory -Force
-    $refusal = 'startup failure: No Direct3D hardware device found'
+    $recordPath = Join-Path $profileDirectory 'ColourWars/last-error.log'
 
     $originalLocalAppData = $env:LOCALAPPDATA
     $originalMute = [Environment]::GetEnvironmentVariable('COLOURWARS_MUTE', 'Process')
@@ -187,8 +188,13 @@ namespace ColourWarsSandbox
     while ($timer.Elapsed.TotalSeconds -lt $StartupSeconds) {
         $process.Refresh()
         $stderr = Read-Text $stderrPath
-        if ($stderr.Trim() -ceq $refusal) { $refused = $true; break }
-        if ($stderr.Contains('startup failure:')) { throw "The game reported a startup failure: $($stderr.Trim())" }
+        if ($stderr.Contains('startup failure:')) {
+            if (-not (Test-RenderDeviceRefusal (Read-Text $recordPath) -AllowLegacyReason)) {
+                throw "The game reported a startup failure: $($stderr.Trim())"
+            }
+            $refused = $true
+            break
+        }
         if ($process.HasExited) { throw "The game exited during startup (code $($process.ExitCode))." }
         Start-Sleep -Milliseconds 250
     }
@@ -210,18 +216,22 @@ namespace ColourWarsSandbox
         }
     }
 
-    [ColourWarsSandbox.GameWindow]::CloseOwnedWindows($process.Id)
-    if (-not $process.WaitForExit(15000)) { throw 'The game did not exit within 15 seconds of WM_CLOSE.' }
+    $closeTimer = [Diagnostics.Stopwatch]::StartNew()
+    while (-not $process.HasExited -and $closeTimer.Elapsed.TotalSeconds -lt 15) {
+        [ColourWarsSandbox.GameWindow]::CloseOwnedWindows($process.Id)
+        $null = $process.WaitForExit(250)
+    }
+    if (-not $process.HasExited) { throw 'The game did not exit within 15 seconds of WM_CLOSE.' }
     $process.WaitForExit()
     $receipt.game.exit_code = $process.ExitCode
     $stderr = Read-Text $stderrPath
 
     if ($refused) {
-        if ($process.ExitCode -ne 1 -or $stderr.Trim() -cne $refusal) {
-            throw "The missing-adapter refusal exited $($process.ExitCode) with: $($stderr.Trim())"
+        if ($process.ExitCode -ne 1 -or -not (Test-RenderDeviceRefusal (Read-Text $recordPath) -AllowLegacyReason)) {
+            throw "The renderer startup refusal exited $($process.ExitCode) with: $($stderr.Trim())"
         }
-        $receipt.outcome = 'refused-no-hardware-adapter'
-        $receipt.diagnostic = 'Release found no Direct3D hardware adapter and refused loudly, as it has no WARP fallback.'
+        $receipt.outcome = 'refused-render-device-unavailable'
+        $receipt.diagnostic = 'Release reported that Direct3D could not meet its startup requirements and exited 1.'
     }
     else {
         if ($process.ExitCode -ne 0) { throw "The game exited $($process.ExitCode) after WM_CLOSE." }

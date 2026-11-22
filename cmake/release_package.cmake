@@ -15,6 +15,9 @@ if(NOT MSVC OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8
     OR NOT LABRADOR_AUDIO_BACKEND STREQUAL "xaudio2")
     install(CODE "message(FATAL_ERROR \"Packaging supports MSVC x64, d3d11 and xaudio2 only.\")")
 endif()
+if(LABRADOR_D3D_SOFTWARE_TEST)
+    install(CODE "message(FATAL_ERROR \"Software-test builds are not redistributable. Configure with LABRADOR_D3D_SOFTWARE_TEST=OFF before packaging.\")")
+endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/release_assets.cmake")
 install(CODE "

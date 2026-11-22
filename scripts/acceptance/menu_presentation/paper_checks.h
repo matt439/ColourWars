@@ -158,6 +158,8 @@ namespace
         check_edge("main_menu.team_select", "warning_position", [](rapidjson::Document& d)
         {
             d["menu_style"]["fonts"]["detail"].SetString("team_warning_descender");
+            // Only the Team Select warning should exercise this font's tall y.
+            d["menu_text"]["results"]["arena_save_failed"].SetString("Failed");
             d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(855.0f);
         }, [](rapidjson::Document& d) { d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(855.25f); });
     }

@@ -263,14 +263,15 @@ The checks legs compile all opt-in cases, the painter with both pad readers
 and paint effects. The Debug leg also compiles the frame-pacing probe and
 builds and queries the console's CPU menu model. Both presets run movement
 feedback, display-awake and startup checks. After a successful build, independent
-check steps run even when earlier checks fail. The runner's Microsoft Basic
-Render Driver is classified as software (`ENG#34`). Movement feedback
-uses the explicitly named hosted-software functional lane in both presets,
+check steps run even when earlier checks fail. The checks legs configure WARP
+explicitly (`ENG#34`). Movement feedback uses the hosted-software functional lane in both presets,
 with all pixel assertions intact; it is not hardware or performance acceptance.
 The default probe remains hardware-only, and pin/renderer changes require
 separate strict Debug/Release real-GPU qualification before merge (see
 [adapter evidence policy](docs/crt-trial.md#adapter-evidence-policy)). Content
-failures, crashes and other startup errors fail CI, never skip. Release also builds and inspects the redistributable ZIP.
+failures, crashes and unexpected startup errors fail CI. Release builds the
+redistributable ZIP separately with WARP disabled, checks its startup refusal
+on the hosted runner and exercises its content with the WARP executable.
 
 [nightly.yml](.github/workflows/nightly.yml) runs what is too long or too exact
 for a pull request on `master`'s tip: the painter (plain matrix and leaves, through

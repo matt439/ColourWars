@@ -6,20 +6,17 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Four are live (27, 30, 33 and 34), all filed on 2026-11-05** after a
-> recheck against upstream master `6189072`: 27 as
-> [labrador#122](https://github.com/matt439/Labrador/issues/122) with 26 as its
-> rider, 30 as [#123](https://github.com/matt439/Labrador/issues/123), 33 as
-> [#124](https://github.com/matt439/Labrador/issues/124) and 34 as the Bug
-> [#125](https://github.com/matt439/Labrador/issues/125). At `v0.4.0`, 27 is partly
-> spent, 30 has a category awaiting backend migration, and 33 and 34 retain
-> pending implementation. The tracker responses remain open. **26 is closed**
-> on the engine's declined Registry rider. A fifth live report, **39**, is an unfiled draft from the 2026-11-13
+> **Two are live (27 and 39).** Report 27 was filed 2026-11-05 as
+> [labrador#122](https://github.com/matt439/Labrador/issues/122), with 26 as its
+> rider. The new pin consumes the implementation answers to
+> [30, 33 and 34](#consume-typed-renderer-refusals-mutable-contacts-and-release-adapter-selection).
+> The tracker responses remain open. **26 is closed**
+> on the engine's declined Registry rider. **39** is an unfiled draft from the 2026-11-13
 > pin bump. On 2026-11-13 the author moved **35** to the
 > [parked list](#what-is-deliberately-not-here), to ride with the next audio
 > report, and withdrew **37**; the bump that day spent **36**, and `PIN#2`
 > parked **38** beside 35.
-> **Thirty-two are closed** (1–26, 28, 29, 31, 32, 36 and 37) and kept below as outcomes
+> **Thirty-five are closed** (1–26, 28–34, 36 and 37) and kept below as outcomes
 > each — what was asked, what the engine answered (shipped, document only,
 > declined or waiting on evidence), and what this repository spent the answer
 > on, if anything. A report is closed when it is answered, whether or not the
@@ -281,9 +278,6 @@ filed ([Closed](#6-no-audio-bus-master-gain-listener-or-voice-cap--accepted-narr
 | # | Report | Exhibit | Status |
 |---|---|---|---|
 | 27 | Scripted pad input without replacing engine members | [`rumble_adapter.cpp`](../../scripts/acceptance/rumble_adapter.cpp) retains a throwing transport fixture; the other five reader fixtures use the supported source | `v0.4.0`'s `ScriptedGamepadSource` spent 2026-11-17 for snapshots and the Application path; exception injection has no supported equivalent. [#122](https://github.com/matt439/Labrador/issues/122) remains open without a tracker response |
-| 30 | A device-unavailable startup failure can be classified only by its message text | See [Owed from the architecture review](#owed-from-the-architecture-review-2026-10-30) | `v0.4.0` adds `RenderDeviceUnavailable`, but no backend throws it yet; the client match remains. [#123](https://github.com/matt439/Labrador/issues/123) and backend migration remain open |
-| 33 | `on_contact` hands the other party over `const` | [`Projectile::answer_paint_contact`](../../game/objects/projectile.h) retains the `const_cast` | PI-25 selects a mutable parameter; the signature in `v0.4.0` is unchanged. [#124](https://github.com/matt439/Labrador/issues/124) remains open |
-| 34 | Known software adapters and Release selection | [the hosted runner's Basic Render Driver](#34-renderdevicekindhardware-describes-a-software-rasteriser---draft-with-hosted-runner-exhibit) needs truthful evidence lanes | classification was consumed at the prior pin, with explicit hosted software lanes and strict hardware defaults. SM-98's ordinary Release software refusal is still planned; [#125](https://github.com/matt439/Labrador/issues/125) remains open |
 | 39 | A float written as `FLT_MAX` does not read back | the [`boundary_factor`](../../scripts/acceptance/gameplay_tuning.cpp) check, moved one float below `FLT_MAX` | the parser is unchanged in `v0.4.0`; drafted, not filed; the author chooses the issue route or an engine fix (`ENG#39`) |
 
 The live client items are listed above. The author waived the startup captures
@@ -466,6 +460,8 @@ with synthetic content only, after a fresh check of upstream master.
 
 ## 30. A device-unavailable startup failure can be classified only by its message text - **draft with string-match exhibit**
 
+**Answered and consumed.** See [the pin record](#consume-typed-renderer-refusals-mutable-contacts-and-release-adapter-selection). The filing and prior pin notes below are preserved as records.
+
 **Filed 2026-11-05** as [labrador#123](https://github.com/matt439/Labrador/issues/123) (Engine request), checked against master `6189072`.
 
 **Partial API in `v0.4.0`, checked 2026-11-17.** `28ae5a6e` adds
@@ -565,6 +561,8 @@ from this text with a synthetic repro.
 
 ## 34. `RenderDeviceKind::hardware` describes a software rasteriser - **draft with hosted-runner exhibit**
 
+**Answered and consumed.** See [the pin record](#consume-typed-renderer-refusals-mutable-contacts-and-release-adapter-selection). The filing below describes the earlier adapter selection.
+
 **Filed 2026-11-05** as the Bug [labrador#125](https://github.com/matt439/Labrador/issues/125), checked against master `6189072`; the filing asks the engine not to keep the current behaviour for this client's sake.
 
 **Exhibit.** A GitHub `windows-latest` runner has no GPU. Every retained run
@@ -627,6 +625,8 @@ the `AGENTS.md` note go.
 ---
 
 ## 33. `on_contact` hands the other party over `const` - **draft with const_cast exhibit**
+
+**Answered and consumed.** See [the pin record](#consume-typed-renderer-refusals-mutable-contacts-and-release-adapter-selection). The filing below describes the removed cast.
 
 **Filed 2026-11-05** as [labrador#124](https://github.com/matt439/Labrador/issues/124) (Engine request), checked against master `6189072`; the cast is now at `game/objects/projectile_contacts.cpp:557`.
 
@@ -743,9 +743,9 @@ itself, and the comment that names this report.
 
 # Closed
 
-Thirty-two reports: twenty-nine answered, one declined by this repository's author and two withdrawn. Twenty-one were
+Thirty-five reports: thirty-two answered, one declined by this repository's author and two withdrawn. Twenty-four were
 spent here in code: 23 and 32 at the 2026-11-03 bump, 31 and 25 on
-2026-11-05, and 36 at the 2026-11-13 bump. Eight spent nothing in code: 1 was fixed before it was
+2026-11-05, 36 at the 2026-11-13 bump, and 30, 33 and 34 at the current pin. Eight spent nothing in code: 1 was fixed before it was
 filed; 9 and 10 were answered as document only, and those two changed only
 comments and docs; 15 was answered as document only, 17 changed only a
 manifest comment, 19 needs more evidence and 21 was declined — an answer that
@@ -766,6 +766,47 @@ to `1e60fb2` for 24, `8bfa00f7` for 29, and the parent of the commit that
 moved the pin to `v0.3.0` for 23, 25, 31 and 32, and the parent of the commit
 that closed it (2026-11-05) for 28, and the parent of the commit that closed it
 (2026-11-13) for 36 and 37.
+
+## Consume typed renderer refusals, mutable contacts and Release adapter selection
+
+The candidate Labrador pin has a [green master push](https://github.com/matt439/Labrador/actions/runs/44702006998).
+The three implementation answers are in master. Their public issues remain
+open.
+
+- **30.** [Labrador classifies startup refusals](https://github.com/matt439/Labrador/commit/4237f55ccabfdf4c1bf317e0963f0a146eb964a3)
+  with `RenderDeviceUnavailable`. [Fatal reporting](../failure-reporting.md)
+  writes `render_device_unavailable` while preserving the diagnostic.
+  The sandbox and hosted Release check read that record.
+- **33.** [Labrador accepts a mutable contact participant](https://github.com/matt439/Labrador/commit/f26feaedb1a1b224e6aa456233742f0936802f31).
+  The collider still dispatches by game object type. Paintable surfaces call
+  `Projectile::note_paint_contact` directly and the cast is gone.
+- **34.** [Ordinary Direct3D Release refuses known software adapters](https://github.com/matt439/Labrador/commit/bee6a28ece6ac72bf7a052c39ab9691ba2746ab5).
+  Hosted raster checks opt into WARP. The published ZIP and PDB come from a
+  separate ordinary Release build. Hosted checks inspect that ZIP and verify
+  its refusal, then exercise the inspected content in a separate WARP startup
+  fixture. The [adapter evidence policy](../crt-trial.md#adapter-evidence-policy)
+  requires strict Debug and Release hardware checks on the final tree.
+
+**Local qualification, 2026-11-22.** The strict Debug and Release movement
+feedback and paint-effects checks passed on the NVIDIA GeForce RTX 5080 (vendor
+`10DE`, device `2C02`). The WARP Release movement and paint-effects checks
+and the focused Results painter passed with software kind and the Microsoft
+Basic Render Driver (vendor `1414`, device `008C`). Both Release builds started
+with the test locale. The ordinary Release ZIP passed inspection and its
+separate missing-bank startup. The WARP build's install target refused
+packaging with the expected diagnostic.
+
+Across the default runs and focused reruns, all 92 Debug and 90 Release CPU
+cases passed. The focused runs covered the Results fixture adjusted for the
+new action row and the Debug UTF-8 balance case that follows the parallel batch.
+
+The receipts are under `out/validation/todo-followups/` in
+`qualified-movement-feedback`, `qualified-paint-fx`, `warp-movement`,
+`warp-paint`, `warp-painter-results-final`, `warp-startup`,
+`qualified-package-startup`, `final-package-fallback-startup`,
+`final-acceptance`, `results-final` and `balance-final`.
+The required hosted gate covers the ordinary
+package's typed startup refusal on a runner without a usable hardware adapter.
 
 ## 1. ~~`StateContext` never empties its stack~~
 

@@ -173,6 +173,29 @@ void Presentation::Validation::validate_results_lines(const StageGeometry& stage
 		this->presentation.menu_.heading_font, results.heading_y);
 	check_results_centered("proceed", this->presentation.menu_text_.results.proceed,
 		this->presentation.menu_.detail_font, results.proceed_y);
+	const MenuResultsText& actions = this->presentation.menu_text_.results;
+	for (const auto& field : { std::pair("continue_action", &actions.continue_action),
+		std::pair("save_arena", &actions.save_arena), std::pair("arena_saved", &actions.arena_saved),
+		std::pair("arena_save_failed", &actions.arena_save_failed) })
+	{
+		const std::string key = std::string("menu_text.results.") + field.first;
+		const Vector2F size = fixed_menu_size(key, *field.second, this->presentation.menu_.detail_font);
+		const bool save_action = field.second != &actions.continue_action;
+		RectangleF bounds = menu_geometry::results_action(results, size, save_action);
+		bounds.inflate(menu_geometry::results_action_art(results).focus_padding);
+		const float arrow = 7.0f * results.art.keyline_width;
+		bounds.x -= arrow;
+		bounds.width += arrow;
+		const RectangleF column(
+			save_action ? results_panel.center().x : results_panel.x + results.art.shadow_offset,
+			results.proceed_y, results_panel.width / 2.0f - results.art.shadow_offset,
+			results_panel.bottom() - results.art.shadow_offset - results.proceed_y);
+		if (!menu_geometry::fits(bounds, column))
+		{
+			throw std::runtime_error(this->presentation.source_path_ + ": " + key +
+				" must fit its half of the Results action row with its focus card and arrow.");
+		}
+	}
 	check_results_centered("series_team_a_wins", this->presentation.menu_text_.results.series_team_a_wins,
 		this->presentation.menu_.detail_font, results.session_result_y);
 	check_results_centered("series_team_b_wins", this->presentation.menu_text_.results.series_team_b_wins,

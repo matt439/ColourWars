@@ -205,9 +205,10 @@ failed:
   the artifacts are gone: delete the tag and push it again, which builds and
   checks the tree afresh.
 
-Never attach a ZIP or PDB built anywhere else to the release by hand: the
-published archive is the one its own run inspected and started, and the PDB
-fits only the executable it was linked with.
+Publish the ZIP and PDB from the tag's own run. The hosted check inspects the
+ordinary Release archive and verifies its renderer refusal on the runner,
+then exercises the packaged content with a separate WARP executable. The PDB
+matches the ordinary Release executable in the ZIP.
 
 After publication, point the README's download step at the release and verify
 the asset name and player instructions against the published ZIP.

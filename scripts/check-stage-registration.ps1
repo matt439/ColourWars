@@ -3,6 +3,7 @@ param(
     [ValidateSet('x64-debug', 'x64-release')]
     [string] $Preset = 'x64-debug',
     [switch] $SkipBuild,
+    [switch] $RequireSoftwareTestAdapter,
     [string] $OutputDirectory
 )
 
@@ -290,7 +291,12 @@ include(cmake/release_assets.cmake)
     $stagedInventory | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $run 'staged-assets.json') -Encoding utf8
 
     $startupOutput = Join-Path $run 'startup'
-    $startupArgs = @{ Executable = Join-Path $staged 'ColourWars.exe'; OutputDirectory = $startupOutput; RequireAudio = $true }
+    $startupArgs = @{
+        Executable = Join-Path $staged 'ColourWars.exe'
+        OutputDirectory = $startupOutput
+        RequireAudio = $true
+        RequireSoftwareTestAdapter = $RequireSoftwareTestAdapter
+    }
     $previousQuietGame = Enter-QuietGame
     try {
         & (Join-Path $PSScriptRoot 'check-startup.ps1') @startupArgs |

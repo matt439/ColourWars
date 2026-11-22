@@ -153,14 +153,6 @@ public:
 	// Cosmetic results accumulate across both contact callbacks and all surfaces
 	// touched by a roller. Flush only after that contact batch is complete.
 	void note_paint_contact(bool painted, bool captured);
-	// note_paint_contact from a surface answering this projectile's contact,
-	// where the projectile is the contact's other party and so arrives const
-	// (labrador::CollisionObject::on_contact). Every projectile is owned
-	// non-const by its scene or a probe, so the write is defined. This is the
-	// one place the game writes through a contact's other party; engine
-	// report 33 asks for a contact that can carry the answer back.
-	static void answer_paint_contact(const Projectile& toucher,
-		bool painted, bool captured);
 	void flush_paint_audio(PaintAudio& audio);
 	// Consume after both callbacks classify the hit, before the projectile is
 	// retired. Wet tiles already have an impact; bare cover needs a detached cue.
@@ -175,7 +167,7 @@ public:
 protected:
 	virtual void set_rectangle(const labrador::RectangleF& rectangle) = 0;
 	void touch(Collider& receiver,
-		const labrador::Vector2F& normal, float penetration) const override;
+		const labrador::Vector2F& normal, float penetration) override;
 
 	// A flying shot stops at its first impact along this tick's travel, if
 	// its kind is swept (is_swept). Rollers keep their one-step volume.

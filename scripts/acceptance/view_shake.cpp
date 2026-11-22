@@ -320,12 +320,12 @@ namespace
             this->emitted_projectiles += this->step(actions).size();
         }
 
-        void hit(const ProjectileSpray& shot)
+        void hit(ProjectileSpray& shot)
         {
             this->player->on_contact(shot, Vector2F::zero, 0.0f);
         }
 
-        void eliminate(const ProjectileSpray& shot)
+        void eliminate(ProjectileSpray& shot)
         {
             for (int hit = 0; hit < 10000 && this->player->health() > 0.0f; ++hit)
             {
@@ -342,7 +342,7 @@ namespace
         neighbour.tick();
         require(affected.player->view_shake().remaining() == 0.0f,
             "Initial spawn support emitted landing shake");
-        const ProjectileSpray shot = world.shot();
+        ProjectileSpray shot = world.shot();
         affected.player->set_damage_immune(true);
         affected.hit(shot);
         require(affected.player->view_shake().remaining() == 0.0f,
@@ -423,7 +423,7 @@ namespace
         }
         Course course(world, true);
         course.tick();
-        const ProjectileSpray shot = world.shot();
+        ProjectileSpray shot = world.shot();
         course.hit(shot);
         require(course.player->view_shake().remaining() > 0.0f,
             "Live reduced-effects fixture did not begin a damage accent");
@@ -454,7 +454,7 @@ namespace
     // switches still decide the keyboard seat and every slot left on Shared.
     void check_seat_preference(World& world)
     {
-        const ProjectileSpray shot = world.shot();
+        ProjectileSpray shot = world.shot();
         const auto shakes = [&](int slot, SeatComfort comfort, bool shared_shake, bool shared_reduced)
         {
             Course course(world, shared_shake, slot);
@@ -498,7 +498,7 @@ namespace
     {
         Course moving(world, true), quiet(world, true);
         quiet.preferences.reduce_effects = true;
-        const ProjectileSpray shot = world.shot();
+        ProjectileSpray shot = world.shot();
         bool shake_seen = false;
         bool respawned = false;
         for (int tick = 0; tick < 360; ++tick)

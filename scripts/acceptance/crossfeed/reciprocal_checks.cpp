@@ -89,7 +89,7 @@ namespace crossfeed_acceptance
         void lethal_contact(Services& services, Player& victim)
         {
             const PlayerTeam enemy = victim.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a;
-            const ProjectileSpray projectile(RectangleF(0, 0, 10, 10), Vector2F::zero, enemy, 1,
+            ProjectileSpray projectile(RectangleF(0, 0, 10, 10), Vector2F::zero, enemy, 1,
                 Colour::white, &services.render,
                 resolve_projectile_strip(services.tuning.projectile(ProjectileType::spray), services.render),
                 &services.tuning.projectile(ProjectileType::spray));

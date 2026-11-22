@@ -67,7 +67,7 @@ namespace paint_surfaces_acceptance
             labrador::RectangleF launch = splash;
             const labrador::Vector2F half = spray.details.col_rect_size / 2.0f;
             launch.offset(half.x, half.y);
-            const ProjectileSpray shot(launch, labrador::Vector2F::zero, team, owner, labrador::Colour::white,
+            ProjectileSpray shot(launch, labrador::Vector2F::zero, team, owner, labrador::Colour::white,
                 &render, resolve_projectile_strip(spray, render), &spray);
             surface.on_contact(shot, labrador::Vector2F::zero, 0.0f);
         }

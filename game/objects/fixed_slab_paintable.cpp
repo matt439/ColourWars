@@ -179,7 +179,7 @@ RectangleF FixedSlabPaintable::cull_bounds(float units_per_pixel) const
     return result;
 }
 
-void FixedSlabPaintable::on_projectile_contact(const Projectile& projectile,
+void FixedSlabPaintable::on_projectile_contact(Projectile& projectile,
     const Vector2F& /*normal*/, float /*penetration*/)
 {
     if (projectile.layer() != collision_layers::projectile_team_a &&
@@ -201,7 +201,7 @@ void FixedSlabPaintable::on_projectile_contact(const Projectile& projectile,
         this->credit_.add(projectile.player_num(), before, team, tile.paint.area());
         painted = true;
     }
-    Projectile::answer_paint_contact(projectile, painted, captured);
+    projectile.note_paint_contact(painted, captured);
 }
 
 PaintTotal FixedSlabPaintable::paint_total() const

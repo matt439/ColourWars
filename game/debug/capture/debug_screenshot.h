@@ -1,43 +1,15 @@
 #pragma once
 
-#include <chrono>
-#include <filesystem>
-#include <string>
+#include "game/save/png_capture.h"
 #include <string_view>
-#include <vector>
 
 namespace labrador
 {
 	class Application;
 }
 
-// The developer `screenshot` command's parts. Debug-only bodies.
-
-// 8-bit RGBA, top row first, as Renderer::read_back_buffer returns it.
-struct ScreenCapture
-{
-	int width = 0;
-	int height = 0;
-	std::vector<unsigned char> rgba;
-};
-
-// Draws the whole state stack into an unpresented frame and reads it back:
-// begin_frame, Application::draw, submit, read_back_buffer, never end_frame.
-// The engine allows readback only between submit and end_frame, and
-// Application::render runs those back to back, so this is the frame the
-// render probes read; the next Application::render begins a fresh frame.
-// This is the engine's documented capture (Renderer::read_back_buffer): a
-// submitted, never-presented frame is legal and leaves nothing to the next.
-// Call it from a state's update, never from inside a draw. Throws what the
-// renderer throws (the null backend refuses readback).
+// The developer `screenshot` command draws the whole stack into the capture.
 ScreenCapture capture_stack(labrador::Application& application);
-
-// A PNG through WIC, 24-bit (the back buffer's alpha means nothing). COM
-// must already be initialised on this thread (Application does it). Encoded
-// in memory and written through replace_file_atomically, so a failure leaves
-// no partial PNG and any earlier file of that name whole.
-bool write_png(const std::filesystem::path& path, const ScreenCapture& image,
-	std::string& error);
 
 // `requested` kept to [A-Za-z0-9_-] (anything else becomes '_', a trailing
 // ".png" is dropped), plus ".png"; empty requests the local-time default

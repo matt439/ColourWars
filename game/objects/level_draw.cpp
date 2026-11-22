@@ -18,7 +18,7 @@ using namespace labrador;
 void Level::draw(Renderer& renderer) const
 {
 	crt_trial::clear(renderer, this->crt_runtime_);
-	if (this->intro_showing() || this->reveal_showing())
+	if (!this->arena_view_ && (this->intro_showing() || this->reveal_showing()))
 	{
 		// The countdown's number and cards show in the picture as they do in the panes.
 		this->opening_->draw(renderer, *this->scene_, this->opening_clock(), this->players_,
@@ -61,10 +61,21 @@ void Level::draw(Renderer& renderer) const
 	}
 	else
 	{
-		// The overview, and the Debug time-lapse's arena view, draw only the
-		// world, with no gameplay overlays.
+		// The arena view draws only the world, with no gameplay overlays.
 		this->scene_->draw(renderer);
 	}
+}
+
+void Level::draw_arena(Renderer& renderer)
+{
+	struct RestoreView
+	{
+		Level& level;
+		bool arena_view;
+		~RestoreView() { this->level.set_arena_view(this->arena_view); }
+	} restore{ *this, this->arena_view() };
+	this->set_arena_view(true);
+	this->draw(renderer);
 }
 
 void Level::draw_player_overlay(int view_index, DrawList& list) const

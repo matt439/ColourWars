@@ -169,7 +169,7 @@ For paired GPU captures of the takeoff/landing prototype, run
 It uses a hidden D3D11 hardware window, scripted jumps and isolated profile;
 see [feedback evidence and limitations](polish-feedback.md).
 CI runs the same correctness matrix in both presets with
-`-HostedSoftwareFunctional` on the runner's Microsoft Basic Render Driver. The
+`-HostedSoftwareFunctional` on explicitly configured WARP. The
 probe requires the engine to classify the adapter as software. It records the
 actual adapter, and CI uploads JSON/CSV results and logs. Hardware qualification
 uses the default hardware-only probe. Movement feel and performance require
@@ -189,9 +189,10 @@ corresponding release tag. See [the shipped-package check](review/2026-11-15-shi
 
 It checks the executable's version stamp, starts it hidden from an unrelated
 directory with an isolated save, checks the game window, its per-monitor v2 DPI awareness and diagnostics, then
-closes gracefully. CI requires startup in both presets; Release starts on the
-runner's Basic Render Driver, and a missing adapter or any application failure
-fails CI. These automated
+closes gracefully. CI requires startup in both presets on explicit WARP. The
+Release startup fixture combines the inspected package contents with the WARP
+executable. The ordinary packaged executable must report a typed renderer
+refusal on the hosted runner and exit with code 1. These automated
 checks do not establish controller feel, audible balance or multiplayer quality;
 the hardware acceptance checklist is in [the roadmap](feature-roadmap.md).
 

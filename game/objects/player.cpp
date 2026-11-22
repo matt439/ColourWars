@@ -269,7 +269,7 @@ const RectangleF* Player::collision_rectangle() const
 	return &this->rectangle_;
 }
 
-void Player::touch(Collider& receiver, const Vector2F& normal, float penetration) const
+void Player::touch(Collider& receiver, const Vector2F& normal, float penetration)
 {
     receiver.on_player_contact(*this, normal, penetration);
 }
@@ -975,7 +975,7 @@ void Player::update_weapon_position()
 {
     this->primary_->set_player_center(this->center());
 }
-void Player::on_projectile_contact(const Projectile& source,
+void Player::on_projectile_contact(Projectile& source,
     const Vector2F& /*normal*/, float /*penetration*/)
 {
     // The projectile side is unchanged: paint still lands.

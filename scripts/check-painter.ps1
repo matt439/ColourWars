@@ -121,7 +121,8 @@ param(
     [switch] $StageScanOnly,
     # Software-only functional evidence, never hardware acceptance.
     [switch] $HostedSoftwareFunctional,
-    [string] $OutputDirectory
+    [string] $OutputDirectory,
+    [string] $BuildDirectory
 )
 
 $ErrorActionPreference = 'Stop'
@@ -177,6 +178,9 @@ $painterCompileVariants = if ($CompileOnly) { @($false, $true) } elseif ($Practi
 if (-not $OutputDirectory) {
     $OutputDirectory = Join-Path $PSScriptRoot '../out/validation/painter'
 }
+if ($BuildDirectory -and -not $SkipBuild) {
+    throw '-BuildDirectory requires -SkipBuild and an existing configured build.'
+}
 
 function Invoke-Logged {
     param([string] $Command, [string[]] $Arguments, [string] $LogPath)
@@ -210,7 +214,7 @@ if ($focusedSelectors.Count -eq 1) {
 . (Join-Path $PSScriptRoot 'check-painter/contact-sheet.ps1')
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$build = Join-Path $repo "out/build/$Preset"
+$build = if ($BuildDirectory) { Resolve-CheckFileSystemPath $BuildDirectory } else { Join-Path $repo "out/build/$Preset" }
 $outputRoot = Resolve-CheckFileSystemPath $OutputDirectory
 $run = Join-Path (Join-Path $outputRoot $Preset) ([Guid]::NewGuid().ToString('N'))
 $captures = Join-Path $run 'captures'
@@ -246,11 +250,12 @@ $process = $null
 $failure = $null
 try {
     . (Join-Path $PSScriptRoot 'check-painter/evidence-record.ps1')
+    $result.build_directory = $build
     if ($CompileOnly) {
         # CI#2: a compile-only receipt, passed or failed, keeps the run's
         # identity but none of the full matrix's scope or check descriptions.
         $compileRecord = [ordered]@{ outcome = 'failed'; scope = 'compile-only' }
-        foreach ($key in 'preset', 'game_revision', 'engine_revision', 'worktree_status',
+        foreach ($key in 'preset', 'build_directory', 'game_revision', 'engine_revision', 'worktree_status',
             'worktree_status_omitted', 'profile') { $compileRecord[$key] = $result[$key] }
         $compileRecord.compiled_variants = @()
         $compileRecord.diagnostic = ''
@@ -274,7 +279,7 @@ try {
             -LogPath (Join-Path $run 'build.log')
     }
     # Every painter mode supplies a fake rumble factory; never link the motor adapter.
-    $probeBuild = Get-ProbeBuild -Repo $repo -Preset $Preset -Adapters @('display_awake') -RequiredContent @('presentation.json')
+    $probeBuild = Get-ProbeBuild -Repo $repo -Preset $Preset -BuildDirectory $build -Adapters @('display_awake') -RequiredContent @('presentation.json')
     $cache = $probeBuild.Cache
     $debug = $probeBuild.Debug
     $gameDirectory = $probeBuild.GameDirectory
@@ -414,7 +419,8 @@ try {
         if ($policyLines.Count -ne 1 -or $policyLines[0] -cne "ADAPTER_POLICY $($result.adapter_policy)") {
             throw 'The probe did not report the requested adapter policy.'
         }
-        Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'reader.err')) -Context 'remembered setup reader' -AllowDebugAdapter:$debug
+        Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'reader.err')) `
+            -Context 'remembered setup reader' -AllowDebugAdapter:$debug -AllowSoftwareTestAdapter:$HostedSoftwareFunctional
         $result['process_relaunch'] = [ordered]@{
             outcome = 'passed'; writer_pid = $writerProcessId; reader_pid = $process.Id; reader_exit_code = $process.ExitCode
             writer_log = Join-Path $run 'run.log'; reader_log = Join-Path $run 'reader.log'
@@ -479,7 +485,9 @@ try {
         if ($line -eq $expectedSaveTail) { ++$saveTailCount; continue }
         if ($line.Trim() -ne '' -and
             -not (Test-OptionalBankDiagnostic $line) -and
-            -not ($debug -and (Test-DebugAdapterDiagnostic $line))) {
+            -not ($debug -and (Test-DebugAdapterDiagnostic $line)) -and
+            -not ($HostedSoftwareFunctional -and (Test-SoftwareTestDeviceDiagnostic $line)) -and
+            -not ($HostedSoftwareFunctional -and $debug -and (Test-SoftwareTestDebugDiagnostic $line))) {
             throw "Unexpected probe diagnostic: $line"
         }
     }

@@ -124,13 +124,17 @@ capped at two compiler jobs after checking for competing build/game processes.
 
 ## Adapter evidence policy
 
-The engine pin correctly classifies the hosted Microsoft Basic Render Driver
-as software (ENG#34). CI previously ran on that same CPU rasteriser but received
-an incorrect hardware label. It now explicitly selects
-`-HostedSoftwareFunctional` in both Debug and Release. This separate lane
+Ordinary Direct3D Release refuses known software adapters (ENG#34). CI
+configures its visual builds with `LABRADOR_D3D_SOFTWARE_TEST=ON` to force WARP
+and runs `-HostedSoftwareFunctional` in both Debug and Release. This lane
 requires a D3D11 software device and runs every existing movement/pixel assertion
 without skips or changed tolerances. Hardware, unknown and null devices are
 rejected in that lane; it cannot provide hardware or performance acceptance.
+
+To qualify a software build locally alongside an ordinary one, configure with
+`cmake --preset x64-release -B out/build/x64-release-software -DLABRADOR_D3D_SOFTWARE_TEST=ON`
+and build that directory. Pass `-Preset x64-release -SkipBuild -HostedSoftwareFunctional -BuildDirectory out/build/x64-release-software`
+to the movement feedback, paint-effects or painter script.
 
 The default movement probe remains strict hardware-only in both configurations.
 The older Debug-only `-AllowSoftwareAdapter` retains its Release refusal and

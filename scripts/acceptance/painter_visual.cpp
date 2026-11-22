@@ -77,6 +77,9 @@
 #include <io.h>
 #include <share.h>
 #include <sys/stat.h>
+#include <objbase.h>
+#include <wincodec.h>
+#include <wrl/client.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -186,6 +189,7 @@ namespace
 #include "scripts/acceptance/painter_visual/pause_item_checks.h"
 #include "scripts/acceptance/painter_visual/pause_question_checks.h"
 #include "scripts/acceptance/painter_visual/results_menu_checks.h"
+#include "scripts/acceptance/painter_visual/arena_png_checks.h"
 #include "scripts/acceptance/painter_visual/main_menu_checks.h"
 #include "scripts/acceptance/painter_visual/title_home_text_checks.h"
 #if COLOURWARS_DEV_TOOLS
@@ -1144,70 +1148,71 @@ int wmain(int argc, wchar_t** argv)
         if (argc == 4 && std::wstring(argv[3]) == L"team-setup")
         {
             team_setup_matrix(app, levels, tuning, presentation, output);
-            std::cout << "PASS team-setup-only actual menu hardware check; scripted backend, no physical-pad acceptance\n";
+            std::cout << "PASS team-setup-only actual menu visual check; scripted backend, no physical-pad acceptance\n";
             return 0;
         }
 #endif
         if (menu_motion_only)
         {
             menu_motion_matrix(app, canvas, tuning, presentation, output);
-            std::cout << "PASS menu-motion-only hardware check; other painter matrices were not run\n";
+            std::cout << "PASS menu-motion-only visual check; other painter matrices were not run\n";
             return 0;
         }
         if (menu_text_only)
         {
             menu_text_matrix(app, levels, canvas, tuning, presentation, output);
-            std::cout << "PASS menu-text-only hardware check; other painter matrices were not run\n";
+            std::cout << "PASS menu-text-only visual check; other painter matrices were not run\n";
             return 0;
         }
         if (weapon_catalog_only)
         {
             weapon_catalog_matrix(app, levels, tuning, presentation, output);
-            std::cout << "PASS weapon-catalog-only hardware check; other painter matrices were not run\n";
+            std::cout << "PASS weapon-catalog-only visual check; other painter matrices were not run\n";
             return 0;
         }
         if (stick_settings_only)
         {
             stick_settings_matrix(app, canvas, tuning, presentation, output);
-            std::cout << "PASS stick-settings-only hardware check; other painter matrices were not run\n";
+            std::cout << "PASS stick-settings-only visual check; other painter matrices were not run\n";
             return 0;
         }
         if (controls_menu_only)
         {
             controls_menu_matrix(app, levels, canvas, tuning, presentation, content, output);
             stick_settings_matrix(app, canvas, tuning, presentation, output);
-            std::cout << "PASS controls-menu-only hardware check; other painter matrices were not run\n";
+            std::cout << "PASS controls-menu-only visual check; other painter matrices were not run\n";
             return 0;
         }
         if (settings_menu_only)
         {
             settings_menu_matrix(app, canvas, tuning, presentation, output);
-            std::cout << "PASS settings-menu-only hardware check; other painter matrices were not run\n";
+            std::cout << "PASS settings-menu-only visual check; other painter matrices were not run\n";
             return 0;
         }
         if (main_menu_only)
         {
             main_menu_matrix(app, canvas, tuning, presentation, output);
-            std::cout << "PASS main-menu-only hardware check; other painter matrices were not run\n";
+            std::cout << "PASS main-menu-only visual check; other painter matrices were not run\n";
             return 0;
         }
         if (results_menu_only)
         {
             results_menu_matrix(app, canvas, tuning, presentation, output);
-            std::cout << "PASS results-menu-only hardware check; other painter matrices were not run\n";
+            arena_png_checks(app, levels, tuning, presentation, output);
+            std::cout << "PASS results-menu-only visual check; other painter matrices were not run\n";
             return 0;
         }
         if (pause_menu_only)
         {
             pause_menu_matrix(app, canvas, tuning, presentation, output);
-            std::cout << "PASS pause-menu-only hardware check; other painter matrices were not run\n";
+            std::cout << "PASS pause-menu-only visual check; other painter matrices were not run\n";
             return 0;
         }
         if (end_menu_only)
         {
             end_menu_matrix(app, canvas, tuning, presentation, output);
             series_repick_checks(app, levels, canvas, tuning, presentation, output);
-            std::cout << "PASS end-menu-only hardware check; other painter matrices were not run\n";
+            std::cout << "PASS end-menu-only visual check; other painter matrices were not run\n";
             return 0;
         }
         if (practice_replay_only)
@@ -1218,7 +1223,7 @@ int wmain(int argc, wchar_t** argv)
         if (resume_only)
         {
             resume_matrix(app, levels, tuning, presentation, content, output);
-            std::cout << "PASS resume-only actual GameLevel hardware check\n";
+            std::cout << "PASS resume-only actual GameLevel visual check\n";
             return 0;
         }
         if (hud_only)
@@ -1466,6 +1471,7 @@ int wmain(int argc, wchar_t** argv)
         series_repick_checks(app, levels, canvas, tuning, presentation, output);
         pause_menu_matrix(app, canvas, tuning, presentation, output);
         results_menu_matrix(app, canvas, tuning, presentation, output);
+        arena_png_checks(app, levels, tuning, presentation, output);
         settings_menu_matrix(app, canvas, tuning, presentation, output);
         controls_menu_matrix(app, levels, canvas, tuning, presentation, content, output);
         stick_settings_matrix(app, canvas, tuning, presentation, output);

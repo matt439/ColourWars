@@ -38,7 +38,7 @@ enum class MenuItem
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
 	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
-	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, series_stage, vsync, variant, toggle_fire, graphics, crt_monitor, how_to_play, count
+	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, keyboard_jump, pad_buttons, rumble, watch_replay, profiles, series_stage, vsync, variant, toggle_fire, graphics, crt_monitor, how_to_play, open_save_folder, count
 };
 
 struct MenuTitleText
@@ -115,6 +115,7 @@ struct MenuStatusText
 	std::wstring options_reverted;
 	std::wstring options_display_failed;
 	std::wstring options_rollback_failed;
+	std::wstring options_open_save_folder_failed;
 };
 
 struct MenuValueText
@@ -159,6 +160,10 @@ struct MenuResultsText
 {
 	std::wstring single_match_heading;
 	std::wstring proceed;
+	std::wstring continue_action;
+	std::wstring save_arena;
+	std::wstring arena_saved;
+	std::wstring arena_save_failed;
 	std::wstring contribution_heading;
 	std::wstring share_basis;
 	std::wstring empty_share_basis;

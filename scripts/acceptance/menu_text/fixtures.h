@@ -174,7 +174,9 @@ namespace menu_text_acceptance
         { "options_display_failed", L"Could not change display settings. Previous settings restored.",
             &MenuStatusText::options_display_failed, true },
         { "options_rollback_failed", L"Could not restore display settings. Try Apply again.",
-            &MenuStatusText::options_rollback_failed, true }
+            &MenuStatusText::options_rollback_failed, true },
+        { "options_open_save_folder_failed", L"Could not open the save folder.",
+            &MenuStatusText::options_open_save_folder_failed, true }
     };
     struct ConnectionText { const char* key; const wchar_t* text; std::wstring MenuConnectionText::* field; };
     constexpr ConnectionText connection_text[]{
@@ -411,7 +413,8 @@ namespace menu_text_acceptance
         { "watch_replay", L"Watch Replay" },
         { "profiles", L"Profiles" }, { "series_stage", L"Series stage" }, { "vsync", L"Vsync" },
         { "variant", L"Variant" }, { "toggle_fire", L"Toggle fire" },
-        { "graphics", L"Graphics" }, { "crt_monitor", L"CRT monitor (restart)" }, { "how_to_play", L"How to play" }
+        { "graphics", L"Graphics" }, { "crt_monitor", L"CRT monitor (restart)" }, { "how_to_play", L"How to play" },
+        { "open_save_folder", L"Open save folder" }
     };
 
     using World = acceptance::ContentWorld;

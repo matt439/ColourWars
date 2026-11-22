@@ -21,9 +21,10 @@ function Get-ProbeBuild {
         [Parameter(Mandatory = $true)][string] $Repo,
         [Parameter(Mandatory = $true)][ValidateSet('x64-debug', 'x64-release', 'x64-asan')][string] $Preset,
         [ValidateSet('rumble_gamepads', 'display_awake')][string[]] $Adapters = @('rumble_gamepads', 'display_awake'),
-        [string[]] $RequiredContent = @()
+        [string[]] $RequiredContent = @(),
+        [string] $BuildDirectory
     )
-    $build = Join-Path $Repo "out/build/$Preset"
+    $build = if ($BuildDirectory) { $BuildDirectory } else { Join-Path $Repo "out/build/$Preset" }
     $cachePath = Join-Path $build 'CMakeCache.txt'
     if (-not (Test-Path -LiteralPath $cachePath -PathType Leaf)) {
         throw "No configured build at $build. Run without -SkipBuild first."

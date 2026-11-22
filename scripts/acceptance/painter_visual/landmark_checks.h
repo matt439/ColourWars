@@ -76,7 +76,7 @@ LandmarkWorld landmark_world(Application& app, const LevelLoadedInfo& info, cons
                 RectangleF splash = object->shape()->bounding_box(); splash.inflate(32.0f);
                 splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
                 const PlayerTeam team = surfaces % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
-                const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, surfaces % 2 == 0 ? 3 : 1,
+                ProjectileSpray shot = controlled_spray(app, tuning, splash, team, surfaces % 2 == 0 ? 3 : 1,
                     colours.team_colour(team));
                 painted->on_contact(shot, Vector2F::zero, 0.0f); painted->update(10.0f);
             }

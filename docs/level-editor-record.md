@@ -24,6 +24,18 @@ and fine movement, and commands when the list's keyboard focus is on a
 different row from the selected object. The editor suite passed in Debug and
 Release on 2026-11-20.
 
+## Open a dropped level file (`REV#66`)
+
+Drop one level JSON file from File Explorer onto the editor. It uses the same
+unsaved-changes prompt, level validation, and match-bounds view as **File > Open**.
+Dropping a folder, multiple files or a different file type leaves the current
+level open and gives a status message.
+
+The [native file-drop check](../scripts/acceptance/level_editor_dpi/file_drop_checks.h)
+sends an in-process Windows drop to the editor. It checks the rejected file
+selections, a Unicode path, Cancel, a malformed JSON file and Save with a
+pending property edit.
+
 ## Bound the external-change comparison on save (`ED#28`)
 
 **Implemented (2026-11-20).** Save compares the disk file against the retained

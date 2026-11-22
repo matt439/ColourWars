@@ -103,12 +103,12 @@ namespace
             this->emitted_projectiles += this->step(actions).size();
         }
 
-        void hit(const ProjectileSpray& shot)
+        void hit(ProjectileSpray& shot)
         {
             this->player->on_contact(shot, Vector2F::zero, 0.0f);
         }
 
-        void eliminate(const ProjectileSpray& shot)
+        void eliminate(ProjectileSpray& shot)
         {
             // Contact damage is deliberately not replaced with the developer
             // kill hook: the fatal event must originate in the production path.
@@ -124,7 +124,7 @@ namespace
     {
         const auto& look = world.presentation.combat_feedback();
         Course course(world, look);
-        const ProjectileSpray shot = world.shot();
+        ProjectileSpray shot = world.shot();
         const float initial_health = course.player->health();
         course.player->set_damage_immune(true);
         course.hit(shot);
@@ -181,7 +181,7 @@ namespace
     {
         const auto& look = world.presentation.combat_feedback();
         Course course(world, look);
-        const ProjectileSpray shot = world.shot();
+        ProjectileSpray shot = world.shot();
         course.tick();
         course.eliminate(shot);
         const RectangleF death = course.player->rectangle();
@@ -258,7 +258,7 @@ namespace
             "Idempotent clear retained the death snapshot or contact limiter");
 
         Course course(world, look);
-        const ProjectileSpray shot = world.shot();
+        ProjectileSpray shot = world.shot();
         course.hit(shot);
         course.player->place_at(Vector2F(50, -200));
         require(course.player->combat_feedback().hurt_remaining() == 0.0f &&
@@ -286,7 +286,7 @@ namespace
         disabled.enabled = false;
         Course visible(world, world.presentation.combat_feedback());
         Course quiet(world, disabled);
-        const ProjectileSpray shot = world.shot();
+        ProjectileSpray shot = world.shot();
         bool hurt_seen = false;
         bool burst_seen = false;
         bool respawned = false;

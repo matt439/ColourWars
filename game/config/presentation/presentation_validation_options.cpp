@@ -16,11 +16,12 @@
 using namespace labrador;
 using namespace presentation_read;
 
-// Phase 1: Options' nine actions; the four option rows fit their labels.
+// Phase 1: Options' actions; the four value rows fit their labels.
 void Presentation::Validation::validate_options_actions(const SetupGeometry& setup) const
 {
 	const MainMenuPresentation& main = this->presentation.main_menu_;
 	const auto& options_art = setup.options_art;
+	const RectangleF paper = menu_geometry::footer_paper(main.options_box_size, this->presentation.menu_.footer_y);
 	const MenuItem options_items[]{ MenuItem::resolution, MenuItem::fullscreen, MenuItem::vsync,
 		MenuItem::team_palette, MenuItem::controls_audio, MenuItem::graphics, MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
 	for (size_t index = 0; index < std::size(options_items); ++index)
@@ -29,8 +30,19 @@ void Presentation::Validation::validate_options_actions(const SetupGeometry& set
 			Vector2F(0.0f, main.options_spacing.y * static_cast<float>(index));
 		const std::optional<float> label_width = index < 4 ?
 			std::optional<float>(main.options_value_x - position.x - options_art.focus_padding.x) : std::nullopt;
-		check_menu_item(options_items[index], this->presentation.main_menu_.options_font, position,
-			menu_geometry::footer_paper(main.options_box_size, this->presentation.menu_.footer_y), main.options_spacing.y, label_width, options_art);
+		check_menu_item(options_items[index], main.options_font, position,
+			paper, main.options_spacing.y, label_width, options_art);
+	}
+	const Vector2F folder_position = options_value_position(settings_rows::options_graphics);
+	check_menu_item(MenuItem::open_save_folder, main.options_font, folder_position,
+		paper, main.options_spacing.y, std::nullopt, options_art);
+	const Vector2F graphics_size = fixed_menu_size("menu_text.items.graphics",
+		this->presentation.menu_text_.item(MenuItem::graphics), main.options_font);
+	const float between_labels = options_art.focus_padding.x * 2.0f + options_art.keyline_width * 7.0f;
+	if (main.options_position.x + graphics_size.x + between_labels > folder_position.x)
+	{
+		throw std::runtime_error(this->presentation.source_path_ +
+			": menu_text.items.graphics overlaps the Open save folder action.");
 	}
 }
 
@@ -64,7 +76,8 @@ void Presentation::Validation::validate_options_statuses(const SetupGeometry& se
 	const StatusMessage options_statuses[]{ { "options_pending", status_text.options_pending },
 		{ "options_saved", status_text.options_saved }, { "options_save_failed", status_text.options_save_failed },
 		{ "options_reverted", status_text.options_reverted }, { "options_display_failed", status_text.options_display_failed },
-		{ "options_rollback_failed", status_text.options_rollback_failed } };
+		{ "options_rollback_failed", status_text.options_rollback_failed },
+		{ "options_open_save_folder_failed", status_text.options_open_save_folder_failed } };
 	for (const StatusMessage& message : options_statuses)
 	{
 		check_status(message, this->presentation.prompt_bar_.font, main.options_status_position, main.options_box_size,

@@ -25,7 +25,7 @@ public:
 	// The one conversion back from the engine's type. A ColourWars scene holds
 	// nothing that is not a Collider; anything else is refused with
 	// std::logic_error. Level keeps its shots typed from Scene::add, so this
-	// is for what a contact or a scene walk hands back (report 33).
+	// is for what a contact or a scene walk hands back.
 	static Collider& of(labrador::CollisionObject& object);
 	static const Collider& of(const labrador::CollisionObject& object);
 
@@ -39,7 +39,7 @@ public:
 	virtual const PaintableObject* paintable() const { return nullptr; }
 
 	// The engine's contact. Final: a contact is answered by the handlers below.
-	void on_contact(const labrador::CollisionObject& other,
+	void on_contact(labrador::CollisionObject& other,
 		const labrador::Vector2F& normal, float penetration) final;
 
 	// Second dispatch, called by the other party's touch. other is what this
@@ -49,12 +49,12 @@ public:
 		const labrador::Vector2F& normal, float penetration);
 	virtual void on_player_contact(const Player& other,
 		const labrador::Vector2F& normal, float penetration);
-	virtual void on_projectile_contact(const Projectile& other,
+	virtual void on_projectile_contact(Projectile& other,
 		const labrador::Vector2F& normal, float penetration);
 
 protected:
 	// Name this object's class to receiver by calling the receiver's handler
 	// for it with *this.
 	virtual void touch(Collider& receiver,
-		const labrador::Vector2F& normal, float penetration) const = 0;
+		const labrador::Vector2F& normal, float penetration) = 0;
 };

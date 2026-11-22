@@ -207,7 +207,7 @@ void MenuPaperArtwork::draw(DrawList& list) const
 	if (this->hidden()) { return; }
 	list.set_filter(TextureFilter::point);
 	this->draw_card(list, this->rectangle(), this->art_->paper);
-	const UiWidget* focused = this->focus_->focused(0);
+	const UiWidget* focused = this->focus_ != nullptr ? this->focus_->focused(0) : nullptr;
 	const bool eligible = focused != nullptr && !focused->hidden() && this->focus_->enabled(focused);
 	const bool animate = this->motion_ != nullptr &&
 		(this->settings_ == nullptr || !this->settings_->reduce_effects);

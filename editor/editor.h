@@ -115,6 +115,8 @@ namespace colourwars_editor
         bool pending() const;
         bool confirm_discard();
         bool confirm_unresolved();
+        void open_level(std::optional<std::filesystem::path> path = std::nullopt);
+        void reset_document_view();
         bool save(bool save_as);
         std::optional<std::filesystem::path> choose_file(bool save_as);
         bool save_user_stage();

@@ -15,7 +15,8 @@ param(
     # establishes neither hardware visual acceptance nor performance acceptance.
     [switch] $AllowSoftwareAdapter,
     # Separate CI functional evidence, never hardware qualification.
-    [switch] $HostedSoftwareFunctional
+    [switch] $HostedSoftwareFunctional,
+    [string] $BuildDirectory
 )
 
 $ErrorActionPreference = 'Stop'
@@ -31,6 +32,9 @@ if ($HostedSoftwareFunctional -and $AllowSoftwareAdapter) {
 
 if ($AllowSoftwareAdapter -and $Preset -eq 'x64-release') {
     throw '-AllowSoftwareAdapter is supported only by the x64-debug probe.'
+}
+if ($BuildDirectory -and -not $SkipBuild) {
+    throw '-BuildDirectory requires -SkipBuild and an existing configured build.'
 }
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
@@ -59,7 +63,7 @@ function Quote-Path {
 }
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$build = Join-Path $repo "out/build/$Preset"
+$build = if ($BuildDirectory) { Resolve-CheckFileSystemPath $BuildDirectory } else { Join-Path $repo "out/build/$Preset" }
 $outputRoot = Resolve-CheckFileSystemPath $OutputDirectory
 $run = Join-Path (Join-Path $outputRoot $Preset) ([Guid]::NewGuid().ToString('N'))
 $captures = Join-Path $run 'captures'
@@ -85,6 +89,7 @@ $failure = $null
 $result = [ordered]@{
     outcome = 'failed'
     preset = $Preset
+    build_directory = $build
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
     worktree_status = @(& git status --short)
@@ -119,7 +124,7 @@ try {
         Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset, '--parallel', '1') `
             -LogPath (Join-Path $run 'build.log')
     }
-    $probeBuild = Get-ProbeBuild -Repo $repo -Preset $Preset -RequiredContent @('presentation.json')
+    $probeBuild = Get-ProbeBuild -Repo $repo -Preset $Preset -BuildDirectory $build -RequiredContent @('presentation.json')
     $cache = $probeBuild.Cache
     $debug = $probeBuild.Debug
     $gameDirectory = $probeBuild.GameDirectory
@@ -182,7 +187,8 @@ try {
         ($result.adapter_kind -eq 'software' -and -not ($AllowSoftwareAdapter -or $HostedSoftwareFunctional))) {
         throw 'The probe did not report one adapter matching the requested policy.'
     }
-    Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'run.err')) -AllowDebugAdapter:$debug
+    Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'run.err')) `
+        -AllowDebugAdapter:$debug -AllowSoftwareTestAdapter:$HostedSoftwareFunctional
     if (Test-Path -LiteralPath (Join-Path $profile 'ColourWars/save_data.json')) {
         throw 'The visual probe unexpectedly created a save.'
     }
