@@ -155,6 +155,13 @@ namespace ColourWars
                 2, 2000, out result) != IntPtr.Zero;
         }
 
+        public static bool RequestGameClose(IntPtr window, uint timeout)
+        {
+            IntPtr result;
+            return SendMessageTimeout(window, 0x0010, IntPtr.Zero, IntPtr.Zero,
+                0, timeout, out result) != IntPtr.Zero;
+        }
+
         public static void CloseOwnedWindows(int processId)
         {
             StartupOwnedWindows.Close(processId);
@@ -195,6 +202,7 @@ $result = [ordered]@{
     stages_folder_created = $false
     first_window_fits_monitor = $false
     first_save_reduce_effects_follows_windows = $false
+    shutdown_close_acknowledged = $null
     locale = $(if ($Locale) { $Locale } else { 'base' })
     audio_expectation = $(if ($RequireAudio) { 'published-bank' } elseif ($RequireNoAudio) { 'missing-bank' } else { 'optional' })
     graphics_expectation = $(if ($RequireRenderDeviceRefusal) { 'refusal' } elseif ($RequireSoftwareTestAdapter) { 'software-test' } else { 'default' })
@@ -317,9 +325,16 @@ try {
     if ($userStageRefusal -and @($stderr -split '\r?\n' | Where-Object { $_ -match $userStageRefusal }).Count -ne 1) {
         throw 'The broken user stage was not refused with exactly one line.'
     }
-    [ColourWars.StartupWindow]::CloseOwnedWindows($process.Id)
-    if (-not $process.WaitForExit(10000)) {
-        throw 'The game did not shut down after WM_CLOSE.'
+    # Address only the game window and account for delivery and teardown in
+    # the same deadline. The acknowledged send also distinguishes their failures.
+    $shutdownTimer = [Diagnostics.Stopwatch]::StartNew()
+    $result.shutdown_close_acknowledged = [ColourWars.StartupWindow]::RequestGameClose($window, 10000)
+    $remainingMilliseconds = [int][Math]::Max(0, 10000 - $shutdownTimer.ElapsedMilliseconds)
+    if (-not $process.WaitForExit($remainingMilliseconds)) {
+        if (-not $result.shutdown_close_acknowledged) {
+            throw 'The game did not acknowledge WM_CLOSE or exit within 10 seconds.'
+        }
+        throw 'The game acknowledged WM_CLOSE but did not exit within 10 seconds.'
     }
     $process.WaitForExit()
     if ($process.ExitCode -ne 0) {
