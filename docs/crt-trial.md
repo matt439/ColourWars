@@ -131,7 +131,9 @@ requires a D3D11 software device and runs every existing movement/pixel assertio
 without skips or changed tolerances. Hardware, unknown and null devices are
 rejected in that lane; it cannot provide hardware or performance acceptance.
 The WARP game executable presents startup frames with a zero sync interval so
-the smoke can close on a runner without a usable display refresh.
+the smoke can run on a runner without a usable display refresh. After the
+startup assertions, the smoke verifies that the WARP window minimizes to
+suspend rendering, then requests a clean close within the usual deadline.
 
 To qualify a software build locally alongside an ordinary one, configure with
 `cmake --preset x64-release -B out/build/x64-release-software -DLABRADOR_D3D_SOFTWARE_TEST=ON`

@@ -82,6 +82,8 @@ namespace ColourWars
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr SendMessageTimeout(IntPtr window, uint message,
             IntPtr wParam, IntPtr lParam, uint flags, uint timeout, out IntPtr result);
+        [DllImport("user32.dll")]
+        private static extern bool IsIconic(IntPtr window);
         [DllImport("shcore.dll")]
         private static extern int GetProcessDpiAwareness(IntPtr process, out int value);
         [DllImport("user32.dll")]
@@ -162,6 +164,15 @@ namespace ColourWars
                 0, timeout, out result) != IntPtr.Zero;
         }
 
+        public static bool MinimizeGame(IntPtr window)
+        {
+            const uint wmSysCommand = 0x0112;
+            var scMinimize = new IntPtr(0xf020);
+            IntPtr result;
+            return SendMessageTimeout(window, wmSysCommand, scMinimize, IntPtr.Zero,
+                0, 5000, out result) != IntPtr.Zero && IsIconic(window);
+        }
+
         public static void CloseOwnedWindows(int processId)
         {
             StartupOwnedWindows.Close(processId);
@@ -202,6 +213,7 @@ $result = [ordered]@{
     stages_folder_created = $false
     first_window_fits_monitor = $false
     first_save_reduce_effects_follows_windows = $false
+    software_window_minimized_before_shutdown = $null
     shutdown_close_acknowledged = $null
     shutdown_window_present_on_timeout = $null
     locale = $(if ($Locale) { $Locale } else { 'base' })
@@ -325,6 +337,14 @@ try {
         -AllowDebugAdapter:$version.IsDebug -RequireSoftwareTestAdapter:$RequireSoftwareTestAdapter -AllowedPattern $userStageRefusal
     if ($userStageRefusal -and @($stderr -split '\r?\n' | Where-Object { $_ -match $userStageRefusal }).Count -ne 1) {
         throw 'The broken user stage was not refused with exactly one line.'
+    }
+    if ($RequireSoftwareTestAdapter) {
+        # Let the Win32 minimize path suspend rendering before closing the
+        # software-test window. The startup assertions above exercise it first.
+        $result.software_window_minimized_before_shutdown = [ColourWars.StartupWindow]::MinimizeGame($window)
+        if (-not $result.software_window_minimized_before_shutdown) {
+            throw 'The D3D11 software-test window did not minimize before shutdown.'
+        }
     }
     # Address only the game window and account for delivery and teardown in
     # the same deadline. The acknowledged send also distinguishes their failures.
