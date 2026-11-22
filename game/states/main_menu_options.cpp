@@ -4,10 +4,14 @@
 #include "game/states/display_confirmation.h"
 #include "game/states/main_menu.h"
 #include "game/states/menu_cycle.h"
+#include "game/directory_consts.h"
 #include "game/input/input_slots.h"
 #include "game/objects/crude_drawing.h"
+#include "engine/core/file_path.h"
 #include "engine/render/renderer.h"
 
+#include <shellapi.h>
+#include <filesystem>
 #include <stdexcept>
 
 using namespace labrador;
@@ -48,15 +52,7 @@ void MainMenuOptions::update_page(float /*dt*/)
 			}
 			continue;
 		}
-		if (this->focus_.move(0, input.direction))
-		{
-			this->play_wave(this->direction_sound_);
-			continue;
-		}
-
-		// Rows overlap horizontally, so left/right does not move focus.
-		// Let the focused value row handle that input instead.
-		this->adjust_focused_value(input.direction);
+		this->move_or_adjust(input.direction);
 	}
 }
 
@@ -87,23 +83,37 @@ bool MainMenuOptions::debug_dismiss(bool leaving_match)
 	return true;
 }
 
-void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
+void MainMenuOptions::move_or_adjust(Direction direction)
 {
-	if (direction != labrador::Direction::left &&
-		direction != labrador::Direction::right)
+	if (direction == Direction::up || direction == Direction::down)
 	{
+		if (this->focus_.move(0, direction)) { this->play_wave(this->direction_sound_); }
 		return;
 	}
+	if (direction != Direction::left && direction != Direction::right) { return; }
 
-	const OptionRow* row =
-		dynamic_cast<const OptionRow*>(this->focus_.focused(0));
-	if (row == nullptr)
+	const UiWidget* focused = this->focus_.focused(0);
+	if (this->save_folder_)
 	{
-		return;
+		const UiWidget* next = nullptr;
+		if (focused == this->graphics_.get() && direction == Direction::right)
+		{
+			next = this->save_folder_.get();
+		}
+		else if (focused == this->save_folder_.get() && direction == Direction::left)
+		{
+			next = this->graphics_.get();
+		}
+		if (next != nullptr && this->focus_.set_focused(0, next))
+		{
+			this->play_wave(this->direction_sound_);
+			return;
+		}
 	}
 
 	// A row disabled while focused must refuse adjustments as well as activation.
-	if (!this->focus_.enabled(row))
+	const auto* row = dynamic_cast<const OptionRow*>(focused);
+	if (row == nullptr || !this->focus_.enabled(row))
 	{
 		return;
 	}
@@ -112,6 +122,33 @@ void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
 	row->adjust(direction);
 	this->press_focus();
 	this->set_status(this->text().status.options_pending, this->look().art.focus_ink);
+}
+
+void MainMenuOptions::open_save_folder()
+{
+	const auto folder = path_from_utf8(directory_consts::save_file_path()).parent_path();
+	const auto* application = this->data()->application();
+	std::error_code error;
+	SHELLEXECUTEINFOW request{};
+	request.cbSize = static_cast<DWORD>(sizeof(request));
+	request.fMask = SEE_MASK_FLAG_NO_UI;
+	request.hwnd = static_cast<HWND>(application->window());
+	request.lpVerb = L"explore";
+	request.lpFile = folder.c_str();
+	request.nShow = SW_SHOWNORMAL;
+	const auto& failure = this->text().status.options_open_save_folder_failed;
+	if (!std::filesystem::is_directory(folder, error) || !ShellExecuteExW(&request))
+	{
+		this->set_status(failure, this->look().options_warning_colour);
+		return;
+	}
+	if (this->status_->text() == failure) { this->set_status(L"", this->look().art.focus_ink); }
+	this->play_wave(this->confirm_sound_);
+	if (application->fullscreen())
+	{
+		// The topmost fullscreen window would cover Explorer.
+		ShowWindowAsync(request.hwnd, SW_MINIMIZE);
+	}
 }
 
 void MainMenuOptions::set_status(const std::wstring& text, const Colour& colour)
@@ -304,8 +341,14 @@ void MainMenuOptions::init()
 	this->controls_ = std::make_unique<UiText>("controls", this->text().item(MenuItem::controls_audio),
 		row_style.item_font, this->calculate_widget_position(0, 4),
 		this->render_resources(), look.art.ink);
-    this->graphics_ = std::make_unique<UiText>("graphics", this->text().item(MenuItem::graphics),
-        row_style.item_font, this->calculate_widget_position(0, 5), this->render_resources(), look.art.ink);
+	this->graphics_ = std::make_unique<UiText>("graphics", this->text().item(MenuItem::graphics),
+		row_style.item_font, this->calculate_widget_position(0, settings_rows::options_graphics),
+		this->render_resources(), look.art.ink);
+	if (!this->pausing_slot_)
+	{
+		this->save_folder_ = std::make_unique<UiText>("open_save_folder", this->text().item(MenuItem::open_save_folder),
+			row_style.item_font, value_position(settings_rows::options_graphics), this->render_resources(), look.art.ink);
+	}
 	this->restore_defaults_ = std::make_unique<UiText>("restore_defaults",
 		this->text().item(MenuItem::restore_defaults), row_style.item_font,
 		this->calculate_widget_position(0, 6), this->render_resources(), look.art.ink);
@@ -349,6 +392,7 @@ void MainMenuOptions::init()
 	this->text_container_->add_child(this->team_palette_row_.get());
 	this->text_container_->add_child(this->controls_.get());
 	this->text_container_->add_child(this->graphics_.get());
+	if (this->save_folder_) { this->text_container_->add_child(this->save_folder_.get()); }
 	this->text_container_->add_child(this->restore_defaults_.get());
 	this->text_container_->add_child(this->apply_.get());
 	this->text_container_->add_child(this->back_.get());
@@ -372,6 +416,10 @@ void MainMenuOptions::init()
         this->input()->reset_actions();
         this->context()->push(std::make_unique<GraphicsSettingsMenu>(this->menu_context(), this->pausing_slot_.value_or(-1)));
     });
+	if (this->save_folder_)
+	{
+		this->focus_.add(this->save_folder_.get(), [this] { this->open_save_folder(); });
+	}
 	this->focus_.add(this->restore_defaults_.get(), [this] { this->restore_defaults(); });
 	this->focus_.add(this->apply_.get(), [this] { this->apply_settings(); });
 	this->focus_.add(this->back_.get(), [this] { this->close(); });

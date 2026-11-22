@@ -60,7 +60,7 @@ void gate_permission_paint(Application& app, TeamGateStructurePaintable& gate,
         splash.width = gate.bounds().right() + 24.0f - splash.x;
     }
     splash.offset(tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
-    const ProjectileSpray shot = controlled_spray(app, tuning, splash, team, team == PlayerTeam::a ? 3 : 1,
+    ProjectileSpray shot = controlled_spray(app, tuning, splash, team, team == PlayerTeam::a ? 3 : 1,
         colours.team_colour(team));
     gate.on_contact(shot, Vector2F::zero, 0.0f); gate.update(10.0f);
 }

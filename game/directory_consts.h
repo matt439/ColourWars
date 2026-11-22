@@ -24,9 +24,8 @@ namespace directory_consts
 	// location.
 	std::string legacy_save_file_path();
 
-	// Where the Debug `screenshot` command writes: %LOCALAPPDATA%\ColourWars\screens,
-	// or the executable-relative save/screens without LOCALAPPDATA. UTF-8; not
-	// created here.
+	// Where arena PNGs and Debug screenshots go: %LOCALAPPDATA%\ColourWars\screens,
+	// or executable-relative save/screens without LOCALAPPDATA. UTF-8.
 	std::string screenshot_directory();
 
 	// Where the Debug `record` command writes and `play` reads:

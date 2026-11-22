@@ -786,18 +786,18 @@ void Level::refresh_views()
 	}
 	this->scene_->clear_views();
 
+	if (this->arena_view_)
+	{
+		// Arena exports and the Debug time-lapse use the authored overview.
+		this->scene_->add_view(this->viewport_manager_->fullscreen_viewport(),
+			this->zoom_out_finish_camera_);
+		return;
+	}
+
 	if (this->intro_showing() || this->reveal_showing())
 	{
 		this->opening_->add_intro_views(*this->scene_, this->view_participants_,
 			this->players_, this->opening_clock());
-		return;
-	}
-
-	if (this->arena_view_)
-	{
-		// The Debug time-lapse: the whole arena, as the overview frames it.
-		this->scene_->add_view(this->viewport_manager_->fullscreen_viewport(),
-			this->zoom_out_finish_camera_);
 		return;
 	}
 

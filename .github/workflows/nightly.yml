@@ -77,7 +77,7 @@ jobs:
       - name: Configure
         if: ${{ !matrix.analyze }}
         run: |
-          cmake --preset ${{ matrix.preset }}
+          cmake --preset ${{ matrix.preset }} -DLABRADOR_D3D_SOFTWARE_TEST=${{ (matrix.paint_fx || matrix.painter_plain || matrix.sweep || matrix.sweep_debug_only) && 'ON' || 'OFF' }}
 
       - name: Build
         if: ${{ !matrix.analyze }}

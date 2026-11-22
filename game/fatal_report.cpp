@@ -4,6 +4,7 @@
 #include "game/directory_consts.h"
 #include "game/save/atomic_file.h"
 #include "engine/core/file_path.h"
+#include "engine/render/device_unavailable.h"
 #include "engine/render/text_encoding.h"
 #include <cstring>
 #include <limits>
@@ -32,6 +33,8 @@ const char* failure_category(FailurePhase phase) noexcept
 
 namespace
 {
+	constexpr char render_device_unavailable[] = "render_device_unavailable";
+
 	const char* phase_description(FailurePhase phase)
 	{
 		switch (phase)
@@ -111,10 +114,9 @@ void FatalReport::capture(const std::exception_ptr& failure)
 		else if (dynamic_cast<const std::logic_error*>(&error)) { cause.kind = "logic_error"; }
 		else if (dynamic_cast<const std::runtime_error*>(&error)) { cause.kind = "runtime_error"; }
 		else { cause.kind = "standard_exception"; }
-		// The engine's device failure has no type of its own (engine report 30).
-		if (diagnostic != nullptr && std::strcmp(diagnostic, "No Direct3D hardware device found") == 0)
+		if (dynamic_cast<const labrador::RenderDeviceUnavailable*>(&error))
 		{
-			cause.reason = "no_hardware_device";
+			cause.reason = render_device_unavailable;
 		}
 		this->causes_.push_back(cause);
 		const auto* nested = dynamic_cast<const std::nested_exception*>(&error);
@@ -148,15 +150,16 @@ std::wstring FatalReport::dialog_text(const std::string& saved_path) const
 	text += ".\n\n";
 	text += this->message_;
 	if (this->message_truncated_) { text += "\n[Exception text truncated]"; }
-	const bool no_hardware = std::any_of(this->causes_.begin(), this->causes_.end(),
+	const bool graphics_unavailable = std::any_of(this->causes_.begin(), this->causes_.end(),
 		[](const Cause& cause)
 		{
-			return cause.reason != nullptr && std::strcmp(cause.reason, "no_hardware_device") == 0;
+			return cause.reason == render_device_unavailable;
 		});
-	if (no_hardware)
+	if (graphics_unavailable)
 	{
-		text += "\n\nColourWars needs a Direct3D 11 graphics card. Update its driver and try "
-			"on the PC directly; Remote Desktop and most virtual machines cannot run it.";
+		text += "\n\nColourWars could not use Direct3D 11. Check that your graphics card supports "
+			"Direct3D 11, update its driver and try on the PC directly if you are using Remote Desktop "
+			"or a virtual machine.";
 	}
 	else if (this->phase_ == FailurePhase::definitions || this->phase_ == FailurePhase::manifest ||
 		this->phase_ == FailurePhase::validation)

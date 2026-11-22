@@ -41,6 +41,23 @@ RectangleF menu_geometry::screen_paper(const Vector2F& box)
 	return RectangleF((design_resolution - box) / 2.0f, box);
 }
 
+MenuPaperArtPresentation menu_geometry::results_action_art(const ResultsMenuPresentation& look)
+{
+	MenuPaperArtPresentation action_art = look.art;
+	// The two compact action cards sit in the Results paper's bottom band.
+	action_art.focus_padding.y = std::min(action_art.focus_padding.y, 12.0f);
+	return action_art;
+}
+
+RectangleF menu_geometry::results_action(const ResultsMenuPresentation& look,
+	const Vector2F& text_size, bool save_action)
+{
+	const RectangleF paper = screen_paper(look.box_size);
+	const float centre = paper.x + paper.width * (save_action ? 0.75f : 0.25f);
+	return RectangleF(centre - text_size.x / 2.0f, look.proceed_y + results_action_art(look).focus_padding.y,
+		text_size.x, text_size.y);
+}
+
 RectangleF menu_geometry::paper_interior(const RectangleF& paper, const MenuPaperArtPresentation& art)
 {
 	const float edge = art.keyline_width * 3.0f;

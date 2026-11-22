@@ -39,7 +39,7 @@ namespace crossfeed_acceptance
                     RectangleF splash = object->shape()->bounding_box();
                     splash.inflate(32.0f);
                     splash.offset(run.services.tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f);
-                    const ProjectileSpray shot(splash, Vector2F::zero, initial, 1, Colour::white,
+                    ProjectileSpray shot(splash, Vector2F::zero, initial, 1, Colour::white,
                         &run.services.render, resolve_projectile_strip(
                             run.services.tuning.projectile(ProjectileType::spray), run.services.render),
                         &run.services.tuning.projectile(ProjectileType::spray));

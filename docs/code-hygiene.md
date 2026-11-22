@@ -4104,10 +4104,13 @@ to the explicit `-HostedSoftwareFunctional` policy. Both paint-effects steps
 passed on each of the first four scheduled nights with that policy,
 [2026-11-16](https://github.com/matt439/ColourWars/actions/runs/43907043322)
 through [2026-11-19](https://github.com/matt439/ColourWars/actions/runs/44565369646).
-After the 2026-11-22 UTC run, check both steps for November 20–22. If all
-three nights also pass, replace the `-CompileOnly` paint-effects line with
-`check-paint-fx.ps1 -HostedSoftwareFunctional` in the Debug and Release
-checks legs of [ci.yml](../.github/workflows/ci.yml), retain the receipts and
+Both steps passed again on [2026-11-20](https://github.com/matt439/ColourWars/actions/runs/44772449193)
+and [2026-11-21](https://github.com/matt439/ColourWars/actions/runs/44924048977),
+bringing the count to six. The paint-effects steps took 100–108 seconds in
+Debug and 70–75 seconds in Release on those two nights. After the 2026-11-22 UTC
+run, check both steps. If both pass, replace the compile-only paint-effects
+command in the Debug and Release checks legs of [ci.yml](../.github/workflows/ci.yml)
+with `check-paint-fx.ps1 -HostedSoftwareFunctional`, retain the receipts, and
 remove the two duplicate nightly legs. Investigate any failed step before
 promotion. The default local hardware checks and the longer nightly checks
 keep their existing scope.

@@ -94,6 +94,12 @@ foreach ($preset in 'x64-debug', 'x64-release', 'x64-asan') {
     }
     Write-Cache $cache $cachePath
 }
+$softwareBuild = Join-Path $run 'side-by-side software build'
+Copy-Item -LiteralPath (Join-Path $repo 'out/build/x64-release') -Destination $softwareBuild -Recurse
+$contract = Get-ProbeBuild -Repo $repo -Preset x64-release -BuildDirectory $softwareBuild
+Assert-Helper ($contract.GameDirectory -ceq (Join-Path $softwareBuild 'game')) 'custom build directory supplies the game and content'
+Assert-Helper ($contract.Libraries -contains (Join-Path $softwareBuild 'external/labrador/engine/LabradorEngine.lib')) 'custom build directory supplies Labrador'
+Assert-Refused { Get-ProbeBuild -Repo $repo -Preset x64-debug -BuildDirectory $softwareBuild } 'requires this checkout'
 Assert-Refused { ConvertTo-ProbeResponsePath "bad`npath" } 'unsupported quote or newline'
 $captureHeader = Join-Path $repo 'game/debug/capture/debug_perf.h'
 $null = New-Item -ItemType Directory -Path (Split-Path -Parent $captureHeader) -Force
@@ -135,6 +141,23 @@ foreach ($line in @(
 Assert-Refused { Assert-CheckDiagnostics -Lines @($adapter, 'content failure: broken stage') -AllowDebugAdapter } 'Unexpected probe diagnostic'
 Assert-Refused { Assert-CheckDiagnostics -Lines @($adapter, $fallback) -AllowDebugAdapter -RequireAudio } 'unexpectedly used a silent bank'
 Assert-Refused { Assert-CheckDiagnostics -Lines @($adapter) -AllowDebugAdapter -RequireNoAudio } 'fallback was not reported'
+
+$warp = 'Direct3D 11 software-test device: Microsoft Basic Render Driver (software)'
+$debugWarp = 'Direct3D Adapter - WARP (explicit software test)'
+Assert-CheckDiagnostics -Lines @($warp) -RequireSoftwareTestAdapter
+Assert-CheckDiagnostics -Lines @($debugWarp, $warp, $fallback) -AllowDebugAdapter -RequireSoftwareTestAdapter -RequireNoAudio
+$checks += 2
+Assert-Refused { Assert-CheckDiagnostics -Lines @($warp) } 'Unexpected probe diagnostic'
+Assert-Refused { Assert-CheckDiagnostics -Lines @($debugWarp) -AllowDebugAdapter -RequireSoftwareTestAdapter } 'software-test device was not reported'
+Assert-Refused { Assert-CheckDiagnostics -Lines @($warp.Replace('(software)', '(hardware)')) -AllowSoftwareTestAdapter } 'Unexpected probe diagnostic'
+
+$recordHead = "report_format=1`ncategory=startup`nphase=application_initialization`n"
+$typedReason = 'cause_1_reason=render_device_unavailable'
+$legacyReason = 'cause_0_reason=no_hardware_device'
+Assert-Helper (Test-RenderDeviceRefusal ($recordHead + $typedReason)) 'nested typed startup refusal was recognized'
+Assert-Helper (-not (Test-RenderDeviceRefusal ($recordHead + $legacyReason))) 'strict startup accepted a legacy reason'
+Assert-Helper (Test-RenderDeviceRefusal ($recordHead + $legacyReason) -AllowLegacyReason) 'sandbox did not recognize a legacy package'
+Assert-Helper (-not (Test-RenderDeviceRefusal ($recordHead.Replace('application_initialization', 'manifest') + $typedReason))) 'a manifest failure was classified as a renderer startup refusal'
 
 # Create only invisible native windows; destroy exactly those handles afterwards.
 if (-not ('ColourWars.CheckOwnedWindowsFixture' -as [type])) {

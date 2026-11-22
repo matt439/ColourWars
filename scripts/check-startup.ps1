@@ -8,6 +8,8 @@ param(
     [switch]$RequireNoAudio,
     [switch]$RequireAudio,
     [switch]$SystemOnlyPath,
+    [switch]$RequireSoftwareTestAdapter,
+    [switch]$RequireRenderDeviceRefusal,
     # ROAD#16: seed the isolated profile's stage folder with one valid user
     # stage and one broken file. Startup must go on, with exactly one
     # refusal line for the broken file and no other diagnostic.
@@ -37,6 +39,10 @@ if (-not (Test-Path -LiteralPath $executablePath -PathType Leaf)) {
 $executableDirectory = Split-Path -Parent $executablePath
 if ($RequireNoAudio -and $RequireAudio) {
     throw 'Choose either the audible bank check or the missing-bank check.'
+}
+if ($RequireRenderDeviceRefusal -and ($RequireSoftwareTestAdapter -or $RequireAudio -or
+    $RequireNoAudio -or $UserStageFixture -or $Locale)) {
+    throw 'The renderer startup refusal check cannot also exercise content startup or a software-test device.'
 }
 if ($RequireAudio -and -not (Test-Path -LiteralPath (
     Join-Path $executableDirectory 'sounds/paint_exe.xwb'))) {
@@ -76,6 +82,8 @@ namespace ColourWars
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr SendMessageTimeout(IntPtr window, uint message,
             IntPtr wParam, IntPtr lParam, uint flags, uint timeout, out IntPtr result);
+        [DllImport("user32.dll")]
+        private static extern bool IsIconic(IntPtr window);
         [DllImport("shcore.dll")]
         private static extern int GetProcessDpiAwareness(IntPtr process, out int value);
         [DllImport("user32.dll")]
@@ -149,6 +157,22 @@ namespace ColourWars
                 2, 2000, out result) != IntPtr.Zero;
         }
 
+        public static bool RequestGameClose(IntPtr window, uint timeout)
+        {
+            IntPtr result;
+            return SendMessageTimeout(window, 0x0010, IntPtr.Zero, IntPtr.Zero,
+                0, timeout, out result) != IntPtr.Zero;
+        }
+
+        public static bool MinimizeGame(IntPtr window)
+        {
+            const uint wmSysCommand = 0x0112;
+            var scMinimize = new IntPtr(0xf020);
+            IntPtr result;
+            return SendMessageTimeout(window, wmSysCommand, scMinimize, IntPtr.Zero,
+                0, 5000, out result) != IntPtr.Zero && IsIconic(window);
+        }
+
         public static void CloseOwnedWindows(int processId)
         {
             StartupOwnedWindows.Close(processId);
@@ -189,8 +213,12 @@ $result = [ordered]@{
     stages_folder_created = $false
     first_window_fits_monitor = $false
     first_save_reduce_effects_follows_windows = $false
+    software_window_minimized_before_shutdown = $null
+    shutdown_close_acknowledged = $null
+    shutdown_window_present_on_timeout = $null
     locale = $(if ($Locale) { $Locale } else { 'base' })
     audio_expectation = $(if ($RequireAudio) { 'published-bank' } elseif ($RequireNoAudio) { 'missing-bank' } else { 'optional' })
+    graphics_expectation = $(if ($RequireRenderDeviceRefusal) { 'refusal' } elseif ($RequireSoftwareTestAdapter) { 'software-test' } else { 'default' })
     outcome = 'failed'
     diagnostic = ''
 }
@@ -238,6 +266,27 @@ try {
     while ($timer.Elapsed.TotalSeconds -lt $StartupSeconds) {
         $process.Refresh()
         [string]$stderr = Read-StartupError
+        if ($RequireRenderDeviceRefusal -and $stderr.Contains('startup failure:')) {
+            $recordPath = Join-Path $profileDirectory 'ColourWars/last-error.log'
+            if (-not (Test-Path -LiteralPath $recordPath -PathType Leaf) -or
+                -not (Test-RenderDeviceRefusal (Get-Content -LiteralPath $recordPath -Raw))) {
+                throw "The game reported an unexpected startup failure: $($stderr.Trim())"
+            }
+            Copy-Item -LiteralPath $recordPath -Destination (Join-Path $runDirectory 'last-error.log')
+            # The report is flushed just before the error dialog is created.
+            $closeTimer = [Diagnostics.Stopwatch]::StartNew()
+            while (-not $process.HasExited -and $closeTimer.Elapsed.TotalSeconds -lt 10) {
+                [ColourWars.StartupWindow]::CloseOwnedWindows($process.Id)
+                $null = $process.WaitForExit(100)
+            }
+            if (-not $process.HasExited -or $process.ExitCode -ne 1) {
+                throw 'Expected the renderer startup refusal to close and exit 1.'
+            }
+            $result.outcome = 'passed'
+            $result.diagnostic = 'Release reported a typed renderer startup refusal and exited 1.'
+            Write-Output $result.diagnostic
+            return
+        }
         if ($RequireAudio -and $stderr -match '(?m)^no audio: ') {
             throw 'The audible startup check unexpectedly used a silent bank.'
         }
@@ -249,6 +298,7 @@ try {
         }
         Start-Sleep -Milliseconds 100
     }
+    if ($RequireRenderDeviceRefusal) { throw 'Expected a renderer startup refusal on this host.' }
 
     $window = [ColourWars.StartupWindow]::FindGame($process.Id)
     if ($window -eq [IntPtr]::Zero) {
@@ -281,15 +331,33 @@ try {
     }
     $result.first_save_reduce_effects_follows_windows = $true
     [string]$stderr = Read-StartupError
-    # resource.rc stamps VS_FF_DEBUG only for the Debug executable; a Release
-    # package still refuses all adapter traces. Raw stderr remains evidence.
-    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context startup -RequireAudio:$RequireAudio -RequireNoAudio:$RequireNoAudio -AllowDebugAdapter:$version.IsDebug -AllowedPattern $userStageRefusal
+    # A software-test fixture must identify its device. Ordinary Release
+    # startup still refuses adapter traces. Raw stderr remains evidence.
+    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context startup -RequireAudio:$RequireAudio -RequireNoAudio:$RequireNoAudio `
+        -AllowDebugAdapter:$version.IsDebug -RequireSoftwareTestAdapter:$RequireSoftwareTestAdapter -AllowedPattern $userStageRefusal
     if ($userStageRefusal -and @($stderr -split '\r?\n' | Where-Object { $_ -match $userStageRefusal }).Count -ne 1) {
         throw 'The broken user stage was not refused with exactly one line.'
     }
-    [ColourWars.StartupWindow]::CloseOwnedWindows($process.Id)
-    if (-not $process.WaitForExit(10000)) {
-        throw 'The game did not shut down after WM_CLOSE.'
+    if ($RequireSoftwareTestAdapter) {
+        # Let the Win32 minimize path suspend rendering before closing the
+        # software-test window. The startup assertions above exercise it first.
+        $result.software_window_minimized_before_shutdown = [ColourWars.StartupWindow]::MinimizeGame($window)
+        if (-not $result.software_window_minimized_before_shutdown) {
+            throw 'The D3D11 software-test window did not minimize before shutdown.'
+        }
+    }
+    # Address only the game window and account for delivery and teardown in
+    # the same deadline. The acknowledged send also distinguishes their failures.
+    $shutdownTimer = [Diagnostics.Stopwatch]::StartNew()
+    $result.shutdown_close_acknowledged = [ColourWars.StartupWindow]::RequestGameClose($window, 10000)
+    $remainingMilliseconds = [int][Math]::Max(0, 10000 - $shutdownTimer.ElapsedMilliseconds)
+    if (-not $process.WaitForExit($remainingMilliseconds)) {
+        $result.shutdown_window_present_on_timeout =
+            [ColourWars.StartupWindow]::FindGame($process.Id) -ne [IntPtr]::Zero
+        if (-not $result.shutdown_close_acknowledged) {
+            throw 'The game did not acknowledge WM_CLOSE or exit within 10 seconds.'
+        }
+        throw 'The game acknowledged WM_CLOSE but did not exit within 10 seconds.'
     }
     $process.WaitForExit()
     if ($process.ExitCode -ne 0) {
@@ -297,7 +365,8 @@ try {
     }
     # Destruction can report errors too, after the last running-process read.
     [string]$stderr = Read-StartupError
-    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context shutdown -RequireAudio:$RequireAudio -AllowDebugAdapter:$version.IsDebug -AllowedPattern $userStageRefusal
+    Assert-CheckDiagnostics -Lines ($stderr -split '\r?\n') -Context shutdown -RequireAudio:$RequireAudio `
+        -AllowDebugAdapter:$version.IsDebug -RequireSoftwareTestAdapter:$RequireSoftwareTestAdapter -AllowedPattern $userStageRefusal
     $result.outcome = 'passed'
     $result.diagnostic = 'Game window, per-monitor v2 DPI awareness, content startup, isolated save with its stages folder and graceful shutdown passed.'
     Write-Output $result.diagnostic

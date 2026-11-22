@@ -238,7 +238,7 @@ namespace movement_acceptance
         const GameTuning& tuning;
         const Presentation& presentation;
         const MovementFeedbackPresentation& feedback;
-        const ProjectileSpray& shot;
+        ProjectileSpray& shot;
         const int fatal_hits;
 
         std::unique_ptr<Course> course(float bottom = 0.0f,

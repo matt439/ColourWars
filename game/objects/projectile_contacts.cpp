@@ -787,12 +787,6 @@ void Projectile::note_retire_cause(ShotRetireCause cause)
     }
 }
 
-void Projectile::answer_paint_contact(const Projectile& toucher,
-    bool painted, bool captured)
-{
-    const_cast<Projectile&>(toucher).note_paint_contact(painted, captured);
-}
-
 void Projectile::note_paint_contact(bool painted, bool captured)
 {
     this->geometry_contact_ = true;

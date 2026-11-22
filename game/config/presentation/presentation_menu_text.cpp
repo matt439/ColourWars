@@ -300,6 +300,7 @@ namespace presentation_read
 		text.status.options_reverted = read_menu_line(status, "options_reverted");
 		text.status.options_display_failed = read_menu_line(status, "options_display_failed");
 		text.status.options_rollback_failed = read_menu_line(status, "options_rollback_failed");
+		text.status.options_open_save_folder_failed = read_menu_line(status, "options_open_save_folder_failed");
 		const JsonValue values = json.object("values");
 		text.values.on = read_menu_line(values, "on");
 		text.values.off = read_menu_line(values, "off");
@@ -358,6 +359,10 @@ namespace presentation_read
 		const JsonValue results = json.object("results");
 		text.results.single_match_heading = read_menu_line(results, "single_match_heading");
 		text.results.proceed = read_menu_line(results, "proceed");
+		text.results.continue_action = read_menu_line(results, "continue_action");
+		text.results.save_arena = read_menu_line(results, "save_arena");
+		text.results.arena_saved = read_menu_line(results, "arena_saved");
+		text.results.arena_save_failed = read_menu_line(results, "arena_save_failed");
 		text.results.contribution_heading = read_menu_line(results, "contribution_heading");
 		text.results.share_basis = read_menu_line(results, "share_basis");
 		text.results.empty_share_basis = read_menu_line(results, "empty_share_basis");

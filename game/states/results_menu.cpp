@@ -28,9 +28,9 @@ const LevelEndInfo& ResultsMenuPage::level_end_info() const
 
 ResultsMenuInitial::ResultsMenuInitial(MenuContext* context,
 	const LevelEndInfo& end_info, const Session& session, bool revealed,
-	const RecordOutcome& record) :
+	const RecordOutcome& record, std::function<bool()> save_arena) :
 	ResultsMenuPage(context, end_info), session_(session), revealed_(revealed),
-	record_(record)
+	record_(record), save_arena_(std::move(save_arena))
 {
 
 }
@@ -115,13 +115,7 @@ void ResultsMenuInitial::update_page(float dt)
 			
 			if (this->show_results_timer_ >= look.show_results_delay)
 			{
-				this->proceed_->set_hidden(false);
-				if (continue_pressed(menu_inputs))
-				{
-					this->play_wave(this->confirm_sound_);
-
-					this->context()->pop();
-				}
+				this->update_actions(menu_inputs);
 			}
 			this->show_results_timer_ += dt;
 		}
@@ -133,12 +127,10 @@ void ResultsMenuInitial::init()
 {
 	const MenuStyle& style = this->menu_style();
 	const ResultsMenuPresentation& look = this->look();
+	this->action_art_ = menu_geometry::results_action_art(look);
 
 	const LevelEndInfo& end_info = this->level_end_info();
 
-	this->box_ = std::make_unique<MenuPaperArtwork>(
-		menu_geometry::screen_paper(look.box_size),
-		this->render_resources(), &style, &look.art, &this->focus_);
 	const auto center_text = [](colourwars::UiTextDropShadow& text, float y)
 	{
 		text.set_position(Vector2F(menu_geometry::centred_x(text.bounds().width), y));
@@ -221,12 +213,12 @@ void ResultsMenuInitial::init()
 	RectangleF team_a_percentage_panel = this->team_a_percentage_->bounds();
 	team_a_percentage_panel.inflate(look.art.focus_padding);
 	this->team_a_percentage_panel_ = std::make_unique<MenuPaperArtwork>(
-		team_a_percentage_panel, this->render_resources(), &style, &look.art, &this->focus_);
+		team_a_percentage_panel, this->render_resources(), &style, &look.art, nullptr);
 	this->team_a_percentage_panel_->set_hidden(true);
 	RectangleF team_b_percentage_panel = this->team_b_percentage_->bounds();
 	team_b_percentage_panel.inflate(look.art.focus_padding);
 	this->team_b_percentage_panel_ = std::make_unique<MenuPaperArtwork>(
-		team_b_percentage_panel, this->render_resources(), &style, &look.art, &this->focus_);
+		team_b_percentage_panel, this->render_resources(), &style, &look.art, nullptr);
 	this->team_b_percentage_panel_->set_hidden(true);
 
 	this->winner_ = std::make_unique<colourwars::UiTextDropShadow>(
@@ -243,7 +235,7 @@ void ResultsMenuInitial::init()
 
 	this->proceed_ = std::make_unique<colourwars::UiTextDropShadow>(
 		"proceed",
-		this->text().results.proceed,
+		this->save_arena_ ? this->text().results.continue_action : this->text().results.proceed,
 		style.detail_font,
 		Vector2F::zero,
 		this->render_resources(),
@@ -251,7 +243,29 @@ void ResultsMenuInitial::init()
 		Colour(),
 		Vector2F::zero,
 		true);
-	center_text(*this->proceed_, look.proceed_y);
+	if (this->save_arena_)
+	{
+		this->set_prompts(MenuPrompt::select);
+		this->focus_.set_style({ look.art.focus_ink, look.art.ink });
+		this->proceed_->set_position(menu_geometry::results_action(
+			look, this->proceed_->bounds().size(), false).position());
+		this->save_arena_action_ = std::make_unique<colourwars::UiTextDropShadow>("save_arena",
+			this->text().results.save_arena, style.detail_font, Vector2F::zero,
+			this->render_resources(), look.art.ink, Colour(), Vector2F::zero, true);
+		this->save_arena_action_->set_position(menu_geometry::results_action(
+			look, this->save_arena_action_->bounds().size(), true).position());
+		this->focus_.add(this->proceed_.get(), [this] { this->continue_to_end(); });
+		this->focus_.add(this->save_arena_action_.get(), [this] { this->save_arena(); });
+	}
+	else
+	{
+		center_text(*this->proceed_, look.proceed_y);
+	}
+	this->box_ = std::make_unique<MenuPaperArtwork>(menu_geometry::screen_paper(look.box_size),
+		this->render_resources(), &style, &look.art, &this->focus_,
+		this->save_arena_ ? this->proceed_.get() : nullptr, &this->focus_motion_,
+		this->save_arena_ ? &this->settings_session()->play_settings() : nullptr,
+		&this->action_art_);
 
 	// Fixed A/B marks label the bars throughout the fill animation.
 	const RectangleF fill_box_rect = this->fill_box_->rectangle();
@@ -305,6 +319,10 @@ void ResultsMenuInitial::init()
 	this->text_container_->add_child(this->team_b_percentage_.get());
 	this->text_container_->add_child(this->winner_.get());
 	this->text_container_->add_child(this->proceed_.get());
+	if (this->save_arena_action_ != nullptr)
+	{
+		this->text_container_->add_child(this->save_arena_action_.get());
+	}
 
 	const auto add_detail = [this, &look](const std::wstring& text,
 		const Vector2F& position, const std::string& font)
@@ -460,4 +478,48 @@ bool ResultsMenuInitial::continue_pressed(const std::vector<ProcessedMenuInput>&
 {
 	return std::any_of(menu_input.begin(), menu_input.end(),
 		[](const ProcessedMenuInput& input) { return input.action == MenuInputAction::proceed; });
+}
+
+void ResultsMenuInitial::continue_to_end()
+{
+	this->play_wave(this->confirm_sound_);
+	this->context()->pop();
+}
+
+void ResultsMenuInitial::save_arena()
+{
+	const bool saved = this->save_arena_();
+	const MenuResultsText& copy = this->text().results;
+	this->save_arena_action_->set_text(saved ? copy.arena_saved : copy.arena_save_failed);
+	this->save_arena_action_->set_position(menu_geometry::results_action(
+		this->look(), this->save_arena_action_->bounds().size(), true).position());
+	this->play_wave(saved ? this->confirm_sound_ : this->cancel_sound_);
+	if (saved)
+	{
+		this->focus_.set_focused(0, this->proceed_.get());
+		this->focus_.set_enabled(this->save_arena_action_.get(), false);
+	}
+}
+
+void ResultsMenuInitial::update_actions(const std::vector<ProcessedMenuInput>& inputs)
+{
+	this->proceed_->set_hidden(false);
+	if (this->save_arena_action_ == nullptr)
+	{
+		if (continue_pressed(inputs)) { this->continue_to_end(); }
+		return;
+	}
+
+	this->save_arena_action_->set_hidden(false);
+	for (const ProcessedMenuInput& input : inputs)
+	{
+		if (input.action == MenuInputAction::proceed && this->activate_focus() == Activation::ran)
+		{
+			return;
+		}
+		if (this->focus_.move(0, input.direction, false))
+		{
+			this->play_wave(this->direction_sound_);
+		}
+	}
 }

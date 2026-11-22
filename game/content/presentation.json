@@ -216,7 +216,8 @@
       "sticks_saved": "Pad settings applied and saved.",
       "options_reverted": "Display settings reverted.",
       "options_display_failed": "Could not change display settings. Previous settings restored.",
-      "options_rollback_failed": "Could not restore display settings. Try Apply again."
+      "options_rollback_failed": "Could not restore display settings. Try Apply again.",
+      "options_open_save_folder_failed": "Could not open the save folder."
     },
     "values": {
       "on": "On",
@@ -251,6 +252,10 @@
     "results": {
       "single_match_heading": "Results",
       "proceed": "Press A/Enter to proceed",
+      "continue_action": "Continue",
+      "save_arena": "Save arena PNG",
+      "arena_saved": "Saved to screens",
+      "arena_save_failed": "PNG failed - Retry",
       "contribution_heading": "Surface held (% of arena)",
       "share_basis": "Team share of painted surface",
       "empty_share_basis": "No surface painted. Equal shares mean a draw.",
@@ -499,7 +504,8 @@
       "toggle_fire": "Toggle fire",
       "graphics": "Graphics",
       "crt_monitor": "CRT monitor (restart)",
-      "how_to_play": "How to play"
+      "how_to_play": "How to play",
+      "open_save_folder": "Open save folder"
     }
   },
 

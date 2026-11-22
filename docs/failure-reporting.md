@@ -32,19 +32,20 @@ exception nested inside a non-standard wrapper. A non-standard exception with
 no printable interface is identified as such. Reporting is bounded to 16 causes
 and 65,536 diagnostic bytes; omitted causes and truncated dialog text are marked.
 
-Single-cause startup stderr keeps its existing spelling:
+Startup stderr begins with `startup failure:` and preserves the backend's
+diagnostic. An ordinary Release on a software-only host can report:
 
 ```text
-startup failure: No Direct3D hardware device found
+startup failure: No Direct3D hardware device found. Known software adapters are excluded by default.
 ```
 
-The sandbox trial's receipt reads this exact missing-adapter line
-(`scripts/sandbox/logon.ps1`). Runtime errors use `runtime failure:`. Metadata-write
+The sandbox and hosted Release checks classify the refused startup from
+`last-error.log`. Runtime errors use `runtime failure:`. Metadata-write
 status appears in the dialog, without adding another stderr line: the dialog
 names the path it wrote, or says it could not save.
 
-The dialog also gives a local-PC and graphics-driver remedy for the classified
-missing-hardware error, including when nested. Content-definition, manifest and
+The dialog also gives local-PC and graphics-driver guidance when the renderer
+cannot meet startup requirements, including for a nested cause. Content-definition, manifest and
 validation failures point to extracting the whole ZIP or rebuilding source
 content. These last-resort strings live in C++ because presentation content may
 be the failure itself. It calls the metadata a short error report, links the
@@ -69,9 +70,9 @@ Format 1 is a UTF-8 `key=value` record containing only these controlled fields:
 - Ordered, fixed exception-kind names. Standard system/generic error categories
   may include their numeric error code. Custom category names, messages and codes
   are omitted.
-- A fixed reason code for one diagnostic: `no_hardware_device` when the
-  engine's message matches exactly (it has no type of its own; engine report
-  30). Reasons are never read from other messages. The game's own
+- The fixed reason `render_device_unavailable` for a Labrador
+  `RenderDeviceUnavailable` exception. The reason identifies an unmet
+  renderer startup requirement. The game's own
   `player_out_of_bounds` reason went with `REV#1` (2026-11-14), which made
   leaving the arena an elimination, so nothing could raise it.
 - Cause-count and diagnostic-text truncation flags.

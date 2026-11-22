@@ -18,6 +18,7 @@ struct OptionsReference
     // a paused page with covers_screen()==true: begin_frame's clear stays in
     // the aspect-ratio margins beneath one menu scrim.
     bool canvas_underlay = false;
+    bool save_folder_action = false;
 };
 
 // The independent shipped Options labels, in row order.
@@ -91,6 +92,11 @@ Frame options_reference(Application& app, const Canvas& canvas, const Presentati
             require(heading->bounds().bottom() <= padded.y && (caption == nullptr || caption->bounds().bottom() <= padded.y),
                 "Independent Options heading/caption reaches its first card");
         }
+    }
+    if (page.save_folder_action)
+    {
+        const Vector2F position(look.options_value_x, look.options_position.y + look.options_spacing.y * 5.0f);
+        add(L"Open save folder", look.options_font, position, art.ink);
     }
     auto* status = add(page.status, captured.prompt_bar().font, look.options_status_position,
         page.status_warning ? look.options_warning_colour : art.focus_ink);

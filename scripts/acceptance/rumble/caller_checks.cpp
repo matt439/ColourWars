@@ -97,13 +97,13 @@ namespace
             records[2].input_slot == input_slots::keyboard_and_mouse,
             "Rumble drain replaced sparse/reordered physical slots with view indices");
         all_empty(records);
-        const ProjectileSpray projectile = shot(world);
+        ProjectileSpray projectile = shot(world);
         first.set_damage_immune(true);
         const float initial_health = first.health();
         first.on_contact(projectile, Vector2F::zero, 0.0f);
         require(first.health() == initial_health, "Immune damage control changed health");
         all_empty(fixture.level->take_rumble_events());
-        const ProjectileSpray keyboard_threat = shot(world, PlayerTeam::a, 3);
+        ProjectileSpray keyboard_threat = shot(world, PlayerTeam::a, 3);
         fixture.players[2]->on_contact(keyboard_threat, Vector2F::zero, 0.0f);
         records = fixture.level->take_rumble_events();
         require(records[2].input_slot == input_slots::keyboard_and_mouse && records[2].events.hit &&
@@ -247,7 +247,7 @@ namespace
         fixture.level->clear_rumble_events();
         world.preferences.pad_rumble[3] = false;
         fixture.tick(input(0.0f, false, true));
-        const ProjectileSpray projectile = shot(world);
+        ProjectileSpray projectile = shot(world);
         player.on_contact(projectile, Vector2F::zero, 0.0f);
         const auto records = fixture.level->take_rumble_events();
         require(records.size() == 1 && records[0].input_slot == 3 &&

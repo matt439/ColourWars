@@ -89,6 +89,7 @@ namespace colourwars_editor
         static void check_align_origin(Editor& editor, const std::filesystem::path& scratch);
         static void check_ramp_hits(Editor& editor, const std::filesystem::path& scratch);
         static void check_clipboard(Editor& editor, const std::filesystem::path& scratch);
+        static void check_file_drop(Editor& editor, const std::filesystem::path& scratch);
         static void run_gestures(const std::filesystem::path& scratch);
         static void run_pending(const std::filesystem::path& scratch);
 
@@ -247,6 +248,7 @@ namespace colourwars_editor
                 << warmed_gdi << " -> " << final_gdi << '\n';
             check_mechanisms(editor, scratch);
             check_paint_failure(editor, scratch);
+            check_file_drop(editor, scratch);
         }
     };
 }
@@ -263,6 +265,7 @@ namespace colourwars_editor
 #include "scripts/acceptance/level_editor_dpi/button_chord_checks.h"
 #include "scripts/acceptance/level_editor_dpi/ramp_hit_checks.h"
 #include "scripts/acceptance/level_editor_dpi/clipboard_checks.h"
+#include "scripts/acceptance/level_editor_dpi/file_drop_checks.h"
 
 int wmain(int argc, wchar_t* argv[])
 {

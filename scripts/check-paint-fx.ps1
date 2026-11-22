@@ -7,7 +7,8 @@ param(
     [switch] $CompileOnly,
     # Software-only functional evidence, never hardware acceptance.
     [switch] $HostedSoftwareFunctional,
-    [string] $OutputDirectory
+    [string] $OutputDirectory,
+    [string] $BuildDirectory
 )
 
 $ErrorActionPreference = 'Stop'
@@ -16,6 +17,10 @@ Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'check-diagnostics.ps1')
 . (Join-Path $PSScriptRoot 'probe-build.ps1')
 . (Join-Path $PSScriptRoot 'quiet-game.ps1')
+
+if ($BuildDirectory -and -not $SkipBuild) {
+    throw '-BuildDirectory requires -SkipBuild and an existing configured build.'
+}
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
 if (-not $OutputDirectory) {
@@ -133,7 +138,7 @@ public static class ColourWarsPaintFxPpm {
 }
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$build = Join-Path $repo "out/build/$Preset"
+$build = if ($BuildDirectory) { Resolve-CheckFileSystemPath $BuildDirectory } else { Join-Path $repo "out/build/$Preset" }
 $outputRoot = Resolve-CheckFileSystemPath $OutputDirectory
 $run = Join-Path (Join-Path $outputRoot $Preset) ([Guid]::NewGuid().ToString('N'))
 $captures = Join-Path $run 'captures'
@@ -163,6 +168,7 @@ $result = [ordered]@{
     rendering_scope = 'Scripted pixel assertions only. Hosted software is not hardware or performance acceptance; human review remains separate.'
     outcome = 'failed'
     preset = $Preset
+    build_directory = $build
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
     worktree_status = @(& git status --short)
@@ -194,7 +200,7 @@ try {
         Invoke-Logged -Command 'cmake' -Arguments @('--build', '--preset', $Preset, '--parallel', '1') `
             -LogPath (Join-Path $run 'build.log')
     }
-    $probeBuild = Get-ProbeBuild -Repo $repo -Preset $Preset -RequiredContent @('presentation.json')
+    $probeBuild = Get-ProbeBuild -Repo $repo -Preset $Preset -BuildDirectory $build -RequiredContent @('presentation.json')
     $cache = $probeBuild.Cache
     $debug = $probeBuild.Debug
     $gameDirectory = $probeBuild.GameDirectory
@@ -259,7 +265,8 @@ try {
         if ($policyLines.Count -ne 1 -or $policyLines[0] -cne "ADAPTER_POLICY $($result.adapter_policy)") {
             throw 'The probe did not report the requested adapter policy.'
         }
-        Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'run.err')) -AllowDebugAdapter:$debug
+        Assert-CheckDiagnostics -Lines @(Get-Content -LiteralPath (Join-Path $run 'run.err')) `
+            -AllowDebugAdapter:$debug -AllowSoftwareTestAdapter:$HostedSoftwareFunctional
         if (Test-Path -LiteralPath (Join-Path $profile 'ColourWars/save_data.json')) {
             throw 'The visual probe unexpectedly created a save.'
         }

@@ -85,6 +85,7 @@ if ($HostTrial) {
 }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'sandbox/logon.ps1') -Destination (Join-Path $results 'logon.ps1')
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'check-windows.ps1') -Destination (Join-Path $results 'check-windows.ps1')
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'check-diagnostics.ps1') -Destination (Join-Path $results 'check-diagnostics.ps1')
 
 $desktop = 'C:\Users\WDAGUtilityAccount\Desktop'
 $escape = { param([string]$Text) [Security.SecurityElement]::Escape($Text) }
@@ -174,7 +175,7 @@ try {
     Write-Output "Receipt: $receiptPath"
     Write-Output "ZIP SHA-256 $($receipt.zip.sha256) matches the host."
     Write-Output "Outcome: $($receipt.outcome) - $($receipt.diagnostic) (exit code $($receipt.game.exit_code))"
-    if ($receipt.outcome -notin @('passed', 'refused-no-hardware-adapter')) { throw "The run failed: $($receipt.diagnostic)" }
+    if ($receipt.outcome -notin @('passed', 'refused-render-device-unavailable')) { throw "The run failed: $($receipt.diagnostic)" }
 }
 catch {
     $failure = $_

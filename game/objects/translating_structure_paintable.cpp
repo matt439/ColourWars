@@ -254,7 +254,7 @@ void TranslatingStructurePaintable::publish_zero_step() noexcept
     this->collision_step_.before = this->world_rectangle_;
     this->collision_step_.after = this->world_rectangle_;
 }
-void TranslatingStructurePaintable::paint_projectile_at(const Projectile& source,
+void TranslatingStructurePaintable::paint_projectile_at(Projectile& source,
     const RectangleF& anchor_rectangle)
 {
     this->paint_from_projectile(source, anchor_rectangle);
@@ -293,7 +293,7 @@ const Shape* TranslatingStructurePaintable::shape() const
 {
     return &this->world_rectangle_;
 }
-void TranslatingStructurePaintable::on_projectile_contact(const Projectile& source,
+void TranslatingStructurePaintable::on_projectile_contact(Projectile& source,
     const Vector2F& /*normal*/, float /*penetration*/)
 {
     const CollisionLayer layer = source.layer();

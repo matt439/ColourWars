@@ -27,6 +27,8 @@ namespace menu_consts
 // the value rows on both pages.
 namespace settings_rows
 {
+	inline constexpr int options_graphics = 5;
+
 	inline constexpr int controls_music = 4;
 	inline constexpr int controls_sfx = 5;
 	inline constexpr int controls_view_shake = 6;
@@ -133,4 +135,7 @@ namespace menu_geometry
 
 	// The Results score bar, centred on the design and offset from the paper top.
 	labrador::RectangleF results_fill_box(const ResultsMenuPresentation& look);
+	MenuPaperArtPresentation results_action_art(const ResultsMenuPresentation& look);
+	labrador::RectangleF results_action(const ResultsMenuPresentation& look,
+		const labrador::Vector2F& text_size, bool save_action);
 }

@@ -92,6 +92,7 @@ add_library(colourwars_game STATIC
     debug/debug_overlay_draw.cpp
     debug/commands/debug_registry.cpp
     debug/capture/debug_screenshot.cpp
+    save/png_capture.cpp
     debug/script/debug_script.cpp
     debug/script/debug_script_runner.cpp
     debug/debug_status_text.cpp
@@ -274,6 +275,7 @@ target_link_libraries(colourwars_game
     PUBLIC
         LabradorEngine
         comctl32
+        shell32
     PRIVATE
         labrador_settings
 )
@@ -304,6 +306,10 @@ add_executable(ColourWars WIN32
     resource.rc
     settings.manifest
 )
+file(CONFIGURE OUTPUT "${PROJECT_BINARY_DIR}/generated/game/graphics_build.h"
+    CONTENT [=[#pragma once
+#cmakedefine01 LABRADOR_D3D_SOFTWARE_TEST
+]=])
 # REL#7: the Release PDB. /DEBUG turns /OPT:REF and /OPT:ICF off unless they
 # are named, and /PDBALTPATH:%_PDB% records the PDB's file name without the
 # build machine's path. CI uploads the PDB; the ZIP leaves it out.

@@ -165,7 +165,7 @@
                 };
                 phase("before", false);
                 Player& player = const_cast<Player&>(level->player(0));
-                const ProjectileSpray hit = controlled_spray(app, tuning, player.rectangle(), PlayerTeam::b, 0, Colour::white);
+                ProjectileSpray hit = controlled_spray(app, tuning, player.rectangle(), PlayerTeam::b, 0, Colour::white);
                 const float health = player.health();
                 player.on_contact(hit, Vector2F::zero, 0);
                 require(player.health() < health && player.state() == PlayerState::alive,

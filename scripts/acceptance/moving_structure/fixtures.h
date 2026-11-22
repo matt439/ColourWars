@@ -197,7 +197,7 @@ namespace moving_structure_acceptance
         {
             const ProjectileTuning& jet = tuning.projectile(ProjectileType::jet);
             auto launch = splash; const auto half = jet.details.col_rect_size / 2.0f; launch.offset(half.x, half.y);
-            const ProjectileJet shot(launch, labrador::Vector2F::zero, team, owner, palette.team_colour(team),
+            ProjectileJet shot(launch, labrador::Vector2F::zero, team, owner, palette.team_colour(team),
                 &render, resolve_projectile_strip(jet, render), &jet);
             surface.on_contact(shot, labrador::Vector2F::zero, 0.0f);
         }

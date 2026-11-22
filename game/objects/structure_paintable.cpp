@@ -133,7 +133,7 @@ RectangleF StructurePaintable::cull_bounds(float units_per_pixel) const
 	return result;
 }
 
-void StructurePaintable::on_projectile_contact(const Projectile& other,
+void StructurePaintable::on_projectile_contact(Projectile& other,
 	const Vector2F& /*normal*/, float /*penetration*/)
 {
 	this->paint_from_projectile(other, other.shape()->bounding_box());
@@ -161,7 +161,7 @@ void StructurePaintable::fill_paint_face(PaintSurfaceFace face, PlayerTeam team,
 	}
 }
 
-void StructurePaintable::paint_from_projectile(const Projectile& projectile,
+void StructurePaintable::paint_from_projectile(Projectile& projectile,
 	const RectangleF& splash)
 {
 	// Only team paint marks a surface; a projectile's layer follows its team.
@@ -171,7 +171,7 @@ void StructurePaintable::paint_from_projectile(const Projectile& projectile,
 	this->paint_from_projectile(projectile, splash, projectile.team());
 }
 
-void StructurePaintable::paint_from_projectile(const Projectile& projectile,
+void StructurePaintable::paint_from_projectile(Projectile& projectile,
 	const RectangleF& splash, PlayerTeam team)
 {
 	bool tile_painted = false;
@@ -249,7 +249,7 @@ void StructurePaintable::paint_from_projectile(const Projectile& projectile,
 			}
 		}
 	}
-	Projectile::answer_paint_contact(projectile, tile_painted, tile_captured);
+	projectile.note_paint_contact(tile_painted, tile_captured);
 }
 
 std::optional<PaintRunoffVisual> StructurePaintable::runoff_visual(

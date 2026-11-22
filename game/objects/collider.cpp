@@ -17,12 +17,9 @@ const Collider& Collider::of(const CollisionObject& object)
 	throw std::logic_error("A ColourWars scene holds a collision object that is not a Collider.");
 }
 
-void Collider::on_contact(const CollisionObject& other,
+void Collider::on_contact(CollisionObject& other,
 	const Vector2F& normal, float penetration)
 {
-	// touch is const on the other party: it only names its class, and every
-	// response belongs to this object's handler. The one exception is a
-	// surface's paint answer, Projectile::answer_paint_contact.
 	Collider::of(other).touch(*this, normal, penetration);
 }
 
@@ -36,7 +33,7 @@ void Collider::on_player_contact(const Player& /*other*/,
 {
 }
 
-void Collider::on_projectile_contact(const Projectile& /*other*/,
+void Collider::on_projectile_contact(Projectile& /*other*/,
 	const Vector2F& /*normal*/, float /*penetration*/)
 {
 }

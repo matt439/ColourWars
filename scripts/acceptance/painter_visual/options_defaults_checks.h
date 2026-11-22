@@ -140,7 +140,7 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
             staged ? L"Off" : saved_fullscreen ? L"On" : L"Off", shown_vsync ? L"On" : L"Off", staged ? L"Random" : L"A: Blue / B: Yellow" };
         const std::array<std::wstring, 4> messages{ L"", L"Apply to save changes.", L"Settings applied and saved.", L"Settings active for this run. Could not save for next time." };
         const Frame expected_frame = options_reference(app, canvas, presentation, { row, values, saved_fullscreen,
-            messages[static_cast<size_t>(status)], status == 3, {}, {}, {}, true });
+            messages[static_cast<size_t>(status)], status == 3, {}, {}, {}, true, true });
         const Camera camera = Camera::frame(design, app.viewport_manager()->fullscreen_viewport());
         const std::string stem = "options-defaults-" + name + (device == keyboard ? "-keyboard-" : "-pad3-") + std::to_string(actual.width) + 'x' + std::to_string(actual.height);
         if (actual.pixels != expected_frame.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(expected_frame, output / (stem + "-failure-expected.ppm")); const auto delta = foreground_delta_bounds(actual, expected_frame); std::cerr << "OPTIONS DEFAULTS " << name << " row=" << row << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }

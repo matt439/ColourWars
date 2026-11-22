@@ -17,7 +17,7 @@ namespace movement_acceptance
         AudioResources& audio = suite.audio;
         const PlaySettings& preferences = suite.preferences;
         const std::filesystem::path& content = suite.content;
-        const ProjectileSpray& shot = suite.shot;
+        ProjectileSpray& shot = suite.shot;
         const int fatal_hits = suite.fatal_hits;
         const auto course = [&](float bottom = 0.0f,
             const Vector2F& velocity = Vector2F::zero)

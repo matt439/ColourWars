@@ -29,8 +29,9 @@ the next build. **File > Save to My Stages** instead saves into the
 player's own stage folder, which the game reads without a rebuild ([Play the
 level](#play-the-level)). The editor does not read or write the player's save.
 
-Open a level with **File > Open** or start with **File > New**, which opens a
-copy of [editor/template.json](../editor/template.json) (compiled in, less its
+Open a level with **File > Open** or drop one level JSON file from File Explorer
+onto the editor. **File > New** opens a copy of
+[editor/template.json](../editor/template.json) (compiled in, less its
 `_comment`): a walled floor, eight spawns, one station and `include_in_random`
 `false`. Save As lets
 you keep an existing arena while experimenting with a copy. The title marks

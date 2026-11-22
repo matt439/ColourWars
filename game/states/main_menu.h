@@ -256,6 +256,7 @@ private:
 	std::unique_ptr<OptionRow> team_palette_row_ = nullptr;
 	std::unique_ptr<labrador::UiText> controls_ = nullptr;
 	std::unique_ptr<labrador::UiText> graphics_ = nullptr;
+	std::unique_ptr<labrador::UiText> save_folder_;
 	std::unique_ptr<labrador::UiText> restore_defaults_ = nullptr;
 
 	std::unique_ptr<labrador::UiText> apply_ = nullptr;
@@ -268,8 +269,9 @@ private:
 	void cycle_resolution(labrador::Direction direction);
 	void cycle_team_palette(labrador::Direction direction);
 	void update_team_palette_selection_text();
-	void adjust_focused_value(labrador::Direction direction);
+	void move_or_adjust(labrador::Direction direction);
 	void set_status(const std::wstring& text, const labrador::Colour& colour);
+	void open_save_folder();
 	void apply_settings();
 	void finish_display_trial(DisplayTrialResult result);
 	void restore_defaults();

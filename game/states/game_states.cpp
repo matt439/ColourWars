@@ -1,6 +1,9 @@
 #include "game/pch.h"
 #include "game/states/game_states.h"
+#include "engine/core/file_path.h"
+#include "game/directory_consts.h"
 #include "game/save/last_match_setup.h"
+#include "game/save/png_capture.h"
 #include "game/match/series_stage_rule.h"
 #include "game/config/stage_loading.h"
 using namespace labrador;
@@ -718,8 +721,36 @@ void GameLevel::open_results_menu()
 	this->menu_input_->reset_actions();
 	this->context()->push(
 		std::make_unique<ResultsMenuInitial>(this->menu_context_.get(),
-			result, this->session_, this->level_->revealed(), record),
+			result, this->session_, this->level_->revealed(), record,
+			[this] { return this->save_finished_arena(); }),
 		[this]() { this->open_end_menu(); });
+}
+
+bool GameLevel::save_finished_arena()
+{
+	Application& application = *this->data()->application();
+	bool saved = false;
+	try
+	{
+		// Draw the finished arena by itself, outside the menu stack.
+		this->level_->refresh_layout();
+		const ScreenCapture image = capture_frame(*application.renderer(),
+			[this](Renderer& renderer) { this->level_->draw_arena(renderer); });
+		const std::string name = "colourwars-arena-" +
+			capture_file_timestamp(std::chrono::system_clock::now()) + "-" +
+			std::to_string(GetCurrentProcessId()) + ".png";
+		const std::filesystem::path output =
+			path_from_utf8(directory_consts::screenshot_directory()) / name;
+		std::string error;
+		saved = write_png(output, image, error, PngWriteMode::new_file);
+		if (!saved) { std::fprintf(stderr, "Arena capture: %s\n", error.c_str()); }
+	}
+	catch (const std::exception& error)
+	{
+		std::fprintf(stderr, "Arena capture: %s\n", error.what());
+	}
+	application.reset_elapsed_time();
+	return saved;
 }
 
 void GameLevel::open_end_menu()

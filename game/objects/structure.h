@@ -96,7 +96,7 @@ protected:
 	// keep the defaults, so bare geometry stays fixed on contact; a painted
 	// one answers projectiles (StructurePaintable).
 	void touch(Collider& receiver,
-		const labrador::Vector2F& normal, float penetration) const override;
+		const labrador::Vector2F& normal, float penetration) override;
 private:
 	bool miniature_ = false;
 	CollisionObjectType collision_type_ =

@@ -7,6 +7,7 @@
 #include "game/states/menu_page.h"
 #include "game/states/ui_player_badge.h"
 #include "game/carried/ui_text_drop_shadow.h"
+#include <functional>
 
 
 class ResultsMenuPage : public MenuPage
@@ -38,7 +39,7 @@ public:
 	// (nothing recorded) shows no record line.
 	ResultsMenuInitial(MenuContext* context, const LevelEndInfo& end_info,
 		const Session& session = Session(), bool revealed = false,
-		const RecordOutcome& record = RecordOutcome());
+		const RecordOutcome& record = RecordOutcome(), std::function<bool()> save_arena = {});
 	// The record line's text, or empty when the page shows none.
 	static std::wstring record_text(const RecordOutcome& record, const MenuRecordText& text);
 	void init() override;
@@ -48,9 +49,12 @@ public:
 	// Toward an armed time-lapse: closes as debug_dismiss does.
 	bool debug_watch_replay() override;
 private:
+	bool shows_focus_backing() const override { return false; }
 	Session session_;
 	bool revealed_ = false;
 	RecordOutcome record_;
+	std::function<bool()> save_arena_;
+	MenuPaperArtPresentation action_art_;
 	std::vector<std::unique_ptr<colourwars::UiTextDropShadow>> details_;
 	std::vector<std::unique_ptr<UiPlayerBadge>> player_badges_;
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
@@ -69,6 +73,7 @@ private:
 	std::unique_ptr<colourwars::UiTextDropShadow> team_b_percentage_ = nullptr;
 	std::unique_ptr<colourwars::UiTextDropShadow> winner_ = nullptr;
 	std::unique_ptr<colourwars::UiTextDropShadow> proceed_ = nullptr;
+	std::unique_ptr<colourwars::UiTextDropShadow> save_arena_action_;
 	bool winner_sound_played_ = false;
 	float delay_timer_ = 0.0f;
 	float fill_timer_ = 0.0f;
@@ -76,6 +81,9 @@ private:
 	float fill_time_ratio() const;
 	labrador::Vector2F calculate_team_b_fill_top_right_position() const;
 	static bool continue_pressed(const std::vector<ProcessedMenuInput>& menu_input);
+	void continue_to_end();
+	void save_arena();
+	void update_actions(const std::vector<ProcessedMenuInput>& inputs);
 	// Grows both score bars with the fill clock, team B's from the right.
 	void update_fill_box() const;
 	// A bar's width at the fill clock for a team's share of the paint.

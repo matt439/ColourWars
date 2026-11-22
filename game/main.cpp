@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/graphics_build.h"
 #include "game/config/crt_trial.h"
 #include "engine/app/application.h"
 #include "engine/app/content_root.h"
@@ -83,7 +84,8 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		options.window_title = L"Colour Wars";
 		options.resolution = save.resolution();
 		options.fullscreen = save.fullscreen();
-		options.vsync = save.vsync();
+		// The hosted WARP smoke exercises presentation without waiting for a display refresh.
+		options.vsync = !LABRADOR_D3D_SOFTWARE_TEST && save.vsync();
 		options.target_fps = simulation::simulation_hz;
 		options.max_threads = 16;
 

@@ -63,7 +63,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     };
     const std::array<const wchar_t*, 9> labels{
         L"Resolution", L"Fullscreen", L"Vsync", L"Team palette", L"Controls / audio", L"Graphics", L"Restore defaults", L"Apply", L"Back" };
-    constexpr size_t palette_row = 3, apply_row = 7, back_row = 8;
+    constexpr size_t palette_row = 3, graphics_row = 5, apply_row = 7, back_row = 8;
     const auto row_label = [&](size_t index)
     {
         return text_bounds(look.options_font, labels[index], look.options_position +
@@ -429,6 +429,29 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     require(saved_bytes() == original && preferences.resolution() == ScreenResolution::s_1920_1080 &&
         preferences.team_palette() == TeamColourPair::blue_yellow,
         "Options Back persisted unapplied display changes");
+
+    // Refuse a missing directory without launching any shell window. The
+    // focused action and warning both belong to the Options page.
+    open(std::make_unique<MainMenuOptions>(&context));
+    for (size_t row = 0; row < graphics_row; ++row) { tap(Key::down); }
+    std::ignore = assert_focus(stack_frame(app), row_label(graphics_row));
+    tap(Key::right);
+    const RectangleF folder_action = value_bounds(graphics_row, L"Open save folder");
+    std::ignore = assert_focus(stack_frame(app), folder_action);
+    {
+        const acceptance::IsolatedSave missing(isolated.root() / "folder-action-with-no-save");
+        const auto missing_folder = missing.save_path().parent_path();
+        require(!std::filesystem::exists(missing_folder), "Missing save folder fixture already exists");
+        tap(Key::enter);
+        require(stack.depth() == 2 && !std::filesystem::exists(missing_folder),
+            "Open save folder changed the screen stack or created a directory");
+    }
+    const Frame folder_failure = capture("options", "open-save-folder-failed", options_panel, folder_action);
+    contrast(folder_failure, text_bounds(presentation.prompt_bar().font,
+        L"Could not open the save folder.", look.options_status_position));
+    tap(Key::left);
+    std::ignore = assert_focus(stack_frame(app), row_label(graphics_row));
+    require(saved_bytes() == original, "Open save folder changed the save");
 
     // Apply through the real page, then load a fresh Save to check persistence.
     open(std::make_unique<MainMenuOptions>(&context));

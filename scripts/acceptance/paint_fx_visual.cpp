@@ -457,7 +457,7 @@ namespace
         {
             const Vector2F half = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2;
             area.offset(half.x, half.y);
-            const ProjectileSpray shot(area, Vector2F::zero, team, owner,
+            ProjectileSpray shot(area, Vector2F::zero, team, owner,
                 colours.team_colour(team), app.render_resources(), resolve_projectile_strip(tuning.projectile(ProjectileType::spray), *app.render_resources()), &tuning.projectile(ProjectileType::spray));
             object.on_contact(shot, Vector2F::zero, 0);
         };

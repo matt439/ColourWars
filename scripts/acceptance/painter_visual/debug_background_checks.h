@@ -323,7 +323,7 @@ void debug_background_checks(Application& app, Registry<LevelLoadedInfo>& levels
     const size_t damage_begin = motors.count;
     Player& victim = const_cast<Player&>(game->level().player(1));
     victim.force_respawn();
-    const ProjectileSpray damage = controlled_spray(app, tuning, RectangleF(0, 0, 10, 10), PlayerTeam::a, 3, Colour::white);
+    ProjectileSpray damage = controlled_spray(app, tuning, RectangleF(0, 0, 10, 10), PlayerTeam::a, 3, Colour::white);
     const float health_before = victim.health();
     victim.on_contact(damage, Vector2F::zero, 0.0f); tick();
     require(victim.health() < health_before, "Inactive motor control did not produce actual damage");

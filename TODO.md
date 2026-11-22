@@ -67,9 +67,6 @@ engine master before filing. The ledger records which workarounds each pin bump 
 |---|---|---|---|---|
 | `ENG#PARKED` | DECISION | LOW | S | The mouse-button naming draft awaits the author's call on posting to labrador#122. The ledger lists the other requests and what would justify filing them. [Parked requests](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#27` | DEFERRED | LOW | S | The throwing rumble transport still needs a link fixture. Replace it when Labrador supports exception injection. [Ledger](docs/review/engine-reports.md#live). |
-| `ENG#30` | DEFERRED | LOW | S | Replace the startup message match when Labrador's render backends throw `RenderDeviceUnavailable`. [Ledger](docs/review/engine-reports.md#live). |
-| `ENG#33` | DEFERRED | LOW | S | Remove the contact `const_cast` when Labrador provides a mutable contact parameter. [Ledger](docs/review/engine-reports.md#live). |
-| `ENG#34` | DEFERRED | LOW | S | Recheck ordinary Release adapter selection when Labrador implements its software-adapter refusal. [Ledger](docs/review/engine-reports.md#live). |
 | `ENG#39` | DECISION | LOW | S | `FLT_MAX` written to JSON reads back one double step above it, so `gameplay_tuning` tests one float below. Drafted 2026-11-13, not filed. Author: issue route or engine fix. [Report](docs/review/engine-reports.md#39-a-float-written-as-flt_max-does-not-read-back---draft-not-filed) |
 
 ## Developer console
@@ -89,7 +86,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `CI#7` | DEFERRED | LOW | S | Both paint-effects checks passed the first four scheduled nights on the current hosted-software policy. Recheck after the Nov 22 UTC run for seven green nights before promotion to PR checks. [Nightly evidence](docs/code-hygiene.md#promote-stable-nightly-checks-ci7). |
+| `CI#7` | DEFERRED | LOW | S | Both hosted-software paint-effects checks passed six scheduled nights, Nov 16–21 UTC. Recheck the Nov 22 UTC run for the seventh before promotion to PR checks. [Nightly evidence](docs/code-hygiene.md#promote-stable-nightly-checks-ci7). |
 
 ## Project review (2026-11-10)
 
@@ -143,7 +140,6 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `REV#48` | UNSCOPED | MED | M | Debug `replay.timelapse` done 2026-11-12. Left: the player-facing End row, not designed. It needs rulings on pacing, HUD, clock and sound, and on the row's place on the six-row End paper, then copy, validation, painter and a play check. [Owner](docs/feature-roadmap.md#whole-round-time-lapse-rev48). |
-| `REV#49` | UNSCOPED | MED | M | Save the finished arena as a PNG from an explicit End or Results action. Capture and WIC writer exist only in Debug; needs a Release home, the reveal frame, a folder, copy and a check. Never designed. [Record](docs/review/2026-11-10-project-review.md#save-the-finished-picture-as-a-png-rev49). |
 | `REV#52` | DEFERRED | LOW | L | Paint-keyed bounce pad as a paint object beside ROAD#28 and ROAD#29: static, launches the team holding its top paint. New class, format kind, art, cue and trial stage. Deferred behind `ROAD#28`'s bot routing. [Record](docs/review/2026-11-10-project-review.md#paint-keyed-bounce-pad-object-rev52). |
 | `REV#53` | UNSCOPED | LOW | L | Eraser stage object that returns tiles to neutral (Splasher water, de Blob). Breaks the paint-only-arrives invariant that wet strips, paint objects, bot finishing, underfoot and awards assume. Never designed. [Record](docs/review/2026-11-10-project-review.md#eraser-stage-object-that-clears-paint-rev53). |
 | `REV#58` | UNSCOPED | LOW | L | Rotation for five to eight people (Nidhogg 2 tournaments): profile names, who sits out, per-person standings. Needs a second ledger beside the team-win Session and a per-person winner rule. Never designed. [Record](docs/review/2026-11-10-project-review.md#party-rotation-for-more-than-four-people-rev58). |
@@ -154,22 +150,9 @@ was proposed and given no row. Here `UNSCOPED` means examined by the review but 
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `REV#66` | UNSCOPED | LOW | L | [Editor group movement](docs/level-editor.md#editing) is built. Recent files, drag-and-drop open and autosave remain unscoped conveniences from the [editor review](docs/review/2026-11-10-project-review.md#editor-lacks-multi-select-and-recent-files-rev66). |
+| `REV#66` | UNSCOPED | LOW | L | Recent files and autosave remain unscoped conveniences from the [editor review](docs/review/2026-11-10-project-review.md#editor-lacks-multi-select-and-recent-files-rev66). |
 | `REV#67` | DEFERRED | LOW | M | No signing or separate checksum (2026-11-13). An itch.io page with a butler publish step waits for the first non-pre-release tag or a wanted store page. [Calls](docs/feature-roadmap.md#project-review-calls-2026-11-13), [record](docs/review/2026-11-10-project-review.md#distribution-is-one-unsigned-github-zip-rev67). |
 | `REV#68` | DEFERRED | LOW | L | No document scopes a Steam release (store page, Remote Play Together, prompts, Deck pass); a note beside `ROAD#23`. Deferred behind `REV#67`'s itch.io trigger. [Record](docs/review/2026-11-10-project-review.md#steam-release-is-not-scoped-rev68). |
-
-## First-run review (2026-11-10)
-
-**Owner:** [docs/review/2026-11-10-first-run-review.md](docs/review/2026-11-10-first-run-review.md),
-a frozen record, so this file holds each row's status. It walked a newcomer from the GitHub page
-to a first match, including a real build from a fresh clone; nothing was played on a pad. Its
-[last section](docs/review/2026-11-10-first-run-review.md#already-tracked) lists findings that
-already had rows. `FTR#13` was folded into `REV#26` on 2026-11-12, which closed 2026-11-13; its id is retired.
-`FTR#1` closed 2026-11-13 with the `v0.1.0` release.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `FTR#14` | UNSCOPED | LOW | S | An in-game Open save folder action still needs a design. [First-run finding](docs/review/2026-11-10-first-run-review.md#the-setup-path-is-long-and-the-save-folder-is-hidden-ftr14). |
 
 ## Areas with no open rows
 
@@ -180,6 +163,7 @@ A new row for one of these gets its section back.
 | Match setup, practice and stage records | [Menu presentation](docs/menu-presentation.md), [Movement Course](docs/polish-movement-course.md), [Stage records](docs/feature-roadmap.md#stage-records-and-the-sectioned-save-gap62) | a new setup, workshop or stage-record issue |
 | Levels and the editor (`ED`) | [level-editor-record.md](docs/level-editor-record.md) | a new stage-authoring or editor workflow issue |
 | Release preparation (`REL`) | [releasing.md](docs/releasing.md) | a new packaging or release qualification item |
+| First-run review (`FTR`) | [2026-11-10-first-run-review.md](docs/review/2026-11-10-first-run-review.md) (frozen) | a new first-run finding |
 | Code hygiene (`HYG`) | [code-hygiene.md](docs/code-hygiene.md#todo-audit-follow-ups-2026-11-12) | a new maintenance finding |
 | Audio replacement | [polish-plan.md §5](docs/polish-plan.md#5-replace-the-entire-audio-set) | a missing cue hook or a mix defect; `POL#23` was accepted and `ROAD#3` waived 2026-11-05 |
 | Game gaps (gap audit Class 1) | [docs/review/gap-audit.md](docs/review/gap-audit.md) (frozen) | a new finding; `ROAD#5`, `ROAD#7`, `ROAD#9`, `ROAD#10`, `GAP#4.2`, `GAP#5.1`, `GAP#L9` and `GAP#L11` were accepted or waived 2026-11-05 (no translation language chosen) |

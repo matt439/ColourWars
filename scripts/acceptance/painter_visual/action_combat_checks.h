@@ -133,7 +133,7 @@
         for (int view = 0; view < count; ++view)
         {
             Player& player = const_cast<Player&>(level->player(view));
-            const ProjectileSpray hit = controlled_spray(app, tuning, RectangleF(0, 0, 10, 10),
+            ProjectileSpray hit = controlled_spray(app, tuning, RectangleF(0, 0, 10, 10),
                 player.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a, 0, Colour::white);
             player.on_contact(hit, Vector2F::zero, 0);
         }
@@ -169,7 +169,7 @@
         for (int view = 0; view < level->player_count(); ++view)
         {
             Player& player = const_cast<Player&>(level->player(view));
-            const ProjectileSpray hit = controlled_spray(app, tuning, RectangleF(0, 0, 10, 10),
+            ProjectileSpray hit = controlled_spray(app, tuning, RectangleF(0, 0, 10, 10),
                 player.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a, 0, Colour::white);
             player.on_contact(hit, Vector2F::zero, 0);
         }

@@ -233,7 +233,7 @@ colour and one frame, so it is not used here.
    player ownership; friendly repaint retains the original player's credit.
    The splash is a tile-owned animation, not a separate Scene object.
    The projectile accumulates cosmetic contact results, which the surface
-   reports through `Projectile::answer_paint_contact`; Level-owned
+   reports through `Projectile::note_paint_contact`. Level-owned
    [PaintAudio](../game/objects/paint_audio.h) plays the completed batch with
    limits per paint owner across every surface. Player flushes launch hits
    before discarding blocked shots, and Level flushes Scene contacts before
@@ -270,11 +270,9 @@ one-shot flag is not const, even when the only thing it changes sits behind a
 borrowed pointer (`Weapon::stop_sounds`, `Level::suspend`,
 `Projectile::note_paint_contact`). `mutable` is kept only for a cache whose fill
 is synchronised or safe under concurrent draws, and `game/` has none today.
-The one write through a const reference is
-[`Projectile::answer_paint_contact`](../game/objects/projectile.h): the engine
-hands a contact's other party over const, and a surface's paint answer has to
-reach the projectile. It is engine report 33 in
-[the ledger](review/engine-reports.md#owed-from-the-architecture-review-2026-10-30).
+Labrador supplies a mutable contact participant. A paintable surface records
+its result on the projectile during its half of the contact. See report 33 in
+[the engine ledger](review/engine-reports.md#consume-typed-renderer-refusals-mutable-contacts-and-release-adapter-selection).
 
 ## Add a weapon without losing the contracts
 

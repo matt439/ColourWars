@@ -371,7 +371,7 @@ namespace acceptance::route_run
     {
         this->death_expected = true;
         const PlayerTeam enemy = this->player->team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a;
-        const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::zero, enemy, 1,
+        ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::zero, enemy, 1,
             Colour::white, &this->services.render,
             resolve_projectile_strip(this->services.tuning.projectile(ProjectileType::spray), this->services.render),
             &this->services.tuning.projectile(ProjectileType::spray));

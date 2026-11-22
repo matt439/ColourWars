@@ -186,7 +186,7 @@ public:
     void on_player_contact(const Player& other,
         const labrador::Vector2F& normal, float penetration) override;
     // Takes the shot's damage, unless immune; the paint still lands.
-    void on_projectile_contact(const Projectile& source,
+    void on_projectile_contact(Projectile& source,
         const labrador::Vector2F& normal, float penetration) override;
     // Always false: Level holds borrowed Player pointers for the entire match.
     // A dead player respawns rather than being retired by Scene.
@@ -535,7 +535,7 @@ private:
 	bool hit_ceiling_this_tick_ = false;
 
 	void touch(Collider& receiver,
-		const labrador::Vector2F& normal, float penetration) const override;
+		const labrador::Vector2F& normal, float penetration) override;
 
 	// Resolve flat surfaces using the contact normal and penetration depth.
 	void on_solid_contact(const Structure& other,

@@ -9,6 +9,7 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <commdlg.h>
+#include <shellapi.h>
 
 #include <algorithm>
 #include <array>
@@ -126,6 +127,28 @@ namespace colourwars_editor
             std::filesystem::current_path(original);
             if (!accepted && error != 0) { throw std::runtime_error("The file dialog could not be opened."); }
             return accepted != FALSE;
+        }
+
+        std::optional<std::filesystem::path> dropped_level_path(HDROP files)
+        {
+            struct DropOwner
+            {
+                HDROP files;
+                ~DropOwner() { DragFinish(files); }
+            } owner{ files };
+
+            if (DragQueryFileW(files, 0xffffffff, nullptr, 0) != 1) return std::nullopt;
+            const UINT length = DragQueryFileW(files, 0, nullptr, 0);
+            if (length == 0) return std::nullopt;
+            std::wstring name(static_cast<std::size_t>(length) + 1, L'\0');
+            if (DragQueryFileW(files, 0, name.data(), length + 1) != length) return std::nullopt;
+            name.resize(length);
+
+            std::filesystem::path path(std::move(name));
+            std::error_code error;
+            if (CompareStringOrdinal(path.extension().c_str(), -1, L".json", -1, TRUE) != CSTR_EQUAL ||
+                !std::filesystem::is_regular_file(path, error)) return std::nullopt;
+            return path;
         }
     }
 
@@ -664,21 +687,34 @@ namespace colourwars_editor
         return answer == IDNO || save(false);
     }
 
+    void Editor::open_level(std::optional<std::filesystem::path> path)
+    {
+        if (!confirm_discard()) return;
+        if (!path) path = choose_file(false);
+        if (!path) return;
+        document_.load(*path);
+        reset_document_view();
+    }
+
+    void Editor::reset_document_view()
+    {
+        group_.clear();
+        selection_.reset();
+        refresh();
+        command(view_match);
+    }
+
     void Editor::command(int id)
     {
         if (dragging_ || panning_) cancel_drag();
         if (id == file_exit) { SendMessageW(window_, WM_CLOSE, 0, 0); return; }
-        if (id == file_new || id == file_open)
+        if (id == file_open) { open_level(); return; }
+        if (id == file_new)
         {
             if (!confirm_discard()) return;
-            if (id == file_new) document_.create();
-            else
-            {
-                const std::optional<std::filesystem::path> path = choose_file(false);
-                if (!path) return;
-                document_.load(*path);
-            }
-            group_.clear(); selection_.reset(); refresh(); command(view_match); return;
+            document_.create();
+            reset_document_view();
+            return;
         }
         if (id == file_save || id == file_save_as) { save(id == file_save_as); return; }
         if (id == file_save_user_stage) { save_user_stage(); return; }
@@ -686,7 +722,7 @@ namespace colourwars_editor
         if (id == help_controls)
         {
             MessageBoxW(window_,
-                L"Open a level from game/content/levels, or start a new one.\n\n"
+                L"Open a level from game/content/levels, drop one level JSON file onto the editor, or start a new one.\n\n"
                 L"Select objects on the canvas or in Level Contents. Drag to move; use the white bottom-right corner to resize. "
                 L"Ctrl+Shift+click toggles group members. Drag any member or use the canvas arrows to move them together. "
                 L"In Level Contents, Ctrl+click toggles a row. Ctrl+Up/Down moves the focus outline and Space toggles that row. Highlighted rows are selected. Enter focuses the canvas for nudging. Click a row to inspect just that object. "
@@ -795,6 +831,14 @@ namespace colourwars_editor
         {
         case WM_CREATE: create_controls(); return 0;
         case WM_SIZE: layout(); return 0;
+        case WM_DROPFILES:
+        {
+            auto path = dropped_level_path(reinterpret_cast<HDROP>(wparam));
+            if (!path) { set_status(L"Drop one level JSON file to open it."); return 0; }
+            if (dragging_ || panning_) cancel_drag();
+            open_level(std::move(path));
+            return 0;
+        }
         case WM_GETMINMAXINFO:
         {
             const RECT work = editor_monitor_work_area(MonitorFromWindow(window_, MONITOR_DEFAULTTONEAREST));
@@ -881,7 +925,7 @@ namespace colourwars_editor
         const HMONITOR monitor = MonitorFromPoint(POINT{}, MONITOR_DEFAULTTOPRIMARY);
         dpi_ = editor_monitor_dpi(monitor);
         const RECT initial = initial_editor_rectangle(dpi_, editor_monitor_work_area(monitor));
-        if (!CreateWindowExW(WS_EX_CONTROLPARENT, L"ColourWarsLevelEditor", L"ColourWars Level Editor",
+        if (!CreateWindowExW(WS_EX_CONTROLPARENT | WS_EX_ACCEPTFILES, L"ColourWarsLevelEditor", L"ColourWars Level Editor",
             WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, initial.left, initial.top,
             initial.right - initial.left, initial.bottom - initial.top,
             nullptr, nullptr, instance_, this)) throw std::runtime_error("Could not open the editor.");

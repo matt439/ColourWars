@@ -75,7 +75,7 @@ public:
 	// Surface splashes affect rendering extent, never layout/contact geometry.
 	labrador::RectangleF cull_bounds(float units_per_pixel) const override;
 	// Players are ignored; only projectiles paint the surface.
-	void on_projectile_contact(const Projectile& other,
+	void on_projectile_contact(Projectile& other,
 		const labrador::Vector2F& normal, float penetration) override;
 
 	PaintableObject* paintable() override { return this; }
@@ -101,11 +101,11 @@ protected:
 	// Compare published translated tile edges directly: float translation is
 	// not generally invertible at binade boundaries.
 	PlayerTeam top_paint_team_translated(float world_x, float offset_x) const;
-	void paint_from_projectile(const Projectile& projectile,
+	void paint_from_projectile(Projectile& projectile,
 		const labrador::RectangleF& splash);
 
 private:
-	void paint_from_projectile(const Projectile& projectile,
+	void paint_from_projectile(Projectile& projectile,
 		const labrador::RectangleF& splash, PlayerTeam team);
 	void draw_paint(labrador::DrawList& draw_list) const;
 	std::vector<PaintTile> paint_tiles_ = std::vector<PaintTile>();
